@@ -20,3 +20,5 @@ Fire alarm (NFPA 72): Battery Sizing, Voltage Drop & NAC Load, Audibility & Line
 ## Changelog
 
 - 2026-11-11: Added global tool search on the homepage (search box + clear button, combines with the category filter, EN/FR).
+- 2026-11-11: Conduit fill — added rigid PVC Schedule 40 / Schedule 80 conduit types (ASTM D1785 IDs; 4 in Sch 40 uses 8091 mm² to match the project calculation book) and corrected PVC outside diameters to IPS values.
+- 2026-11-11: Voltage drop — conductor resistance R is now corrected to the selected temperature rating (75 °C table basis; Cu ×1.048 / Al ×1.050 at 90 °C).
