@@ -420,24 +420,34 @@ const CONDUIT_TYPE_SIZES = {
   EMT:  [16,21,27,35,41,53,63,78,91,103,129,155],
   RMC:  [16,21,27,35,41,53,63,78,91,103,129,155],
   PVC:  [16,21,27,35,41,53,63,78,91,103,129,155],
+  PVC40:[16,21,27,35,41,53,63,78,91,103,129,155],
+  PVC80:[16,21,27,35,41,53,63,78,91,103,129,155],
   HDPE: [2,3,4,5,6,8,10,12,14,16,18,20,24]  // nominal IPS size, inches
 };
 const CONDUIT_AREA = {
   EMT:  {16:196, 21:343, 27:556, 35:968, 41:1314, 53:2165, 63:3089, 78:4770, 91:6379, 103:8213, 129:13050, 155:18821},
   RMC:  {16:179, 21:314, 27:527, 35:911, 41:1245, 53:2043, 63:2934, 78:4517, 91:6082, 103:7845, 129:12546, 155:18158},
   PVC:  {16:201, 21:352, 27:573, 35:995, 41:1349, 53:2226, 63:3186, 78:4914, 91:6605, 103:8500, 129:13541, 155:19547},
+  /* Rigid PVC Schedule 40 / Schedule 80 — internal area computed as π·ID²/4 from the ASTM D1785
+     average-ID table. 103 (4 in) Sch 40 uses 8091 mm² (ID 101.5 mm) to match the project calculation
+     book (Stablex conduit-fill Rev. 0); the ASTM average-ID value would be 8099 mm². */
+  PVC40:{16:187, 21:332, 27:541, 35:943, 41:1284, 53:2127, 63:3029, 78:4689, 91:6278, 103:8091, 129:12754, 155:18430},
+  PVC80:{16:141, 21:266, 27:443, 35:799, 41:1104, 53:1854, 63:2655, 78:4156, 91:5605, 103:7263, 129:11515, 155:16515},
   /* HDPE (IPS, SDR11 / DR11) internal area computed from GF Piping Systems "IPS HDPE Pipe Chart" (Part #10014098),
      average ID at DR11 — this is real published pipe dimensional data, not a representative estimate. */
   HDPE: {2:1862, 3:4047, 4:6688, 5:10215, 6:14498, 8:24567, 10:38168, 12:53684, 14:64713, 16:84517, 18:107006, 20:132095, 24:190194}
 };
 /* Outer diameter, mm — for display only (does not affect fill calculation).
-   EMT/RMC/PVC share a common nominal external diameter per trade size (standard North American practice);
-   HDPE OD is the actual pipe OD from the GF Piping Systems chart. Representative for EMT/RMC/PVC — verify against
-   the specific product; HDPE values are as published. */
+   EMT and RMC share a common nominal external diameter per trade size; all rigid PVC types share the
+   IPS outside diameter per trade size (ASTM D1785 OD column) — the previous PVC row wrongly reused the
+   EMT/RMC diameters for sizes 16–53. HDPE OD is the actual pipe OD from the GF Piping Systems chart.
+   Representative for EMT/RMC/PVC — verify against the specific product; HDPE values are as published. */
 const CONDUIT_OD_MM = {
   EMT:  {16:17.93, 21:23.42, 27:29.54, 35:38.35, 41:44.20, 53:55.80, 63:73.02, 78:88.90, 91:101.60, 103:114.30, 129:141.30, 155:168.27},
   RMC:  {16:17.93, 21:23.42, 27:29.54, 35:38.35, 41:44.20, 53:55.80, 63:73.02, 78:88.90, 91:101.60, 103:114.30, 129:141.30, 155:168.27},
-  PVC:  {16:17.93, 21:23.42, 27:29.54, 35:38.35, 41:44.20, 53:55.80, 63:73.02, 78:88.90, 91:101.60, 103:114.30, 129:141.30, 155:168.27},
+  PVC:  {16:21.34, 21:26.67, 27:33.40, 35:42.16, 41:48.26, 53:60.33, 63:73.03, 78:88.90, 91:101.60, 103:114.30, 129:141.30, 155:168.28},
+  PVC40:{16:21.34, 21:26.67, 27:33.40, 35:42.16, 41:48.26, 53:60.33, 63:73.03, 78:88.90, 91:101.60, 103:114.30, 129:141.30, 155:168.28},
+  PVC80:{16:21.34, 21:26.67, 27:33.40, 35:42.16, 41:48.26, 53:60.33, 63:73.03, 78:88.90, 91:101.60, 103:114.30, 129:141.30, 155:168.28},
   HDPE: {2:60.33, 3:88.90, 4:114.30, 5:141.30, 6:168.27, 8:219.08, 10:273.05, 12:323.85, 14:355.60, 16:406.40, 18:457.20, 20:508.00, 24:609.60}
 };
 
@@ -1565,7 +1575,7 @@ const UI = {
     diagramTitle: "Cross-Section", diagramTag: "to scale, illustrative packing",
     diagramIDCaption: "ID {id} mm (dashed = conduit wall)", diagramOverflowNote: "⚠ some items don't fit at this scale — see fill % above",
     diagramNoItems: "Add conductors or cables to see the cross-section.",
-    conduit_EMT: "EMT (electrical metallic tubing)", conduit_RMC: "RMC (rigid metal conduit)", conduit_PVC: "PVC (rigid, Type EB1/DB2)", conduit_HDPE: "HDPE (IPS, SDR11)",
+    conduit_EMT: "EMT (electrical metallic tubing)", conduit_RMC: "RMC (rigid metal conduit)", conduit_PVC: "PVC (rigid, Type EB1/DB2)", conduit_PVC40: "PVC (rigid, Schedule 40)", conduit_PVC80: "PVC (rigid, Schedule 80)", conduit_HDPE: "HDPE (IPS, SDR11)",
     insul_RW90: "RW90 (90°C thermoset, heavier wall)", insul_TWU75: "TWU75 (75°C PVC/nylon, lighter wall)",
     cat_MV1C_CU: "MV single-conductor, copper (15/25 kV)", cat_MV1C_AL: "MV single-conductor, aluminum (15/35 kV)",
     cat_C2_CU: "2-conductor TECK, copper", cat_C3_CU: "3-conductor TECK, copper", cat_C3_AL: "3-conductor, aluminum",
@@ -1652,7 +1662,7 @@ const UI = {
     diagramTitle: "Coupe transversale", diagramTag: "à l'échelle, empaquetage illustratif",
     diagramIDCaption: "ID {id} mm (pointillé = paroi du conduit)", diagramOverflowNote: "⚠ certains éléments ne tiennent pas à cette échelle — voir le % de remplissage ci-dessus",
     diagramNoItems: "Ajoutez des conducteurs ou des câbles pour voir la coupe transversale.",
-    conduit_EMT: "EMT (tube électrique métallique)", conduit_RMC: "RMC (conduit métallique rigide)", conduit_PVC: "PVC (rigide, type EB1/DB2)", conduit_HDPE: "HDPE (IPS, SDR11)",
+    conduit_EMT: "EMT (tube électrique métallique)", conduit_RMC: "RMC (conduit métallique rigide)", conduit_PVC: "PVC (rigide, type EB1/DB2)", conduit_PVC40: "PVC (rigide, Schedule 40)", conduit_PVC80: "PVC (rigide, Schedule 80)", conduit_HDPE: "HDPE (IPS, SDR11)",
     insul_RW90: "RW90 (thermodurcissable 90 °C, paroi plus épaisse)", insul_TWU75: "TWU75 (PVC/nylon 75 °C, paroi plus mince)",
     cat_MV1C_CU: "Monoconducteur MT, cuivre (15/25 kV)", cat_MV1C_AL: "Monoconducteur MT, aluminium (15/35 kV)",
     cat_C2_CU: "TECK 2 conducteurs, cuivre", cat_C3_CU: "TECK 3 conducteurs, cuivre", cat_C3_AL: "3 conducteurs, aluminium",
