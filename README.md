@@ -16,3 +16,7 @@ Fire alarm (NFPA 72): Battery Sizing, Voltage Drop & NAC Load, Audibility & Line
 - Standards referenced: CSA C22.1, IEEE 485 / 551 / 242 / C57.109, NFPA 72, NEMA VE1, ICEA P-32-382, CSA C61000-3-6, Hydro-Québec C.25-01.
 - Tools are preliminary-design aids, not stamped calculations. Always verify against manufacturer data and the current code edition.
 - Deployed on Vercel with automatic deployments from this repository (main branch).
+
+## Changelog
+
+- 2026-11-11: Added global tool search on the homepage (search box + clear button, combines with the category filter, EN/FR).
