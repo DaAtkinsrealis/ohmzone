@@ -307,12 +307,14 @@ footer.note b{color:var(--ink-dim);}
           <div class="stat"><div class="k" id="lblStatSccRatio">S<sub>cc</sub>/S<sub>r</sub> ratio</div><div class="v" id="statSccRatio">—</div></div>
           <div class="stat"><div class="k" id="lblStatThdu">THD<sub>U</sub> at PCC (estimated)</div><div class="v" id="statThdu">—</div></div>
           <div class="stat"><div class="k" id="lblStatThduLimit">THD<sub>U</sub> compatibility level</div><div class="v" id="statThduLimit">—</div></div>
+          <div class="stat"><div class="k" id="lblStatThduWorst">THD<sub>U</sub> worst case @ Scc min</div><div class="v" id="statThduWorst">—</div></div>
           <div class="stat"><div class="k" id="lblStatWorstOrder">Worst-case harmonic order</div><div class="v" id="statWorstOrder">—</div></div>
           <div class="stat"><div class="k" id="lblStatResonance">Estimated resonance order</div><div class="v" id="statResonance">—</div></div>
         </div>
       </div>
       <div id="verdictBox"></div>
       <div id="resonanceBox"></div>
+      <div id="worstThduBox"></div>
     </div>
 
     <div class="panel">
@@ -558,6 +560,16 @@ function calcAll(){
   const thdu = Math.sqrt(thduContribution*thduContribution + backgroundThdu*backgroundThdu);
   const thduLimit = meta.thduCompat[state.voltClass];
 
+  // Worst case at minimum short-circuit capacity: the weakest system gives
+  // the highest voltage distortion. sccMin defaults to sccGen when blank;
+  // take the smaller of the two so an accidental sccMin > sccGen cannot
+  // understate the result.
+  const sccWorst = Math.min(sccGen, sccMin);
+  const Z1min = (pccV*pccV)/(sccWorst*1e6);
+  const sumUsqMin = HARMONIC_ORDERS.reduce((s,h)=>{ const u = Ih[h]*(h*Z1min); return s+u*u; },0);
+  const thduContributionWorst = Math.sqrt(sumUsqMin)/phaseV*100;
+  const thduWorst = Math.sqrt(thduContributionWorst*thduContributionWorst + backgroundThdu*backgroundThdu);
+
   // resonance estimate if capacitor bank present
   let resonanceOrder = null, resonanceWarn = false;
   if(capOn && qc>0){
@@ -579,11 +591,11 @@ function calcAll(){
     const lim = state.limits[h]*occasionalMult;
     return {h, Ih:Ih[h], pctOfIr, limit: state.limits[h], limitApplied: lim, ok: pctOfIr <= lim};
   });
-  const anyFail = rows.some(r=>!r.ok) || thdi>thdiLimit || thdu>thduLimit;
+  const anyFail = rows.some(r=>!r.ok) || thdi>thdiLimit || thdu>thduLimit || thduWorst>thduLimit;
 
-  return {std, stdName: meta.name, pccV, sccGen, sccMin, sr, sccRatio, Ir, backgroundThdu,
+  return {std, stdName: meta.name, pccV, sccGen, sccMin, sccWorst, sr, sccRatio, Ir, backgroundThdu,
     condition: state.condition, occasionalMult, voltClass: state.voltClass,
-    Ih, rows, thdi, thdiLimit, thdu, thduLimit, thduContribution,
+    Ih, rows, thdi, thdiLimit, thdu, thduLimit, thduContribution, thduWorst, thduContributionWorst,
     capOn, qc, resonanceOrder, resonanceWarn, worstOrder, worstRatio, anyFail,
     tag: $("eqTag").value.trim(), devices: state.devices.slice()};
 }
@@ -597,6 +609,7 @@ function recalc(){
   $("statSccRatio").textContent = fmt(d.sccRatio,0);
   $("statThdu").textContent = fmt(d.thdu,2)+"%";
   $("statThduLimit").textContent = fmt(d.thduLimit,1)+"%";
+  $("statThduWorst").textContent = fmt(d.thduWorst,2)+"%";
   $("statWorstOrder").textContent = d.worstOrder ? "h="+d.worstOrder : "—";
   $("statResonance").textContent = d.resonanceOrder ? "h≈"+fmt(d.resonanceOrder,1) : "—";
   $("revTag").textContent = new Date().toISOString().slice(0,10);
@@ -618,6 +631,11 @@ function recalc(){
       resBox.innerHTML = `<div class="risk-box risk-ok"><b>${L.resOkTitle}</b> ${L.resOkBody.replace('{h}',fmt(d.resonanceOrder,1))}</div>`;
     }
   } else { resBox.innerHTML = ""; }
+
+  const worstBox = $("worstThduBox");
+  if(d.thduWorst > d.thduLimit){
+    worstBox.innerHTML = `<div class="risk-box risk-warn"><b>${L.thduWorstTitle}</b> ${L.thduWorstBody.replace('{sccMin}',fmt(d.sccMin,1)).replace('{worst}',fmt(d.thduWorst,2)).replace('{limit}',fmt(d.thduLimit,1)).replace('{gen}',fmt(d.thdu,2))}</div>`;
+  } else { worstBox.innerHTML = ""; }
 
   renderLimitTable(d);
   renderSpectrumChart(d);
@@ -688,11 +706,12 @@ Zh = h × Z1
 Uh = Ih × Zh   (summed as √ΣUh²)
 ${L.thduContribLbl} = ${fmt(d.thduContribution,2)}%
 ${L.backgroundLbl} = ${fmt(d.backgroundThdu,2)}%
-THDU = √(contribution² + background²) = ${fmt(d.thdu,2)}%`});
+THDU = √(contribution² + background²) = ${fmt(d.thdu,2)}%
+${L.thduWorstLbl} (${fmt(d.sccMin,1)} MVA) = ${fmt(d.thduWorst,2)}%`});
 
   steps.push({num:5, title:L.ls5Title, clause: d.std==="hq_dist"?"HQ C.25-01":(d.std==="hq_trans"?"HQ Transmission emission limits":(d.std==="ieee519"?"IEEE 519":"CSA C61000-3-6")), note:L.ls5Note, formula:
 `${L.thduLimitLbl} (${d.voltClass.toUpperCase()}) = ${fmt(d.thduLimit,1)}%
-${L.resultLbl}: ${d.thdu<=d.thduLimit ? L.resultPass : L.resultFail}`});
+${L.resultLbl}: ${d.thduWorst<=d.thduLimit ? L.resultPass : L.resultFail} (${L.thduWorstLbl})`});
 
   if(d.capOn && d.qc>0){
     steps.push({num:6, title:L.ls6Title, clause:"—", note:L.ls6Note, formula:
@@ -732,7 +751,7 @@ function buildReportPageHTML(d, includeLedger, includeSpectrum, includeLogo){
     [L.gaugeLbl, fmt(d.thdi,1)+"%"], [L.lblStatThdiLimit, fmt(d.thdiLimit,1)+"%"],
     [L.lblStatThdu, fmt(d.thdu,2)+"%"], [L.lblStatThduLimit, fmt(d.thduLimit,1)+"%"],
     [L.lblStatSccRatio, fmt(d.sccRatio,0)], [L.lblStatWorstOrder, d.worstOrder?("h="+d.worstOrder):"—"],
-    [L.lblStatResonance, d.resonanceOrder?("h≈"+fmt(d.resonanceOrder,1)):"—"], ["", ""]
+    [L.lblStatResonance, d.resonanceOrder?("h≈"+fmt(d.resonanceOrder,1)):"—"], [L.lblStatThduWorst, fmt(d.thduWorst,2)+"%"]
   ];
 
   let spectrumHtml = "";
@@ -908,6 +927,7 @@ $("exportExcelBtn").addEventListener("click", ()=>{
     ["",""], [L.repResults,""],
     [L.gaugeLbl, fmt(d.thdi,1)], [L.lblStatThdiLimit, fmt(d.thdiLimit,1)],
     [L.lblStatThdu, fmt(d.thdu,2)], [L.lblStatThduLimit, fmt(d.thduLimit,1)],
+    [L.lblStatThduWorst, fmt(d.thduWorst,2)],
     [L.lblStatSccRatio, fmt(d.sccRatio,0)], [L.lblStatWorstOrder, d.worstOrder||"—"],
     [L.lblStatResonance, d.resonanceOrder?fmt(d.resonanceOrder,1):"—"],
     ["",""], [L.disclaimerLbl, L.disclaimerBody]
@@ -967,6 +987,8 @@ const UI = {
     resultTitle:"Result — Emission &amp; Distortion Summary", gaugeLbl:"THD<sub>I</sub> at PCC",
     lblStatThdiLimit:"THD<sub>I</sub> limit (this condition)", lblStatSccRatio:"S<sub>cc</sub>/S<sub>r</sub> ratio",
     lblStatThdu:"THD<sub>U</sub> at PCC (estimated)", lblStatThduLimit:"THD<sub>U</sub> compatibility level",
+    lblStatThduWorst:"THD<sub>U</sub> worst case @ Scc min",
+    thduWorstTitle:"Worst-case THDU at minimum Scc exceeds the limit.", thduWorstBody:"At minimum short-circuit capacity ({sccMin} MVA) the estimated THDU is {worst}% — above the {limit}% compatibility level, even though THDU at general Scc is {gen}%. Check mitigation for the weakest-system condition.",
     lblStatWorstOrder:"Worst-case harmonic order", lblStatResonance:"Estimated resonance order",
     noDevTitle:"No source devices entered.", noDevBody:"Add at least one harmonic source device in Step 2 to run the assessment.",
     passTitle:"Within all limits checked.", passBody:"THDI, THDU and every individual harmonic order shown are within the limits/table entered — this is a screening-level result only.",
@@ -988,6 +1010,7 @@ const UI = {
     limitLbl:"Limit", occasionalNote:"occasional condition, ×1.5 applied", generalNote:"general condition",
     ls4Title:"PCC voltage distortion estimate", ls4Note:"This uses a simplified linear system reactance model (X scales directly with harmonic order from the fundamental short-circuit reactance) — a real assessment requires the network's actual harmonic impedance data, which Hydro-Québec typically provides for the PCC.",
     thduContribLbl:"Installation's THDU contribution", backgroundLbl:"Background THDU",
+    thduWorstLbl:"Worst-case THDU at Scc min",
     ls5Title:"Compliance check against compatibility level", ls5Note:"The calculated PCC voltage distortion is compared against the compatibility level for the voltage class — this represents the level below which equipment on the system is expected to operate compatibly per CSA C61000-2-2/2-12.",
     thduLimitLbl:"THDU compatibility level", resultLbl:"Result", resultPass:"within limit", resultFail:"exceeds limit",
     ls6Title:"Capacitor bank resonance screening", ls6Note:"A simplified parallel-resonance estimate — treats the system as a single inductive source impedance and the capacitor bank as the only capacitive element. Confirm against a full frequency scan if a resonance risk is flagged.",
@@ -1029,6 +1052,8 @@ const UI = {
     resultTitle:"Résultat — Sommaire des émissions et de la distorsion", gaugeLbl:"THD<sub>I</sub> au PCC",
     lblStatThdiLimit:"Limite THD<sub>I</sub> (cette condition)", lblStatSccRatio:"Rapport S<sub>cc</sub>/S<sub>r</sub>",
     lblStatThdu:"THD<sub>U</sub> au PCC (estimé)", lblStatThduLimit:"Niveau de compatibilité THD<sub>U</sub>",
+    lblStatThduWorst:"THD<sub>U</sub> pire cas à Scc min",
+    thduWorstTitle:"Le THDU en pire cas à Scc minimal dépasse la limite.", thduWorstBody:"À la puissance de court-circuit minimale ({sccMin} MVA), le THDU estimé est de {worst} % — au-dessus du niveau de compatibilité de {limit} %, même si le THDU à Scc général est de {gen} %. Vérifiez les mesures d'atténuation pour la condition de réseau la plus faible.",
     lblStatWorstOrder:"Rang harmonique le plus défavorable", lblStatResonance:"Rang de résonance estimé",
     noDevTitle:"Aucun dispositif source saisi.", noDevBody:"Ajoutez au moins un dispositif source d'harmoniques à l'étape 2 pour exécuter l'évaluation.",
     passTitle:"Conforme à toutes les limites vérifiées.", passBody:"Le THDI, le THDU et chaque rang harmonique individuel affiché sont conformes aux limites/tableau saisis — ceci est un résultat préliminaire seulement.",
@@ -1050,6 +1075,7 @@ const UI = {
     limitLbl:"Limite", occasionalNote:"condition occasionnelle, ×1,5 appliqué", generalNote:"condition générale",
     ls4Title:"Estimation de la distorsion de tension au PCC", ls4Note:"Ceci utilise un modèle de réactance système linéaire simplifié (X varie directement avec le rang harmonique à partir de la réactance de court-circuit fondamentale) — une évaluation réelle nécessite les données d'impédance harmonique réelles du réseau, qu'Hydro-Québec fournit généralement pour le PCC.",
     thduContribLbl:"Contribution THDU de l'installation", backgroundLbl:"THDU de fond",
+    thduWorstLbl:"THDU en pire cas à Scc min",
     ls5Title:"Vérification de conformité par rapport au niveau de compatibilité", ls5Note:"La distorsion de tension calculée au PCC est comparée au niveau de compatibilité pour la classe de tension — cela représente le niveau en dessous duquel l'équipement sur le réseau est censé fonctionner de façon compatible selon la CSA C61000-2-2/2-12.",
     thduLimitLbl:"Niveau de compatibilité THDU", resultLbl:"Résultat", resultPass:"sous la limite", resultFail:"dépasse la limite",
     ls6Title:"Vérification préliminaire de résonance du banc de condensateurs", ls6Note:"Une estimation simplifiée de résonance parallèle — traite le système comme une seule impédance de source inductive et le banc de condensateurs comme le seul élément capacitif. Confirmez auprès d'un balayage d'impédance complet si un risque de résonance est signalé.",
@@ -1086,6 +1112,7 @@ function applyStaticI18n(){
   $('resultTitle').innerHTML=L.resultTitle; $('gaugeLbl').innerHTML=L.gaugeLbl;
   $('lblStatThdiLimit').innerHTML=L.lblStatThdiLimit; $('lblStatSccRatio').innerHTML=L.lblStatSccRatio;
   $('lblStatThdu').innerHTML=L.lblStatThdu; $('lblStatThduLimit').innerHTML=L.lblStatThduLimit;
+  $('lblStatThduWorst').innerHTML=L.lblStatThduWorst;
   $('lblStatWorstOrder').textContent=L.lblStatWorstOrder; $('lblStatResonance').textContent=L.lblStatResonance;
   $('spectrumTitle').textContent=L.spectrumTitle; $('spectrumTag').innerHTML=L.spectrumTag;
   $('lblIncludeLedger').textContent=L.lblIncludeLedger; $('lblIncludeSizes').textContent=L.lblIncludeSizes; $('lblIncludeLogo').textContent=L.lblIncludeLogo;

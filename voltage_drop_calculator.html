@@ -586,7 +586,9 @@ function renderDynamicInputs(){
   document.getElementById('modeDesc').textContent = m.desc;
   const L = UI[currentLang];
 
-  const sizeOptions = CONDUCTORS.map(c=>`<option value="${c.size}">${c.size}</option>`).join('');
+  // Only offer sizes that have R/X data for the selected material (e.g. no
+  // 14 AWG aluminum in the table — offering it used to yield 0 V / Infinity).
+  const sizeOptions = CONDUCTORS.filter(c=> state.material==='Cu' ? c.cuR!==null : c.alR!==null).map(c=>`<option value="${c.size}">${c.size}</option>`).join('');
   let fields = `
     <label class="field">${L.lblCurrent}
       <input type="number" id="in_current" value="${state.inputs.current||''}" min="0" step="0.1">
@@ -707,7 +709,9 @@ function runCalculation(){
   if(state.mode==='distance'){
     const size = document.getElementById('in_size').value;
     state.inputs.size=size;
-    const {R,X} = getRX(size, state.material);
+    const rxD = getRX(size, state.material);
+    if(!rxD || rxD.R===null || rxD.X===null){ alert(UI[currentLang].alertNoData); return; }
+    const {R,X} = rxD;
     const Reff = R/parallel, Xeff = X/parallel;
     const Ze = effectiveImpedance(Reff,Xeff,pf,state.systemType);
     const mult = multiplierFor(state.systemType);
@@ -724,7 +728,9 @@ function runCalculation(){
     if(!length||length<=0){ alert(UI[currentLang].alertLength); return; }
     state.inputs.size=size; state.inputs.length=length;
     const Lkm = length/1000;
-    const {R,X} = getRX(size, state.material);
+    const rxP = getRX(size, state.material);
+    if(!rxP || rxP.R===null || rxP.X===null){ alert(UI[currentLang].alertNoData); return; }
+    const {R,X} = rxP;
     const Reff = R/parallel, Xeff = X/parallel;
     const vd = vdVolts(current, Lkm, Reff, Xeff, pf, state.systemType);
     const pct = vd/state.voltage*100;
@@ -1024,7 +1030,7 @@ const UI = {
     lblLength:"One-way run length (m)", lblSize:"Conductor size",
     copper:"Copper", aluminum:"Aluminum", insulation:"insulation",
     thSize:"Size", thArea:"Area (mm²)", thAmpacity:"Base ampacity", thDrop:"Drop", thMeetsTarget:"Meets target?",
-    alertCurrent:"Enter a load current greater than 0.", alertLength:"Enter a run length greater than 0.",
+    alertCurrent:"Enter a load current greater than 0.", alertLength:"Enter a run length greater than 0.", alertNoData:"No resistance/reactance data for this size in aluminum — the conductor table has no 14 AWG aluminum. Choose copper or a larger size.",
     statusGood:"Within 3% — meets recommended feeder/branch limit",
     statusWarn:"Between 3–5% — check combined run against the 5% total",
     statusBad:"Exceeds 5% — recommended to resize or shorten the run",
@@ -1096,7 +1102,7 @@ const UI = {
     lblLength:"Longueur unidirectionnelle (m)", lblSize:"Section du conducteur",
     copper:"Cuivre", aluminum:"Aluminium", insulation:"isolation",
     thSize:"Section", thArea:"Aire (mm²)", thAmpacity:"Ampacité de base", thDrop:"Chute", thMeetsTarget:"Cible atteinte?",
-    alertCurrent:"Entrez un courant de charge supérieur à 0.", alertLength:"Entrez une longueur de parcours supérieure à 0.",
+    alertCurrent:"Entrez un courant de charge supérieur à 0.", alertLength:"Entrez une longueur de parcours supérieure à 0.", alertNoData:"Aucune donnée de résistance/réactance pour cette taille en aluminium — le tableau ne contient pas l'aluminium 14 AWG. Choisissez le cuivre ou une taille supérieure.",
     statusGood:"Sous 3 % — respecte la limite recommandée pour un départ/circuit de dérivation",
     statusWarn:"Entre 3 et 5 % — vérifiez le parcours combiné par rapport au total de 5 %",
     statusBad:"Dépasse 5 % — il est recommandé de redimensionner ou de raccourcir le parcours",
