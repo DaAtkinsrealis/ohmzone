@@ -349,7 +349,7 @@
 
       <div class="card">
         <h3 id="p3-h3b">Cable reference database <span class="pill" style="margin-left:8px;" id="p3-pill">sample data — verify before use</span></h3>
-        <p style="color:var(--ink-soft);font-size:13px;margin-top:-4px;" id="p3-dbnote">Representative R/X and base ampacity values compiled per the CSA C22.1 Table D3 / Table 2 &amp; 4 methodology, plus a few illustrative North American cable references. Not a substitute for a manufacturer datasheet.</p>
+        <p style="color:var(--ink-soft);font-size:13px;margin-top:-4px;" id="p3-dbnote">Representative R/X and base ampacity values compiled per the CSA C22.1 Table D3 / Table 2 &amp; 4 methodology, plus a few illustrative North American cable references. R is tabulated at 75 °C and corrected to the selected temperature rating (Cu ×1.048 at 90 °C, Al ×1.050 at 90 °C). Not a substitute for a manufacturer datasheet.</p>
         <div class="db-toolbar">
           <span class="pill" id="dbFilterPill"></span>
         </div>
@@ -631,20 +631,32 @@ function renderCableTable(){
   document.getElementById('dbFilterPill').textContent =
     `${cu?L.copper:L.aluminum} · ${state.tempRating}°C ${L.insulation} · ${state.voltage}V ${state.systemType}`;
   const rows = CONDUCTORS.filter(c=> cu ? c.cuR!==null : c.alR!==null).map(c=>{
-    const R = cu?c.cuR:c.alR, X = cu?c.cuX:c.alX;
+    const R = correctedR(cu?c.cuR:c.alR, state.material, state.tempRating), X = cu?c.cuX:c.alX;
     const amp = state.tempRating===90 ? (cu?c.cuAmp90:c.alAmp90) : (cu?c.cuAmp75:c.alAmp75);
     return `<tr><td>${c.size}</td><td>${c.area.toFixed(1)}</td><td>${R.toFixed(3)}</td><td>${X.toFixed(3)}</td><td>${amp} A</td></tr>`;
   }).join('');
   document.getElementById('cableTable').innerHTML = `
-    <tr><th>${L.thSize}</th><th>${L.thArea}</th><th>R (Ω/km)</th><th>X (Ω/km)</th><th>${L.thAmpacity} (${state.tempRating}°C)</th></tr>
+    <tr><th>${L.thSize}</th><th>${L.thArea}</th><th>R (Ω/km, ${state.tempRating}°C)</th><th>X (Ω/km)</th><th>${L.thAmpacity} (${state.tempRating}°C)</th></tr>
     ${rows}`;
 }
 
 /* ===================== CALCULATION ENGINE ===================== */
+/* Table R values are tabulated at 75 °C (CEC Table D3 basis). When the 90 °C insulation rating is
+   selected, resistance is corrected to the 90 °C conductor temperature:
+   R(T) = R(75) × (T + K) / (75 + K), K = 234.5 for copper, 228 for aluminum.
+   Reactance X is essentially temperature-independent and is not corrected. */
+const TEMP_K = {Cu: 234.5, Al: 228};
+function correctedR(R, material, tempC){
+  if(R === null || R === undefined) return R;
+  const K = TEMP_K[material] || 234.5;
+  return R * (tempC + K) / (75 + K);
+}
 function getRX(size, material){
   const c = CONDUCTORS.find(x=>x.size===size);
   if(!c) return null;
-  return material==='Cu' ? {R:c.cuR,X:c.cuX} : {R:c.alR,X:c.alX};
+  const R = material==='Cu' ? c.cuR : c.alR;
+  const X = material==='Cu' ? c.cuX : c.alX;
+  return {R: correctedR(R, material, state.tempRating), X};
 }
 function getAmpacity(size, material, temp){
   const c = CONDUCTORS.find(x=>x.size===size);
@@ -1002,7 +1014,7 @@ const UI = {
     p2eyebrow:"03 · Calculation type", p2h1:"What do you need to find?", continueBtn:"Continue →",
     p3eyebrow:"04 · Inputs", p3h3a:"Load & circuit",
     p3h3b:"Cable reference database", p3pill:"sample data — verify before use",
-    p3dbnote:"Representative R/X and base ampacity values compiled per the CSA C22.1 Table D3 / Table 2 & 4 methodology, plus a few illustrative North American cable references. Not a substitute for a manufacturer datasheet.",
+    p3dbnote:"Representative R/X and base ampacity values compiled per the CSA C22.1 Table D3 / Table 2 & 4 methodology, plus a few illustrative North American cable references. R is tabulated at 75 °C and corrected to the selected temperature rating (Cu ×1.048 at 90 °C, Al ×1.050 at 90 °C). Not a substitute for a manufacturer datasheet.",
     calcBtn:"Calculate →",
     p4eyebrow:"05 · Results & report", p4h1:"Results", p4h3a:"Export report",
     p4exportnote:"The report opens with the CSA reference page from Step 1, followed by your system setup and results.",
@@ -1074,7 +1086,7 @@ const UI = {
     p2eyebrow:"03 · Type de calcul", p2h1:"Que souhaitez-vous déterminer ?", continueBtn:"Continuer →",
     p3eyebrow:"04 · Données", p3h3a:"Charge et circuit",
     p3h3b:"Base de données des câbles de référence", p3pill:"données d'exemple — à vérifier avant utilisation",
-    p3dbnote:"Valeurs représentatives de R/X et d'ampacité de base compilées selon la méthodologie du tableau D3 / tableaux 2 et 4 de la CSA C22.1, ainsi que quelques références de câbles nord-américains à titre indicatif. Ne remplace pas une fiche technique du fabricant.",
+    p3dbnote:"Valeurs représentatives de R/X et d'ampacité de base compilées selon la méthodologie du tableau D3 / tableaux 2 et 4 de la CSA C22.1, ainsi que quelques références de câbles nord-américains à titre indicatif. R est tabulé à 75 °C et corrigé selon la température sélectionnée (Cu ×1,048 à 90 °C, Al ×1,050 à 90 °C). Ne remplace pas une fiche technique du fabricant.",
     calcBtn:"Calculer →",
     p4eyebrow:"05 · Résultats et rapport", p4h1:"Résultats", p4h3a:"Exporter le rapport",
     p4exportnote:"Le rapport s'ouvre avec la page de référence CSA de l'étape 1, suivie de la configuration du système et des résultats.",
