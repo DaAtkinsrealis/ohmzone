@@ -589,7 +589,11 @@ function genericFuseCurve(rating, iMin, iMax, classKey){
     if(denom<=0) return;
     const tMelt = Math.min(300, Math.max(0.005, A/denom));
     melt.push({I, t:tMelt});
-    clear.push({I, t:tMelt*0.72});
+    // Total clearing = melt + arcing, so it must lie ABOVE (slower than) the
+    // minimum-melt curve: melt is typically ~72% of clearing time, i.e.
+    // tClear = tMelt/0.72. (Previously multiplied by 0.72, which inverted the
+    // two curves and put clearing below melting — physically impossible.)
+    clear.push({I, t:tMelt/0.72});
   });
   return {melt, clear};
 }
