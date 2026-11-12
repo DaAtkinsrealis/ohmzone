@@ -23,3 +23,4 @@ Fire alarm (NFPA 72): Battery Sizing, Voltage Drop & NAC Load, Audibility & Line
 - 2026-11-11: Conduit fill — added rigid PVC Schedule 40 / Schedule 80 conduit types (ASTM D1785 IDs; 4 in Sch 40 uses 8091 mm² to match the project calculation book) and corrected PVC outside diameters to IPS values.
 - 2026-11-11: Voltage drop — conductor resistance R is now corrected to the selected temperature rating (75 °C table basis; Cu ×1.048 / Al ×1.050 at 90 °C).
 - 2026-11-11: Cable tray — corrected the 40% fill note: it is a conservative design guideline, not the NEC rule (NEC 392.22 sets fill by Table 392.22(A) areas for ladder/ventilated trays; 40% applies to solid-bottom trays).
+- 2026-11-11: Battery sizing — temperature correction factors replaced with IEEE 485-1997 Table 1 values (old table was 3–7% low at 0–5 °C and unmarked extrapolation below −3.9 °C); factor floored at 1.00 above 25 °C per IEEE 485-2020 §6.3.2 (no credit for warm electrolyte).
