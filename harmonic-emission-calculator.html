@@ -550,7 +550,10 @@ function calcAll(){
     Uh[h] = Ih[h]*Zh; // volts
   });
   const sumUsq = HARMONIC_ORDERS.reduce((s,h)=>s+Uh[h]*Uh[h],0);
-  const phaseV = pccV; // treat as phase quantity consistently for screening ratio
+  // pccV is line-to-line: the fundamental reference for a phase-voltage
+  // distortion ratio is V_LL/sqrt(3). (Previously divided by V_LL itself,
+  // which understated THDu by sqrt(3).)
+  const phaseV = pccV/Math.sqrt(3);
   const thduContribution = Math.sqrt(sumUsq)/phaseV*100;
   const thdu = Math.sqrt(thduContribution*thduContribution + backgroundThdu*backgroundThdu);
   const thduLimit = meta.thduCompat[state.voltClass];
