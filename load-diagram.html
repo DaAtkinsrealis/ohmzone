@@ -1,0 +1,1372 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>Plant Electrical Load Allocation — Single-Line Overview</title>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3887318872951674" crossorigin="anonymous"></script>
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icon-16.png">
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="OhmZone">
+<meta name="theme-color" content="#0a1728">
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --bg:#0d1117;
+    --panel:#151b23;
+    --line:#2a3441;
+    --ink:#d7dee6;
+    --dim:#8b98a8;
+    --amber:#3b9eff;
+    --trf:#5b9bd5;
+    --mcc:#c98a4b;
+    --vfd:#a679d2;
+    --dpp:#4fb0a5;
+    --mtr:#6fbf73;
+    --danger:#e0655a;
+    --danger-bg:#3a1f1f;
+    --mono: 'JetBrains Mono','Consolas',monospace;
+    --sans: 'Segoe UI', system-ui, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans);
+    padding:28px 20px 60px;
+  }
+  h1{
+    font-family:var(--mono); font-size:20px; letter-spacing:0.5px; margin:0 0 4px;
+    color:#fff; font-weight:700;
+  }
+  .sub{color:var(--dim); font-size:13px; margin-bottom:20px;}
+  .summary{
+    display:flex; gap:0; background:var(--panel); border:1px solid var(--line);
+    border-radius:6px; overflow:hidden; margin-bottom:26px; flex-wrap:wrap;
+  }
+  .summary div{padding:14px 22px; border-right:1px solid var(--line); min-width:150px;}
+  .summary div:last-child{border-right:none;}
+  .summary .num{font-family:var(--mono); font-size:22px; font-weight:700; color:#fff;}
+  .summary .lbl{font-size:11px; color:var(--dim); text-transform:uppercase; letter-spacing:0.6px; margin-top:2px;}
+
+  .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(360px,1fr)); gap:22px;}
+  .building{background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:16px;}
+  .building h2{
+    font-family:var(--mono); font-size:14px; color:var(--amber); margin:0 0 12px;
+    text-transform:uppercase; letter-spacing:0.8px; border-bottom:1px dashed var(--line); padding-bottom:8px;
+  }
+  .trf-block{margin-bottom:16px;}
+  .trf-block:last-child{margin-bottom:0;}
+
+  .trf-box{
+    border:2px solid var(--trf); border-radius:6px; padding:10px 12px; margin-bottom:8px;
+    background:rgba(91,155,213,0.07);
+  }
+  .trf-box.low{border-color:var(--danger); background:var(--danger-bg);}
+  .tag-row{display:flex; align-items:baseline; gap:8px; flex-wrap:wrap;}
+  .tag{font-family:var(--mono); font-weight:700; font-size:14px; color:#fff;
+       border-bottom:1px dotted var(--dim); cursor:text; outline:none;}
+  .desc{font-size:11px; color:var(--dim); cursor:text; outline:none; border-bottom:1px dotted transparent;}
+  .desc:hover, .tag:hover, .kva-val:hover{border-bottom-color:var(--amber);}
+  .bar-wrap{margin-top:8px; background:#0a0e13; border-radius:4px; height:8px; overflow:hidden;}
+  .bar{height:100%; background:var(--trf); }
+  .trf-box.low .bar{background:var(--danger);}
+  .pct-row{display:flex; justify-content:space-between; font-family:var(--mono); font-size:11px; margin-top:4px; color:var(--dim);}
+  .pct-row .pct{font-weight:700; color:var(--ink);}
+  .trf-box.low .pct-row .pct{color:var(--danger);}
+  .flag{font-size:10px; color:var(--danger); font-family:var(--mono); margin-top:3px;}
+
+  .loads{display:flex; flex-direction:column; gap:5px; margin-left:14px; padding-left:12px; border-left:2px solid var(--line);}
+  .load{
+    display:flex; justify-content:space-between; align-items:center; gap:8px;
+    background:#0f141b; border:1px solid var(--line); border-radius:4px; padding:5px 9px; font-size:12px;
+  }
+  .load .l-left{display:flex; flex-direction:column;}
+  .load .l-tag{font-family:var(--mono); font-weight:700; font-size:12px;}
+  .load.mcc .l-tag{color:var(--mcc);}
+  .load.vfd .l-tag{color:var(--vfd);}
+  .load.dpp .l-tag{color:var(--dpp);}
+  .load.mtr .l-tag{color:var(--mtr);}
+  .load .l-desc{color:var(--dim); font-size:10px; cursor:text; outline:none;}
+  .load .l-right{font-family:var(--mono); text-align:right; white-space:nowrap;}
+  .kva-val{cursor:text; outline:none; border-bottom:1px dotted transparent;}
+  .count{color:var(--dim); font-size:10px; margin-left:4px;}
+  .warn-icon{color:var(--danger); font-weight:700; margin-left:4px; cursor:help;}
+
+  .note{font-size:10px; color:var(--dim); margin-top:10px; line-height:1.5;}
+  .legend{display:flex; gap:14px; flex-wrap:wrap; font-size:11px; color:var(--dim); margin:16px 0 24px; font-family:var(--mono);}
+  .legend span{display:inline-flex; align-items:center; gap:5px;}
+  .dot{width:9px;height:9px;border-radius:2px;display:inline-block;}
+
+  .reco{background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:18px 20px; margin-top:26px;}
+
+  .export-btn{
+    font-family:var(--mono); font-size:12px; color:var(--ink); background:var(--panel);
+    border:1px solid var(--line); border-radius:6px; padding:9px 14px; cursor:pointer;
+  }
+  .export-btn:hover{border-color:var(--amber); color:var(--amber);}
+  .low-util-box{
+    background:var(--danger-bg); border:1px solid var(--danger); border-radius:8px;
+    padding:14px 18px; margin-bottom:20px; font-size:13px;
+  }
+  .low-util-box h3{margin:0 0 8px; font-family:var(--mono); font-size:13px; color:var(--danger); text-transform:uppercase; letter-spacing:0.5px;}
+  .low-util-box ul{margin:0; padding-left:18px;}
+  .low-util-box li{margin-bottom:4px;}
+  @media print{
+    .no-print{display:none !important;}
+    body{background:#fff; color:#111;}
+  }
+  .reco h2{font-family:var(--mono); color:var(--amber); font-size:14px; margin:0 0 10px; text-transform:uppercase; letter-spacing:0.8px;}
+  .reco ol{margin:0; padding-left:20px; font-size:13px; line-height:1.7; color:var(--ink);}
+  .reco li{margin-bottom:6px; display:flex; align-items:flex-start; gap:8px;}
+  .reco li .reco-text{flex:1; outline:none; border-bottom:1px dotted transparent;}
+  .reco li .reco-text:hover{border-bottom-color:var(--amber);}
+  .reco li .reco-remove{
+    background:transparent; border:none; color:var(--dim); cursor:pointer; font-size:13px;
+    padding:0 2px; flex:none; line-height:1.7;
+  }
+  .reco li .reco-remove:hover{color:var(--danger);}
+  .reco .tag-i{font-family:var(--mono); color:var(--amber);}
+
+  .editable-hint{font-size:10px; color:var(--dim); margin-bottom:18px; font-style:italic;}
+
+  .topbar{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;}
+  .home-link{font-family:var(--mono); font-size:11px; color:var(--dim); text-decoration:none; border-bottom:1px dotted var(--dim);}
+  .home-link:hover{color:var(--amber); border-bottom-color:var(--amber);}
+  .lang-switch{display:flex; align-items:center; background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:3px; gap:2px; font-family:var(--mono); font-size:11px;}
+  .lang-switch button{border:none; background:transparent; color:var(--dim); padding:5px 12px; border-radius:13px; cursor:pointer; font-family:inherit; font-size:inherit;}
+  .lang-switch button.active{background:var(--amber); color:#1a1000; font-weight:700;}
+
+  /* ===== CRUD controls ===== */
+  .project-panel{
+    background:var(--panel); border:1px solid var(--line); border-radius:8px;
+    padding:12px 14px; margin-bottom:16px;
+  }
+  .project-row{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+  .project-status{
+    font-family:var(--mono); font-size:11px; color:var(--amber); background:rgba(59, 158, 255,0.08);
+    border:1px solid rgba(59, 158, 255,0.3); border-radius:5px; padding:6px 10px; margin-right:4px;
+  }
+  .project-list-item{
+    display:flex; align-items:center; gap:8px; padding:8px 10px; background:#0a0e13;
+    border:1px solid var(--line); border-radius:5px; margin-bottom:6px; font-size:12px;
+  }
+  .project-list-item .pname{flex:1; color:var(--txt); font-weight:600;}
+  .project-list-item .pmeta{font-family:var(--mono); font-size:10px; color:var(--dim);}
+  .project-list-item button{
+    font-family:var(--mono); font-size:10.5px; color:var(--dim); background:transparent;
+    border:1px solid var(--line); border-radius:4px; padding:3px 8px; cursor:pointer;
+  }
+  .project-list-item button:hover{color:var(--amber); border-color:var(--amber);}
+  .project-list-item button.danger:hover{color:var(--danger); border-color:var(--danger);}
+  .add-building-btn{
+    font-family:var(--mono); font-size:12px; color:var(--amber); background:transparent;
+    border:1px dashed var(--amber); border-radius:6px; padding:9px 14px; cursor:pointer; margin-bottom:18px;
+  }
+  .add-building-btn:hover{background:rgba(59, 158, 255,0.08);}
+  .building-head{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:12px; border-bottom:1px dashed var(--line); padding-bottom:8px;}
+  .building-head h2{margin:0; border:none; padding:0; flex:1; cursor:text; outline:none;}
+  .icon-btn{
+    font-family:var(--mono); font-size:11px; color:var(--dim); background:transparent; border:1px solid var(--line);
+    border-radius:4px; padding:3px 7px; cursor:pointer; white-space:nowrap; flex:none;
+  }
+  .icon-btn:hover{color:var(--amber); border-color:var(--amber);}
+  .icon-btn.danger:hover{color:var(--danger); border-color:var(--danger);}
+  .add-trf-btn{margin-top:4px;}
+  .trf-actions{display:flex; gap:5px; flex:none;}
+  .add-load-row{margin:6px 0 0 14px; padding-left:12px;}
+  .load .l-tag{cursor:pointer; text-decoration:underline; text-decoration-style:dotted; text-underline-offset:2px;}
+  .load .l-tag:hover{filter:brightness(1.3);}
+  .type-sel{
+    font-family:var(--mono); font-size:9.5px; background:#0a0e13; color:var(--dim); border:1px solid var(--line);
+    border-radius:3px; padding:1px 3px; margin-right:5px;
+  }
+  .count{cursor:text; outline:none; border-bottom:1px dotted transparent;}
+  .count:hover{border-bottom-color:var(--amber);}
+  .l-remove{background:transparent; border:none; color:var(--dim); cursor:pointer; font-size:13px; padding:0 0 0 6px; flex:none;}
+  .l-remove:hover{color:var(--danger);}
+
+  /* ===== modal ===== */
+  .modal-backdrop{
+    position:fixed; inset:0; background:rgba(5,8,12,0.78); z-index:9998;
+    display:none; align-items:flex-start; justify-content:center; padding:32px 16px; overflow-y:auto;
+  }
+  .modal-backdrop.open{display:flex;}
+  .modal-box{
+    background:var(--panel); border:1px solid var(--line); border-radius:10px; max-width:720px; width:100%;
+    padding:22px 24px 26px; position:relative;
+  }
+  .modal-close{
+    position:absolute; top:14px; right:16px; background:transparent; border:none; color:var(--dim);
+    font-size:20px; cursor:pointer; line-height:1;
+  }
+  .modal-close:hover{color:var(--danger);}
+  .modal-head{display:flex; align-items:baseline; gap:10px; margin-bottom:4px; flex-wrap:wrap;}
+  .modal-tag-edit{
+    font-family:var(--mono); font-weight:700; font-size:17px; color:#fff; background:#0a0e13;
+    border:1px solid var(--line); border-radius:4px; padding:4px 8px;
+  }
+  .modal-subtitle{font-size:11px; color:var(--dim); margin-bottom:16px;}
+  .modal-section-title{font-family:var(--mono); font-size:11px; color:var(--amber); text-transform:uppercase; letter-spacing:0.6px; margin:18px 0 8px;}
+  .modal-hint{font-size:10.5px; color:var(--dim); line-height:1.6; margin-bottom:10px; font-style:italic;}
+  .mtable{width:100%; border-collapse:collapse; font-size:12px;}
+  .mtable th{font-family:var(--mono); font-size:9.5px; color:var(--dim); text-transform:uppercase; text-align:left; padding:4px 6px; border-bottom:1px solid var(--line);}
+  .mtable td{padding:4px 6px; border-bottom:1px solid var(--line);}
+  .mtable input{width:100%; background:#0a0e13; border:1px solid var(--line); color:var(--ink); border-radius:3px; padding:3px 5px; font-family:var(--mono); font-size:11.5px;}
+  .mtable input:focus{border-color:var(--amber); outline:none;}
+  .mfield-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px 16px;}
+  .mfield{display:flex; flex-direction:column; gap:4px; font-size:10.5px; color:var(--dim);}
+  .mfield b{color:var(--ink); font-weight:500; font-size:11px;}
+  .mfield input, .mfield select{background:#0a0e13; border:1px solid var(--line); color:var(--ink); border-radius:4px; padding:6px 8px; font-family:var(--mono); font-size:12px;}
+  .mfield input:focus, .mfield select:focus{border-color:var(--amber); outline:none;}
+  .modal-add-row-btn{font-family:var(--mono); font-size:11px; color:var(--amber); background:transparent; border:1px dashed var(--amber); border-radius:5px; padding:5px 10px; cursor:pointer; margin-top:8px;}
+  .modal-add-row-btn:hover{background:rgba(59, 158, 255,0.08);}
+  .row-remove{background:transparent; border:none; color:var(--dim); cursor:pointer; font-size:12px;}
+  .row-remove:hover{color:var(--danger);}
+  .total-line{font-family:var(--mono); font-size:11.5px; color:var(--dim); margin-top:8px; display:flex; justify-content:space-between;}
+
+  @media (max-width:680px){
+    body{padding:16px 12px 44px;}
+    h1{font-size:14px;letter-spacing:0.2px;}
+    .sub{font-size:11.5px;margin-bottom:14px;}
+    .summary div{padding:10px 12px;min-width:44%;flex:1 1 44%;}
+    .summary .num{font-size:17px;}
+    .summary .lbl{font-size:9.5px;}
+    .grid{grid-template-columns:1fr;gap:14px;}
+    .building{padding:12px;}
+    .loads{margin-left:8px;padding-left:8px;}
+    .load{font-size:12px;}
+    .legend{font-size:9.5px;gap:8px;margin:12px 0 18px;}
+    .project-row{gap:6px;}
+    .export-row{gap:6px;}
+    .export-btn{font-size:10.5px;padding:6px 9px;}
+    .modal-box{padding:16px 14px 18px;max-height:88vh;overflow-y:auto;}
+    .mfield-grid{grid-template-columns:1fr;}
+    .panel-visual svg{min-width:0;}
+  }
+  .total-line b{color:var(--ink);}
+  .sync-btn{font-family:var(--mono); font-size:10.5px; color:var(--amber); background:transparent; border:1px solid var(--amber); border-radius:4px; padding:3px 8px; cursor:pointer;}
+  .panel-visual{background:#0a0e13; border:1px solid var(--line); border-radius:8px; padding:14px; margin-bottom:12px;}
+  .panel-visual svg{width:100%; height:auto; display:block;}
+  @media print{ .modal-backdrop{display:none !important;} }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="home-link no-print" href="index.html">← OhmZone</a>
+  <div class="lang-switch no-print" role="group" aria-label="Language">
+    <button type="button" id="btn-en" class="active" onclick="setLang('en')">EN</button>
+    <button type="button" id="btn-fr" onclick="setLang('fr')">FR</button>
+  </div>
+</div>
+
+<h1 data-i18n="h1">PLANT ELECTRICAL LOAD ALLOCATION</h1>
+<div class="sub" data-i18n="sub">13.8kV / 0.6kV distribution — transformer loading study (Emergency/ATS branch excluded per scope)</div>
+
+<div class="summary">
+  <div><div class="num" id="grandKva">–</div><div class="lbl" data-i18n="lbl-demand">Total Demand (kVA)</div></div>
+  <div><div class="num" id="grandCap">–</div><div class="lbl" data-i18n="lbl-capacity">Installed Capacity (kVA)</div></div>
+  <div><div class="num" id="grandPct">–</div><div class="lbl" data-i18n="lbl-util">Overall Utilization</div></div>
+  <div><div class="num" style="color:var(--danger)" id="lowCount">–</div><div class="lbl" data-i18n="lbl-flagged">Transformers Flagged Low (&lt;40%)</div></div>
+</div>
+
+<div class="legend">
+  <span><span class="dot" style="background:var(--trf)"></span><span data-i18n="leg-trf">Transformer</span></span>
+  <span><span class="dot" style="background:var(--mcc)"></span><span data-i18n="leg-mcc">MCC (Eaton)</span></span>
+  <span><span class="dot" style="background:var(--vfd)"></span><span data-i18n="leg-vfd">VFD MCC</span></span>
+  <span><span class="dot" style="background:var(--dpp)"></span><span data-i18n="leg-dpp">DPP (Schneider)</span></span>
+  <span><span class="dot" style="background:var(--mtr)"></span><span data-i18n="leg-mtr">Added motor (study)</span></span>
+  <span><span class="dot" style="background:var(--danger)"></span><span data-i18n="leg-low">Low utilization — flagged for manual review</span></span>
+</div>
+<div class="editable-hint" data-i18n="hint">Tags, descriptions and kVA values are editable (click text). Percentages and highlighting recompute live.</div>
+
+<div class="project-panel no-print" id="projectPanel">
+  <div class="project-row">
+    <span class="project-status" id="projectStatusTxt">—</span>
+    <button class="export-btn" id="btnSaveProject" data-i18n="btn-save-project">💾 Save Project</button>
+    <button class="export-btn" id="btnOpenProject" data-i18n="btn-open-project">📂 Open Project</button>
+    <button class="export-btn" id="btnExportJson" data-i18n="btn-export-json">⬇ Export (.json)</button>
+    <label class="export-btn" id="btnImportJson" style="cursor:pointer;" data-i18n="btn-import-json">⬆ Import (.json)
+      <input type="file" id="importJsonInput" accept=".json" style="display:none;">
+    </label>
+    <button class="export-btn" id="btnNewProject" data-i18n="btn-new-project">➕ New Project</button>
+  </div>
+  <div class="hint" id="projectHint" data-i18n="project-hint" style="margin-top:6px;"></div>
+  <div id="projectListBox" style="display:none;margin-top:10px;"></div>
+</div>
+
+<div class="export-row no-print" style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
+  <button class="export-btn" onclick="window.print()" id="btnPrint" data-i18n="btn-print">🖨 Print / Save as PDF</button>
+  <button class="export-btn" onclick="exportWord()" id="btnWord" data-i18n="btn-word">📄 Export load table (Word)</button>
+  <button class="export-btn" onclick="exportExcel()" id="btnExcel" data-i18n="btn-excel">📊 Export load table (Excel)</button>
+</div>
+
+<div class="low-util-box" id="lowUtilBox" style="display:none;"></div>
+
+<button class="add-building-btn no-print" id="addBuildingBtn">+ <span id="addBuildingTxt">Add Building</span></button>
+
+<div class="grid" id="gridRoot"></div>
+
+<div class="modal-backdrop no-print" id="detailModal">
+  <div class="modal-box" id="modalBox"></div>
+</div>
+
+<div class="reco">
+  <h2 data-i18n="reco-title">Recommendations</h2>
+  <ol id="recoList"></ol>
+  <button class="add-building-btn no-print" id="addRecoBtn" style="margin-top:10px;">+ <span id="addRecoTxt" data-i18n="add-reco">Add Recommendation</span></button>
+</div>
+
+<script>
+const DATA = [
+  {
+    name:"Flotation Building",
+    trfs:[
+      { tag:"62TRF56501", cap:2500, desc:"13.8kV-0.6kV, 2.5MVA",
+        loads:[
+          {tag:"62MCC56503", type:"vfd", desc:"VFD MCC", kva:382, count:22},
+          {tag:"62MLL56701", type:"mtr", desc:"600HP, 600V — added per study", kva:540, count:1},
+        ]},
+      { tag:"62TRF56502", cap:2500, desc:"13.8kV-0.6kV, 2.5MVA",
+        loads:[
+          {tag:"62MCC58501", type:"mcc", desc:"Eaton, 1200Amps", kva:313, count:67},
+          {tag:"62MCC56501", type:"mcc", desc:"Eaton, 1200Amps", kva:78, count:11},
+          {tag:"62DPP56501", type:"dpp", desc:"Schneider, I-line panel 400Amps", kva:55, count:12},
+          {tag:"62MLL56702", type:"mtr", desc:"600HP, 600V — added per study", kva:540, count:1},
+        ]},
+    ],
+    note:"Now two 600HP motors (62MLL56701/56702, one per transformer). Rebalanced to 922kVA / 986kVA — both still under 40% (≈37% / 39%) since building demand is only ≈1.9MVA against 5.0MVA installed. Both transformers remain flagged; consider whether the 2nd 2.5MVA unit is needed as N+1 spare or could be reassigned."
+  },
+  {
+    name:"Grinding Building",
+    trfs:[
+      { tag:"62TRF56202", cap:2500, desc:"13.8kV-0.6kV, 2.5MVA",
+        loads:[
+          {tag:"62MCC56201", type:"mcc", desc:"Eaton, 1200Amps", kva:380, count:19},
+          {tag:"62MCC56202", type:"mcc", desc:"Eaton, 1200Amps", kva:284, count:18},
+          {tag:"62MCC56203", type:"vfd", desc:"VFD MCC", kva:126, count:6, warn:"Recommended for consolidation with 62MCC56204 — see Recommendations."},
+          {tag:"62MCC56204", type:"vfd", desc:"VFD MCC", kva:42, count:5, warn:"Recommended for consolidation with 62MCC56203 — see Recommendations."},
+          {tag:"62MCC55701", type:"mcc", desc:"Eaton, 1200Amps", kva:291, count:9},
+          {tag:"MTR-GRD-01", type:"mtr", desc:"400HP, 600V — Grinding cyclone feed pump #1", kva:360, count:1},
+          {tag:"MTR-GRD-02", type:"mtr", desc:"400HP, 600V — Grinding cyclone feed pump #2", kva:360, count:1},
+        ]},
+    ],
+    note:"Only one transformer serves this building, so no rebalancing applies. Loading reaches ≈74% after adding both 400HP motors — healthy, but leaves limited headroom for further additions."
+  },
+  {
+    name:"SAG Mill Building",
+    trfs:[
+      { tag:"62TRF5620X", cap:12000, desc:"13.8kV primary — sized for MV mill motor (ONAN/ONAF; final unit no. TBD)",
+        loads:[
+          {tag:"MTR-SAG-01", type:"mtr", desc:"SAG Mill motor, 13.8kV direct-fed", kva:9090, count:1, warn:"kVA estimated at ~0.9 kVA/HP (10,100HP) — confirm against vendor motor/starting data before finalizing transformer size."},
+        ]},
+    ],
+    note:"New building. Motor operates at 13.8kV (no step-down), so this transformer is sized for the MV motor's supply/starting duty rather than a downstream MCC lineup. 9,090kVA estimated demand against a recommended 12MVA ONAN/ONAF standard rating (~76% loaded, allowing headroom for starting inrush) — verify with motor/VFD vendor data."
+  },
+  {
+    name:"Ball Mill Building",
+    trfs:[
+      { tag:"62TRF5620X", cap:3750, desc:"13.8kV primary — sized for MV mill motor (ONAN/ONAF; final unit no. TBD)",
+        loads:[
+          {tag:"MTR-BALL-01", type:"mtr", desc:"Ball Mill motor, 13.8kV direct-fed", kva:2700, count:1, warn:"kVA estimated at ~0.9 kVA/HP (3,000HP) — confirm against vendor motor/starting data before finalizing transformer size."},
+        ]},
+    ],
+    note:"New building. 2,700kVA estimated demand against a recommended 3.75MVA standard rating (~72% loaded). Same motor operates at 13.8kV directly — confirm starting method (autotransformer/soft-start/VFD) since it can drive up the required transformer size."
+  },
+  {
+    name:"Gold Recovery Building",
+    trfs:[
+      { tag:"62TRF58001", cap:2500, desc:"13.8kV-0.6kV, 2.5MVA",
+        loads:[
+          {tag:"62MCC58801", type:"mcc", desc:"Eaton, 1200Amps", kva:827, count:20, warn:"Avg ≈41kVA/way for 20 ways — high; verify feeder list/large single loads."},
+          {tag:"62MCC58006", type:"mcc", desc:"Eaton, 1200Amps", kva:316, count:30},
+        ]},
+      { tag:"62TRF58002", cap:2500, desc:"13.8kV-0.6kV, 2.5MVA",
+        loads:[
+          {tag:"62MCC58001", type:"mcc", desc:"Eaton, 1200Amps", kva:69, count:13},
+          {tag:"62MCC58002", type:"mcc", desc:"Eaton, 1200Amps", kva:107, count:16},
+          {tag:"62MCC58004", type:"vfd", desc:"VFD MCC", kva:233, count:21},
+          {tag:"62MCC58007", type:"vfd", desc:"VFD MCC", kva:312, count:5, warn:"5×200HP ≈62kVA/motor — low vs nameplate (~150-175kVA/motor); confirm diversity/duty factor used."},
+          {tag:"62MCC58008", type:"vfd", desc:"VFD MCC", kva:468, count:5, warn:"5×200HP ≈94kVA/motor — still below nameplate expectation; confirm basis with vendor data."},
+        ]},
+    ],
+    note:"Rebalanced to 1143kVA / 1189kVA (≈46-48%) — a good split. Flag the two 200HP VFD MCCs (58007/58008) for a nameplate-vs-demand check before finalizing."
+  },
+  {
+    name:"Crushing Building",
+    trfs:[
+      { tag:"62TRF55401", cap:1500, desc:"13.8kV-0.6kV, 1.5MVA",
+        loads:[
+          {tag:"62MCC55401", type:"mcc", desc:"Eaton, 2000Amps", kva:720, count:21},
+        ]},
+    ],
+    note:"Single transformer, single MCC. ≈48% loaded — reasonable, no rebalancing needed."
+  },
+];
+
+const LOW_THRESHOLD = 40; // % below which a transformer is flagged
+
+function buildLoadTableRows(){
+  const L = STR();
+  const rows = [[L.xlsBuilding, L.xlsTrfTag, L.xlsTrfDesc, L.xlsCapKva, L.xlsLoadTag, L.xlsLoadDesc, L.xlsLoadKva, L.xlsLoadCount]];
+  document.querySelectorAll('.building').forEach(bEl=>{
+    const bname = bEl.querySelector('h2').textContent;
+    bEl.querySelectorAll('.trf-block').forEach(block=>{
+      const trfTag = block.querySelector('.tag').textContent;
+      const trfDesc = block.querySelector('.desc').textContent;
+      const box = block.querySelector('.trf-box');
+      const bi = box.dataset.bi, ti = box.dataset.ti;
+      const cap = DATA[bi].trfs[ti].cap;
+      const loadEls = block.querySelectorAll('.load');
+      if(loadEls.length===0){
+        rows.push([bname, trfTag, trfDesc, cap, "", "", "", ""]);
+      } else {
+        loadEls.forEach(l=>{
+          const ltag = l.querySelector('.l-tag').textContent;
+          const ldesc = l.querySelector('.l-desc').textContent;
+          const lkva = l.querySelector('.kva-val').textContent;
+          const lcount = l.querySelector('.count').textContent.replace(/[()]/g,'');
+          rows.push([bname, trfTag, trfDesc, cap, ltag, ldesc, lkva, lcount]);
+        });
+      }
+    });
+  });
+  return rows;
+}
+
+function exportExcel(){
+  const rows = buildLoadTableRows();
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Load Allocation");
+  XLSX.writeFile(wb, "plant-load-allocation.xlsx");
+}
+
+function downloadBlob(content, mime, filename){
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 2000);
+}
+
+function exportWord(){
+  const rows = buildLoadTableRows();
+  const header = rows[0];
+  const bodyRows = rows.slice(1);
+  const theadHtml = `<tr>${header.map(h=>`<th style="padding:6px 10px;background:#1a2f4a;color:#fff;font-weight:600;border:1px solid #ccc;text-align:left;">${h}</th>`).join("")}</tr>`;
+  const tbodyHtml = bodyRows.map(r=>`<tr>${r.map(c=>`<td style="padding:5px 10px;border:1px solid #ccc;">${c}</td>`).join("")}</tr>`).join("");
+  const doc = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+  <head><meta charset="utf-8"><title>Plant Load Allocation</title>
+  <!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View></w:WordDocument></xml><![endif]-->
+  </head><body style="font-family:Calibri,Arial,sans-serif;color:#1a1a1a;background:#fff;">
+  <h2 style="font-family:Calibri,Arial,sans-serif;">PLANT ELECTRICAL LOAD ALLOCATION</h2>
+  <table style="border-collapse:collapse;width:100%;font-size:10pt;"><thead>${theadHtml}</thead><tbody>${tbodyHtml}</tbody></table>
+  <p style="font-size:9pt;color:#777;margin-top:16px;">© 2026 OhmZone. All rights reserved.</p>
+  </body></html>`;
+  downloadBlob(doc, "application/msword", "plant-load-allocation.doc");
+}
+
+function typeLabel(t){
+  return {mcc:"mcc", vfd:"vfd", dpp:"dpp", mtr:"mtr"}[t] || "mcc";
+}
+const TYPE_OPTIONS = ["mcc","vfd","dpp","mtr"];
+
+function render(){
+  const root = document.getElementById('gridRoot');
+  root.innerHTML = "";
+  DATA.forEach((b, bi) => {
+    const bEl = document.createElement('div');
+    bEl.className = 'building';
+    bEl.innerHTML = `
+      <div class="building-head">
+        <h2 contenteditable="true" data-bi="${bi}" class="b-name">${b.name}</h2>
+        <div class="trf-actions no-print">
+          <button class="icon-btn" data-act="add-trf" data-bi="${bi}">+ ${STR().addTrf}</button>
+          <button class="icon-btn danger" data-act="remove-building" data-bi="${bi}">✕ ${STR().removeBuilding}</button>
+        </div>
+      </div>`;
+    b.trfs.forEach((t, ti) => {
+      const block = document.createElement('div');
+      block.className = 'trf-block';
+      const total = t.loads.reduce((s,l)=>s+l.kva,0);
+      block.innerHTML = `
+        <div class="trf-box" data-bi="${bi}" data-ti="${ti}">
+          <div class="tag-row">
+            <span class="tag" contenteditable="true">${t.tag}</span>
+            <span class="desc" contenteditable="true">${t.desc}</span>
+            <input type="number" class="cap-val no-print" value="${t.cap}" style="width:70px;font-family:var(--mono);font-size:11px;background:#0a0e13;color:var(--ink);border:1px solid var(--line);border-radius:3px;padding:2px 4px;" title="${STR().capLbl}"> kVA
+            <button class="icon-btn danger no-print" data-act="remove-trf" data-bi="${bi}" data-ti="${ti}" style="margin-left:auto;">✕ ${STR().removeTrf}</button>
+          </div>
+          <div class="bar-wrap"><div class="bar" style="width:0%"></div></div>
+          <div class="pct-row">
+            <span><span class="assigned-lbl">${STR().assigned}</span> <span class="assigned-kva">${total}</span> kVA / <span class="cap-echo">${t.cap}</span> kVA</span>
+            <span class="pct">0%</span>
+          </div>
+          <div class="flag" style="display:none;">⚠ <span class="flag-txt">${STR().lowFlag}</span></div>
+        </div>
+        <div class="loads">
+          ${t.loads.map((l,li)=>`
+            <div class="load ${typeLabel(l.type)}" data-bi="${bi}" data-ti="${ti}" data-li="${li}">
+              <div class="l-left">
+                <select class="type-sel no-print" data-act="type-sel">${TYPE_OPTIONS.map(o=>`<option value="${o}" ${o===l.type?'selected':''}>${o.toUpperCase()}</option>`).join('')}</select>
+                <span class="l-tag" data-act="open-detail" title="${STR().clickForDetail}">${l.tag}</span>
+                <span class="l-desc" contenteditable="true">${l.desc}</span>
+              </div>
+              <div class="l-right">
+                <span class="kva-val" contenteditable="true">${l.kva}</span> kVA
+                <span class="count" contenteditable="true">(${l.count})</span>
+                ${l.warn ? `<span class="warn-icon" title="${l.warn}">⚠</span>` : ""}
+                <button class="l-remove no-print" data-act="remove-load" title="${STR().removeLoad}">✕</button>
+              </div>
+            </div>
+          `).join("")}
+          <div class="add-load-row no-print"><button class="icon-btn" data-act="add-load" data-bi="${bi}" data-ti="${ti}">+ ${STR().addLoad}</button></div>
+        </div>
+      `;
+      bEl.appendChild(block);
+    });
+    if(b.note){
+      const n = document.createElement('div');
+      n.className = 'note';
+      n.textContent = STR().noteLbl + " " + b.note;
+      bEl.appendChild(n);
+    }
+    root.appendChild(bEl);
+  });
+
+  attachListeners();
+  recompute();
+  autosave();
+  updateProjectStatus();
+}
+
+function attachListeners(){
+  document.querySelectorAll('.kva-val').forEach(el=>{
+    el.addEventListener('input', recompute);
+    el.addEventListener('blur', ()=>{
+      const v = parseFloat(el.textContent.replace(/[^0-9.]/g,''));
+      el.textContent = isNaN(v) ? 0 : v;
+      const {bi,ti,li} = el.closest('.load').dataset;
+      DATA[bi].trfs[ti].loads[li].kva = isNaN(v) ? 0 : v;
+      recompute();
+    });
+  });
+  document.querySelectorAll('.count').forEach(el=>{
+    el.addEventListener('blur', ()=>{
+      const v = parseInt(el.textContent.replace(/[^0-9]/g,''));
+      el.textContent = '('+(isNaN(v)?0:v)+')';
+      const {bi,ti,li} = el.closest('.load').dataset;
+      DATA[bi].trfs[ti].loads[li].count = isNaN(v) ? 0 : v;
+    });
+  });
+  document.querySelectorAll('.l-desc').forEach(el=>{
+    el.addEventListener('blur', ()=>{
+      const {bi,ti,li} = el.closest('.load').dataset;
+      DATA[bi].trfs[ti].loads[li].desc = el.textContent;
+    });
+  });
+  document.querySelectorAll('.trf-box .tag').forEach(el=>{
+    el.addEventListener('blur', ()=>{
+      const {bi,ti} = el.closest('.trf-box').dataset;
+      DATA[bi].trfs[ti].tag = el.textContent;
+    });
+  });
+  document.querySelectorAll('.trf-box .desc').forEach(el=>{
+    el.addEventListener('blur', ()=>{
+      const {bi,ti} = el.closest('.trf-box').dataset;
+      DATA[bi].trfs[ti].desc = el.textContent;
+    });
+  });
+  document.querySelectorAll('.cap-val').forEach(el=>{
+    el.addEventListener('input', ()=>{
+      const {bi,ti} = el.closest('.trf-box').dataset;
+      const v = parseFloat(el.value)||0;
+      DATA[bi].trfs[ti].cap = v;
+      el.closest('.trf-box').querySelector('.cap-echo').textContent = v;
+      recompute();
+    });
+  });
+  document.querySelectorAll('.b-name').forEach(el=>{
+    el.addEventListener('blur', ()=>{
+      DATA[el.dataset.bi].name = el.textContent;
+    });
+  });
+  document.querySelectorAll('.type-sel').forEach(el=>{
+    el.addEventListener('change', ()=>{
+      const {bi,ti,li} = el.closest('.load').dataset;
+      DATA[bi].trfs[ti].loads[li].type = el.value;
+      render();
+    });
+  });
+  document.querySelectorAll('.l-tag[data-act="open-detail"]').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const {bi,ti,li} = el.closest('.load').dataset;
+      openDetailModal(bi,ti,li);
+    });
+  });
+  document.querySelectorAll('[data-act="remove-load"]').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const {bi,ti,li} = el.closest('.load').dataset;
+      DATA[bi].trfs[ti].loads.splice(li,1);
+      render();
+    });
+  });
+  document.querySelectorAll('[data-act="add-load"]').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const {bi,ti} = el.dataset;
+      DATA[bi].trfs[ti].loads.push({tag:STR().newLoadTag, type:"mcc", desc:STR().newLoadDesc, kva:0, count:1});
+      render();
+    });
+  });
+  document.querySelectorAll('[data-act="add-trf"]').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const bi = el.dataset.bi;
+      DATA[bi].trfs.push({tag:STR().newTrfTag, cap:2500, desc:"13.8kV-0.6kV, 2.5MVA", loads:[]});
+      render();
+    });
+  });
+  document.querySelectorAll('[data-act="remove-trf"]').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const {bi,ti} = el.dataset;
+      if(!confirm(STR().confirmRemoveTrf)) return;
+      DATA[bi].trfs.splice(ti,1);
+      render();
+    });
+  });
+  document.querySelectorAll('[data-act="remove-building"]').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const bi = el.dataset.bi;
+      if(!confirm(STR().confirmRemoveBuilding)) return;
+      DATA.splice(bi,1);
+      render();
+    });
+  });
+}
+
+document.getElementById('addBuildingBtn').addEventListener('click', ()=>{
+  DATA.push({name:STR().newBuildingName, trfs:[{tag:STR().newTrfTag, cap:2500, desc:"13.8kV-0.6kV, 2.5MVA", loads:[]}]});
+  render();
+});
+
+function recompute(){
+  let grandKva = 0, grandCap = 0, lowCount = 0;
+  const lowItems = [];
+  document.querySelectorAll('.trf-box').forEach(box=>{
+    const bi = box.dataset.bi, ti = box.dataset.ti;
+    const cap = DATA[bi].trfs[ti].cap;
+    const tag = DATA[bi].trfs[ti].tag;
+    const bname = DATA[bi].name;
+    let sum = 0;
+    document.querySelectorAll(`.load[data-bi="${bi}"][data-ti="${ti}"] .kva-val`).forEach(v=>{
+      sum += parseFloat(v.textContent) || 0;
+    });
+    const pct = cap ? (sum/cap*100) : 0;
+    box.querySelector('.assigned-kva').textContent = Math.round(sum);
+    box.querySelector('.bar').style.width = Math.min(pct,100).toFixed(1)+'%';
+    box.querySelector('.pct').textContent = pct.toFixed(1)+'%';
+    const isLow = pct < LOW_THRESHOLD;
+    box.classList.toggle('low', isLow);
+    box.querySelector('.flag').style.display = isLow ? 'block' : 'none';
+    if(isLow){ lowCount++; lowItems.push({bname, tag, pct, sum, cap}); }
+    grandKva += sum;
+    grandCap += cap;
+  });
+  document.getElementById('grandKva').textContent = Math.round(grandKva).toLocaleString();
+  document.getElementById('grandCap').textContent = grandCap.toLocaleString();
+  document.getElementById('grandPct').textContent = (grandCap? (grandKva/grandCap*100):0).toFixed(1)+'%';
+  document.getElementById('lowCount').textContent = lowCount;
+
+  const box = document.getElementById('lowUtilBox');
+  if(lowItems.length){
+    box.style.display = 'block';
+    box.innerHTML = `<h3>${STR().lowListTitle}</h3><ul>${lowItems.map(it=>
+      `<li>${it.bname} — <b>${it.tag}</b>: ${it.pct.toFixed(1)}% (${Math.round(it.sum)} / ${it.cap} kVA)</li>`
+    ).join('')}</ul>`;
+  } else {
+    box.style.display = 'none';
+  }
+}
+
+let RECO = [
+  `<span class="tag-i">Flotation:</span> with both 600HP motors now in (62MLL56701/56702), the building still sits at ≈38% of installed 5.0MVA. Recommend confirming whether the 2nd 2.5MVA transformer is intentionally kept as N+1 spare capacity, or could be reassigned elsewhere if redundancy isn't required.`,
+  `<span class="tag-i">62MCC56203 and 62MCC56204 建议合并 (recommend consolidating)</span> — combined they total only ~168kVA across 11 ways, well within a single 1200A Eaton VFD MCC; merging frees a spare MCC section/cubicle and simplifies the Grinding lineup.`,
+  `<span class="tag-i">Gold Recovery:</span> the 5×200HP entries under 62MCC58007/58008 show demand well below typical nameplate kVA for 200HP motors at 600V — confirm whether a diversity/duty-cycle factor was applied, since this materially changes the balancing result if corrected.`,
+  `<span class="tag-i">62MCC58801 (20 ways, 827kVA):</span> average load per way (~41kVA) is notably higher than comparable MCCs in the same building — worth a quick feeder-list check to confirm no large motor was mis-grouped here.`,
+  `<span class="tag-i">Grinding:</span> single-transformer building now at ~74% after adding both 400HP cyclone feed pump motors — fine for now, but leaves little room for future load growth without a 2nd transformer or upsize.`,
+  `<span class="tag-i">SAG Mill (new):</span> recommend a 12MVA ONAN/ONAF unit for the 10,100HP motor (~76% loaded on the estimated 9,090kVA demand) — standard increment with headroom for starting duty; confirm against actual motor/starting data.`,
+  `<span class="tag-i">Ball Mill (new):</span> recommend a 3.75MVA unit for the 3,000HP motor (~72% loaded on the estimated 2,700kVA demand) — next standard size above the bare estimate; confirm starting method before finalizing.`,
+  `<span class="tag-i">Crushing:</span> well-matched (1.5MVA transformer, ~48% loaded, 21 ways) — no changes recommended.`,
+  `Motor kVA for all added/new motors (600HP, 400HP, 10,100HP, 3,000HP) was estimated at ~0.9 kVA/HP (assumed 0.9 PF / large-motor efficiency) since no vendor nameplate was provided — replace with actual nameplate kVA once available and the tool recomputes automatically.`,
+];
+
+function renderReco(){
+  const list = document.getElementById('recoList');
+  list.innerHTML = RECO.map((r,i)=>`<li>
+    <span class="reco-text" contenteditable="true" data-i="${i}">${r}</span>
+    <button class="reco-remove no-print" data-i="${i}" title="${STR()['remove-reco']||'Remove'}">✕</button>
+  </li>`).join('');
+  list.querySelectorAll('.reco-text').forEach(el=>{
+    el.addEventListener('blur', ()=>{
+      RECO[parseInt(el.dataset.i)] = el.innerHTML;
+      autosave();
+    });
+  });
+  list.querySelectorAll('.reco-remove').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      RECO.splice(parseInt(btn.dataset.i),1);
+      renderReco();
+      autosave();
+    });
+  });
+}
+document.getElementById('addRecoBtn').addEventListener('click', ()=>{
+  RECO.push(STR()['new-reco-text'] || 'New recommendation — click to edit.');
+  renderReco();
+  autosave();
+});
+
+/* ===================== detail modal system ===================== */
+const STD_BREAKERS = [15,20,25,30,35,40,45,50,60,70,80,90,100,110,125,150,175,200,225,250];
+function nextStdBreaker(a){ return STD_BREAKERS.find(s=>s>=a) || STD_BREAKERS[STD_BREAKERS.length-1]; }
+
+function ensureSubloads(l){
+  if(l.subloads) return l.subloads;
+  const n = Math.max(1, l.count||1);
+  const each = n>0 ? Math.round((l.kva/n)*10)/10 : 0;
+  l.subloads = Array.from({length:n}, (_,i)=>({
+    tag: `${l.tag}-${String(i+1).padStart(2,'0')}`,
+    desc: STR().genericFeeder,
+    hp: "",
+    kva: each,
+    qty: 1
+  }));
+  return l.subloads;
+}
+
+function ensurePanel(l){
+  if(l.panel) return l.panel;
+  const mainCalc = l.kva>0 ? (l.kva*1000)/(Math.sqrt(3)*600) : 0;
+  const mainBreaker = nextStdBreaker(mainCalc || 100);
+  const n = Math.max(1, Math.min(l.count||6, 42));
+  l.panel = {
+    mainBreaker,
+    busRating: nextStdBreaker(mainBreaker),
+    enclosure: "NEMA 1",
+    mounting: "Surface",
+    branches: Array.from({length:n}, (_,i)=>({
+      slot: i+1, poles: (i%3===0)?3:1, size: (i%3===0)?60:20, desc: STR().genericCircuit+" "+(i+1)
+    }))
+  };
+  return l.panel;
+}
+
+function estimateHpFromDesc(desc, kva){
+  const m = desc && desc.match(/(\d{2,5})\s*HP/i);
+  if(m) return parseInt(m[1]);
+  return kva>0 ? Math.round(kva*1.1) : 0;
+}
+function ensureMotor(l){
+  if(l.motor) return l.motor;
+  const hp = estimateHpFromDesc(l.desc, l.kva);
+  const isMV = /13\.8kV|13800V|MV direct/i.test(l.desc||"");
+  const voltage = isMV ? 13800 : 600;
+  const poles = hp>2000 ? 8 : (hp>500 ? 6 : 4);
+  const freq = 60;
+  const syncRpm = Math.round(120*freq/poles);
+  const slipPct = 1.5;
+  const ratedRpm = Math.round(syncRpm*(1-slipPct/100));
+  const flTorque = ratedRpm>0 ? Math.round(hp*5252/ratedRpm) : 0;
+  l.motor = {
+    hp, voltage, freq, poles, syncRpm, ratedRpm, slipPct, flTorque,
+    serviceFactor: hp>1000 ? 1.0 : 1.15,
+    frame: "",
+    pf25: 0.55, pf50: 0.76, pf75: 0.83, pf100: 0.86,
+    eff25: 0.85, eff50: 0.91, eff75: 0.93, eff100: 0.93
+  };
+  return l.motor;
+}
+
+let modalCtx = null;
+function openDetailModal(bi,ti,li){
+  modalCtx = {bi,ti,li};
+  const l = DATA[bi].trfs[ti].loads[li];
+  const box = document.getElementById('modalBox');
+  const type = l.type;
+  let bodyHtml = "";
+  if(type==='mtr'){
+    bodyHtml = renderMotorModalContent(l);
+  } else if(type==='dpp'){
+    bodyHtml = renderPanelModalContent(l);
+  } else {
+    bodyHtml = renderMccModalContent(l);
+  }
+  box.innerHTML = `
+    <button class="modal-close" id="modalCloseBtn">✕</button>
+    <div class="modal-head">
+      <input type="text" class="modal-tag-edit" id="modalTagInput" value="${l.tag}">
+    </div>
+    <div class="modal-subtitle">${l.desc}</div>
+    ${bodyHtml}
+  `;
+  document.getElementById('modalCloseBtn').addEventListener('click', closeDetailModal);
+  document.getElementById('modalTagInput').addEventListener('blur', (e)=>{
+    DATA[bi].trfs[ti].loads[li].tag = e.target.value;
+    render();
+  });
+  wireModalBody(type, l);
+  document.getElementById('detailModal').classList.add('open');
+}
+function closeDetailModal(){
+  document.getElementById('detailModal').classList.remove('open');
+  modalCtx = null;
+}
+document.getElementById('detailModal').addEventListener('click', (e)=>{
+  if(e.target.id === 'detailModal') closeDetailModal();
+});
+document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeDetailModal(); });
+
+/* ---- MCC / VFD detail: itemized sub-loads ---- */
+function renderMccModalContent(l){
+  const L = STR();
+  const subs = ensureSubloads(l);
+  const total = subs.reduce((s,r)=>s+(parseFloat(r.kva)||0),0);
+  return `
+    <div class="modal-hint">${L.mccHint}</div>
+    <div class="modal-section-title">${L.mccSectionTitle}</div>
+    <table class="mtable" id="mccTable">
+      <thead><tr><th>${L.thTag}</th><th>${L.thDesc}</th><th>${L.thHp}</th><th>${L.thKva}</th><th>${L.thQty}</th><th></th></tr></thead>
+      <tbody>${subs.map((r,i)=>`
+        <tr data-i="${i}">
+          <td><input class="sub-tag" value="${r.tag}"></td>
+          <td><input class="sub-desc" value="${r.desc}"></td>
+          <td><input class="sub-hp" value="${r.hp}" style="width:50px;"></td>
+          <td><input class="sub-kva" type="number" step="0.1" value="${r.kva}" style="width:65px;"></td>
+          <td><input class="sub-qty" type="number" step="1" value="${r.qty}" style="width:45px;"></td>
+          <td><button class="row-remove" data-i="${i}">✕</button></td>
+        </tr>`).join("")}
+      </tbody>
+    </table>
+    <button class="modal-add-row-btn" id="mccAddRow">+ ${L.addFeeder}</button>
+    <div class="total-line"><span>${L.subTotalLbl}</span><b id="mccSubTotal">${total.toFixed(1)} kVA</b></div>
+    <div class="total-line"><span>${L.parentKvaLbl}</span><b>${l.kva} kVA</b>
+      <button class="sync-btn" id="mccSyncBtn">${L.syncToParent}</button>
+    </div>`;
+}
+
+/* ---- I-Line panel: editable breaker schedule + schematic ---- */
+function buildPanelSVG(panel){
+  const rows = panel.branches.length;
+  const rowH = 16, w = 380, h = 40 + rows*rowH;
+  let s = `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">`;
+  s += `<rect x="4" y="4" width="${w-8}" height="${h-8}" rx="4" fill="none" stroke="#5b9bd5" stroke-width="1.5"/>`;
+  s += `<text x="${w/2}" y="18" text-anchor="middle" font-family="monospace" font-size="10" fill="#3b9eff">MAIN ${panel.mainBreaker}A · BUS ${panel.busRating}A · ${panel.enclosure}</text>`;
+  panel.branches.forEach((b,i)=>{
+    const y = 30 + i*rowH;
+    const leftCol = i%2===0;
+    const x = leftCol ? 14 : w/2+6;
+    const bw = w/2 - 22;
+    const color = b.poles===3 ? "#4fb0a5" : (b.poles===2 ? "#a679d2" : "#c98a4b");
+    s += `<rect x="${x}" y="${y}" width="${bw}" height="${rowH-3}" rx="2" fill="${color}" fill-opacity="0.18" stroke="${color}" stroke-width="1"/>`;
+    s += `<text x="${x+4}" y="${y+11}" font-family="monospace" font-size="8.5" fill="#d7dee6">${b.slot}: ${b.size}A/${b.poles}P ${b.desc.slice(0,16)}</text>`;
+  });
+  s += `</svg>`;
+  return s;
+}
+function renderPanelModalContent(l){
+  const L = STR();
+  const p = ensurePanel(l);
+  return `
+    <div class="modal-hint">${L.panelHint}</div>
+    <div class="mfield-grid">
+      <label class="mfield"><b>${L.mainBreakerLbl}</b><input type="number" id="panelMain" value="${p.mainBreaker}"></label>
+      <label class="mfield"><b>${L.busRatingLbl}</b><input type="number" id="panelBus" value="${p.busRating}"></label>
+      <label class="mfield"><b>${L.enclosureLbl}</b>
+        <select id="panelEnclosure">
+          <option ${p.enclosure==='NEMA 1'?'selected':''}>NEMA 1</option>
+          <option ${p.enclosure==='NEMA 3R'?'selected':''}>NEMA 3R</option>
+          <option ${p.enclosure==='NEMA 12'?'selected':''}>NEMA 12</option>
+        </select>
+      </label>
+      <label class="mfield"><b>${L.mountingLbl}</b>
+        <select id="panelMounting">
+          <option ${p.mounting==='Surface'?'selected':''}>Surface</option>
+          <option ${p.mounting==='Flush'?'selected':''}>Flush</option>
+        </select>
+      </label>
+    </div>
+    <div class="modal-section-title">${L.panelVisualTitle}</div>
+    <div class="panel-visual" id="panelVisual">${buildPanelSVG(p)}</div>
+    <div class="modal-section-title">${L.branchScheduleTitle}</div>
+    <table class="mtable" id="panelTable">
+      <thead><tr><th>${L.thSlot}</th><th>${L.thPoles}</th><th>${L.thAmps}</th><th>${L.thDesc}</th><th></th></tr></thead>
+      <tbody>${p.branches.map((b,i)=>`
+        <tr data-i="${i}">
+          <td><input class="br-slot" type="number" value="${b.slot}" style="width:40px;"></td>
+          <td><select class="br-poles"><option value="1" ${b.poles===1?'selected':''}>1P</option><option value="2" ${b.poles===2?'selected':''}>2P</option><option value="3" ${b.poles===3?'selected':''}>3P</option></select></td>
+          <td><input class="br-amps" type="number" value="${b.size}" style="width:55px;"></td>
+          <td><input class="br-desc" value="${b.desc}"></td>
+          <td><button class="row-remove" data-i="${i}">✕</button></td>
+        </tr>`).join("")}
+      </tbody>
+    </table>
+    <button class="modal-add-row-btn" id="panelAddRow">+ ${L.addBranch}</button>`;
+}
+
+/* ---- Motor nameplate detail ---- */
+function renderMotorModalContent(l){
+  const L = STR();
+  const m = ensureMotor(l);
+  return `
+    <div class="modal-hint">${L.motorHint}</div>
+    <div class="mfield-grid">
+      <label class="mfield"><b>${L.mHp}</b><input type="number" id="mHp" value="${m.hp}"></label>
+      <label class="mfield"><b>${L.mVoltage}</b><input type="number" id="mVoltage" value="${m.voltage}"></label>
+      <label class="mfield"><b>${L.mFreq}</b><select id="mFreq">${[50,60].map(f=>`<option value="${f}" ${f===m.freq?'selected':''}>${f} Hz</option>`).join('')}</select></label>
+      <label class="mfield"><b>${L.mPoles}</b><select id="mPoles">${[2,4,6,8,10,12].map(p=>`<option value="${p}" ${p===m.poles?'selected':''}>${p}</option>`).join('')}</select></label>
+      <label class="mfield"><b>${L.mSyncRpm}</b><input type="number" id="mSyncRpm" value="${m.syncRpm}"></label>
+      <label class="mfield"><b>${L.mSlip}</b><input type="number" id="mSlip" value="${m.slipPct}" step="0.1"></label>
+      <label class="mfield"><b>${L.mRatedRpm}</b><input type="number" id="mRatedRpm" value="${m.ratedRpm}"></label>
+      <label class="mfield"><b>${L.mTorque}</b><input type="number" id="mTorque" value="${m.flTorque}"></label>
+      <label class="mfield"><b>${L.mSf}</b><input type="number" id="mSf" value="${m.serviceFactor}" step="0.01"></label>
+      <label class="mfield"><b>${L.mFrame}</b><input type="text" id="mFrame" value="${m.frame}" placeholder="e.g. 5013Z"></label>
+    </div>
+    <div class="modal-section-title">${L.pfEffTitle}</div>
+    <table class="mtable">
+      <thead><tr><th></th><th>25%</th><th>50%</th><th>75%</th><th>100%</th></tr></thead>
+      <tbody>
+        <tr><td>${L.pfRow}</td>
+          <td><input id="mPf25" type="number" step="0.01" value="${m.pf25}"></td>
+          <td><input id="mPf50" type="number" step="0.01" value="${m.pf50}"></td>
+          <td><input id="mPf75" type="number" step="0.01" value="${m.pf75}"></td>
+          <td><input id="mPf100" type="number" step="0.01" value="${m.pf100}"></td>
+        </tr>
+        <tr><td>${L.effRow}</td>
+          <td><input id="mEff25" type="number" step="0.01" value="${m.eff25}"></td>
+          <td><input id="mEff50" type="number" step="0.01" value="${m.eff50}"></td>
+          <td><input id="mEff75" type="number" step="0.01" value="${m.eff75}"></td>
+          <td><input id="mEff100" type="number" step="0.01" value="${m.eff100}"></td>
+        </tr>
+      </tbody>
+    </table>`;
+}
+
+function wireModalBody(type, l){
+  if(type==='mtr'){
+    const m = l.motor;
+    const bind = (id,key,isFloat)=>{
+      document.getElementById(id).addEventListener('blur', (e)=>{
+        const v = isFloat ? parseFloat(e.target.value) : parseInt(e.target.value);
+        m[key] = isNaN(v) ? m[key] : v;
+        if(['poles','freq'].includes(key)){
+          m.syncRpm = Math.round(120*m.freq/m.poles);
+          document.getElementById('mSyncRpm').value = m.syncRpm;
+        }
+        if(['poles','freq','slipPct'].includes(key)){
+          m.ratedRpm = Math.round(m.syncRpm*(1-m.slipPct/100));
+          document.getElementById('mRatedRpm').value = m.ratedRpm;
+          m.flTorque = m.ratedRpm>0 ? Math.round(m.hp*5252/m.ratedRpm) : 0;
+          document.getElementById('mTorque').value = m.flTorque;
+        }
+        if(key==='hp'){
+          m.flTorque = m.ratedRpm>0 ? Math.round(m.hp*5252/m.ratedRpm) : 0;
+          document.getElementById('mTorque').value = m.flTorque;
+        }
+      });
+    };
+    const bindSelect = (id,key)=>{
+      document.getElementById(id).addEventListener('change', (e)=>{
+        const v = parseInt(e.target.value);
+        m[key] = isNaN(v) ? m[key] : v;
+        if(['poles','freq'].includes(key)){
+          m.syncRpm = Math.round(120*m.freq/m.poles);
+          document.getElementById('mSyncRpm').value = m.syncRpm;
+        }
+        if(['poles','freq','slipPct'].includes(key)){
+          m.ratedRpm = Math.round(m.syncRpm*(1-m.slipPct/100));
+          document.getElementById('mRatedRpm').value = m.ratedRpm;
+          m.flTorque = m.ratedRpm>0 ? Math.round(m.hp*5252/m.ratedRpm) : 0;
+          document.getElementById('mTorque').value = m.flTorque;
+        }
+      });
+    };
+    bind('mHp','hp'); bind('mVoltage','voltage');
+    bindSelect('mFreq','freq'); bindSelect('mPoles','poles');
+    bind('mSyncRpm','syncRpm'); bind('mSlip','slipPct',true);
+    bind('mRatedRpm','ratedRpm'); bind('mTorque','flTorque'); bind('mSf','serviceFactor',true);
+    document.getElementById('mFrame').addEventListener('blur', e=>{ m.frame = e.target.value; });
+    ['25','50','75','100'].forEach(p=>{
+      bind('mPf'+p, 'pf'+p, true);
+      bind('mEff'+p, 'eff'+p, true);
+    });
+  } else if(type==='dpp'){
+    const p = l.panel;
+    document.getElementById('panelMain').addEventListener('blur', e=>{ p.mainBreaker = parseFloat(e.target.value)||p.mainBreaker; refreshPanelVisual(p); });
+    document.getElementById('panelBus').addEventListener('blur', e=>{ p.busRating = parseFloat(e.target.value)||p.busRating; refreshPanelVisual(p); });
+    document.getElementById('panelEnclosure').addEventListener('change', e=>{ p.enclosure = e.target.value; refreshPanelVisual(p); });
+    document.getElementById('panelMounting').addEventListener('change', e=>{ p.mounting = e.target.value; });
+    document.getElementById('panelAddRow').addEventListener('click', ()=>{
+      p.branches.push({slot:p.branches.length+1, poles:1, size:20, desc:STR().genericCircuit+" "+(p.branches.length+1)});
+      refreshPanelTable(p);
+    });
+    wirePanelTableRows(p);
+  } else {
+    document.getElementById('mccAddRow').addEventListener('click', ()=>{
+      l.subloads.push({tag:l.tag+"-"+String(l.subloads.length+1).padStart(2,'0'), desc:STR().genericFeeder, hp:"", kva:0, qty:1});
+      refreshMccTable(l);
+    });
+    document.getElementById('mccSyncBtn').addEventListener('click', ()=>{
+      const total = l.subloads.reduce((s,r)=>s+(parseFloat(r.kva)||0),0);
+      l.kva = Math.round(total*10)/10;
+      closeDetailModal();
+      render();
+    });
+    wireMccTableRows(l);
+  }
+}
+
+function refreshPanelVisual(p){ document.getElementById('panelVisual').innerHTML = buildPanelSVG(p); }
+function refreshPanelTable(p){
+  const box = document.getElementById('modalBox');
+  const l = DATA[modalCtx.bi].trfs[modalCtx.ti].loads[modalCtx.li];
+  box.querySelector('#panelTable tbody').outerHTML = '<tbody>'+p.branches.map((b,i)=>`
+        <tr data-i="${i}">
+          <td><input class="br-slot" type="number" value="${b.slot}" style="width:40px;"></td>
+          <td><select class="br-poles"><option value="1" ${b.poles===1?'selected':''}>1P</option><option value="2" ${b.poles===2?'selected':''}>2P</option><option value="3" ${b.poles===3?'selected':''}>3P</option></select></td>
+          <td><input class="br-amps" type="number" value="${b.size}" style="width:55px;"></td>
+          <td><input class="br-desc" value="${b.desc}"></td>
+          <td><button class="row-remove" data-i="${i}">✕</button></td>
+        </tr>`).join("")+'</tbody>';
+  refreshPanelVisual(p);
+  wirePanelTableRows(p);
+}
+function wirePanelTableRows(p){
+  const tbody = document.querySelector('#panelTable tbody');
+  tbody.querySelectorAll('tr').forEach(tr=>{
+    const i = parseInt(tr.dataset.i);
+    tr.querySelector('.br-slot').addEventListener('blur', e=>{ p.branches[i].slot = parseInt(e.target.value)||p.branches[i].slot; refreshPanelVisual(p); });
+    tr.querySelector('.br-poles').addEventListener('change', e=>{ p.branches[i].poles = parseInt(e.target.value); refreshPanelVisual(p); });
+    tr.querySelector('.br-amps').addEventListener('blur', e=>{ p.branches[i].size = parseFloat(e.target.value)||p.branches[i].size; refreshPanelVisual(p); });
+    tr.querySelector('.br-desc').addEventListener('blur', e=>{ p.branches[i].desc = e.target.value; refreshPanelVisual(p); });
+    tr.querySelector('.row-remove').addEventListener('click', ()=>{ p.branches.splice(i,1); refreshPanelTable(p); });
+  });
+}
+function refreshMccTable(l){
+  const total = l.subloads.reduce((s,r)=>s+(parseFloat(r.kva)||0),0);
+  const box = document.getElementById('modalBox');
+  box.querySelector('#mccTable tbody').outerHTML = '<tbody>'+l.subloads.map((r,i)=>`
+        <tr data-i="${i}">
+          <td><input class="sub-tag" value="${r.tag}"></td>
+          <td><input class="sub-desc" value="${r.desc}"></td>
+          <td><input class="sub-hp" value="${r.hp}" style="width:50px;"></td>
+          <td><input class="sub-kva" type="number" step="0.1" value="${r.kva}" style="width:65px;"></td>
+          <td><input class="sub-qty" type="number" step="1" value="${r.qty}" style="width:45px;"></td>
+          <td><button class="row-remove" data-i="${i}">✕</button></td>
+        </tr>`).join("")+'</tbody>';
+  document.getElementById('mccSubTotal').textContent = total.toFixed(1)+' kVA';
+  wireMccTableRows(l);
+}
+function wireMccTableRows(l){
+  const tbody = document.querySelector('#mccTable tbody');
+  tbody.querySelectorAll('tr').forEach(tr=>{
+    const i = parseInt(tr.dataset.i);
+    tr.querySelector('.sub-tag').addEventListener('blur', e=>{ l.subloads[i].tag = e.target.value; });
+    tr.querySelector('.sub-desc').addEventListener('blur', e=>{ l.subloads[i].desc = e.target.value; });
+    tr.querySelector('.sub-hp').addEventListener('blur', e=>{ l.subloads[i].hp = e.target.value; });
+    tr.querySelector('.sub-kva').addEventListener('blur', e=>{
+      l.subloads[i].kva = parseFloat(e.target.value)||0;
+      const total = l.subloads.reduce((s,r)=>s+(parseFloat(r.kva)||0),0);
+      document.getElementById('mccSubTotal').textContent = total.toFixed(1)+' kVA';
+    });
+    tr.querySelector('.sub-qty').addEventListener('blur', e=>{ l.subloads[i].qty = parseInt(e.target.value)||1; });
+    tr.querySelector('.row-remove').addEventListener('click', ()=>{ l.subloads.splice(i,1); refreshMccTable(l); });
+  });
+}
+
+const UI = {
+  en: {
+    h1: "PLANT ELECTRICAL LOAD ALLOCATION",
+    sub: "13.8kV / 0.6kV distribution — transformer loading study (Emergency/ATS branch excluded per scope)",
+    "lbl-demand": "Total Demand (kVA)",
+    "lbl-capacity": "Installed Capacity (kVA)",
+    "lbl-util": "Overall Utilization",
+    "lbl-flagged": "Transformers Flagged Low (&lt;40%)",
+    "leg-trf": "Transformer",
+    "leg-mcc": "MCC (Eaton)",
+    "leg-vfd": "VFD MCC",
+    "leg-dpp": "DPP (Schneider)",
+    "leg-mtr": "Added motor (study)",
+    "leg-low": "Low utilization — flagged for manual review",
+    hint: "Tags, descriptions and kVA values are editable (click text). Percentages and highlighting recompute live.",
+    "reco-title": "Recommendations", "add-reco": "Add Recommendation", "remove-reco": "Remove", "new-reco-text": "New recommendation — click to edit.",
+    assigned: "Assigned:",
+    lowFlag: "Low utilization — flagged for manual review",
+    noteLbl: "Note:",
+    "btn-print": "🖨 Print / Save as PDF", "btn-word": "📄 Export load table (Word)", "btn-excel": "📊 Export load table (Excel)",
+    "btn-save-project": "💾 Save Project", "btn-open-project": "📂 Open Project", "btn-export-json": "⬇ Export (.json)",
+    "btn-import-json": "⬆ Import (.json)", "btn-new-project": "➕ New Project",
+    "project-current": "Project", "project-unsaved": "Unsaved — edits are kept in this browser only until you Save Project",
+    "project-name-prompt": "Name this project:", "project-saved-msg": "Saved as \"{name}\".",
+    "project-none-saved": "No saved projects yet in this browser. Click Save Project to create one.",
+    "project-load-btn": "Open", "project-delete-btn": "Delete",
+    "project-load-confirm": "Load \"{name}\"? Any unsaved changes to the current project will be replaced (they remain recoverable from this browser's autosave until you load something else).",
+    "project-delete-confirm": "Delete the saved project \"{name}\"? This cannot be undone.",
+    "project-import-ok": "Project imported.", "project-import-error": "Could not read this file as an OhmZone load allocation project.",
+    "project-new-confirm": "Start a new blank project? The current project stays saved under its name (if you've saved it) and remains in this browser's autosave until you load something else.",
+    "project-hint": "Projects are saved in this browser only — there is no server behind this page, so nothing syncs automatically between devices. Use Export (.json) to back up a project or move it to another computer, and Import (.json) to bring it back in.",
+    lowListTitle: "Transformers below 40% utilization — review list",
+    xlsBuilding: "Building", xlsTrfTag: "Transformer Tag", xlsTrfDesc: "Transformer Description", xlsCapKva: "Capacity (kVA)",
+    xlsLoadTag: "Load Tag", xlsLoadDesc: "Load Description", xlsLoadKva: "Load (kVA)", xlsLoadCount: "Ways/Count",
+    addTrf: "Add Transformer", removeBuilding: "Remove Building", removeTrf: "Remove Transformer",
+    addLoad: "Add Load", removeLoad: "Remove load", clickForDetail: "Click to view/edit details",
+    newBuildingName: "New Building", newTrfTag: "NEW-TRF", newLoadTag: "NEW-LOAD", newLoadDesc: "New load — click to edit",
+    confirmRemoveTrf: "Remove this transformer and all its loads?", confirmRemoveBuilding: "Remove this entire building?",
+    capLbl: "Transformer capacity (kVA)",
+    genericFeeder: "Feeder — click to edit", genericCircuit: "Circuit",
+    mccHint: "Itemized feeder breakdown for this MCC/VFD lineup. Starting values are split evenly across the way count entered — edit each row to match the actual feeder schedule. Use \"Sync to parent kVA\" to push the itemized total back up to the summary card.",
+    mccSectionTitle: "Feeder Schedule",
+    thTag: "Tag", thDesc: "Description", thHp: "HP", thKva: "kVA", thQty: "Qty",
+    addFeeder: "Add feeder", subTotalLbl: "Itemized subtotal:", parentKvaLbl: "Summary card shows:", syncToParent: "Sync to parent kVA →",
+    panelHint: "Schneider I-Line style panelboard layout. Main/bus ratings are estimated from the load's kVA at 600V — verify against the actual panel schedule. Branch breakers alternate left/right columns in the visual, matching typical I-Line construction.",
+    mainBreakerLbl: "Main breaker (A)", busRatingLbl: "Bus rating (A)", enclosureLbl: "Enclosure", mountingLbl: "Mounting",
+    panelVisualTitle: "Panel Schematic", branchScheduleTitle: "Branch Breaker Schedule",
+    thSlot: "Slot", thPoles: "Poles", thAmps: "Amps", addBranch: "Add branch breaker",
+    motorHint: "Nameplate-style parameters. HP is parsed from the description where possible; voltage, poles, slip, PF and efficiency curves are typical representative defaults — replace with the actual manufacturer nameplate/datasheet values once available.",
+    mHp: "Horsepower (HP)", mVoltage: "Voltage (V)", mFreq: "Frequency (Hz)", mPoles: "Poles",
+    mSyncRpm: "Synchronous speed (RPM)", mSlip: "Slip (%)", mRatedRpm: "Rated speed (RPM)",
+    mTorque: "Full-load torque (lb·ft)", mSf: "Service factor", mFrame: "Frame",
+    pfEffTitle: "Power Factor &amp; Efficiency by Load", pfRow: "Power factor", effRow: "Efficiency",
+  },
+  fr: {
+    h1: "RÉPARTITION DES CHARGES ÉLECTRIQUES DE L'USINE",
+    sub: "Distribution 13,8 kV / 0,6 kV — étude de charge des transformateurs (départ Urgence/ASI exclu de la portée)",
+    "lbl-demand": "Demande totale (kVA)",
+    "lbl-capacity": "Capacité installée (kVA)",
+    "lbl-util": "Taux d'utilisation global",
+    "lbl-flagged": "Transformateurs sous-utilisés (&lt;40 %)",
+    "leg-trf": "Transformateur",
+    "leg-mcc": "MCC (Eaton)",
+    "leg-vfd": "MCC à VFD",
+    "leg-dpp": "DPP (Schneider)",
+    "leg-mtr": "Moteur ajouté (étude)",
+    "leg-low": "Sous-utilisation — à réviser manuellement",
+    hint: "Les repères, descriptions et valeurs kVA sont modifiables (cliquer sur le texte). Les pourcentages et la mise en évidence se recalculent en direct.",
+    "reco-title": "Recommandations", "add-reco": "Ajouter une recommandation", "remove-reco": "Supprimer", "new-reco-text": "Nouvelle recommandation — cliquer pour modifier.",
+    assigned: "Assigné :",
+    lowFlag: "Sous-utilisation — à réviser manuellement",
+    noteLbl: "Note :",
+    "btn-print": "🖨 Imprimer / Enregistrer en PDF", "btn-word": "📄 Exporter le tableau des charges (Word)", "btn-excel": "📊 Exporter le tableau des charges (Excel)",
+    "btn-save-project": "💾 Enregistrer le projet", "btn-open-project": "📂 Ouvrir un projet", "btn-export-json": "⬇ Exporter (.json)",
+    "btn-import-json": "⬆ Importer (.json)", "btn-new-project": "➕ Nouveau projet",
+    "project-current": "Projet", "project-unsaved": "Non enregistré — les modifications restent dans ce navigateur seulement jusqu'à ce que vous enregistriez le projet",
+    "project-name-prompt": "Nommez ce projet :", "project-saved-msg": "Enregistré sous « {name} ».",
+    "project-none-saved": "Aucun projet enregistré pour l'instant dans ce navigateur. Cliquez sur Enregistrer le projet pour en créer un.",
+    "project-load-btn": "Ouvrir", "project-delete-btn": "Supprimer",
+    "project-load-confirm": "Charger « {name} » ? Toute modification non enregistrée du projet actuel sera remplacée (elle reste récupérable depuis la sauvegarde automatique de ce navigateur jusqu'à ce que vous chargiez autre chose).",
+    "project-delete-confirm": "Supprimer le projet enregistré « {name} » ? Cette action est irréversible.",
+    "project-import-ok": "Projet importé.", "project-import-error": "Impossible de lire ce fichier comme projet d'allocation de charges OhmZone.",
+    "project-new-confirm": "Démarrer un nouveau projet vierge ? Le projet actuel reste enregistré sous son nom (si vous l'avez enregistré) et demeure dans la sauvegarde automatique de ce navigateur jusqu'à ce que vous chargiez autre chose.",
+    "project-hint": "Les projets sont enregistrés dans ce navigateur seulement — il n'y a pas de serveur derrière cette page, donc rien ne se synchronise automatiquement entre les appareils. Utilisez Exporter (.json) pour sauvegarder un projet ou le transférer vers un autre ordinateur, et Importer (.json) pour le récupérer.",
+    lowListTitle: "Transformateurs sous 40 % d'utilisation — liste à réviser",
+    xlsBuilding: "Bâtiment", xlsTrfTag: "Repère du transformateur", xlsTrfDesc: "Description du transformateur", xlsCapKva: "Capacité (kVA)",
+    xlsLoadTag: "Repère de la charge", xlsLoadDesc: "Description de la charge", xlsLoadKva: "Charge (kVA)", xlsLoadCount: "Départs/Nombre",
+    addTrf: "Ajouter un transformateur", removeBuilding: "Retirer le bâtiment", removeTrf: "Retirer le transformateur",
+    addLoad: "Ajouter une charge", removeLoad: "Retirer la charge", clickForDetail: "Cliquer pour voir/modifier les détails",
+    newBuildingName: "Nouveau bâtiment", newTrfTag: "NOUV-TRF", newLoadTag: "NOUV-CHARGE", newLoadDesc: "Nouvelle charge — cliquer pour modifier",
+    confirmRemoveTrf: "Retirer ce transformateur et toutes ses charges?", confirmRemoveBuilding: "Retirer ce bâtiment au complet?",
+    capLbl: "Capacité du transformateur (kVA)",
+    genericFeeder: "Départ — cliquer pour modifier", genericCircuit: "Circuit",
+    mccHint: "Répartition détaillée des départs pour ce MCC/lignée VFD. Les valeurs de départ sont réparties également selon le nombre de départs saisi — modifiez chaque ligne selon la liste réelle des départs. Utilisez « Synchroniser vers le kVA parent » pour reporter le total détaillé vers la carte sommaire.",
+    mccSectionTitle: "Liste des départs",
+    thTag: "Repère", thDesc: "Description", thHp: "HP", thKva: "kVA", thQty: "Qté",
+    addFeeder: "Ajouter un départ", subTotalLbl: "Sous-total détaillé :", parentKvaLbl: "La carte sommaire affiche :", syncToParent: "Synchroniser vers le kVA parent →",
+    panelHint: "Disposition de panneau de type Schneider I-Line. Les calibres principal/bus sont estimés à partir du kVA de la charge à 600 V — vérifiez auprès de la liste réelle du panneau. Les disjoncteurs de départ alternent entre colonnes gauche/droite dans le schéma, conformément à la construction I-Line typique.",
+    mainBreakerLbl: "Disjoncteur principal (A)", busRatingLbl: "Calibre du bus (A)", enclosureLbl: "Armoire", mountingLbl: "Montage",
+    panelVisualTitle: "Schéma du panneau", branchScheduleTitle: "Liste des disjoncteurs de départ",
+    thSlot: "Emplacement", thPoles: "Pôles", thAmps: "Ampères", addBranch: "Ajouter un disjoncteur de départ",
+    motorHint: "Paramètres de type plaque signalétique. Le HP est extrait de la description lorsque possible; la tension, le nombre de pôles, le glissement, le facteur de puissance et les courbes de rendement sont des valeurs par défaut représentatives typiques — remplacez par les valeurs réelles de la plaque signalétique/fiche technique du fabricant une fois disponibles.",
+    mHp: "Puissance (HP)", mVoltage: "Tension (V)", mFreq: "Fréquence (Hz)", mPoles: "Pôles",
+    mSyncRpm: "Vitesse synchrone (RPM)", mSlip: "Glissement (%)", mRatedRpm: "Vitesse nominale (RPM)",
+    mTorque: "Couple à pleine charge (lb·pi)", mSf: "Facteur de service", mFrame: "Carcasse",
+    pfEffTitle: "Facteur de puissance et rendement selon la charge", pfRow: "Facteur de puissance", effRow: "Rendement",
+  }
+};
+
+let currentLang = 'en';
+function STR(){ return UI[currentLang]; }
+
+function setLang(lang){
+  currentLang = lang;
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const key = el.getAttribute('data-i18n');
+    if (UI[lang][key] !== undefined) el.innerHTML = UI[lang][key];
+  });
+  document.getElementById('btn-en').classList.toggle('active', lang==='en');
+  document.getElementById('btn-fr').classList.toggle('active', lang==='fr');
+  document.documentElement.lang = lang;
+  try { localStorage.setItem('ohmzone-lang', lang); } catch(e) {}
+  updateProjectStatus();
+  renderReco();
+  render();
+}
+
+/* ===================== project save / load system ===================== */
+/* Saved locally in this browser only — there is no server behind this site,
+   so this is not a multi-device cloud sync. Use Export/Import (.json) to
+   move a project between devices or keep an off-site backup. */
+const PROJECTS_KEY = 'ohmzone-load-diagram-projects';
+const AUTOSAVE_KEY = 'ohmzone-load-diagram-autosave';
+let currentProjectName = null;
+
+function getProjects(){
+  try { return JSON.parse(localStorage.getItem(PROJECTS_KEY) || '[]'); } catch(e){ return []; }
+}
+function setProjects(arr){
+  try { localStorage.setItem(PROJECTS_KEY, JSON.stringify(arr)); } catch(e){}
+}
+function autosave(){
+  try { localStorage.setItem(AUTOSAVE_KEY, JSON.stringify({name: currentProjectName, savedAt: new Date().toISOString(), data: DATA, reco: RECO})); } catch(e){}
+}
+function tryRestoreAutosave(){
+  try {
+    const raw = localStorage.getItem(AUTOSAVE_KEY);
+    if(!raw) return false;
+    const snap = JSON.parse(raw);
+    if(!snap.data || !Array.isArray(snap.data) || snap.data.length===0) return false;
+    DATA.length = 0;
+    snap.data.forEach(b=>DATA.push(b));
+    if(Array.isArray(snap.reco)){
+      RECO.length = 0;
+      snap.reco.forEach(r=>RECO.push(r));
+      renderReco();
+    }
+    currentProjectName = snap.name || null;
+    return true;
+  } catch(e){ return false; }
+}
+function updateProjectStatus(){
+  const el = document.getElementById('projectStatusTxt');
+  if(!el) return;
+  const L = UI[currentLang];
+  el.textContent = currentProjectName ? (L['project-current']+': '+currentProjectName) : L['project-unsaved'];
+}
+
+document.getElementById('btnSaveProject').addEventListener('click', ()=>{
+  const L = UI[currentLang];
+  const name = prompt(L['project-name-prompt'], currentProjectName || '');
+  if(!name) return;
+  const projects = getProjects();
+  const existingIdx = projects.findIndex(p=>p.name===name);
+  const snapshot = { name, savedAt: new Date().toISOString(), data: JSON.parse(JSON.stringify(DATA)), reco: JSON.parse(JSON.stringify(RECO)) };
+  if(existingIdx>=0) projects[existingIdx] = snapshot; else projects.push(snapshot);
+  setProjects(projects);
+  currentProjectName = name;
+  autosave();
+  updateProjectStatus();
+  alert(L['project-saved-msg'].replace('{name}', name));
+});
+
+function renderProjectList(){
+  const L = UI[currentLang];
+  const box = document.getElementById('projectListBox');
+  if(box.style.display === 'block'){ box.style.display='none'; return; }
+  const projects = getProjects();
+  if(projects.length===0){
+    box.innerHTML = `<div class="hint">${L['project-none-saved']}</div>`;
+  } else {
+    box.innerHTML = projects.map((p,i)=>`
+      <div class="project-list-item">
+        <span class="pname">${p.name}</span>
+        <span class="pmeta">${new Date(p.savedAt).toLocaleString(currentLang==='fr'?'fr-CA':'en-CA')}</span>
+        <button data-act="load" data-i="${i}">${L['project-load-btn']}</button>
+        <button data-act="delete" data-i="${i}" class="danger">${L['project-delete-btn']}</button>
+      </div>
+    `).join('');
+    box.querySelectorAll('[data-act="load"]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const p = projects[parseInt(btn.dataset.i)];
+        if(!confirm(L['project-load-confirm'].replace('{name}', p.name))) return;
+        DATA.length = 0;
+        p.data.forEach(b=>DATA.push(b));
+        if(Array.isArray(p.reco)){ RECO.length = 0; p.reco.forEach(r=>RECO.push(r)); renderReco(); }
+        currentProjectName = p.name;
+        autosave();
+        box.style.display = 'none';
+        render();
+      });
+    });
+    box.querySelectorAll('[data-act="delete"]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const p = projects[parseInt(btn.dataset.i)];
+        if(!confirm(L['project-delete-confirm'].replace('{name}', p.name))) return;
+        setProjects(projects.filter((_,idx)=>idx!==parseInt(btn.dataset.i)));
+        box.style.display = 'none';
+        renderProjectList();
+      });
+    });
+  }
+  box.style.display = 'block';
+}
+document.getElementById('btnOpenProject').addEventListener('click', renderProjectList);
+
+document.getElementById('btnExportJson').addEventListener('click', ()=>{
+  const snapshot = { name: currentProjectName || 'OhmZone Load Allocation', savedAt: new Date().toISOString(), data: DATA, reco: RECO };
+  const blob = new Blob([JSON.stringify(snapshot, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = (currentProjectName || 'load-allocation').replace(/[^a-z0-9-_]+/gi,'-') + '.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 2000);
+});
+
+document.getElementById('importJsonInput').addEventListener('change', (e)=>{
+  const L = UI[currentLang];
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev)=>{
+    try {
+      const snap = JSON.parse(ev.target.result);
+      if(!snap.data || !Array.isArray(snap.data)) throw new Error('bad format');
+      DATA.length = 0;
+      snap.data.forEach(b=>DATA.push(b));
+      if(Array.isArray(snap.reco)){ RECO.length = 0; snap.reco.forEach(r=>RECO.push(r)); renderReco(); }
+      currentProjectName = snap.name || null;
+      autosave();
+      render();
+      alert(L['project-import-ok']);
+    } catch(err){
+      alert(L['project-import-error']);
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+document.getElementById('btnNewProject').addEventListener('click', ()=>{
+  const L = UI[currentLang];
+  if(!confirm(L['project-new-confirm'])) return;
+  DATA.length = 0;
+  DATA.push({name: L.newBuildingName, trfs:[{tag:L.newTrfTag, cap:2500, desc:"13.8kV-0.6kV, 2.5MVA", loads:[]}]});
+  RECO.length = 0;
+  renderReco();
+  currentProjectName = null;
+  autosave();
+  render();
+});
+
+(function(){
+  let saved = 'en';
+  try { saved = localStorage.getItem('ohmzone-lang') || 'en'; } catch(e) {}
+  tryRestoreAutosave();
+  currentLang = saved;
+  setLang(saved);
+})();
+</script>
+
+<div style="position:fixed;bottom:6px;right:12px;z-index:9999;font-family:monospace;font-size:10px;color:#5c7592;opacity:0.75;">© 2026 OhmZone. All rights reserved.</div>
+</body>
+</html>

@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Motor Circuit Sizing — Reference Calculator</title>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3887318872951674" crossorigin="anonymous"></script>
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icon-16.png">
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="OhmZone">
+<meta name="theme-color" content="#0a1728">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<style>
+  @media print{
+    .no-print{display:none !important;}
+    body{background:#fff !important;}
+  }
+  :root{
+    --bg:#0d1420;
+    --panel:#121c2b;
+    --panel-2:#0f1826;
+    --line:#233248;
+    --line-soft:#1a2536;
+    --text:#e7edf3;
+    --muted:#7f93a8;
+    --muted-2:#5b6e82;
+    --amber:#3b9eff;
+    --amber-dim:#8a672a;
+    --teal:#4fb8ae;
+    --red:#e1584b;
+    --mono:'IBM Plex Mono',monospace;
+    --sans:'IBM Plex Sans',sans-serif;
+    --disp:'Space Grotesk',sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(1200px 600px at 15% -10%, #16233680 0%, transparent 60%),
+      radial-gradient(900px 500px at 100% 0%, #10233022 0%, transparent 60%),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:38px 22px 90px;}
+
+  /* ---------- Header ---------- */
+  header{
+    border-bottom:1px solid var(--line);
+    padding-bottom:26px;
+    margin-bottom:34px;
+    position:relative;
+  }
+  .eyebrow{
+    font-family:var(--mono);
+    font-size:11.5px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--amber);
+    display:flex;align-items:center;gap:10px;
+    margin-bottom:14px;
+  }
+  .eyebrow::before{content:"";width:22px;height:1px;background:var(--amber);display:inline-block;}
+  h1{
+    font-family:var(--disp);
+    font-weight:600;
+    font-size:clamp(28px,4vw,42px);
+    margin:0 0 10px;
+    letter-spacing:-0.01em;
+  }
+  h1 span{color:var(--amber);}
+  .sub{color:var(--muted);max-width:680px;font-size:14.5px;}
+  .disclaimer{
+    margin-top:18px;
+    font-family:var(--mono);
+    font-size:11.5px;
+    color:var(--muted-2);
+    border-left:2px solid var(--amber-dim);
+    padding:8px 12px;
+    background:var(--panel-2);
+    max-width:760px;
+  }
+
+  /* ---------- Sections ---------- */
+  section{margin-bottom:30px;}
+  .sec-head{
+    display:flex;align-items:baseline;gap:14px;
+    margin-bottom:16px;
+  }
+  .sec-num{
+    font-family:var(--mono);
+    color:var(--amber);
+    font-size:13px;
+    border:1px solid var(--amber-dim);
+    padding:2px 8px;
+    border-radius:3px;
+    flex-shrink:0;
+  }
+  .sec-title{
+    font-family:var(--disp);
+    font-weight:600;
+    font-size:19px;
+    letter-spacing:-0.01em;
+  }
+  .sec-note{color:var(--muted);font-size:12.5px;margin-left:4px;}
+  .panel{
+    background:linear-gradient(180deg,var(--panel),var(--panel-2));
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:22px 24px;
+  }
+
+  /* ---------- Form controls ---------- */
+  .grid{display:grid;gap:16px;}
+  .grid-4{grid-template-columns:repeat(4,1fr);}
+  .grid-3{grid-template-columns:repeat(3,1fr);}
+  .grid-2{grid-template-columns:repeat(2,1fr);}
+  @media(max-width:820px){.grid-4,.grid-3,.grid-2{grid-template-columns:1fr 1fr;}}
+  @media(max-width:560px){.grid-4,.grid-3,.grid-2{grid-template-columns:1fr;}}
+
+  label{
+    display:block;
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:.05em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin-bottom:7px;
+  }
+  select,input[type=number],input[type=text]{
+    width:100%;
+    background:#0a1119;
+    border:1px solid var(--line);
+    color:var(--text);
+    font-family:var(--mono);
+    font-size:14px;
+    padding:10px 11px;
+    border-radius:6px;
+    outline:none;
+    transition:border-color .15s;
+  }
+  select:focus,input:focus{border-color:var(--amber);}
+  select{cursor:pointer;}
+  .field-hint{font-size:11px;color:var(--muted-2);margin-top:5px;}
+  .checkline{display:flex;align-items:center;gap:9px;margin-top:4px;}
+  .checkline input{width:16px;height:16px;accent-color:var(--amber);}
+  .checkline span{font-size:13px;color:var(--text);}
+
+  /* ---------- Result readouts ---------- */
+  .readouts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-top:18px;}
+  .ro{background:var(--panel-2);padding:14px 16px;}
+  .ro .rk{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:6px;}
+  .ro .rv{font-family:var(--mono);font-size:20px;font-weight:600;color:var(--text);}
+  .ro .rv small{font-size:12px;color:var(--muted);font-weight:400;}
+  .ro.hot .rv{color:var(--amber);}
+  .ro.cool .rv{color:var(--teal);}
+
+  .code-note{
+    margin-top:16px;
+    font-family:var(--mono);
+    font-size:11.5px;
+    color:var(--muted);
+    background:#0a1119;
+    border:1px solid var(--line-soft);
+    border-radius:7px;
+    padding:12px 14px;
+  }
+  .code-note b{color:var(--teal);font-weight:600;}
+  .code-note .tag{display:inline-block;font-family:var(--mono);font-size:10px;color:var(--bg);background:var(--teal);padding:1px 6px;border-radius:3px;margin-right:8px;letter-spacing:.04em;}
+
+  .formula{
+    font-family:var(--mono);
+    font-size:13px;
+    background:#0a1119;
+    border:1px dashed var(--line);
+    border-radius:6px;
+    padding:12px 14px;
+    color:var(--amber);
+    margin:12px 0;
+    overflow-x:auto;
+    white-space:pre;
+  }
+
+  /* ---------- Method radio cards ---------- */
+  .method-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;}
+  .mtab{
+    font-family:var(--mono);font-size:12px;letter-spacing:.03em;
+    padding:9px 16px;border-radius:20px;border:1px solid var(--line);
+    background:transparent;color:var(--muted);cursor:pointer;
+    transition:all .15s;
+  }
+  .mtab.active{background:var(--amber);border-color:var(--amber);color:#181008;font-weight:600;}
+  .mtab:hover:not(.active){border-color:var(--amber-dim);color:var(--text);}
+
+  .method-body{display:none;}
+  .method-body.active{display:block;}
+  p.expl{font-size:13.5px;color:#c3d0dd;max-width:760px;}
+  p.expl b{color:var(--text);}
+
+  /* wiring diagram */
+  .diagram-row{display:flex;gap:24px;flex-wrap:wrap;margin-top:16px;align-items:flex-start;}
+  .diagram-box{background:#0a1119;border:1px solid var(--line-soft);border-radius:8px;padding:14px;flex:1;min-width:280px;}
+  .diagram-box h4{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 10px;}
+
+  /* table */
+  table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12.5px;margin-top:10px;}
+  th,td{padding:9px 10px;text-align:left;border-bottom:1px solid var(--line-soft);white-space:nowrap;}
+  th{color:var(--muted);font-weight:500;text-transform:uppercase;font-size:10.5px;letter-spacing:.05em;}
+  td.hi{color:var(--amber);font-weight:600;}
+  td.hi2{color:var(--teal);font-weight:600;}
+  .tbl-scroll{overflow-x:auto;}
+
+  footer{margin-top:60px;border-top:1px solid var(--line);padding-top:18px;color:var(--muted-2);font-size:11.5px;font-family:var(--mono);}
+  .lang-switch{display:flex;align-items:center;background:#0f2036;border:1px solid #2f5678;border-radius:16px;padding:3px;gap:2px;font-family:monospace;font-size:11px;position:fixed;top:10px;right:12px;z-index:9999;}
+  .lang-switch button{border:none;background:transparent;color:#8fa8c2;padding:5px 12px;border-radius:13px;cursor:pointer;font-family:inherit;font-size:inherit;}
+  .lang-switch button.active{background:#f2a93b;color:#1a1000;font-weight:700;}
+</style>
+</head>
+<body>
+<a href="index.html" class="no-print" style="position:fixed;top:10px;left:12px;z-index:9999;font-family:monospace;font-size:11px;color:#8fa8c2;background:rgba(10,23,40,0.85);border:1px solid #234261;border-radius:14px;padding:5px 12px;text-decoration:none;">← OhmZone</a>
+<div class="lang-switch no-print">
+  <button type="button" id="btn-en" class="active" onclick="setLang('en')">EN</button>
+  <button type="button" id="btn-fr" onclick="setLang('fr')">FR</button>
+</div>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow" id="eyebrowTxt">Motor branch circuit — sizing reference</div>
+    <h1 id="h1Txt">Cable, protection &amp; starting<br><span>current</span> calculator</h1>
+    <p class="sub" id="subTxt">Select a supply voltage and motor size to size the branch-circuit short-circuit protection, overload relay, starting-current behaviour, feeder cable, conduit and disconnect switch — built from a standard 35&nbsp;°C-ambient motor protection reference table (CSA C22.1 / Canadian Electrical Code Part&nbsp;I basis).</p>
+    <div class="disclaimer" id="disclaimerTxt">⚠ Engineering reference only. Values follow CEC Rule 28‑200 (Table 29), 28‑106 and 28‑306 concepts as commonly applied — always verify final selections, standard device ratings and local amendments against the current edition of CSA C22.1 and the equipment nameplate before installation.</div>
+  </header>
+
+  <!-- SECTION 1 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">§1</span><span class="sec-title" id="s1Title">Motor &amp; supply data</span><span class="sec-note" id="s1Note">— voltage, size, and (optional) actual PF / efficiency</span></div>
+    <div class="panel">
+      <div class="grid grid-4" style="margin-bottom:10px;">
+        <div style="grid-column:1/-1;">
+          <label id="lblPresets">Common presets</label>
+          <div class="btn-row" id="presetRow" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+        </div>
+      </div>
+      <div class="grid grid-4">
+        <div>
+          <label id="lblSupplyV">Supply voltage / phase</label>
+          <select id="cat"></select>
+        </div>
+        <div>
+          <label id="lblRating">Motor rating (HP)</label>
+          <select id="hp"></select>
+        </div>
+        <div>
+          <label id="lblPf">Power factor (optional)</label>
+          <input type="number" id="pf" placeholder="e.g. 0.85" min="0" max="1" step="0.01">
+          <div class="field-hint" id="hintPf">0 – 1. Leave blank to use table FLA.</div>
+        </div>
+        <div>
+          <label id="lblEff">Efficiency % (optional)</label>
+          <input type="number" id="eff" placeholder="e.g. 92" min="1" max="100" step="0.1">
+          <div class="field-hint" id="hintEff">Leave blank to use table FLA.</div>
+        </div>
+      </div>
+
+      <div class="readouts" id="flaReadouts"></div>
+      <div class="code-note" id="flaNote"></div>
+    </div>
+  </section>
+
+  <!-- SECTION 2 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">§2</span><span class="sec-title" id="s2Title">Short-circuit protection — fuse &amp; breaker</span><span class="sec-note">— CEC Rule 28‑200 / Table 29</span></div>
+    <div class="panel">
+      <p class="expl" id="s2Expl">Table 29 caps the branch-circuit short-circuit device at a multiple of full-load current (FLC), depending on device type. <b>Time-delay (dual-element) fuse: 175% FLA.</b> <b>Non-time-delay fuse: 300% FLA.</b> <b>Inverse-time circuit breaker: 250% FLA.</b> <b>Instantaneous-trip breaker: up to 1300% FLA</b> (CEC) — used mainly ahead of VFDs / soft starters, sized per the drive manufacturer's data.</p>
+      <div class="readouts" id="scReadouts"></div>
+      <div class="code-note" id="s2Note"><span class="tag">CEC 28‑200 / Tbl 29</span>The rating is calculated from the motor's full-load current, then rounded up to the <b>next standard overcurrent device size</b> (CEC Table 13 / Rule 14‑104). If the device won't allow the motor to start, Rule 28‑200(d) permits a time-delay fuse up to 225% FLA. Instantaneous-trip breakers feeding a VFD or soft starter are normally sized from the drive's own input-current data rather than Table 29 directly.</div>
+    </div>
+  </section>
+
+  <!-- SECTION 3 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">§3</span><span class="sec-title" id="s3Title">Overload protection</span><span class="sec-note">— CEC Rule 28‑306</span></div>
+    <div class="panel">
+      <div class="grid grid-3">
+        <div>
+          <label id="lblSf">Nameplate service factor / temp. rise</label>
+          <select id="sfmode">
+            <option value="125" id="optSf125">Service factor ≥ 1.15, or temp. rise ≤ 40 °C → 125% FLA</option>
+            <option value="115" id="optSf115">Service factor &lt; 1.15 and temp. rise &gt; 40 °C → 115% FLA</option>
+          </select>
+        </div>
+        <div>
+          <label id="lblOvlCustom">Or enter a custom multiplier</label>
+          <input type="number" id="ovlCustom" placeholder="e.g. 120" min="100" max="140" step="0.1">
+          <div class="field-hint" id="hintOvlCustom">% of FLA. Overrides the dropdown if filled in.</div>
+        </div>
+        <div>
+          <label>&nbsp;</label>
+          <div class="readouts" style="grid-template-columns:1fr;margin-top:0;">
+            <div class="ro hot"><div class="rk" id="lblOvlSetting">Overload relay setting</div><div class="rv" id="ovlOut">—</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="code-note" id="s3Note"><span class="tag">CEC 28‑306</span>Overload devices protect the motor from sustained overheating, not from short-circuit current. A motor with a nameplate service factor of 1.15 or greater (or a temperature rise of 40 °C or less) is set at 125% of FLA; otherwise the relay is limited to 115% of FLA. This is a separate device from the branch-circuit fuse/breaker in §2.</div>
+    </div>
+  </section>
+
+  <!-- SECTION 4 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">§4</span><span class="sec-title" id="s4Title">Starting method &amp; starting current</span></div>
+    <div class="panel">
+      <div class="method-tabs" id="methodTabs">
+        <button class="mtab active" data-m="dol" id="tabDol">Direct-On-Line (DOL)</button>
+        <button class="mtab" data-m="wye" id="tabWye">Star-Delta (Y‑Δ)</button>
+        <button class="mtab" data-m="soft" id="tabSoft">Soft Starter</button>
+        <button class="mtab" data-m="vfd" id="tabVfd">VFD</button>
+      </div>
+
+      <!-- DOL -->
+      <div class="method-body active" id="m-dol">
+        <p class="expl" id="dolExpl">Direct-on-line starting connects the motor straight across full line voltage. Starting (locked-rotor) current is estimated from the motor's nameplate <b>Code Letter</b>, which states the locked-rotor kVA per HP (NEMA MG‑1 / CEC Table 45‑equivalent code letter table).</p>
+        <div class="grid grid-3">
+          <div>
+            <label id="lblCodeLetter">Nameplate code letter</label>
+            <select id="codeLetter"></select>
+            <div class="field-hint" id="codeLetterRange"></div>
+          </div>
+          <div>
+            <label>&nbsp;</label>
+            <div class="readouts" style="grid-template-columns:1fr;margin-top:0;">
+              <div class="ro hot"><div class="rk" id="lblDolLRA">Locked-rotor / starting current</div><div class="rv" id="dolLRA">—</div></div>
+            </div>
+          </div>
+          <div>
+            <label>&nbsp;</label>
+            <div class="readouts" style="grid-template-columns:1fr;margin-top:0;">
+              <div class="ro cool"><div class="rk" id="lblDolMult">Starting current as multiple of FLA</div><div class="rv" id="dolMult">—</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="formula" id="dolFormula"></div>
+        <div id="dolChart"></div>
+      </div>
+
+      <!-- WYE -->
+      <div class="method-body" id="m-wye">
+        <p class="expl" id="wyeExpl">Star-delta (wye-delta) starting connects the motor windings in <b>star (Y)</b> for the start — dropping the voltage across each winding to 1/√3 (≈58%) of line voltage — then switches to <b>delta (Δ)</b> for the run. Because starting current scales with voltage on a constant-impedance locked rotor, the line starting current drops to about <b>1/3</b> of the DOL value; starting torque also drops to about 1/3.</p>
+        <div class="readouts" id="wyeReadouts"></div>
+        <div class="diagram-row">
+          <div class="diagram-box">
+            <h4 id="wyeH4a">Wiring — star / delta contactors</h4>
+            <svg viewBox="0 0 300 200" width="100%" height="200"></svg>
+          </div>
+          <div class="diagram-box" style="flex:1.4;min-width:320px;">
+            <h4 id="wyeH4b">Current vs. time</h4>
+            <div id="wyeChart"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SOFT -->
+      <div class="method-body" id="m-soft">
+        <p class="expl" id="softExpl">A solid-state soft starter uses back-to-back SCRs to ramp the applied voltage smoothly, holding starting current to a set current limit instead of a fixed step. The adjustable range is usually about <b>200–400% FLA</b> — lightly loaded, low-inertia loads (e.g. pumps, fans) can often be set as low as ~200%, while high-inertia loads need closer to 400%. Starting torque ramps with it, giving a smoother mechanical start than DOL or Y‑Δ.</p>
+        <div class="grid grid-2">
+          <div>
+            <label id="lblSoftLimit">Current-limit setting</label>
+            <select id="softLimit">
+              <option value="2" id="optSoft2">200% FLA (light load)</option>
+              <option value="2.5" id="optSoft25">250% FLA</option>
+              <option value="3" selected id="optSoft3">300% FLA</option>
+              <option value="3.5" id="optSoft35">350% FLA</option>
+              <option value="4" id="optSoft4">400% FLA (high inertia)</option>
+            </select>
+          </div>
+          <div>
+            <label>&nbsp;</label>
+            <div class="readouts" style="grid-template-columns:1fr;margin-top:0;">
+              <div class="ro hot"><div class="rk" id="lblSoftOut">Limited starting current</div><div class="rv" id="softOut">—</div></div>
+            </div>
+          </div>
+        </div>
+        <div id="softChart"></div>
+      </div>
+
+      <!-- VFD -->
+      <div class="method-body" id="m-vfd">
+        <p class="expl" id="vfdExpl">A variable-frequency drive starts the motor at low frequency/voltage with full closed-loop current control, so line-side inrush stays close to (typically <b>100–150%</b>) rated current — no locked-rotor spike is presented to the supply. Protection ahead of the VFD is selected from the drive's own input-current / let-through data, not Table 29.</p>
+        <div class="grid grid-2">
+          <div>
+            <label id="lblVfdLimit">Current-limit setting</label>
+            <select id="vfdLimit">
+              <option value="1.0" id="optVfd100">100% FLA</option>
+              <option value="1.25" selected id="optVfd125">125% FLA</option>
+              <option value="1.5" id="optVfd150">150% FLA</option>
+            </select>
+          </div>
+          <div>
+            <label>&nbsp;</label>
+            <div class="readouts" style="grid-template-columns:1fr;margin-top:0;">
+              <div class="ro cool"><div class="rk" id="lblVfdOut">Limited starting current</div><div class="rv" id="vfdOut">—</div></div>
+            </div>
+          </div>
+        </div>
+        <div id="vfdChart"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 5 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">§5</span><span class="sec-title" id="s5Title">Cable, conduit &amp; disconnect</span><span class="sec-note" id="s5Note">— copper conductors, 75 °C termination, 35 °C ambient, ≤3 CCC/conduit</span></div>
+    <div class="panel">
+      <div class="readouts" id="cableReadouts"></div>
+      <div class="code-note" id="cableNote"></div>
+      <div class="code-note" id="s5Note2">Conduit sizes shown are minimum trade size for the conductor set listed, in RW90 and RWU90 (wet-location) insulation. Aluminum conductor sizing is not yet included in this table — copper only for now.</div>
+    </div>
+  </section>
+
+  <div class="panel no-print" style="border:none;background:transparent;">
+    <div class="btn-row" style="display:flex;gap:10px;flex-wrap:wrap;">
+      <button id="copyBtn" style="padding:9px 16px;border-radius:8px;border:1px solid #2f5678;background:#0f2036;color:#c8d8e8;cursor:pointer;font-family:inherit;">📋 Copy spec summary</button>
+      <button id="printBtn" style="padding:9px 16px;border-radius:8px;border:1px solid #2f5678;background:#0f2036;color:#c8d8e8;cursor:pointer;font-family:inherit;">🖨 Print / Save as PDF</button>
+      <button id="exportWordBtn" style="padding:9px 16px;border-radius:8px;border:1px solid #2f5678;background:#0f2036;color:#c8d8e8;cursor:pointer;font-family:inherit;">📄 Export summary (Word)</button>
+      <button id="exportExcelBtn" style="padding:9px 16px;border-radius:8px;border:1px solid #2f5678;background:#0f2036;color:#c8d8e8;cursor:pointer;font-family:inherit;">📊 Export summary (Excel)</button>
+    </div>
+  </div>
+
+  <footer id="footerTxt">
+    Data basis: manufacturer 35 °C-ambient motor protection &amp; wiring table (Motor.pdf), sections 3.1A–3.1F — 575 V/460 V/208 V 3Φ, 115 V/230 V/208 V 1Φ induction motors. Reference tool only; confirm against CSA C22.1 current edition, drive/starter manufacturer data and the motor nameplate.
+  </footer>
+
+</div>
+
+<script>
+/* ============================================================
+   DATA — extracted from Motor.pdf, base (first) column set
+   row = [hp, fla, kva, fuseTD, breaker, magBreaker, ovlMax, nema,
+          cable, amp, rw90, rwu90, disc]
+   ============================================================ */
+const DATA = {
+"575_3":{v:575,ph:3,label:"575 V — 3Φ induction",rows:[
+[0.5,0.9,0.9,1.6,null,null,1.0,"0","3#12 CU + 1#12 V",18.8,'3/4"','3/4"',30],
+[0.75,1.3,1.3,2.3,null,null,1.5,"0","3#12 CU + 1#12 V",18.8,'3/4"','3/4"',30],
+[1,1.7,1.7,3.0,null,null,2.0,"0","3#12 CU + 1#12 V",18.8,'3/4"','3/4"',30],
+[1.5,2.4,2.4,4.0,null,null,2.8,"0","3#12 CU + 1#12 V",18.8,'3/4"','3/4"',30],
+[2,2.7,2.7,5.0,null,null,3.1,"0","3#12 CU + 1#12 V",18.8,'3/4"','3/4"',30],
+[3,3.9,3.9,7.0,null,null,4.5,"0","3#12 CU + 1#12 V",18.8,'3/4"','3/4"',30],
+[5,6.1,6.1,10.0,15.0,null,7.0,"0","3#12 CU + 1#12 V",18.8,'3/4"','3/4"',30],
+[7.5,9.0,9.0,15.0,20.0,110,10.4,"1","3#12 CU + 1#12 V",18.8,'3/4"','3/4"',30],
+[10,11.0,11.0,20.0,25.0,150,12.7,"1","3#12 CU + 1#12 V",18.8,'3/4"','3/4"',30],
+[15,17.0,16.9,30.0,40.0,225,19.6,"2",'3#10 CU + 1#12 V',28.2,'3/4"','1"',30],
+[20,22.0,21.9,40.0,50.0,250,25.3,"2",'3#10 CU + 1#12 V',28.2,'3/4"','1"',30],
+[25,27.0,26.9,50.0,70.0,350,31.1,"2",'3#8 CU + 1#10 V',47.0,'1"','1"',60],
+[30,32.0,31.9,60.0,80.0,400,36.8,"3",'3#8 CU + 1#10 V',47.0,'1"','1"',60],
+[40,41.0,40.8,70.0,100.0,500,47.2,"3",'3#6 CU + 1#8 V',61.1,'1-1/4"','1-1/4"',60],
+[50,52.0,51.8,90.0,125.0,700,59.8,"3",'3#4 CU + 1#8 V',79.9,'1-1/4"','1-1/4"',100],
+[60,62.0,61.7,110.0,150.0,800,71.3,"4",'3#4 CU + 1#8 V',79.9,'1-1/4"','1-1/4"',100],
+[75,77.0,76.7,150.0,200.0,1000,88.6,"4",'3#2 CU + 1#6 V',108.1,'1-1/2"','1-1/2"',100],
+[100,99.0,98.6,175.0,250.0,1200,113.9,"4",'3#1/0 CU + 1#6 V',141.0,'2"','2"',200],
+[125,125.0,124.5,225.0,300.0,1600,143.8,"5",'3#2/0 CU + 1#6 V',164.5,'2"','2"',200],
+[150,144.0,143.4,250.0,350.0,1600,165.6,"5",'3#3/0 CU + 1#4 V',188.0,'2"','2"',200],
+[200,192.0,191.2,350.0,450.0,2500,220.8,"5",'3#250 CU + 1#4 V',239.7,'2-1/2"','2-1/2"',400],
+[250,242.0,241.0,450.0,600.0,3200,278.3,"6",'3#400 CU + 1#3 V',314.9,'3"','3"',400],
+[300,289.0,287.8,500.0,700.0,3500,332.4,"6",'2x(3#3/0 CU + 1#4 V)',376.0,'2"','2"',400],
+[350,336.0,334.6,600.0,800.0,4000,386.4,"6",'2x(3#4/0 CU + 1#4 V)',432.4,'2-1/2"','2-1/2"',600],
+[400,382.0,380.4,700.0,1000.0,5000,439.3,"6",'2x(3#500 CU + 1#3 V)',714.4,'3-1/2"','3"',600],
+[450,412.0,410.3,750.0,1000.0,5000,473.8,"7",'3x(3#300 CU + 1#4 V)',803.7,'3"','2-1/2"',600],
+[500,472.0,470.1,800.0,1200.0,6000,542.8,"7",'3x(3#300 CU + 1#4 V)',803.7,'3"','2-1/2"',600],
+]},
+"460_3":{v:460,ph:3,label:"460 V — 3Φ induction",rows:[
+[0.5,1.0,0.8,1.8,null,null,1.2,"0",'3#12 CU + 1#12 V',18.8,'3/4"','3/4"',30],
+[0.75,1.4,1.1,2.5,null,null,1.6,"0",'3#12 CU + 1#12 V',18.8,'3/4"','3/4"',30],
+[1,1.8,1.4,3.2,null,null,2.1,"0",'3#12 CU + 1#12 V',18.8,'3/4"','3/4"',30],
+[1.5,2.6,2.1,4.5,null,null,3.0,"0",'3#12 CU + 1#12 V',18.8,'3/4"','3/4"',30],
+[2,3.4,2.7,6.0,null,null,3.9,"0",'3#12 CU + 1#12 V',18.8,'3/4"','3/4"',30],
+[3,4.8,3.8,9.0,null,null,5.5,"0",'3#12 CU + 1#12 V',18.8,'3/4"','3/4"',30],
+[5,7.6,6.1,15.0,20.0,100,8.7,"0",'3#12 CU + 1#12 V',18.8,'3/4"','3/4"',30],
+[7.5,11.0,8.8,20.0,30.0,150,12.7,"1",'3#12 CU + 1#12 V',18.8,'3/4"','3/4"',30],
+[10,14.0,11.2,25.0,35.0,175,16.1,"1",'3#12 CU + 1#12 V',18.8,'3/4"','3/4"',30],
+[15,21.0,16.7,40.0,50.0,250,24.2,"2",'3#10 CU + 1#12 V',28.2,'3/4"','1"',30],
+[20,27.0,21.5,50.0,70.0,350,31.1,"2",'3#8 CU + 1#10 V',47.0,'1"','1"',60],
+[25,34.0,27.1,60.0,90.0,450,39.1,"2",'3#8 CU + 1#10 V',47.0,'1"','1"',60],
+[30,40.0,31.9,70.0,100.0,500,46.0,"3",'3#6 CU + 1#8 V',61.1,'1-1/4"','1-1/4"',60],
+[40,52.0,41.4,90.0,125.0,700,59.8,"3",'3#4 CU + 1#8 V',79.9,'1-1/4"','1-1/4"',100],
+[50,65.0,51.8,110.0,175.0,800,74.8,"3",'3#3 CU + 1#6 V',94.0,'1-1/2"','1-1/2"',100],
+[60,77.0,61.3,150.0,200.0,1000,88.6,"4",'3#2 CU + 1#6 V',108.1,'1-1/2"','1-1/2"',100],
+[75,96.0,76.5,175.0,250.0,1200,110.4,"4",'3#1 CU + 1#6 V',122.2,'2"','2"',200],
+[100,124.0,98.8,225.0,300.0,1600,142.6,"4",'3#2/0 CU + 1#6 V',164.5,'2"','2"',200],
+[125,156.0,124.3,300.0,400.0,2000,179.4,"5",'3#4/0 CU + 1#4 V',216.2,'2-1/2"','2-1/2"',200],
+[150,180.0,143.4,350.0,450.0,2500,207.0,"5",'3#250 CU + 1#4 V',239.7,'2-1/2"','2-1/2"',400],
+[200,240.0,191.2,450.0,600.0,3200,276.0,"5",'3#400 CU + 1#3 V',314.9,'3"','3"',400],
+[250,302.0,240.6,500.0,800.0,4000,347.3,"6",'2x(3#4/0 CU + 1#4 V)',432.4,'2-1/2"','2-1/2"',400],
+[300,361.0,287.6,650.0,900.0,5000,415.2,"6",'2x(3#500 CU + 1#3 V)',714.4,'3-1/2"','3"',600],
+[350,414.0,329.9,750.0,1000.0,5000,476.1,"6",'3x(3#300 CU + 1#4 V)',803.7,'3"','2-1/2"',600],
+[400,477.0,380.0,900.0,1200.0,6000,548.6,"6",'3x(3#400 CU + 1#3 V)',944.7,'3"','3"',600],
+[450,515.0,410.3,900.0,1200.0,6000,592.3,"7",'3x(3#400 CU + 1#3 V)',944.7,'3"','3"',800],
+[500,590.0,470.1,1000.0,1600.0,8000,678.5,"7",'3x(3#500 CU + 1#3 V)',1071.6,'3-1/2"','3"',800],
+]},
+"208_3":{v:208,ph:3,label:"208 V — 3Φ induction",rows:[
+[0.5,2.4,0.9,4.0,null,null,2.8,"0",'3#12 CU + 1#12 V',18.8,'3/4"','3/4"',30],
+[0.75,3.5,1.3,6.0,null,null,4.0,"0",'3#12 CU + 1#12 V',18.8,'3/4"','3/4"',30],
+[1,4.6,1.7,8.0,null,null,5.3,"0",'3#12 CU + 1#12 V',18.8,'3/4"','3/4"',30],
+[1.5,6.6,2.4,12.0,15.0,90,7.6,"0",'3#12 CU + 1#12 V',18.8,'3/4"','3/4"',30],
+[2,7.5,2.7,15.0,20.0,100,8.6,"0",'3#12 CU + 1#12 V',18.8,'3/4"','3/4"',30],
+[3,10.6,3.8,20.0,25.0,150,12.2,"0",'3#12 CU + 1#12 V',18.8,'3/4"','3/4"',30],
+[5,16.7,6.0,30.0,40.0,225,19.2,"1",'3#10 CU + 1#12 V',28.2,'3/4"','1"',30],
+[7.5,24.2,8.7,45.0,60.0,300,27.8,"1",'3#8 CU + 1#10 V',47.0,'1"','1"',60],
+[10,30.8,11.1,60.0,80.0,400,35.4,"2",'3#8 CU + 1#10 V',47.0,'1"','1"',60],
+[15,46.2,16.6,80.0,110.0,600,53.1,"3",'3#6 CU + 1#8 V',61.1,'1-1/4"','1-1/4"',60],
+[20,59.4,21.4,110.0,150.0,800,68.3,"3",'3#4 CU + 1#8 V',79.9,'1-1/4"','1-1/4"',100],
+[25,74.8,26.9,150.0,175.0,1000,86.0,"3",'3#3 CU + 1#6 V',94.0,'1-1/2"','1-1/2"',100],
+[30,88.0,31.7,150.0,225.0,1200,101.2,"4",'3#1 CU + 1#6 V',122.2,'2"','2"',200],
+[40,114.0,41.1,200.0,250.0,1600,131.1,"4",'3#2/0 CU + 1#6 V',164.5,'2"','2"',200],
+[50,143.0,51.5,250.0,350.0,2000,164.5,"5",'3#3/0 CU + 1#4 V',188.0,'2"','2"',200],
+[60,169.0,60.9,300.0,400.0,2500,194.4,"5",'3#4/0 CU + 1#4 V',216.2,'2-1/2"','2-1/2"',400],
+[75,211.0,76.0,400.0,500.0,2500,242.7,"5",'3#300 CU + 1#4 V',267.9,'3"','2-1/2"',400],
+[100,273.0,98.4,500.0,700.0,3500,314.0,"6",'3#500 CU + 1#3 V',357.2,'3-1/2"','3"',400],
+[125,343.0,123.6,600.0,900.0,4000,394.5,"6",'2x(3#4/0 CU + 1#4 V)',432.4,'2-1/2"','2-1/2"',600],
+[150,396.0,142.7,700.0,1000.0,5000,455.4,"6",'2x(3#500 CU + 1#3 V)',714.4,'3-1/2"','3"',600],
+]},
+"115_1":{v:115,ph:1,label:"115 V — 1Φ",rows:[
+[0.17,4.4,0.5,8.0,null,null,5.1,"00",'2#12 CU + 1#12 V',18.8,'3/4"','3/4"',30],
+[0.25,5.8,0.7,10.0,15.0,80,6.7,"00",'2#12 CU + 1#12 V',18.8,'3/4"','3/4"',30],
+[0.33,7.2,0.8,12.0,20.0,90,8.3,"00",'2#12 CU + 1#12 V',18.8,'3/4"','3/4"',30],
+[0.5,9.8,1.1,17.5,25.0,125,11.3,"0",'2#12 CU + 1#12 V',18.8,'3/4"','3/4"',30],
+[0.8,13.8,1.6,25.0,35.0,175,15.9,"0",'2#12 CU + 1#12 V',18.8,'3/4"','3/4"',30],
+[1.0,16.0,1.8,30.0,40.0,200,18.4,"0",'2#10 CU + 1#12 V',28.2,'3/4"','3/4"',30],
+[1.5,20.0,2.3,35.0,50.0,250,23.0,"1",'2#10 CU + 1#12 V',28.2,'3/4"','3/4"',30],
+[2.0,24.0,2.8,45.0,60.0,300,27.6,"1",'2#8 CU + 1#10 V',47.0,'3/4"','1"',60],
+[3.0,34.0,3.9,60.0,90.0,450,39.1,"2",'2#8 CU + 1#10 V',47.0,'3/4"','1"',60],
+[5.0,56.0,6.4,100.0,150.0,700,64.4,"3",'2#4 CU + 1#8 V',79.9,'1"','1-1/4"',100],
+[7.5,80.0,9.2,150.0,200.0,1000,92.0,"3",'2#2 CU + 1#6 V',108.1,'1-1/4"','1-1/4"',100],
+]},
+"230_1":{v:230,ph:1,label:"230 V — 1Φ",rows:[
+[0.17,2.2,0.5,4.0,null,null,2.5,"00",'2#12 CU + 1#12 V',18.8,'3/4"','3/4"',30],
+[0.25,2.9,0.7,5.0,null,null,3.3,"00",'2#12 CU + 1#12 V',18.8,'3/4"','3/4"',30],
+[0.33,3.6,0.8,6.0,null,null,4.1,"00",'2#12 CU + 1#12 V',18.8,'3/4"','3/4"',30],
+[0.5,4.9,1.1,9.0,15.0,60,5.6,"00",'2#12 CU + 1#12 V',18.8,'3/4"','3/4"',30],
+[0.8,6.9,1.6,12.0,15.0,90,7.9,"00",'2#12 CU + 1#12 V',18.8,'3/4"','3/4"',30],
+[1.0,8.0,1.8,15.0,20.0,100,9.2,"00",'2#12 CU + 1#12 V',18.8,'3/4"','3/4"',30],
+[1.5,10.0,2.3,17.5,25.0,125,11.5,"0",'2#12 CU + 1#12 V',18.8,'3/4"','3/4"',30],
+[2.0,12.0,2.8,25.0,30.0,150,13.8,"0",'2#12 CU + 1#12 V',18.8,'3/4"','3/4"',30],
+[3.0,17.0,3.9,30.0,40.0,225,19.6,"1",'2#10 CU + 1#12 V',28.2,'3/4"','3/4"',30],
+[5.0,28.0,6.4,50.0,70.0,350,32.2,"2",'2#8 CU + 1#10 V',47.0,'3/4"','1"',60],
+[7.5,40.0,9.2,70.0,100.0,500,46.0,"2",'2#6 CU + 1#8 V',61.1,'1"','1"',60],
+[10.0,50.0,11.5,90.0,125.0,600,57.5,"3",'2#4 CU + 1#8 V',79.9,'1"','1-1/4"',100],
+]},
+"208_1":{v:208,ph:1,label:"208 V — 1Φ",rows:[
+[0.17,2.4,0.5,4.5,null,null,2.8,"00",'2#12 CU + 1#12 V',18.8,'3/4"','3/4"',30],
+[0.25,3.2,0.7,6.0,null,null,3.7,"00",'2#12 CU + 1#12 V',18.8,'3/4"','3/4"',30],
+[0.33,4.0,0.8,7.0,null,null,4.6,"00",'2#12 CU + 1#12 V',18.8,'3/4"','3/4"',30],
+[0.5,5.4,1.1,10.0,15.0,70,6.2,"00",'2#12 CU + 1#12 V',18.8,'3/4"','3/4"',30],
+[0.8,7.6,1.6,15.0,15.0,100,8.7,"00",'2#12 CU + 1#12 V',18.8,'3/4"','3/4"',30],
+[1.0,8.8,1.8,15.0,20.0,125,10.1,"00",'2#12 CU + 1#12 V',18.8,'3/4"','3/4"',30],
+[1.5,11.0,2.3,20.0,25.0,150,12.7,"0",'2#12 CU + 1#12 V',18.8,'3/4"','3/4"',30],
+[2.0,13.2,2.7,25.0,30.0,175,15.2,"0",'2#12 CU + 1#12 V',18.8,'3/4"','3/4"',30],
+[3.0,18.7,3.9,35.0,40.0,225,21.5,"1",'2#10 CU + 1#12 V',28.2,'3/4"','3/4"',30],
+[5.0,30.8,6.4,60.0,70.0,400,35.4,"2",'2#8 CU + 1#10 V',47.0,'3/4"','1"',60],
+[7.5,44.0,9.2,80.0,100.0,600,50.6,"2",'2#6 CU + 1#8 V',61.1,'1"','1"',60],
+[10.0,55.0,11.4,100.0,125.0,700,63.3,"3",'2#4 CU + 1#8 V',79.9,'1"','1-1/4"',100],
+]},
+};
+
+const CODE_LETTERS=[
+["A",0,3.14],["B",3.15,3.54],["C",3.55,3.99],["D",4.0,4.49],["E",4.5,4.99],
+["F",5.0,5.59],["G",5.6,6.29],["H",6.3,7.09],["J",7.1,7.99],["K",8.0,8.99],
+["L",9.0,9.99],["M",10.0,11.19],["N",11.2,12.49],["P",12.5,13.99],["R",14.0,15.99],
+["S",16.0,17.99],["T",18.0,19.99],["U",20.0,22.39],["V",22.4,26.0],
+];
+
+/* Fuses come in much finer standard ampere ratings below 15A (CEC Table 13 /
+   dual-element cartridge & midget fuse lines) — small motors must NOT be
+   floored at 15A. Breakers/disconnects realistically start at 15A. */
+const FUSE_STD=[1,1.25,1.6,2,2.25,2.5,2.8,3,3.2,3.5,4,4.5,5,5.6,6,6.25,7,8,9,10,12,15,
+  20,25,30,35,40,45,50,60,70,80,90,100,110,125,150,175,200,225,250,300,
+  350,400,450,500,600,700,800,900,1000,1200,1600,2000,2500,3000,3200,4000,5000,6000,7000,8000];
+const STD_SIZES=[15,20,25,30,35,40,45,50,60,70,80,90,100,110,125,150,175,200,225,250,300,
+  350,400,450,500,600,700,800,900,1000,1200,1600,2000,2500,3000,3200,4000,5000,6000,7000,8000];
+
+function nextStd(x,list=STD_SIZES){
+  for(const s of list){ if(s>=x) return s; }
+  return Math.ceil(x/100)*100;
+}
+/* Pick the smallest cable/conduit/disconnect row (within the same voltage
+   table) whose 75°C conductor ampacity meets a required ampacity. Falls
+   back to the largest listed row (flagged) if nothing in the table is big
+   enough. */
+function pickCableForAmpacity(catKey, requiredAmp){
+  const rows=DATA[catKey].rows;
+  for(const r of rows){ if(r[9] >= requiredAmp) return {row:r, sufficient:true}; }
+  return {row:rows[rows.length-1], sufficient:false};
+}
+function fmt(n,d=1){ return (n===null||n===undefined||isNaN(n)) ? "—" : n.toFixed(d); }
+
+/* ============ state / elements ============ */
+const $=id=>document.getElementById(id);
+const catSel=$("cat"), hpSel=$("hp"), pfIn=$("pf"), effIn=$("eff");
+
+for(const key in DATA){
+  const o=document.createElement("option"); o.value=key; o.textContent=DATA[key].label;
+  catSel.appendChild(o);
+}
+function populateHP(){
+  hpSel.innerHTML="";
+  DATA[catSel.value].rows.forEach((r,i)=>{
+    const o=document.createElement("option"); o.value=i; o.textContent=r[0]+" HP";
+    hpSel.appendChild(o);
+  });
+}
+populateHP();
+
+const MOTOR_PRESETS = [
+  {label:"Pump · 10 HP", cat:"575_3", hp:10},
+  {label:"Fan · 25 HP", cat:"575_3", hp:25},
+  {label:"Compressor · 50 HP", cat:"575_3", hp:50},
+  {label:"Small pump · 5 HP", cat:"208_3", hp:5},
+];
+const presetRow = $("presetRow");
+MOTOR_PRESETS.forEach(p=>{
+  const b = document.createElement("button");
+  b.type = "button";
+  b.textContent = p.label;
+  b.style.cssText = "padding:6px 12px;font-size:12px;border-radius:14px;border:1px solid #2f5678;background:#0f2036;color:#c8d8e8;cursor:pointer;";
+  b.onclick = ()=>{
+    catSel.value = p.cat;
+    populateHP();
+    const idx = DATA[p.cat].rows.findIndex(r=>r[0]===p.hp);
+    if(idx>=0) hpSel.value = idx;
+    render();
+  };
+  presetRow.appendChild(b);
+});
+
+CODE_LETTERS.forEach(([l,lo,hi])=>{
+  const o=document.createElement("option"); o.value=l; o.textContent=`${l}  (${lo.toFixed(2)}–${hi.toFixed(2)} kVA/HP)`;
+  $("codeLetter").appendChild(o);
+});
+$("codeLetter").value="H";
+
+/* ============ core compute ============ */
+function currentRow(){
+  const cat=DATA[catSel.value];
+  const row=cat.rows[hpSel.value];
+  return {cat,row};
+}
+
+function computeFLA(){
+  const {cat,row}=currentRow();
+  const hp=row[0], tableFLA=row[1];
+  const pf=parseFloat(pfIn.value), eff=parseFloat(effIn.value);
+  let fla=tableFLA, method="table";
+  if(pf>0 && pf<=1 && eff>0 && eff<=100){
+    const effFrac=eff/100;
+    if(cat.ph===3){ fla = (hp*746)/(Math.sqrt(3)*cat.v*pf*effFrac); }
+    else { fla = (hp*746)/(cat.v*pf*effFrac); }
+    method="calc";
+  }
+  return {fla,tableFLA,method,hp,v:cat.v,ph:cat.ph,row};
+}
+
+function render(){
+  const F=computeFLA();
+  const {row}=F;
+  const L=UI[currentLang];
+
+  /* --- §1 FLA readouts --- */
+  $("flaReadouts").innerHTML = `
+    <div class="ro hot"><div class="rk">${L.rkFla}</div><div class="rv">${fmt(F.fla,1)}<small> A</small></div></div>
+    <div class="ro"><div class="rk">${L.rkTableFla}</div><div class="rv">${fmt(F.tableFLA,1)}<small> A</small></div></div>
+    <div class="ro"><div class="rk">${L.rkApparentPower}</div><div class="rv">${fmt(row[2],2)}<small> kVA</small></div></div>
+    <div class="ro cool"><div class="rk">${L.rkMotor}</div><div class="rv">${row[0]}<small> HP · ${F.v} V · ${F.ph}Φ</small></div></div>
+  `;
+  $("flaNote").innerHTML = F.method==="calc"
+    ? `<span class="tag">${L.tagCalculated}</span>${L.flaCalcNote.replace('{formula}', F.ph===3?"√3 × V × PF × Eff":"V × PF × Eff").replace('{pf}',pfIn.value).replace('{eff}',effIn.value)}`
+    : `<span class="tag">${L.tagTableValue}</span>${L.flaTableNote}`;
+
+  /* --- §2 short circuit --- */
+  const fuseCalc = 1.75*F.fla, fuseStd = nextStd(fuseCalc, FUSE_STD);
+  const brkCalc = 2.5*F.fla, brkStd = nextStd(brkCalc, STD_SIZES);
+  $("scReadouts").innerHTML = `
+    <div class="ro"><div class="rk">${L.rk175Fla}</div><div class="rv">${fmt(fuseCalc,1)}<small> A</small></div></div>
+    <div class="ro hot"><div class="rk">${L.rkMaxFuseStd}</div><div class="rv">${fuseStd}<small> A</small></div></div>
+    <div class="ro"><div class="rk">${L.rk25Fla}</div><div class="rv">${fmt(brkCalc,1)}<small> A</small></div></div>
+    <div class="ro hot"><div class="rk">${L.rkMaxBrkStd}</div><div class="rv">${brkStd}<small> A</small></div></div>
+  `;
+
+  /* --- §3 overload --- */
+  const customOvl=parseFloat($("ovlCustom").value);
+  const mult = customOvl>0 ? customOvl/100 : (parseFloat($("sfmode").value)/100);
+  const ovlSetting = mult*F.fla;
+  $("ovlOut").innerHTML = `${fmt(ovlSetting,1)} <small>A (${(mult*100).toFixed(0)}% FLA)</small>`;
+
+  /* --- §4 starting current --- */
+  renderStarting(F);
+
+  /* --- §5 cable/conduit/disconnect ---
+     CEC 28-106 requires conductors ≥125% FLA; the overload relay (§3) must
+     also not exceed the conductor ampacity. If the entered PF/efficiency
+     pushed the actual FLA — or the overload setting — above what the
+     table's nominal HP row provides, step up to the next larger cable/
+     conduit/disconnect set from the same voltage table. */
+  const reqAmp = Math.max(1.25*F.fla, ovlSetting);
+  const pick = pickCableForAmpacity(catSel.value, reqAmp);
+  const cRow = pick.row;
+  const upsized = cRow[0] !== row[0];
+
+  $("cableReadouts").innerHTML = `
+    <div class="ro cool"><div class="rk">${L.rkConductors}</div><div class="rv" style="font-size:15px;">${cRow[8]}</div></div>
+    <div class="ro"><div class="rk">${L.rkAmpacity}</div><div class="rv">${cRow[9]}<small> A</small></div></div>
+    <div class="ro"><div class="rk">${L.rkConduitRw90}</div><div class="rv">${cRow[10]}</div></div>
+    <div class="ro"><div class="rk">${L.rkConduitRwu90}</div><div class="rv">${cRow[11]}</div></div>
+    <div class="ro hot"><div class="rk">${L.rkDisconnect}</div><div class="rv">${cRow[12]}<small> A</small></div></div>
+  `;
+
+  const baseNote = `<span class="tag">${L.tagCec28106}</span>${L.reqAmpFormula.replace('{a}',fmt(1.25*F.fla,1)).replace('{b}',fmt(ovlSetting,1)).replace('{c}',fmt(reqAmp,1))}`;
+  let upsizeNote = "";
+  if(!pick.sufficient){
+    upsizeNote = ` ⚠ ${L.upsizeExceedsNote.replace('{label}',DATA[catSel.value].label).replace('{hp}',cRow[0])}`;
+  } else if(upsized){
+    upsizeNote = ` ⚠ ${L.upsizeRaisedNote.replace('{hp1}',row[0]).replace('{hp2}',cRow[0])}`;
+  }
+  $("cableNote").innerHTML = baseNote + upsizeNote;
+}
+
+/* ============ starting current ============ */
+function renderStarting(F){
+  const {row}=F;
+  const L=UI[currentLang];
+  const letter=$("codeLetter").value;
+  const cl=CODE_LETTERS.find(c=>c[0]===letter);
+  const mid=(cl[1]+cl[2])/2;
+  $("codeLetterRange").textContent = L.codeLetterRangeTxt.replace('{letter}',letter).replace('{lo}',cl[1].toFixed(2)).replace('{hi}',cl[2].toFixed(2)).replace('{mid}',mid.toFixed(2));
+
+  let lra;
+  if(F.ph===3){ lra = (mid*F.hp*1000)/(Math.sqrt(3)*F.v); }
+  else { lra = (mid*F.hp*1000)/F.v; }
+  const mult = lra/F.fla;
+
+  $("dolLRA").innerHTML=`${fmt(lra,0)} <small>A</small>`;
+  $("dolMult").innerHTML=`${fmt(mult,1)}× <small>FLA</small>`;
+  $("dolFormula").textContent =
+`LRA = (kVA/HP)code × HP × 1000 / (${F.ph===3?"√3 × V":"V"})
+    = ${mid.toFixed(2)} × ${F.hp} × 1000 / ${F.ph===3?`(1.732 × ${F.v})`:F.v}
+    = ${fmt(lra,0)} A  (≈ ${fmt(mult,1)}× ${L.runningFla})`;
+
+  drawCurve("dolChart", [
+    {t:0,i:lra},{t:0.05,i:lra},{t:5,i:lra*0.97},{t:5.3,i:F.fla*1.6},{t:7,i:F.fla}
+  ], F.fla, lra, L.captionDol);
+
+  /* wye-delta */
+  const wyeCurr = lra/3;
+  $("wyeReadouts").innerHTML = `
+    <div class="ro"><div class="rk">${L.rkDolLra}</div><div class="rv">${fmt(lra,0)}<small> A</small></div></div>
+    <div class="ro hot"><div class="rk">${L.rkStarCurrent}</div><div class="rv">${fmt(wyeCurr,0)}<small> A (${L.approx33Dol})</small></div></div>
+    <div class="ro cool"><div class="rk">${L.rkStartingTorque}</div><div class="rv">≈33%<small> ${L.ofDolTorque}</small></div></div>
+  `;
+  drawWyeDiagram();
+  drawCurve("wyeChart", [
+    {t:0,i:wyeCurr},{t:0.05,i:wyeCurr},{t:4,i:wyeCurr*0.9},
+    {t:4.2,i:lra*0.8},{t:4.6,i:F.fla*1.4},{t:6,i:F.fla}
+  ], F.fla, lra, L.captionWye);
+
+  /* soft starter */
+  const softMult=parseFloat($("softLimit").value);
+  const softCurr=softMult*F.fla;
+  $("softOut").innerHTML=`${fmt(softCurr,0)} <small>A (${softMult*100}% FLA)</small>`;
+  drawCurve("softChart", [
+    {t:0,i:F.fla*0.6},{t:0.3,i:softCurr},{t:4,i:softCurr*0.95},{t:5,i:F.fla}
+  ], F.fla, lra, L.captionSoft);
+
+  /* vfd */
+  const vfdMult=parseFloat($("vfdLimit").value);
+  const vfdCurr=vfdMult*F.fla;
+  $("vfdOut").innerHTML=`${fmt(vfdCurr,0)} <small>A (${vfdMult*100}% FLA)</small>`;
+  drawCurve("vfdChart", [
+    {t:0,i:vfdCurr*0.5},{t:0.5,i:vfdCurr},{t:4,i:vfdCurr},{t:5,i:F.fla}
+  ], F.fla, lra, L.captionVfd);
+}
+
+/* simple svg line chart, oscilloscope styling */
+function drawCurve(containerId, points, fla, lra, caption){
+  const w=560,h=190,pad=34;
+  const maxI=Math.max(lra,fla)*1.08;
+  const maxT=Math.max(...points.map(p=>p.t));
+  const x=t=>pad+(t/maxT)*(w-pad*1.4);
+  const y=i=>h-pad-(i/maxI)*(h-pad*1.6);
+  let path=points.map((p,i)=>`${i===0?"M":"L"} ${x(p.t).toFixed(1)} ${y(p.i).toFixed(1)}`).join(" ");
+  const flaY=y(fla).toFixed(1);
+  const svg=`
+  <svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}">
+    <defs>
+      <linearGradient id="g-${containerId}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#3b9eff" stop-opacity="0.35"/>
+        <stop offset="100%" stop-color="#3b9eff" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    ${[0,0.25,0.5,0.75,1].map(f=>`<line x1="${pad}" y1="${pad+f*(h-pad*1.6)}" x2="${w-4}" y2="${pad+f*(h-pad*1.6)}" stroke="#1a2536" stroke-width="1"/>`).join("")}
+    <line x1="${pad}" y1="${flaY}" x2="${w-4}" y2="${flaY}" stroke="#4fb8ae" stroke-width="1" stroke-dasharray="4 3"/>
+    <text x="${w-6}" y="${flaY-4}" text-anchor="end" font-family="IBM Plex Mono" font-size="10" fill="#4fb8ae">FLA ${fla.toFixed(0)}A</text>
+    <path d="${path} L ${x(points[points.length-1].t).toFixed(1)} ${h-pad} L ${x(0).toFixed(1)} ${h-pad} Z" fill="url(#g-${containerId})" stroke="none"/>
+    <path d="${path}" fill="none" stroke="#3b9eff" stroke-width="2"/>
+    <text x="${pad}" y="14" font-family="IBM Plex Mono" font-size="10" fill="#7f93a8">${caption}</text>
+    <text x="${pad}" y="${h-8}" font-family="IBM Plex Mono" font-size="9" fill="#5b6e82">t (s) →</text>
+  </svg>`;
+  $(containerId).innerHTML=svg;
+}
+
+function drawWyeDiagram(){
+  const svg = document.querySelector("#m-wye svg");
+  svg.innerHTML = `
+    <g font-family="IBM Plex Mono" font-size="9" fill="#7f93a8">
+      <rect x="10" y="10" width="70" height="24" rx="4" fill="none" stroke="#233248"/>
+      <text x="45" y="26" text-anchor="middle" fill="#e7edf3">L1 L2 L3</text>
+
+      <rect x="115" y="55" width="70" height="22" rx="4" fill="none" stroke="#4fb8ae"/>
+      <text x="150" y="70" text-anchor="middle" fill="#4fb8ae">KM1 — main</text>
+
+      <rect x="30" y="105" width="70" height="22" rx="4" fill="none" stroke="#3b9eff"/>
+      <text x="65" y="120" text-anchor="middle" fill="#3b9eff">KM2 — star</text>
+
+      <rect x="200" y="105" width="70" height="22" rx="4" fill="none" stroke="#e1584b"/>
+      <text x="235" y="120" text-anchor="middle" fill="#e1584b">KM3 — delta</text>
+
+      <rect x="105" y="155" width="90" height="30" rx="6" fill="none" stroke="#233248"/>
+      <text x="150" y="174" text-anchor="middle" fill="#e7edf3">Motor windings</text>
+
+      <line x1="45" y1="34" x2="150" y2="55" stroke="#233248"/>
+      <line x1="150" y1="77" x2="65" y2="105" stroke="#233248"/>
+      <line x1="150" y1="77" x2="235" y2="105" stroke="#233248"/>
+      <line x1="65" y1="127" x2="130" y2="155" stroke="#233248"/>
+      <line x1="235" y1="127" x2="170" y2="155" stroke="#233248"/>
+    </g>`;
+}
+
+/* ============ events ============ */
+["change","input"].forEach(evt=>{
+  document.addEventListener(evt, e=>{
+    if(e.target===catSel){ populateHP(); render(); return; }
+    if([hpSel,pfIn,effIn,$("codeLetter"),$("sfmode"),$("ovlCustom"),$("softLimit"),$("vfdLimit")].includes(e.target)){
+      render();
+    }
+  });
+});
+
+document.getElementById("methodTabs").addEventListener("click", e=>{
+  const btn=e.target.closest(".mtab"); if(!btn) return;
+  document.querySelectorAll(".mtab").forEach(b=>b.classList.remove("active"));
+  document.querySelectorAll(".method-body").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+  document.getElementById("m-"+btn.dataset.m).classList.add("active");
+  render();
+});
+
+/* ============ summary / export ============ */
+function buildSummaryRows(){
+  const F=computeFLA();
+  const {row}=F;
+  const fuseCalc = 1.75*F.fla, fuseStd = nextStd(fuseCalc, FUSE_STD);
+  const brkCalc = 2.5*F.fla, brkStd = nextStd(brkCalc, STD_SIZES);
+  const customOvl=parseFloat($("ovlCustom").value);
+  const mult = customOvl>0 ? customOvl/100 : (parseFloat($("sfmode").value)/100);
+  const ovlSetting = mult*F.fla;
+  const reqAmp = Math.max(1.25*F.fla, ovlSetting);
+  const pick = pickCableForAmpacity(catSel.value, reqAmp);
+  const cRow = pick.row;
+  const methodBtn = document.querySelector(".mtab.active");
+  const methodLabel = methodBtn ? methodBtn.textContent.trim() : "—";
+
+  return [
+    ["Motor", `${row[0]} HP · ${F.v} V · ${F.ph}Φ`],
+    ["FLA source", F.method==="calc" ? "Calculated from PF/efficiency" : "Table value"],
+    ["Full-load current (FLA)", `${fmt(F.fla,1)} A`],
+    ["Code letter", $("codeLetter").value],
+    ["", ""],
+    ["-- Short-circuit protection (CEC 28-200 / Table 29) --", ""],
+    ["Max. time-delay fuse", `${fuseStd} A (1.75× FLA = ${fmt(fuseCalc,1)} A)`],
+    ["Max. inverse-time breaker", `${brkStd} A (2.5× FLA = ${fmt(brkCalc,1)} A)`],
+    ["", ""],
+    ["-- Overload protection (CEC 28-306) --", ""],
+    ["Overload relay setting", `${fmt(ovlSetting,1)} A (${(mult*100).toFixed(0)}% FLA)`],
+    ["", ""],
+    ["-- Starting method --", ""],
+    ["Method", methodLabel],
+    ["", ""],
+    ["-- Cable, conduit & disconnect (Cu, 75°C term., 35°C amb., <=3 CCC) --", ""],
+    ["Conductors", cRow[8]],
+    ["Conductor ampacity (75°C)", `${cRow[9]} A`],
+    ["Conduit (RW90)", cRow[10]],
+    ["Conduit (RWU90)", cRow[11]],
+    ["Disconnect switch", `${cRow[12]} A`],
+    ["", ""],
+    ["Disclaimer", "Engineering reference only. Values follow CEC Rule 28-200 (Table 29), 28-106 and 28-306 concepts as commonly applied — always verify final selections, standard device ratings and local amendments against the current edition of CSA C22.1 and the equipment nameplate before installation."]
+  ];
+}
+
+document.getElementById("copyBtn").addEventListener("click", () => {
+  const rows = buildSummaryRows();
+  const text = rows.map(r => r[1] ? `${r[0]}: ${r[1]}` : r[0]).join("\n");
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn = document.getElementById("copyBtn");
+    const original = btn.textContent;
+    btn.textContent = "✓ Copied";
+    setTimeout(()=>{ btn.textContent = original; }, 1800);
+  }).catch(()=>{ alert("Could not copy — please select and copy manually."); });
+});
+
+document.getElementById("printBtn").addEventListener("click", () => window.print());
+
+document.getElementById("exportWordBtn").addEventListener("click", () => {
+  const rows = buildSummaryRows();
+  const bodyRows = rows.map(r=>{
+    if(r[0]==="" && r[1]==="") return `<tr><td colspan="2" style="border:none;padding:4px;"></td></tr>`;
+    if(r[0] && r[0].startsWith("--")) return `<tr><td colspan="2" style="padding:8px 10px;font-weight:700;border:1px solid #ccc;background:#f0f0f0;">${r[0].replace(/--/g,'').trim()}</td></tr>`;
+    return `<tr><td style="padding:5px 10px;border:1px solid #ccc;">${r[0]}</td><td style="padding:5px 10px;border:1px solid #ccc;">${r[1]}</td></tr>`;
+  }).join("");
+  const doc = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+  <head><meta charset="utf-8"><title>Motor Circuit Summary</title>
+  <!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View></w:WordDocument></xml><![endif]-->
+  </head><body style="font-family:Calibri,Arial,sans-serif;color:#1a1a1a;background:#fff;">
+  <h2 style="font-family:Calibri,Arial,sans-serif;">${document.getElementById('h1Txt').textContent}</h2>
+  <table style="border-collapse:collapse;width:100%;font-size:10.5pt;"><tr><td style="padding:6px 10px;background:#1a2f4a;color:#fff;font-weight:600;border:1px solid #ccc;">Parameter</td><td style="padding:6px 10px;background:#1a2f4a;color:#fff;font-weight:600;border:1px solid #ccc;">Value</td></tr>${bodyRows}</table>
+  <p style="font-size:9pt;color:#777;margin-top:16px;">© 2026 OhmZone. All rights reserved.</p>
+  </body></html>`;
+  downloadBlob(doc, "application/msword", "motor_circuit_summary.doc");
+});
+
+function downloadBlob(content, mime, filename){
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 2000);
+}
+
+document.getElementById("exportExcelBtn").addEventListener("click", () => {
+  const rows = buildSummaryRows();
+  const ws = XLSX.utils.aoa_to_sheet([["Parameter","Value"], ...rows]);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Motor Circuit");
+  XLSX.writeFile(wb, "motor_circuit_summary.xlsx");
+});
+
+/* ===================== i18n ===================== */
+let currentLang = 'en';
+const UI = {
+  en: {
+    eyebrowTxt: "Motor branch circuit — sizing reference",
+    h1Txt: 'Cable, protection &amp; starting<br><span>current</span> calculator',
+    subTxt: "Select a supply voltage and motor size to size the branch-circuit short-circuit protection, overload relay, starting-current behaviour, feeder cable, conduit and disconnect switch — built from a standard 35&nbsp;°C-ambient motor protection reference table (CSA C22.1 / Canadian Electrical Code Part&nbsp;I basis).",
+    disclaimerTxt: "⚠ Engineering reference only. Values follow CEC Rule 28‑200 (Table 29), 28‑106 and 28‑306 concepts as commonly applied — always verify final selections, standard device ratings and local amendments against the current edition of CSA C22.1 and the equipment nameplate before installation.",
+    s1Title: "Motor &amp; supply data", s1Note: "— voltage, size, and (optional) actual PF / efficiency",
+    lblPresets: "Common presets", lblSupplyV: "Supply voltage / phase", lblRating: "Motor rating (HP)",
+    lblPf: "Power factor (optional)", hintPf: "0 – 1. Leave blank to use table FLA.",
+    lblEff: "Efficiency % (optional)", hintEff: "Leave blank to use table FLA.",
+    s2Title: "Short-circuit protection — fuse &amp; breaker",
+    s2Expl: "Table 29 caps the branch-circuit short-circuit device at a multiple of full-load current (FLC), depending on device type. <b>Time-delay (dual-element) fuse: 175% FLA.</b> <b>Non-time-delay fuse: 300% FLA.</b> <b>Inverse-time circuit breaker: 250% FLA.</b> <b>Instantaneous-trip breaker: up to 1300% FLA</b> (CEC) — used mainly ahead of VFDs / soft starters, sized per the drive manufacturer's data.",
+    s2Note: '<span class="tag">CEC 28‑200 / Tbl 29</span>The rating is calculated from the motor\'s full-load current, then rounded up to the <b>next standard overcurrent device size</b> (CEC Table 13 / Rule 14‑104). If the device won\'t allow the motor to start, Rule 28‑200(d) permits a time-delay fuse up to 225% FLA. Instantaneous-trip breakers feeding a VFD or soft starter are normally sized from the drive\'s own input-current data rather than Table 29 directly.',
+    s3Title: "Overload protection",
+    lblSf: "Nameplate service factor / temp. rise",
+    optSf125: "Service factor ≥ 1.15, or temp. rise ≤ 40 °C → 125% FLA",
+    optSf115: "Service factor &lt; 1.15 and temp. rise &gt; 40 °C → 115% FLA",
+    lblOvlCustom: "Or enter a custom multiplier", hintOvlCustom: "% of FLA. Overrides the dropdown if filled in.",
+    lblOvlSetting: "Overload relay setting",
+    s3Note: '<span class="tag">CEC 28‑306</span>Overload devices protect the motor from sustained overheating, not from short-circuit current. A motor with a nameplate service factor of 1.15 or greater (or a temperature rise of 40 °C or less) is set at 125% of FLA; otherwise the relay is limited to 115% of FLA. This is a separate device from the branch-circuit fuse/breaker in §2.',
+    s4Title: "Starting method &amp; starting current",
+    tabDol: "Direct-On-Line (DOL)", tabWye: "Star-Delta (Y‑Δ)", tabSoft: "Soft Starter", tabVfd: "VFD",
+    dolExpl: "Direct-on-line starting connects the motor straight across full line voltage. Starting (locked-rotor) current is estimated from the motor's nameplate <b>Code Letter</b>, which states the locked-rotor kVA per HP (NEMA MG‑1 / CEC Table 45‑equivalent code letter table).",
+    lblCodeLetter: "Nameplate code letter", lblDolLRA: "Locked-rotor / starting current", lblDolMult: "Starting current as multiple of FLA",
+    wyeExpl: "Star-delta (wye-delta) starting connects the motor windings in <b>star (Y)</b> for the start — dropping the voltage across each winding to 1/√3 (≈58%) of line voltage — then switches to <b>delta (Δ)</b> for the run. Because starting current scales with voltage on a constant-impedance locked rotor, the line starting current drops to about <b>1/3</b> of the DOL value; starting torque also drops to about 1/3.",
+    wyeH4a: "Wiring — star / delta contactors", wyeH4b: "Current vs. time",
+    softExpl: "A solid-state soft starter uses back-to-back SCRs to ramp the applied voltage smoothly, holding starting current to a set current limit instead of a fixed step. The adjustable range is usually about <b>200–400% FLA</b> — lightly loaded, low-inertia loads (e.g. pumps, fans) can often be set as low as ~200%, while high-inertia loads need closer to 400%. Starting torque ramps with it, giving a smoother mechanical start than DOL or Y‑Δ.",
+    lblSoftLimit: "Current-limit setting",
+    optSoft2: "200% FLA (light load)", optSoft25: "250% FLA", optSoft3: "300% FLA", optSoft35: "350% FLA", optSoft4: "400% FLA (high inertia)",
+    lblSoftOut: "Limited starting current",
+    vfdExpl: "A variable-frequency drive starts the motor at low frequency/voltage with full closed-loop current control, so line-side inrush stays close to (typically <b>100–150%</b>) rated current — no locked-rotor spike is presented to the supply. Protection ahead of the VFD is selected from the drive's own input-current / let-through data, not Table 29.",
+    lblVfdLimit: "Current-limit setting", optVfd100: "100% FLA", optVfd125: "125% FLA", optVfd150: "150% FLA",
+    lblVfdOut: "Limited starting current",
+    s5Title: "Cable, conduit &amp; disconnect", s5Note: "— copper conductors, 75 °C termination, 35 °C ambient, ≤3 CCC/conduit",
+    s5Note2: "Conduit sizes shown are minimum trade size for the conductor set listed, in RW90 and RWU90 (wet-location) insulation. Aluminum conductor sizing is not yet included in this table — copper only for now.",
+    footerTxt: "Data basis: manufacturer 35 °C-ambient motor protection &amp; wiring table (Motor.pdf), sections 3.1A–3.1F — 575 V/460 V/208 V 3Φ, 115 V/230 V/208 V 1Φ induction motors. Reference tool only; confirm against CSA C22.1 current edition, drive/starter manufacturer data and the motor nameplate.",
+    copyBtnLabel: "📋 Copy spec summary", printBtnLabel: "🖨 Print / Save as PDF", exportWordLabel: "📄 Export summary (Word)", exportBtnLabel: "📊 Export summary (Excel)",
+    rkFla: "Full-load current (FLA)", rkTableFla: "Table FLA (reference)", rkApparentPower: "Apparent power", rkMotor: "Motor",
+    tagCalculated: "Calculated", flaCalcNote: "FLA = HP × 746 / ({formula}) using your entered power factor ({pf}) and efficiency ({eff}%).",
+    tagTableValue: "Table value", flaTableNote: "No power factor / efficiency entered — using the manufacturer table's full-load current for this HP/voltage/phase combination.",
+    rk175Fla: "1.75 × FLA (time-delay fuse)", rkMaxFuseStd: "Max. time-delay fuse (std. size)",
+    rk25Fla: "2.5 × FLA (inverse-time breaker)", rkMaxBrkStd: "Max. inverse-time breaker (std. size)",
+    rkConductors: "Conductors (Cu)", rkAmpacity: "Conductor ampacity (75 °C)",
+    rkConduitRw90: "Conduit — RW90", rkConduitRwu90: "Conduit — RWU90", rkDisconnect: "Disconnect switch",
+    tagCec28106: "CEC 28‑106", reqAmpFormula: "Required ampacity = max(1.25 × FLA, overload relay setting) = max({a} A, {b} A) = <b>{c} A</b>.",
+    upsizeExceedsNote: "This exceeds every cable set listed for {label} in the source table — the largest available set ({hp} HP row) is shown, but it does not fully cover the required ampacity. Have an engineer size a custom conductor.",
+    upsizeRaisedNote: "Your entered PF/efficiency (or overload setting) raised the required ampacity above the {hp1} HP table row's cable — the table's <b>{hp2} HP</b> cable/conduit/disconnect set is shown instead so the conductors and disconnect stay adequately rated.",
+    codeLetterRangeTxt: "Locked-rotor kVA/HP range for code letter {letter}: {lo}–{hi} (using midpoint {mid})",
+    runningFla: "running FLA", captionDol: "DOL: instant full-voltage step, decays after acceleration",
+    rkDolLra: "DOL locked-rotor current", rkStarCurrent: "Star-connection starting current", approx33Dol: "≈33% of DOL",
+    rkStartingTorque: "Starting torque", ofDolTorque: "of DOL torque",
+    captionWye: "Star stage → transition spike → delta run",
+    captionSoft: "Ramped voltage — current limited at the set point",
+    captionVfd: "Closed-loop current limit — no inrush spike to the line"
+  },
+  fr: {
+    eyebrowTxt: "Circuit de dérivation moteur — référence de dimensionnement",
+    h1Txt: 'Calculateur de câbles, protection<br><span>et courant</span> de démarrage',
+    subTxt: "Sélectionnez une tension d'alimentation et une taille de moteur pour dimensionner la protection contre les courts-circuits du circuit de dérivation, le relais de surcharge, le comportement du courant de démarrage, le câble d'alimentation, le conduit et le sectionneur — à partir d'un tableau de référence standard de protection moteur à ambiante 35&nbsp;°C (base CSA C22.1 / Code canadien de l'électricité, Partie&nbsp;I).",
+    disclaimerTxt: "⚠ Référence technique seulement. Les valeurs suivent les concepts des règles 28‑200 (tableau 29), 28‑106 et 28‑306 du CCE tels que couramment appliqués — validez toujours les sélections finales, les calibres normalisés et les modifications locales auprès de l'édition en vigueur de la CSA C22.1 et de la plaque signalétique de l'équipement avant l'installation.",
+    s1Title: "Données du moteur et de l'alimentation", s1Note: "— tension, taille, et (facultatif) FP / rendement réels",
+    lblPresets: "Préréglages courants", lblSupplyV: "Tension d'alimentation / phase", lblRating: "Puissance du moteur (HP)",
+    lblPf: "Facteur de puissance (facultatif)", hintPf: "0 – 1. Laisser vide pour utiliser le FLA du tableau.",
+    lblEff: "Rendement % (facultatif)", hintEff: "Laisser vide pour utiliser le FLA du tableau.",
+    s2Title: "Protection contre les courts-circuits — fusible et disjoncteur",
+    s2Expl: "Le tableau 29 limite le dispositif de protection contre les courts-circuits du circuit de dérivation à un multiple du courant à pleine charge (FLC), selon le type de dispositif. <b>Fusible temporisé (bi-élément) : 175 % FLA.</b> <b>Fusible non temporisé : 300 % FLA.</b> <b>Disjoncteur à temps inverse : 250 % FLA.</b> <b>Disjoncteur à déclenchement instantané : jusqu'à 1300 % FLA</b> (CCE) — utilisé principalement en amont des VFD/démarreurs progressifs, dimensionné selon les données du fabricant du variateur.",
+    s2Note: '<span class="tag">CCE 28‑200 / Tabl. 29</span>Le calibre est calculé à partir du courant à pleine charge du moteur, puis arrondi au <b>calibre normalisé de dispositif de surintensité supérieur</b> (tableau 13 / règle 14‑104 du CCE). Si le dispositif ne permet pas au moteur de démarrer, la règle 28‑200(d) permet un fusible temporisé jusqu\'à 225 % FLA. Les disjoncteurs à déclenchement instantané alimentant un VFD ou un démarreur progressif sont normalement dimensionnés à partir des données de courant d\'entrée du variateur plutôt que directement du tableau 29.',
+    s3Title: "Protection contre les surcharges",
+    lblSf: "Facteur de service / élévation de température (plaque signalétique)",
+    optSf125: "Facteur de service ≥ 1,15, ou élévation ≤ 40 °C → 125 % FLA",
+    optSf115: "Facteur de service &lt; 1,15 et élévation &gt; 40 °C → 115 % FLA",
+    lblOvlCustom: "Ou entrez un multiplicateur personnalisé", hintOvlCustom: "% du FLA. Remplace la liste déroulante si rempli.",
+    lblOvlSetting: "Réglage du relais de surcharge",
+    s3Note: '<span class="tag">CCE 28‑306</span>Les dispositifs de surcharge protègent le moteur contre la surchauffe soutenue, non contre le courant de court-circuit. Un moteur avec un facteur de service de plaque signalétique de 1,15 ou plus (ou une élévation de température de 40 °C ou moins) est réglé à 125 % du FLA; sinon, le relais est limité à 115 % du FLA. Il s\'agit d\'un dispositif distinct du fusible/disjoncteur du circuit de dérivation à la §2.',
+    s4Title: "Méthode et courant de démarrage",
+    tabDol: "Démarrage direct (DOL)", tabWye: "Étoile-Triangle (Y‑Δ)", tabSoft: "Démarreur progressif", tabVfd: "VFD",
+    dolExpl: "Le démarrage direct connecte le moteur directement à la pleine tension de ligne. Le courant de démarrage (rotor bloqué) est estimé à partir de la <b>lettre-code</b> de la plaque signalétique du moteur, qui indique le kVA à rotor bloqué par HP (tableau NEMA MG‑1 / équivalent au tableau 45 du CCE).",
+    lblCodeLetter: "Lettre-code de la plaque signalétique", lblDolLRA: "Courant à rotor bloqué / démarrage", lblDolMult: "Courant de démarrage en multiple du FLA",
+    wyeExpl: "Le démarrage étoile-triangle connecte les enroulements du moteur en <b>étoile (Y)</b> pour le démarrage — réduisant la tension sur chaque enroulement à 1/√3 (≈58 %) de la tension de ligne — puis passe en <b>triangle (Δ)</b> pour le régime établi. Comme le courant de démarrage varie avec la tension pour un rotor bloqué à impédance constante, le courant de démarrage de ligne chute à environ <b>1/3</b> de la valeur DOL; le couple de démarrage chute aussi à environ 1/3.",
+    wyeH4a: "Câblage — contacteurs étoile / triangle", wyeH4b: "Courant en fonction du temps",
+    softExpl: "Un démarreur progressif à semi-conducteurs utilise des thyristors tête-bêche pour augmenter la tension appliquée en douceur, limitant le courant de démarrage à une valeur réglée plutôt qu'un palier fixe. La plage réglable est généralement d'environ <b>200–400 % FLA</b> — les charges légères à faible inertie (p. ex. pompes, ventilateurs) peuvent souvent être réglées aussi bas que ~200 %, tandis que les charges à forte inertie nécessitent près de 400 %. Le couple de démarrage augmente avec la tension, offrant un démarrage mécanique plus doux que le DOL ou le Y‑Δ.",
+    lblSoftLimit: "Réglage de limite de courant",
+    optSoft2: "200 % FLA (charge légère)", optSoft25: "250 % FLA", optSoft3: "300 % FLA", optSoft35: "350 % FLA", optSoft4: "400 % FLA (forte inertie)",
+    lblSoftOut: "Courant de démarrage limité",
+    vfdExpl: "Un variateur de fréquence démarre le moteur à basse fréquence/tension avec un contrôle de courant en boucle fermée complet, de sorte que l'appel de courant côté ligne reste proche du courant nominal (typiquement <b>100–150 %</b>) — aucune pointe à rotor bloqué n'est présentée au réseau. La protection en amont du VFD est choisie à partir des données de courant d'entrée/let-through propres au variateur, et non du tableau 29.",
+    lblVfdLimit: "Réglage de limite de courant", optVfd100: "100 % FLA", optVfd125: "125 % FLA", optVfd150: "150 % FLA",
+    lblVfdOut: "Courant de démarrage limité",
+    s5Title: "Câble, conduit et sectionneur", s5Note: "— conducteurs en cuivre, terminaison 75 °C, ambiante 35 °C, ≤3 CCC/conduit",
+    s5Note2: "Les tailles de conduit indiquées sont la taille commerciale minimale pour l'ensemble de conducteurs listé, en isolation RW90 et RWU90 (emplacement humide). Le dimensionnement en conducteurs d'aluminium n'est pas encore inclus dans ce tableau — cuivre seulement pour l'instant.",
+    footerTxt: "Base de données : tableau du fabricant de protection et de câblage moteur à ambiante 35 °C (Motor.pdf), sections 3.1A–3.1F — moteurs à induction 575 V/460 V/208 V 3Φ, 115 V/230 V/208 V 1Φ. Outil de référence seulement; confirmez auprès de l'édition en vigueur de la CSA C22.1, des données du fabricant du variateur/démarreur et de la plaque signalétique du moteur.",
+    copyBtnLabel: "📋 Copier le résumé", printBtnLabel: "🖨 Imprimer / Enregistrer en PDF", exportWordLabel: "📄 Exporter le résumé (Word)", exportBtnLabel: "📊 Exporter le résumé (Excel)",
+    rkFla: "Courant à pleine charge (FLA)", rkTableFla: "FLA du tableau (référence)", rkApparentPower: "Puissance apparente", rkMotor: "Moteur",
+    tagCalculated: "Calculé", flaCalcNote: "FLA = HP × 746 / ({formula}) selon le facteur de puissance ({pf}) et le rendement ({eff} %) entrés.",
+    tagTableValue: "Valeur du tableau", flaTableNote: "Aucun facteur de puissance / rendement entré — utilisation du courant à pleine charge du tableau du fabricant pour cette combinaison HP/tension/phase.",
+    rk175Fla: "1,75 × FLA (fusible temporisé)", rkMaxFuseStd: "Fusible temporisé max. (calibre normalisé)",
+    rk25Fla: "2,5 × FLA (disjoncteur à temps inverse)", rkMaxBrkStd: "Disjoncteur à temps inverse max. (calibre normalisé)",
+    rkConductors: "Conducteurs (Cu)", rkAmpacity: "Ampacité du conducteur (75 °C)",
+    rkConduitRw90: "Conduit — RW90", rkConduitRwu90: "Conduit — RWU90", rkDisconnect: "Sectionneur",
+    tagCec28106: "CCE 28‑106", reqAmpFormula: "Ampacité requise = max(1,25 × FLA, réglage du relais de surcharge) = max({a} A, {b} A) = <b>{c} A</b>.",
+    upsizeExceedsNote: "Ceci dépasse tous les ensembles de câbles listés pour {label} dans le tableau source — le plus grand ensemble disponible (rangée {hp} HP) est affiché, mais il ne couvre pas entièrement l'ampacité requise. Faites dimensionner un conducteur personnalisé par un ingénieur.",
+    upsizeRaisedNote: "Votre FP/rendement entré (ou réglage de surcharge) a augmenté l'ampacité requise au-delà du câble de la rangée {hp1} HP du tableau — l'ensemble câble/conduit/sectionneur de la rangée <b>{hp2} HP</b> du tableau est affiché à la place afin que les conducteurs et le sectionneur restent adéquatement calibrés.",
+    codeLetterRangeTxt: "Plage kVA/HP à rotor bloqué pour la lettre-code {letter} : {lo}–{hi} (point médian {mid} utilisé)",
+    runningFla: "FLA en marche", captionDol: "DOL : palier de pleine tension instantané, décroît après l'accélération",
+    rkDolLra: "Courant à rotor bloqué DOL", rkStarCurrent: "Courant de démarrage en connexion étoile", approx33Dol: "≈33 % du DOL",
+    rkStartingTorque: "Couple de démarrage", ofDolTorque: "du couple DOL",
+    captionWye: "Étage étoile → pointe de transition → régime triangle",
+    captionSoft: "Tension progressive — courant limité au point de consigne",
+    captionVfd: "Limite de courant en boucle fermée — aucune pointe d'appel au réseau"
+  }
+};
+
+function applyStaticI18n(){
+  const L = UI[currentLang];
+  document.getElementById('eyebrowTxt').textContent = L.eyebrowTxt;
+  document.getElementById('h1Txt').innerHTML = L.h1Txt;
+  document.getElementById('subTxt').innerHTML = L.subTxt;
+  document.getElementById('disclaimerTxt').innerHTML = '⚠ ' + L.disclaimerTxt.replace(/^⚠ /,'');
+  document.getElementById('s1Title').innerHTML = L.s1Title;
+  document.getElementById('s1Note').textContent = L.s1Note;
+  document.getElementById('lblPresets').textContent = L.lblPresets;
+  document.getElementById('lblSupplyV').textContent = L.lblSupplyV;
+  document.getElementById('lblRating').textContent = L.lblRating;
+  document.getElementById('lblPf').textContent = L.lblPf;
+  document.getElementById('hintPf').textContent = L.hintPf;
+  document.getElementById('lblEff').textContent = L.lblEff;
+  document.getElementById('hintEff').textContent = L.hintEff;
+  document.getElementById('s2Title').innerHTML = L.s2Title;
+  document.getElementById('s2Expl').innerHTML = L.s2Expl;
+  document.getElementById('s2Note').innerHTML = L.s2Note;
+  document.getElementById('s3Title').textContent = L.s3Title;
+  document.getElementById('lblSf').textContent = L.lblSf;
+  document.getElementById('optSf125').innerHTML = L.optSf125;
+  document.getElementById('optSf115').innerHTML = L.optSf115;
+  document.getElementById('lblOvlCustom').textContent = L.lblOvlCustom;
+  document.getElementById('hintOvlCustom').textContent = L.hintOvlCustom;
+  document.getElementById('lblOvlSetting').textContent = L.lblOvlSetting;
+  document.getElementById('s3Note').innerHTML = L.s3Note;
+  document.getElementById('s4Title').innerHTML = L.s4Title;
+  document.getElementById('tabDol').textContent = L.tabDol;
+  document.getElementById('tabWye').textContent = L.tabWye;
+  document.getElementById('tabSoft').textContent = L.tabSoft;
+  document.getElementById('tabVfd').textContent = L.tabVfd;
+  document.getElementById('dolExpl').innerHTML = L.dolExpl;
+  document.getElementById('lblCodeLetter').textContent = L.lblCodeLetter;
+  document.getElementById('lblDolLRA').textContent = L.lblDolLRA;
+  document.getElementById('lblDolMult').textContent = L.lblDolMult;
+  document.getElementById('wyeExpl').innerHTML = L.wyeExpl;
+  document.getElementById('wyeH4a').textContent = L.wyeH4a;
+  document.getElementById('wyeH4b').textContent = L.wyeH4b;
+  document.getElementById('softExpl').innerHTML = L.softExpl;
+  document.getElementById('lblSoftLimit').textContent = L.lblSoftLimit;
+  document.getElementById('optSoft2').textContent = L.optSoft2;
+  document.getElementById('optSoft25').textContent = L.optSoft25;
+  document.getElementById('optSoft3').textContent = L.optSoft3;
+  document.getElementById('optSoft35').textContent = L.optSoft35;
+  document.getElementById('optSoft4').textContent = L.optSoft4;
+  document.getElementById('lblSoftOut').textContent = L.lblSoftOut;
+  document.getElementById('vfdExpl').innerHTML = L.vfdExpl;
+  document.getElementById('lblVfdLimit').textContent = L.lblVfdLimit;
+  document.getElementById('optVfd100').textContent = L.optVfd100;
+  document.getElementById('optVfd125').textContent = L.optVfd125;
+  document.getElementById('optVfd150').textContent = L.optVfd150;
+  document.getElementById('lblVfdOut').textContent = L.lblVfdOut;
+  document.getElementById('s5Title').innerHTML = L.s5Title;
+  document.getElementById('s5Note').textContent = L.s5Note;
+  document.getElementById('s5Note2').textContent = L.s5Note2;
+  document.getElementById('footerTxt').innerHTML = L.footerTxt;
+  document.getElementById('copyBtn').textContent = L.copyBtnLabel;
+  document.getElementById('printBtn').textContent = L.printBtnLabel;
+  document.getElementById('exportWordBtn').textContent = L.exportWordLabel;
+  document.getElementById('exportExcelBtn').textContent = L.exportBtnLabel;
+}
+
+function setLang(lang){
+  currentLang = lang;
+  document.getElementById('btn-en').classList.toggle('active', lang==='en');
+  document.getElementById('btn-fr').classList.toggle('active', lang==='fr');
+  document.documentElement.lang = lang;
+  try { localStorage.setItem('ohmzone-lang', lang); } catch(e) {}
+  applyStaticI18n();
+  render();
+}
+
+(function(){
+  let saved = 'en';
+  try { saved = localStorage.getItem('ohmzone-lang') || 'en'; } catch(e) {}
+  setLang(saved);
+})();
+</script>
+<div style="position:fixed;bottom:6px;right:12px;z-index:9999;font-family:monospace;font-size:10px;color:#5c7592;opacity:0.75;">© 2026 OhmZone. All rights reserved.</div>
+</body>
+</html>

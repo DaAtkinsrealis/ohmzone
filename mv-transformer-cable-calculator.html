@@ -1,0 +1,1328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MV Transformer — Primary Cable Sizing</title>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3887318872951674" crossorigin="anonymous"></script>
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icon-16.png">
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="OhmZone">
+<meta name="theme-color" content="#0a1728">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.6/dist/pizzip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.6/dist/pizzip-utils.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/docxtemplater@3.47.2/js/docxtemplater.js"></script>
+<style>
+@media print{
+  .no-print{display:none !important;}
+  body{background:#fff !important;}
+}
+:root{
+  --bg:#080c14; --bg2:#0d1420; --panel:#111a2a; --panel-soft:#0c1220;
+  --line:#233350; --line-soft:#182238; --grid-line: rgba(96,140,196,0.09);
+  --ink:#e7edf7; --ink-dim:#8497b8; --ink-faint:#516085;
+  --trace:#3b9eff; --trace-soft:#1a3a5c; --gold:#e8b545;
+  --alarm:#ff5d77; --alarm-soft:#4a1f2b; --warn:#e3a83b; --warn-soft:#4a3a1a;
+  --radius:2px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',sans-serif;}
+body{
+  background-image:linear-gradient(var(--grid-line) 1px, transparent 1px),linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size:28px 28px; min-height:100vh;
+}
+::selection{background:var(--trace);color:#04120f;}
+a{color:var(--trace);}
+.mono{font-family:'IBM Plex Mono',monospace;}
+input:focus-visible, select:focus-visible, button:focus-visible{outline:2px solid var(--trace); outline-offset:2px;}
+.lang-switch{display:flex;align-items:center;background:#0f2036;border:1px solid #2f5678;border-radius:16px;padding:3px;gap:2px;font-family:monospace;font-size:11px;position:fixed;top:10px;right:12px;z-index:9999;}
+.lang-switch button{border:none;background:transparent;color:#8fa8c2;padding:5px 12px;border-radius:13px;cursor:pointer;font-family:inherit;font-size:inherit;}
+.lang-switch button.active{background:var(--trace);color:#04120f;font-weight:700;}
+
+.titleblock{border-bottom:1px solid var(--line); background:linear-gradient(180deg, rgba(17,26,42,.9), rgba(13,20,32,.7)); padding:18px 22px; display:flex; flex-wrap:wrap; gap:14px 28px; align-items:flex-end; justify-content:space-between;}
+.titleblock .brand{display:flex; align-items:baseline; gap:12px;}
+.titleblock .brand .mark{width:34px;height:34px;border:1.5px solid var(--trace); border-radius:3px; display:flex;align-items:center;justify-content:center;color:var(--trace); font-family:'IBM Plex Mono';font-weight:700;font-size:12px;flex:none; box-shadow:0 0 14px rgba(59, 158, 255,.18) inset;}
+.titleblock h1{font-family:'IBM Plex Sans Condensed'; font-weight:700; letter-spacing:.3px; font-size:20px; margin:0; text-transform:uppercase;}
+.titleblock .sub{color:var(--ink-dim); font-size:12.5px; margin-top:2px;}
+.stamp{display:grid; grid-template-columns:repeat(4,auto); gap:0 22px; font-family:'IBM Plex Mono'; font-size:10.5px; color:var(--ink-dim);}
+.stamp div b{display:block; color:var(--ink-faint); font-weight:500; font-size:9px; letter-spacing:.06em; text-transform:uppercase;}
+.stamp div span{color:var(--trace); font-weight:600; font-size:12px;}
+
+.top-disclaimer{max-width:1480px; margin:14px auto 0; padding:10px 16px; border:1px solid var(--warn); background:rgba(227,168,59,.07); border-radius:var(--radius); font-size:11.5px; color:var(--ink-dim); line-height:1.6;}
+.top-disclaimer b{color:var(--warn);}
+
+.app{display:grid; grid-template-columns:400px 1fr; gap:1px; background:var(--line); max-width:1480px; margin:0 auto;}
+@media (max-width:980px){ .app{grid-template-columns:1fr;} }
+.steps{background:var(--bg2); padding:18px 16px 40px; display:flex; flex-direction:column; gap:14px;}
+.canvas-col{background:var(--bg2); display:flex; flex-direction:column; gap:1px; background:var(--line);}
+.canvas-col > *{background:var(--bg2);}
+
+.step{border:1px solid var(--line-soft); border-radius:var(--radius); background:var(--panel-soft); overflow:hidden;}
+.step-head{display:flex; align-items:center; gap:10px; padding:11px 13px; background:var(--panel); cursor:pointer; user-select:none; border-bottom:1px solid var(--line-soft);}
+.step-num{font-family:'IBM Plex Mono'; font-size:11px; font-weight:600; color:var(--bg); background:var(--trace); width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex:none;}
+.step.optional .step-num{background:var(--ink-faint); color:var(--bg2);}
+.step.optional.on .step-num{background:var(--gold);}
+.step-title{font-size:13px; font-weight:600; letter-spacing:.2px; flex:1;}
+.step-title small{display:block; font-weight:400; color:var(--ink-dim); font-size:10.5px; margin-top:1px;}
+.chev{color:var(--ink-faint); font-size:11px; transition:transform .15s;}
+.step.closed .chev{transform:rotate(-90deg);}
+.step-body{padding:13px; display:flex; flex-direction:column; gap:11px;}
+.step.closed .step-body{display:none;}
+
+label.field{display:flex; flex-direction:column; gap:5px; font-size:11.5px; color:var(--ink-dim);}
+label.field b{color:var(--ink); font-weight:500; font-size:12px;}
+.row2{display:grid; grid-template-columns:1fr 1fr; gap:9px;}
+.row3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:9px;}
+
+input[type=number], select{background:var(--bg2); border:1px solid var(--line); color:var(--ink); font-family:'IBM Plex Mono'; font-size:13px; padding:8px 9px; border-radius:var(--radius); width:100%;}
+select{appearance:none; -webkit-appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238497b8'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 10px center; padding-right:26px;}
+input:focus, select:focus{border-color:var(--trace);}
+
+.chip-row{display:flex; flex-wrap:wrap; gap:6px;}
+.chip{font-family:'IBM Plex Mono'; font-size:10.5px; color:var(--ink-dim); border:1px solid var(--line); padding:4px 8px; border-radius:20px; cursor:pointer; background:var(--bg2);}
+.chip:hover{border-color:var(--trace); color:var(--ink);}
+.chip.active{border-color:var(--trace); color:var(--trace); background:var(--trace-soft);}
+
+.seg{display:flex; border:1px solid var(--line); border-radius:20px; overflow:hidden; width:max-content; flex-wrap:wrap;}
+.seg button{background:transparent; border:none; color:var(--ink-dim); font-family:'IBM Plex Mono'; font-size:10.5px; padding:5px 12px; cursor:pointer;}
+.seg button.active{background:var(--trace); color:#04120f; font-weight:600;}
+
+.switch{position:relative; width:34px; height:19px; flex:none;}
+.switch input{opacity:0; width:0; height:0; position:absolute;}
+.switch .track{position:absolute; inset:0; background:var(--line); border-radius:20px; transition:.15s;}
+.switch .track:before{content:''; position:absolute; width:13px; height:13px; left:3px; top:3px; background:var(--ink-dim); border-radius:50%; transition:.15s;}
+.switch input:checked + .track{background:var(--trace-soft); border:1px solid var(--trace);}
+.switch input:checked + .track:before{transform:translateX(15px); background:var(--trace);}
+
+.hint{font-size:10.5px; color:var(--ink-faint); line-height:1.5;}
+.hint em{color:var(--ink-dim); font-style:normal;}
+.override-box{border:1px dashed var(--line); border-radius:var(--radius); padding:9px 10px; display:flex; flex-direction:column; gap:8px; background:rgba(255,255,255,.015);}
+.override-head{display:flex; align-items:center; gap:8px; font-size:11px; color:var(--ink-dim);}
+
+.example-btn{align-self:flex-start; font-family:'IBM Plex Mono'; font-size:11px; font-weight:600; color:#0a1220; background:var(--trace); border:1px solid var(--trace); padding:9px 16px; border-radius:20px; cursor:pointer; box-shadow:0 4px 12px -4px var(--trace-soft);}
+.example-btn:hover{filter:brightness(1.08);}
+
+.panel{padding:16px;}
+.panel-head{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:10px; gap:10px; flex-wrap:wrap;}
+.panel-head h2{font-family:'IBM Plex Sans Condensed'; font-size:13px; text-transform:uppercase; letter-spacing:.1em; color:var(--ink-dim); margin:0; font-weight:600;}
+.panel-head .tag{font-family:'IBM Plex Mono'; font-size:10px; color:var(--ink-faint);}
+
+.result-grid{display:grid; grid-template-columns:220px 1fr; gap:16px; align-items:center;}
+@media (max-width:640px){ .result-grid{grid-template-columns:1fr;} }
+.gauge-box{display:flex; flex-direction:column; align-items:center; gap:4px;}
+.gauge-num{font-family:'IBM Plex Mono'; font-weight:700; font-size:26px; color:var(--gold); text-align:center;}
+.gauge-lbl{font-size:10px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:.1em; text-align:center;}
+
+.stat-list{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+@media (max-width:480px){ .stat-list{grid-template-columns:1fr;} }
+.stat{border:1px solid var(--line-soft); border-radius:var(--radius); padding:9px 11px; background:var(--panel-soft);}
+.stat .k{font-size:10px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.06em;}
+.stat .v{font-family:'IBM Plex Mono'; font-size:15px; font-weight:600; margin-top:3px;}
+.stat.hot{border-color:var(--gold); background:linear-gradient(180deg, rgba(232,181,69,.08), transparent);}
+.stat.hot .v{color:var(--gold);}
+.stat.bad{border-color:var(--alarm);}
+.stat.bad .v{color:var(--alarm);}
+.stat.ok .v{color:var(--trace);}
+
+.risk-box{border-radius:var(--radius); padding:11px 13px; margin-top:12px; font-size:12px; line-height:1.6; border:1px solid;}
+.risk-ok{border-color:var(--trace); background:rgba(59, 158, 255,.06); color:var(--ink-dim);}
+.risk-warn{border-color:var(--warn); background:rgba(227,168,59,.08); color:var(--ink-dim);}
+.risk-alarm{border-color:var(--alarm); background:rgba(255,93,119,.08); color:var(--ink-dim);}
+.risk-box b{color:var(--ink);}
+
+.ref-table{width:100%; border-collapse:collapse; font-size:11px;}
+.ref-table th, .ref-table td{padding:6px 8px; border-bottom:1px solid var(--line-soft); text-align:left;}
+.ref-table th{color:var(--ink-faint); font-weight:500; text-transform:uppercase; font-size:9px; letter-spacing:.06em;}
+.ref-table td{color:var(--ink-dim); font-family:'IBM Plex Mono';}
+.ref-table tr.hl td{color:var(--gold); font-weight:600;}
+
+.ledger{display:flex; flex-direction:column;}
+.lstep{padding:13px 16px; border-bottom:1px solid var(--line-soft); display:grid; grid-template-columns:26px 1fr; gap:12px;}
+.lstep:last-child{border-bottom:none;}
+.lstep .ln{font-family:'IBM Plex Mono'; color:var(--ink-faint); font-size:11px; padding-top:2px;}
+.lstep h3{margin:0 0 5px; font-size:12.5px; font-weight:600; color:var(--ink);}
+.lstep .formula{font-family:'IBM Plex Mono'; font-size:12px; color:var(--trace); background:rgba(59, 158, 255,.06); padding:8px 10px; border-radius:var(--radius); border:1px solid var(--trace-soft); margin:6px 0; overflow-x:auto; white-space:pre;}
+.cite{font-size:9.5px; color:var(--ink-faint); margin-top:6px; line-height:1.5; border-left:2px solid var(--line); padding-left:8px;}
+.cite b{color:var(--ink-dim); font-weight:500;}
+
+footer.note{max-width:1480px; margin:22px auto 60px; padding:0 16px; font-size:10.5px; color:var(--ink-faint); line-height:1.7;}
+footer.note b{color:var(--ink-dim);}
+</style>
+</head>
+<body>
+<a href="index.html" class="no-print" style="position:fixed;top:10px;left:12px;z-index:9999;font-family:monospace;font-size:11px;color:#8fa8c2;background:rgba(10,23,40,0.85);border:1px solid #234261;border-radius:14px;padding:5px 12px;text-decoration:none;">← OhmZone</a>
+<div class="lang-switch no-print">
+  <button type="button" id="btn-en" class="active" onclick="setLang('en')">EN</button>
+  <button type="button" id="btn-fr" onclick="setLang('fr')">FR</button>
+</div>
+
+<div class="titleblock">
+  <div class="brand">
+    <div class="mark">MV</div>
+    <div>
+      <h1 id="titleH1">MV Transformer — Primary Cable Sizing</h1>
+      <div class="sub" id="titleSub">Ampacity, voltage drop &amp; short-circuit thermal withstand for medium-voltage transformer primary feeders — NEC 450 / IEEE C57 / ICEA basis</div>
+    </div>
+  </div>
+  <div class="stamp">
+    <div><b id="lblDwg">Dwg No.</b><span>MV-001</span></div>
+    <div><b id="lblScale">Scale</b><span>NTS</span></div>
+    <div><b id="lblMethod">Method</b><span>NEC 450 / ICEA P-32-382</span></div>
+    <div><b id="lblRev">Rev</b><span id="revTag">—</span></div>
+  </div>
+</div>
+
+<div class="top-disclaimer no-print">
+  <b id="topDiscB">Reference tool only.</b> <span id="topDiscTxt">Preliminary sizing aid for a medium-voltage transformer primary feeder. Cable ampacity, reactance and short-circuit withstand values used are representative/typical figures — verify against ICEA P-32-382 / P-54-440, the cable manufacturer's data, and NEC Article 450 before finalizing a design. Not a substitute for a qualified electrical engineer's design and a formal short-circuit/coordination study.</span>
+</div>
+
+<div class="app">
+  <div class="steps">
+
+    <button class="example-btn" id="loadExample">▸ <span id="loadExampleTxt">Load example</span></button>
+
+    <!-- STEP 1: TRANSFORMER -->
+    <div class="step" id="step1">
+      <div class="step-head" data-toggle="step1">
+        <div class="step-num">1</div>
+        <div class="step-title" id="step1Title">Transformer<small id="step1Small">Rating, primary voltage, impedance</small></div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="step-body">
+        <label class="field"><b id="lblTag">Equipment tag</b>
+          <input type="text" id="eqTag" placeholder="e.g. TX-101" value="">
+        </label>
+        <label class="field"><b id="lblStandard">Governing standard</b>
+          <select id="stdSel">
+            <option value="csa" id="optCsa" selected>CSA C22.1 (Canadian Electrical Code)</option>
+            <option value="nec" id="optNec">NEC / NFPA 70 (Article 450)</option>
+          </select>
+        </label>
+        <div class="hint" id="hintStandard">Sets the code reference cited for primary overcurrent protection sizing in the results and report. CSA C22.1 governs by default; switch to NEC only where the project is under U.S. jurisdiction.</div>
+        <label class="field"><b id="lblKva">Transformer rating (kVA)</b>
+          <input type="number" id="kva" value="1500" min="1" step="1">
+        </label>
+        <label class="field"><b id="lblPriV">Primary voltage (kV, line-to-line)</b>
+          <input type="number" id="priV" value="13.8" min="1" step="0.001">
+        </label>
+        <div class="chip-row" id="priVChips" data-chips-for="priV">
+          <div class="chip" data-v="2.4">2.4 kV</div>
+          <div class="chip" data-v="4.16">4.16 kV</div>
+          <div class="chip" data-v="12.47">12.47 kV</div>
+          <div class="chip" data-v="13.2">13.2 kV</div>
+          <div class="chip" data-v="13.8">13.8 kV</div>
+          <div class="chip" data-v="24.94">24.94 kV</div>
+          <div class="chip" data-v="34.5">34.5 kV</div>
+        </div>
+        <label class="field"><b id="lblImped">Transformer impedance, %Z</b>
+          <input type="number" id="impedZ" value="5.75" min="1" max="15" step="0.01">
+        </label>
+        <div class="hint" id="hintImped">Typical %Z rises with rating — roughly 2–5% for smaller units, 5.5–7%+ for larger distribution-class units. Use the nameplate value once a unit is selected.</div>
+      </div>
+    </div>
+
+    <!-- STEP 2: PRIMARY CABLE -->
+    <div class="step" id="step2">
+      <div class="step-head" data-toggle="step2">
+        <div class="step-num">2</div>
+        <div class="step-title" id="step2Title">Primary Cable<small id="step2Small">Length, material, insulation class, sets</small></div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="step-body">
+        <div class="row2">
+          <label class="field"><b id="lblLength">Length</b><input type="number" id="cLen" value="250" min="0"></label>
+          <label class="field"><b id="lblUnit">Unit</b>
+            <div class="seg" id="cUnit"><button data-u="ft" class="active">ft</button><button data-u="m">m</button></div>
+          </label>
+        </div>
+        <div class="row2">
+          <label class="field"><b id="lblMat">Conductor</b>
+            <select id="cMat"><option value="cu" id="optCu">Copper</option><option value="al" id="optAl">Aluminum</option></select>
+          </label>
+          <label class="field"><b id="lblInsulClass">Insulation voltage class</b>
+            <select id="insulClass">
+              <option value="5">5 kV</option>
+              <option value="15" selected>15 kV</option>
+              <option value="25">25 kV</option>
+              <option value="35">35 kV</option>
+            </select>
+          </label>
+        </div>
+        <div class="row2">
+          <label class="field"><b id="lblSets">Sets / phase (parallel)</b>
+            <input type="number" id="cPar" value="1" min="1" step="1">
+          </label>
+          <label class="field"><b id="lblPf">Load power factor (for VD)</b>
+            <input type="number" id="cPf" value="0.95" min="0.1" max="1" step="0.01">
+          </label>
+        </div>
+        <label class="field"><b id="lblVdTarget">Target voltage drop (%)</b>
+          <input type="number" id="vdTarget" value="3" min="0.5" max="10" step="0.1">
+        </label>
+        <div class="hint" id="hintStep2">Insulation voltage class should be rated for the system voltage (100% or 133% insulation level per the cable manufacturer's recommendation for the grounding configuration in use).</div>
+      </div>
+    </div>
+
+    <!-- STEP 3: UPSTREAM SHORT-CIRCUIT -->
+    <div class="step" id="step3">
+      <div class="step-head" data-toggle="step3">
+        <div class="step-num">3</div>
+        <div class="step-title" id="step3Title">Upstream Short-Circuit<small id="step3Small">Available fault current at the primary terminals</small></div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="step-body">
+        <label class="field"><b id="lblFaultKa">Available fault current (kA symmetrical)</b>
+          <input type="number" id="faultKa" value="8.5" min="0.1" step="0.1">
+        </label>
+        <label class="field"><b id="lblInitTemp">Cable normal operating temperature (°C)</b>
+          <input type="number" id="t1" value="90" min="60" max="105" step="1">
+        </label>
+        <label class="field"><b id="lblMaxTemp">Cable max. short-circuit temperature (°C)</b>
+          <input type="number" id="t2" value="250" min="150" max="350" step="5">
+        </label>
+        <div class="hint" id="hintStep3">Default 90°C/250°C matches typical 90°C-rated EPR/XLPE shielded MV cable — confirm the exact short-circuit temperature limit against the cable manufacturer's data for the insulation actually selected.</div>
+      </div>
+    </div>
+
+    <!-- STEP 4: PROTECTION (optional) -->
+    <div class="step optional" id="step4">
+      <div class="step-head" data-toggle="step4">
+        <div class="step-num">4</div>
+        <div class="step-title" id="step4Title">Primary Protection <span style="color:var(--ink-faint)" id="optionalTag4">(optional)</span><small id="step4Small">Clearing time at the fault current above, if known</small></div>
+        <label class="switch" onclick="event.stopPropagation()">
+          <input type="checkbox" id="protOn"><span class="track"></span>
+        </label>
+      </div>
+      <div class="step-body">
+        <label class="field"><b id="lblClearTime">Protection clearing time at this fault level (seconds)</b>
+          <input type="number" id="clearTime" value="0.5" min="0.001" step="0.01">
+        </label>
+        <div class="hint" id="hintStep4">If you know the primary fuse/breaker's actual clearing time at the fault current entered in Step 3, enter it here to check the cable's short-circuit withstand against it. If left off, the tool instead reports how long the selected cable can withstand that fault current before reaching its thermal damage limit.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="canvas-col">
+    <div class="panel">
+      <div class="panel-head"><h2 id="resultTitle">Result — Recommended Primary Cable</h2></div>
+      <div class="result-grid">
+        <div class="gauge-box">
+          <div class="gauge-num" id="gaugeNum">—</div>
+          <div class="gauge-lbl" id="gaugeLbl">Recommended size</div>
+        </div>
+        <div class="stat-list">
+          <div class="stat hot"><div class="k" id="lblStatFla">Transformer FLA (primary)</div><div class="v" id="statFla">—</div></div>
+          <div class="stat"><div class="k" id="lblStatReqAmp">Required ampacity (125% FLA)</div><div class="v" id="statReqAmp">—</div></div>
+          <div class="stat"><div class="k" id="lblStatAmpacity">Cable ampacity (this size)</div><div class="v" id="statAmpacity">—</div></div>
+          <div class="stat"><div class="k" id="lblStatVd">Voltage drop, this length</div><div class="v" id="statVd">—</div></div>
+          <div class="stat"><div class="k" id="lblStatWithstand">Short-circuit withstand time</div><div class="v" id="statWithstand">—</div></div>
+          <div class="stat"><div class="k" id="lblStatMaxFuse">Max primary fuse</div><div class="v" id="statMaxFuse">—</div></div>
+          <div class="stat"><div class="k" id="lblStatMaxBreaker">Max primary breaker</div><div class="v" id="statMaxBreaker">—</div></div>
+        </div>
+      </div>
+      <div id="verdictBox"></div>
+      <div id="protBox"></div>
+    </div>
+
+    <div class="panel no-print">
+      <div class="panel-head"><h2 id="savedTitle">Report Pages</h2><span class="tag" id="savedTag">save each transformer/cable run, then compile them into one document</span></div>
+      <div class="btn-row" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
+        <button id="savePageBtn" style="padding:9px 16px;border-radius:8px;border:1px solid #2f5678;background:#0f2036;color:#c8d8e8;cursor:pointer;font-family:inherit;">💾 Save this calculation as a page</button>
+      </div>
+      <div id="savedList" style="display:flex;flex-direction:column;gap:6px;"></div>
+      <div class="btn-row" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;">
+        <button id="compileWordBtn" style="padding:9px 16px;border-radius:8px;border:1px solid var(--gold);background:rgba(232,181,69,.1);color:var(--gold);cursor:pointer;font-family:inherit;">📚 Compile selected → Word</button>
+        <button id="compilePrintBtn" style="padding:9px 16px;border-radius:8px;border:1px solid var(--gold);background:rgba(232,181,69,.1);color:var(--gold);cursor:pointer;font-family:inherit;">🖨 Compile selected → Print/PDF</button>
+      </div>
+      <div class="hint" id="hintSaved" style="margin-top:8px;">Saved pages are stored in this browser only (not uploaded anywhere). Compiling renumbers pages automatically based on the order and selection below.</div>
+
+      <div style="border-top:1px dashed var(--line); margin-top:14px; padding-top:12px;">
+        <label class="field"><b id="lblUploadTemplate">Report template (.docx, optional)</b>
+          <input type="file" id="templateFile" accept=".docx">
+        </label>
+        <div id="templateStatus" style="font-size:11px;color:var(--trace);margin-top:4px;"></div>
+        <div class="hint" id="hintUploadTemplate" style="margin-top:6px;"></div>
+      </div>
+    </div>
+
+    <div class="panel no-print" style="border:none;background:transparent;">
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px;font-size:11.5px;color:var(--ink-dim);">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+          <input type="checkbox" id="includeLedger" checked style="width:auto;">
+          <span id="lblIncludeLedger">Include Calculation Ledger in report</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+          <input type="checkbox" id="includeSizesTable" checked style="width:auto;">
+          <span id="lblIncludeSizes">Include All Sizes Evaluated in report</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+          <input type="checkbox" id="includeLogo" checked style="width:auto;">
+          <span id="lblIncludeLogo">Include OhmZone brand mark in report</span>
+        </label>
+      </div>
+      <div class="btn-row" style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button id="printBtn" style="padding:9px 16px;border-radius:8px;border:1px solid #2f5678;background:#0f2036;color:#c8d8e8;cursor:pointer;font-family:inherit;">🖨 Print / Save as PDF</button>
+        <button id="exportWordBtn" style="padding:9px 16px;border-radius:8px;border:1px solid #2f5678;background:#0f2036;color:#c8d8e8;cursor:pointer;font-family:inherit;">📄 Export study (Word)</button>
+        <button id="exportExcelBtn" style="padding:9px 16px;border-radius:8px;border:1px solid #2f5678;background:#0f2036;color:#c8d8e8;cursor:pointer;font-family:inherit;">📊 Export study (Excel)</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2 id="ledgerTitle">Calculation Ledger</h2><span class="tag" id="ledgerTag">FLA → ampacity → voltage drop → thermal withstand</span></div>
+      <div class="ledger" id="ledger"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2 id="sizesTitle">All Sizes Evaluated</h2></div>
+      <div style="overflow-x:auto;">
+        <table class="ref-table">
+          <thead><tr><th id="szThSize">Size</th><th id="szThAmp">Ampacity</th><th id="szThVd">VD%</th><th id="szThWithstand">Withstand (s)</th><th id="szThOk">Meets all?</th></tr></thead>
+          <tbody id="sizesTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="note" id="footerNote"></footer>
+
+<script>
+const $ = id => document.getElementById(id);
+function fmt(n,d=2){ if(n===undefined||n===null||isNaN(n)) return "—"; return Number(n).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d}); }
+
+/* ===================== reference data ===================== */
+/* Representative MV cable data (single-conductor, shielded, 90°C EPR/XLPE), Cu and Al.
+   Resistance values are conductor-size-driven (largely voltage-class independent) and consistent
+   with the LV conductor tables used elsewhere on this site. Reactance and ampacity are simplified
+   representative figures for a typical duct-bank installation — verify against ICEA P-32-382 /
+   P-54-440 or the manufacturer's cable data for the exact construction, spacing and installation method. */
+const CABLE_SIZES = [
+  {size:"2 AWG",   cm:66360,  cuR:0.194,  alR:0.319},
+  {size:"1 AWG",   cm:83690,  cuR:0.154,  alR:0.253},
+  {size:"1/0 AWG", cm:105600, cuR:0.122,  alR:0.201},
+  {size:"2/0 AWG", cm:133100, cuR:0.0967, alR:0.159},
+  {size:"3/0 AWG", cm:167800, cuR:0.0766, alR:0.126},
+  {size:"4/0 AWG", cm:211600, cuR:0.0608, alR:0.100},
+  {size:"250 kcmil", cm:250000, cuR:0.0515, alR:0.0847},
+  {size:"350 kcmil", cm:350000, cuR:0.0367, alR:0.0605},
+  {size:"500 kcmil", cm:500000, cuR:0.0259, alR:0.0426},
+  {size:"750 kcmil", cm:750000, cuR:0.0172, alR:0.0284},
+  {size:"1000 kcmil",cm:1000000,cuR:0.0129, alR:0.0213}
+];
+const MV_X_OHM_PER_KFT = 0.045; // representative flat reactance for shielded MV cable, ohm/1000ft — verify vs. manufacturer data
+const MV_AMPACITY_15KV = { // representative ampacity, single conductor per duct, duct bank, 15kV class baseline
+  "2 AWG":165, "1 AWG":190, "1/0 AWG":215, "2/0 AWG":245, "3/0 AWG":280, "4/0 AWG":320,
+  "250 kcmil":350, "350 kcmil":430, "500 kcmil":520, "750 kcmil":630, "1000 kcmil":715
+};
+const MV_AMPACITY_AL_FACTOR = 0.78; // representative Al vs Cu ampacity ratio for same cross-section
+const INSUL_CLASS_FACTOR = {5:1.05, 15:1.00, 25:0.97, 35:0.94}; // representative adjustment vs 15kV baseline
+
+let currentLang = 'en';
+let state = { mat:"cu", unit:"ft", insulClass:15 };
+
+/* ===== step collapse ===== */
+document.querySelectorAll(".step-head").forEach(h=>{
+  h.addEventListener("click", ()=>{ $(h.dataset.toggle).classList.toggle("closed"); });
+});
+function wireOptionalToggle(stepId, checkboxId){
+  const cb = $(checkboxId), step = $(stepId);
+  const sync = ()=> step.classList.toggle("on", cb.checked);
+  cb.addEventListener("change", ()=>{ sync(); recalc(); });
+  sync();
+}
+wireOptionalToggle("step4","protOn");
+
+/* ===== voltage chips ===== */
+$("priVChips").addEventListener("click", e=>{
+  const c = e.target.closest(".chip"); if(!c) return;
+  $("priV").value = c.dataset.v;
+  recalc();
+});
+$("priV").addEventListener("input", recalc);
+
+/* ===== unit segmented control ===== */
+$("cUnit").addEventListener("click", e=>{
+  const b = e.target.closest("button"); if(!b) return;
+  document.querySelectorAll("#cUnit button").forEach(x=>x.classList.remove("active"));
+  b.classList.add("active");
+  state.unit = b.dataset.u;
+  recalc();
+});
+
+/* ===== inputs that trigger recalc ===== */
+["eqTag","stdSel","kva","impedZ","cLen","cMat","insulClass","cPar","cPf","vdTarget","faultKa","t1","t2","clearTime"].forEach(id=>{
+  $(id).addEventListener("input", recalc);
+  $(id).addEventListener("change", recalc);
+});
+
+/* ===== example ===== */
+$("loadExample").addEventListener("click", ()=>{
+  $("eqTag").value = "TX-101"; $("stdSel").value = "csa";
+  $("kva").value = 1500; $("priV").value = 13.8; $("impedZ").value = 5.75;
+  $("cLen").value = 250; document.querySelectorAll("#cUnit button").forEach(x=>x.classList.toggle("active", x.dataset.u==="ft")); state.unit="ft";
+  $("cMat").value = "cu"; $("insulClass").value = "15"; $("cPar").value = 1; $("cPf").value = 0.95; $("vdTarget").value = 3;
+  $("faultKa").value = 8.5; $("t1").value = 90; $("t2").value = 250;
+  $("protOn").checked = true; $("clearTime").value = 0.5;
+  wireOptionalToggle("step4","protOn");
+  recalc();
+});
+
+/* ===== core calc ===== */
+function ampacityFor(cableRow, mat, insulClass){
+  const base = MV_AMPACITY_15KV[cableRow.size];
+  const classFactor = INSUL_CLASS_FACTOR[insulClass] || 1;
+  const matFactor = mat==="al" ? MV_AMPACITY_AL_FACTOR : 1;
+  return base * classFactor * matFactor;
+}
+
+function withstandSeconds(cableRow, mat, faultA, t1, t2, sets){
+  const cm = cableRow.cm * sets; // parallel sets increase effective CM
+  if(mat==="cu"){
+    return 0.0297 * Math.pow(cm/faultA, 2) * Math.log10((t2+234)/(t1+234));
+  } else {
+    return 0.0125 * Math.pow(cm/faultA, 2) * Math.log10((t2+228)/(t1+228));
+  }
+}
+
+function nextStdFuse(calcA){
+  const STD = [1,2,3,6,10,15,20,25,30,40,50,65,80,100,125,150,200,250,300,400,500,600,700,800,1000,1200];
+  return STD.find(s=>s>=calcA) || STD[STD.length-1];
+}
+
+/* Pure calculation function — takes a plain inputs object, returns full results.
+   Used by both the live UI (recalc) and the saved report-page compiler, so a
+   saved page and the on-screen tool always agree. */
+function calcAll(inp){
+  const kva = inp.kva, priVkV = inp.priVkV, impedZ = inp.impedZ;
+  const mat = inp.mat, insulClass = inp.insulClass, sets = inp.sets;
+  const pf = inp.pf, vdTarget = inp.vdTarget;
+  const faultKa = inp.faultKa, faultA = faultKa*1000;
+  const t1 = inp.t1, t2 = inp.t2, protOn = inp.protOn, clearTime = inp.clearTime;
+  const lenFt = inp.unit==="ft" ? inp.cLen : inp.cLen*3.28084;
+  const lenKft = lenFt/1000;
+
+  const fla = (kva*1000) / (Math.sqrt(3)*priVkV*1000);
+  const reqAmp = 1.25*fla;
+  const phi = Math.acos(Math.min(Math.max(pf,-1),1));
+
+  const rows = CABLE_SIZES.map(c=>{
+    const amp = ampacityFor(c, mat, insulClass) * sets;
+    const Rper = (mat==="cu"?c.cuR:c.alR) / sets;
+    const Xper = MV_X_OHM_PER_KFT / sets;
+    const R = Rper*lenKft, X = Xper*lenKft;
+    const vd = Math.sqrt(3) * fla * (R*Math.cos(phi) + X*Math.sin(phi));
+    const vdPct = vd/(priVkV*1000)*100;
+    const wt = withstandSeconds(c, mat, faultA, t1, t2, sets);
+    const ampOk = amp >= reqAmp;
+    const vdOk = vdPct <= vdTarget;
+    const scOk = protOn ? (wt >= clearTime) : true;
+    return {size:c.size, amp, R, X, vdPct, wt, ampOk, vdOk, scOk, ok: ampOk && vdOk && scOk};
+  });
+
+  const chosen = rows.find(r=>r.ok);
+  const maxFuseCalc = impedZ<=6 ? 3.0*fla : 2.5*fla;
+  const maxBreakerCalc = impedZ<=6 ? 6.0*fla : 4.0*fla;
+  const maxFuseStd = nextStdFuse(maxFuseCalc);
+  const maxBreakerStd = nextStdFuse(maxBreakerCalc);
+
+  return {fla, reqAmp, phi, rows, chosen, impedZ, maxFuseCalc, maxFuseStd, maxBreakerCalc, maxBreakerStd,
+    kva, priVkV, faultA, faultKa, t1, t2, protOn, clearTime, lenFt, sets, mat, pf, insulClass, vdTarget,
+    tag: inp.tag, std: inp.std};
+}
+
+function readInputs(){
+  return {
+    tag: $("eqTag").value.trim(),
+    std: $("stdSel").value,
+    kva: parseFloat($("kva").value)||0,
+    priVkV: parseFloat($("priV").value)||1,
+    impedZ: parseFloat($("impedZ").value)||5,
+    cLen: parseFloat($("cLen").value)||0,
+    unit: state.unit,
+    mat: $("cMat").value,
+    insulClass: parseInt($("insulClass").value),
+    sets: Math.max(1, parseInt($("cPar").value)||1),
+    pf: parseFloat($("cPf").value)||1,
+    vdTarget: parseFloat($("vdTarget").value)||3,
+    faultKa: parseFloat($("faultKa").value)||0,
+    t1: parseFloat($("t1").value)||90,
+    t2: parseFloat($("t2").value)||250,
+    protOn: $("protOn").checked,
+    clearTime: parseFloat($("clearTime").value)||0
+  };
+}
+
+function recalc(){
+  const L = UI[currentLang];
+  const inp = readInputs();
+  state.mat = inp.mat; state.insulClass = inp.insulClass;
+  const d = calcAll(inp);
+  const {fla, reqAmp, chosen, rows, faultKa, protOn, clearTime, maxFuseStd} = d;
+
+  $("gaugeNum").textContent = chosen ? chosen.size : L.noneMet;
+  $("statFla").textContent = fmt(fla,1)+" A";
+  $("statReqAmp").textContent = fmt(reqAmp,1)+" A";
+  $("statAmpacity").textContent = chosen ? fmt(chosen.amp,0)+" A" : "—";
+  $("statVd").textContent = chosen ? fmt(chosen.vdPct,2)+"%" : "—";
+  $("statWithstand").textContent = chosen ? fmt(chosen.wt,2)+" s" : "—";
+  $("statMaxFuse").textContent = maxFuseStd+" A ("+(d.std==="nec"?L.citeNecShort:L.citeCsaShort)+")";
+  $("statMaxBreaker").textContent = d.maxBreakerStd+" A ("+(d.std==="nec"?L.citeNecShort:L.citeCsaShort)+")";
+  $("revTag").textContent = new Date().toISOString().slice(0,10);
+
+  const verdictBox = $("verdictBox");
+  if(chosen){
+    verdictBox.innerHTML = `<div class="risk-box risk-ok"><b>${L.passTitle}</b> ${L.passBody.replace('{size}',chosen.size).replace('{amp}',fmt(chosen.amp,0)).replace('{vd}',fmt(chosen.vdPct,2))}</div>`;
+  } else {
+    const closest = rows[rows.length-1];
+    verdictBox.innerHTML = `<div class="risk-box risk-alarm"><b>${L.failTitle}</b> ${L.failBody.replace('{size}',closest.size)}</div>`;
+  }
+
+  const protBox = $("protBox");
+  if(protOn && chosen){
+    if(chosen.wt >= clearTime){
+      protBox.innerHTML = `<div class="risk-box risk-ok"><b>${L.protPassTitle}</b> ${L.protPassBody.replace('{wt}',fmt(chosen.wt,2)).replace('{ct}',fmt(clearTime,2))}</div>`;
+    } else {
+      protBox.innerHTML = `<div class="risk-box risk-alarm"><b>${L.protFailTitle}</b> ${L.protFailBody.replace('{wt}',fmt(chosen.wt,2)).replace('{ct}',fmt(clearTime,2))}</div>`;
+    }
+  } else if(chosen){
+    protBox.innerHTML = `<div class="risk-box risk-warn"><b>${L.noProtTitle}</b> ${L.noProtBody.replace('{wt}',fmt(chosen.wt,2)).replace('{ka}',fmt(faultKa,2))}</div>`;
+  } else {
+    protBox.innerHTML = "";
+  }
+
+  // sizes table
+  $("sizesTableBody").innerHTML = rows.map(r=>`<tr class="${chosen && r.size===chosen.size ? 'hl':''}">
+    <td>${r.size}</td><td>${fmt(r.amp,0)} A</td><td>${fmt(r.vdPct,2)}%</td><td>${fmt(r.wt,2)}</td>
+    <td>${r.ok ? '✓ '+L.yes : '✗ '+L.no}</td>
+  </tr>`).join("");
+
+  renderLedger(d);
+  window._lastResults = d;
+}
+
+function buildLedgerSteps(d){
+  const L = UI[currentLang];
+  const steps = [];
+  steps.push({num:1, title:L.lstep1Title, note:L.lstep1Note, formula:
+`FLA = (kVA × 1000) / (√3 × V_LL)
+    = (${d.kva} × 1000) / (1.732 × ${d.priVkV*1000})
+    = ${fmt(d.fla,1)} A
+
+${L.reqAmpLbl} = 1.25 × FLA = ${fmt(d.reqAmp,1)} A`});
+
+  steps.push({num:2, title:L.lstep2Title, note:L.lstep2Note, formula:
+`${d.chosen ? L.chosenSizeLine.replace('{size}',d.chosen.size).replace('{amp}',fmt(d.chosen.amp,0)) : L.noSizeLine}`});
+
+  if(d.chosen){
+    steps.push({num:3, title:L.lstep3Title, note:L.lstep3Note, formula:
+`Vd = √3 × I × (R·cosφ + X·sinφ)
+   R = ${fmt(d.chosen.R,4)} Ω, X = ${fmt(d.chosen.X,4)} Ω (${fmt(d.lenFt,0)} ft, ${d.sets}× ${L.parallelPhase})
+   Vd% = ${fmt(d.chosen.vdPct,2)}% (${L.targetLbl}: ${d.vdTarget}%)`});
+
+    steps.push({num:4, title:L.lstep4Title, note:L.lstep4Note, formula:
+`${d.mat==="cu" ? L.icea_cu : L.icea_al}
+t = ${fmt(d.chosen.wt,3)} s ${L.atFaultLbl} ${fmt(d.faultKa,2)} kA
+(T1=${d.t1}°C, T2=${d.t2}°C)`});
+  }
+
+  const stdCite = d.std==="nec" ? L.citeNec : L.citeCsa;
+  steps.push({num:d.chosen?5:3, title:L.lstep5Title.replace('{std}', stdCite), note:(d.std==="nec" ? L.lstep5NoteNec : L.lstep5NoteCsa), formula:
+`${L.impedLbl} = ${d.impedZ}%
+${L.maxFuseLbl} = ${d.impedZ<=6?'300':'250'}% × FLA = ${fmt(d.maxFuseCalc,1)} A → ${d.maxFuseStd} A (${L.nextStd})
+${L.maxBreakerLbl} = ${d.impedZ<=6?'600':'400'}% × FLA = ${fmt(d.maxBreakerCalc,1)} A → ${d.maxBreakerStd} A (${L.nextStd})`});
+
+  if(d.protOn && d.chosen){
+    steps.push({num:d.chosen?6:4, title:L.lstep6Title, note:L.lstep6Note, formula:
+`${L.withstandLbl} = ${fmt(d.chosen.wt,3)} s
+${L.clearTimeLbl} = ${fmt(d.clearTime,3)} s
+${d.chosen.wt >= d.clearTime ? L.resultPass : L.resultFail}`});
+  }
+  return steps;
+}
+
+function renderLedger(d){
+  const steps = buildLedgerSteps(d);
+  $("ledger").innerHTML = steps.map(s=>lstep(s.num, s.title, s.formula, s.note)).join("");
+}
+function lstep(n,title,formula,note){
+  return `<div class="lstep"><div class="ln">${String(n).padStart(2,'0')}</div><div>
+    <h3>${title}</h3>
+    <div class="formula">${formula}</div>
+    <div class="cite">${note}</div>
+  </div></div>`;
+}
+
+/* ===== saved report pages ===== */
+const SAVED_KEY = "ohmzone-mv-report-pages";
+function getSavedPages(){
+  try { return JSON.parse(localStorage.getItem(SAVED_KEY) || "[]"); } catch(e){ return []; }
+}
+function setSavedPages(arr){
+  try { localStorage.setItem(SAVED_KEY, JSON.stringify(arr)); } catch(e){}
+}
+
+$("savePageBtn").addEventListener("click", ()=>{
+  const L = UI[currentLang];
+  const inp = readInputs();
+  if(!inp.tag){
+    const t = prompt(L.tagPrompt);
+    if(!t) return;
+    $("eqTag").value = t;
+    inp.tag = t;
+  }
+  const pages = getSavedPages();
+  pages.push({ id: "p"+Date.now()+Math.random().toString(36).slice(2,6), savedAt: new Date().toISOString(), inputs: inp });
+  setSavedPages(pages);
+  renderSavedList();
+});
+
+function renderSavedList(){
+  const L = UI[currentLang];
+  const pages = getSavedPages();
+  const list = $("savedList");
+  if(pages.length===0){
+    list.innerHTML = `<div class="hint">${L.noSavedPages}</div>`;
+    return;
+  }
+  list.innerHTML = pages.map((p,i)=>{
+    const d = calcAll(p.inputs);
+    const sizeLabel = d.chosen ? d.chosen.size : L.noneMet;
+    const dateLabel = new Date(p.savedAt).toLocaleString(currentLang==='fr'?'fr-CA':'en-CA');
+    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--panel);border:1px solid var(--line-soft);border-radius:var(--radius);font-size:11.5px;">
+      <input type="checkbox" class="saved-check" data-id="${p.id}" checked style="width:auto;">
+      <span style="flex:1;color:var(--ink);">${p.inputs.tag || L.untitledTag} <small style="color:var(--ink-faint);display:block;">${p.inputs.kva} kVA · ${p.inputs.priVkV} kV · ${sizeLabel} · ${dateLabel}</small></span>
+      <button onclick="removeSavedPage('${p.id}')" style="background:transparent;border:none;color:var(--alarm);cursor:pointer;font-size:14px;">✕</button>
+    </div>`;
+  }).join("");
+}
+function removeSavedPage(id){
+  setSavedPages(getSavedPages().filter(p=>p.id!==id));
+  renderSavedList();
+}
+function getSelectedSavedPages(){
+  const ids = [...document.querySelectorAll(".saved-check:checked")].map(el=>el.dataset.id);
+  return getSavedPages().filter(p=>ids.includes(p.id));
+}
+
+/* Builds one print/Word-safe "page" mirroring the tool's own 4-step structure, light theme. */
+function buildLedgerLightHTML(d){
+  const L = UI[currentLang];
+  const steps = buildLedgerSteps(d);
+  const sectionHead = (title)=>`<div style="font-size:9.5pt;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;border-bottom:1pt solid #1a1a1a;padding-bottom:2pt;margin:12pt 0 5pt;">${title}</div>`;
+  const rows = steps.map(s=>{
+    const formulaLines = s.formula.split("\n").map(l=>l===""?"&nbsp;":l).join("<br>");
+    return `<tr>
+      <td style="padding:5pt 8pt 5pt 0;border-bottom:0.5pt solid #e5e5e5;font-size:8.5pt;font-weight:700;color:#1a1a1a;vertical-align:top;white-space:nowrap;">${String(s.num).padStart(2,'0')}</td>
+      <td style="padding:5pt 8pt;border-bottom:0.5pt solid #e5e5e5;vertical-align:top;">
+        <div style="font-size:8.5pt;font-weight:700;color:#1a1a1a;margin-bottom:2pt;">${s.title}</div>
+        <div style="font-family:'Courier New',monospace;font-size:8pt;color:#333;line-height:1.5;">${formulaLines}</div>
+        <div style="font-size:7.5pt;color:#888;margin-top:3pt;">${s.note}</div>
+      </td>
+    </tr>`;
+  }).join("");
+  return sectionHead(L.ledgerTitle) + `<table style="width:100%;border-collapse:collapse;">${rows}</table>`;
+}
+
+function buildSizesTableLightHTML(d){
+  const L = UI[currentLang];
+  const sectionHead = (title)=>`<div style="font-size:9.5pt;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;border-bottom:1pt solid #1a1a1a;padding-bottom:2pt;margin:12pt 0 5pt;">${title}</div>`;
+  const th = (t)=>`<td style="padding:4pt 8pt;font-size:7.5pt;font-weight:700;text-transform:uppercase;color:#666;border-bottom:1pt solid #999;">${t}</td>`;
+  const rows = d.rows.map(r=>`<tr style="${d.chosen && r.size===d.chosen.size?'background:#f2f8f6;':''}">
+    <td style="padding:4pt 8pt;border-bottom:0.5pt solid #e5e5e5;font-size:8.5pt;${d.chosen && r.size===d.chosen.size?'font-weight:700;':''}">${r.size}</td>
+    <td style="padding:4pt 8pt;border-bottom:0.5pt solid #e5e5e5;font-size:8.5pt;">${fmt(r.amp,0)} A</td>
+    <td style="padding:4pt 8pt;border-bottom:0.5pt solid #e5e5e5;font-size:8.5pt;">${fmt(r.vdPct,2)}%</td>
+    <td style="padding:4pt 8pt;border-bottom:0.5pt solid #e5e5e5;font-size:8.5pt;">${fmt(r.wt,2)}</td>
+    <td style="padding:4pt 8pt;border-bottom:0.5pt solid #e5e5e5;font-size:8.5pt;">${r.ok ? '✓' : '✗'}</td>
+  </tr>`).join("");
+  return sectionHead(L.sizesTitle) + `
+    <table style="width:100%;border-collapse:collapse;">
+      <tr>${th(L.szThSize)}${th(L.szThAmp)}${th(L.szThVd)}${th(L.szThWithstand)}${th(L.szThOk)}</tr>
+      ${rows}
+    </table>`;
+}
+
+function buildReportPageHTML(d, pageNum, totalPages, includeLedger, includeSizes, includeLogo){
+  const L = UI[currentLang];
+  const today = new Date().toLocaleDateString(currentLang==='fr'?'fr-CA':'en-CA');
+  const stdCite = d.std==="nec" ? L.citeNec : L.citeCsa;
+  const stdName = d.std==="nec" ? L.optNec : L.optCsa;
+  const protResult = d.protOn ? (d.chosen && d.chosen.wt>=d.clearTime ? L.passWord : L.failWord) : L.notEvaluated;
+
+  const cell = (k,v)=>`<td style="padding:2.5pt 6pt 2.5pt 0;color:#333;font-size:9.5pt;white-space:nowrap;">${k}</td><td style="padding:2.5pt 14pt 2.5pt 0;font-weight:600;font-size:9.5pt;border-bottom:0.5pt solid #ddd;">${v}</td>`;
+  const gridRows = (pairs)=>{
+    let html = "";
+    for(let i=0;i<pairs.length;i+=2){
+      const a = pairs[i], b = pairs[i+1];
+      html += `<tr>${cell(a[0],a[1])}${b?cell(b[0],b[1]):'<td></td><td></td>'}</tr>`;
+    }
+    return html;
+  };
+  const sectionHead = (title)=>`<div style="font-size:9.5pt;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;border-bottom:1pt solid #1a1a1a;padding-bottom:2pt;margin:12pt 0 4pt;">${title}</div>`;
+
+  const inputPairs = [
+    [L.lblKva, d.kva+" kVA"], [L.lblPriV, d.priVkV+" kV"],
+    [L.lblImped, d.impedZ+"%"], [L.lblMat, d.mat==="cu"?L.copper:L.aluminum],
+    [L.lblInsulClass, d.insulClass+" kV"], [L.lblLength, fmt(d.lenFt,0)+" ft"],
+    [L.lblSets, d.sets], [L.lblPf, d.pf],
+    [L.lblVdTarget, d.vdTarget+"%"], [L.lblFaultKa, d.faultKa+" kA"],
+    [L.lblInitTemp+" / "+L.lblMaxTemp, d.t1+"°C / "+d.t2+"°C"],
+    [L.lblClearTime, d.protOn ? fmt(d.clearTime,3)+" s" : "—"]
+  ];
+
+  const resultPairs = d.chosen ? [
+    [L.lblStatFla, fmt(d.fla,1)+" A"], [L.lblStatReqAmp, fmt(d.reqAmp,1)+" A"],
+    [L.gaugeLbl, d.chosen.size], [L.lblStatAmpacity, fmt(d.chosen.amp,0)+" A"],
+    [L.lblStatVd, fmt(d.chosen.vdPct,2)+"%"], [L.lblStatWithstand, fmt(d.chosen.wt,2)+" s"],
+    [L.lblStatMaxFuse, d.maxFuseStd+" A"], [L.lblStatMaxBreaker, d.maxBreakerStd+" A"], [L.xlsProtResult, protResult]
+  ] : [[L.gaugeLbl, L.noneMet]];
+
+  return `
+  <div style="page-break-after:always;font-family:Arial,Helvetica,sans-serif;color:#1a1a1a;background:#fff;padding:4pt 2pt;font-size:9.5pt;line-height:1.4;">
+    <table style="width:100%;border-collapse:collapse;border-bottom:1.5pt solid #1a1a1a;padding-bottom:6pt;margin-bottom:4pt;">
+      <tr>
+        <td style="font-size:13pt;font-weight:700;padding-bottom:6pt;">${L.titleH1}</td>
+        <td style="text-align:right;font-size:8.5pt;color:#555;padding-bottom:6pt;">${includeLogo ? 'Ω OHMZONE' : ''}</td>
+      </tr>
+      <tr>
+        <td style="font-size:9pt;color:#333;"><b>${L.lblTag}:</b> ${d.tag || L.untitledTag} &nbsp;&nbsp; <b>${L.lblStandard}:</b> ${stdName}</td>
+        <td style="text-align:right;font-size:8.5pt;color:#555;">${today} &nbsp;·&nbsp; ${L.pageLbl} ${pageNum} ${L.ofLbl} ${totalPages}</td>
+      </tr>
+    </table>
+
+    ${sectionHead(L.repInputData)}
+    <table style="width:100%;border-collapse:collapse;">${gridRows(inputPairs)}</table>
+
+    ${sectionHead(L.repResults)}
+    <table style="width:100%;border-collapse:collapse;">${gridRows(resultPairs)}</table>
+
+    ${sectionHead(L.repBasis)}
+    <p style="font-size:8.5pt;color:#444;margin:2pt 0;">${L.repBasisLine.replace('{std}', stdCite)}</p>
+
+    ${includeLedger && d.chosen ? buildLedgerLightHTML(d) : ""}
+    ${includeSizes ? buildSizesTableLightHTML(d) : ""}
+
+    <p style="font-size:7.5pt;color:#888;margin-top:14pt;border-top:0.5pt solid #ddd;padding-top:6pt;">${L.xlsDisclaimerBody}</p>
+  </div>`;
+}
+
+document.getElementById("compileWordBtn").addEventListener("click", ()=>{
+  const L = UI[currentLang];
+  const selected = getSelectedSavedPages();
+  if(selected.length===0){ alert(L.noSelectionAlert); return; }
+  const inclLedger = $("includeLedger").checked, inclSizes = $("includeSizesTable").checked, inclLogo = $("includeLogo").checked;
+  const pagesHtml = selected.map((p,i)=>buildReportPageHTML(calcAll(p.inputs), i+1, selected.length, inclLedger, inclSizes, inclLogo)).join("");
+  const doc = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+  <head><meta charset="utf-8"><title>MV Transformer Compiled Report</title>
+  <!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View></w:WordDocument></xml><![endif]-->
+  </head><body>${pagesHtml}</body></html>`;
+  downloadBlob(doc, "application/msword", "mv_transformer_compiled_report.doc");
+});
+
+document.getElementById("compilePrintBtn").addEventListener("click", ()=>{
+  const L = UI[currentLang];
+  const selected = getSelectedSavedPages();
+  if(selected.length===0){ alert(L.noSelectionAlert); return; }
+  const inclLedger = $("includeLedger").checked, inclSizes = $("includeSizesTable").checked, inclLogo = $("includeLogo").checked;
+  const pagesHtml = selected.map((p,i)=>buildReportPageHTML(calcAll(p.inputs), i+1, selected.length, inclLedger, inclSizes, inclLogo)).join("");
+  const w = window.open("", "_blank");
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>MV Transformer Compiled Report</title>
+  <style>body{font-family:Calibri,Arial,sans-serif;margin:0;padding:16px;} @media print{body{padding:0;}}</style>
+  </head><body>${pagesHtml}<script>window.onload=()=>window.print();<\/script></body></html>`);
+  w.document.close();
+});
+
+/* ===== export ===== */
+function buildReportRows(){
+  const d = window._lastResults;
+  if(!d || !d.chosen) return null;
+  const L = UI[currentLang];
+  return [
+    [L.xlsParam, L.xlsValue],
+    [L.lblTag, d.tag || L.untitledTag], [L.lblStandard, d.std==="nec"?L.optNec:L.optCsa],
+    [L.xlsKva, d.kva], [L.xlsPriV, d.priVkV+" kV"], [L.xlsImpedZ, d.impedZ+"%"],
+    [L.xlsMat, d.mat==="cu"?L.copper:L.aluminum], [L.xlsInsulClass, d.insulClass+" kV"],
+    [L.xlsLength, fmt(d.lenFt,0)+" ft"], [L.xlsSets, d.sets],
+    ["",""],
+    [L.xlsFla, fmt(d.fla,1)+" A"], [L.xlsReqAmp, fmt(d.reqAmp,1)+" A"],
+    [L.xlsChosenSize, d.chosen.size], [L.xlsChosenAmp, fmt(d.chosen.amp,0)+" A"],
+    [L.xlsVdPct, fmt(d.chosen.vdPct,2)+"%"], [L.xlsVdTarget, d.vdTarget+"%"],
+    [L.xlsWithstand, fmt(d.chosen.wt,3)+" s"], [L.xlsFaultKa, d.faultKa+" kA"],
+    [L.xlsMaxFuse, d.maxFuseStd+" A"], [L.xlsMaxBreaker, d.maxBreakerStd+" A"],
+    ["",""],
+    [L.xlsProtOn, d.protOn ? L.yes : L.no],
+    [L.xlsClearTime, d.protOn ? fmt(d.clearTime,3)+" s" : "—"],
+    [L.xlsProtResult, d.protOn ? (d.chosen.wt>=d.clearTime ? L.passWord : L.failWord) : L.notEvaluated],
+    ["",""],
+    [L.xlsDisclaimerLbl, L.xlsDisclaimerBody]
+  ];
+}
+
+document.getElementById('printBtn').addEventListener('click', () => {
+  const d = window._lastResults;
+  if(!d || !d.chosen) { window.print(); return; }
+  const pageHtml = buildReportPageHTML(d, 1, 1, $("includeLedger").checked, $("includeSizesTable").checked, $("includeLogo").checked);
+  const w = window.open("", "_blank");
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${$('titleH1').textContent}</title>
+  <style>body{margin:0;padding:18px;} @media print{body{padding:0;}}</style>
+  </head><body>${pageHtml}<script>window.onload=()=>window.print();<\/script></body></html>`);
+  w.document.close();
+});
+
+/* ===== report template upload ===== */
+let uploadedTemplateBuffer = null;
+let uploadedTemplateName = "";
+
+$("templateFile").addEventListener("change", (e)=>{
+  const L = UI[currentLang];
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev)=>{
+    uploadedTemplateBuffer = ev.target.result;
+    uploadedTemplateName = file.name;
+    inspectTemplate(file.name);
+  };
+  reader.readAsArrayBuffer(file);
+});
+
+/* Scans the uploaded .docx and reports which known placeholders it found —
+   this is what tells you whether the template is actually wired up, rather
+   than silently producing an unchanged document. */
+function inspectTemplate(fileName){
+  const L = UI[currentLang];
+  const known = Object.keys(templateTagValues(window._lastResults || calcAll(readInputs())));
+  try{
+    const zip = new PizZip(uploadedTemplateBuffer);
+    // Gather text from body, headers and footers so tags in a header/footer count too
+    let xml = "";
+    Object.keys(zip.files).forEach(name=>{
+      if(/^word\/(document|header\d*|footer\d*)\.xml$/.test(name)){
+        xml += zip.files[name].asText();
+      }
+    });
+    // Strip XML tags so placeholders split across runs still read as {tag}
+    const plain = xml.replace(/<[^>]+>/g, "");
+    const found = known.filter(k => plain.includes("{"+k+"}"));
+    const missing = known.filter(k => !found.includes(k));
+    // Any {something} in the doc that isn't one of ours
+    const allTags = [...plain.matchAll(/\{([a-zA-Z0-9_]+)\}/g)].map(m=>m[1]);
+    const unknown = [...new Set(allTags.filter(t => !known.includes(t)))];
+
+    let msg = L.templateLoadedMsg.replace("{name}", fileName) + " — ";
+    let color = "var(--trace)";
+    if(found.length === 0){
+      msg += L.templateNoTagsFound;
+      color = "var(--alarm)";
+    } else {
+      msg += L.templateTagsFound.replace("{n}", found.length).replace("{total}", known.length);
+      if(missing.length) msg += " " + L.templateTagsMissing.replace("{list}", missing.join(", "));
+      if(unknown.length){ msg += " " + L.templateTagsUnknown.replace("{list}", unknown.join(", ")); color = "var(--warn)"; }
+      if(missing.length && !unknown.length) color = "var(--warn)";
+    }
+    showTemplateStatus(msg, color);
+  } catch(err){
+    console.error("Template inspect error:", err);
+    showTemplateStatus(L.templateErrorMsg + " " + (err.message||""), "var(--alarm)");
+  }
+}
+
+function templateTagValues(d){
+  const L = UI[currentLang];
+  const today = new Date().toLocaleDateString(currentLang==='fr'?'fr-CA':'en-CA');
+  const stdCite = d.std==="nec" ? L.citeNec : L.citeCsa;
+  const stdName = d.std==="nec" ? L.optNec : L.optCsa;
+  return {
+    tag: d.tag || L.untitledTag,
+    standard: stdName,
+    date: today,
+    kva: String(d.kva),
+    priV: d.priVkV+" kV",
+    impedZ: d.impedZ+"%",
+    material: d.mat==="cu"?L.copper:L.aluminum,
+    insulClass: d.insulClass+" kV",
+    length: fmt(d.lenFt,0)+" ft",
+    sets: String(d.sets),
+    vdTarget: d.vdTarget+"%",
+    fla: fmt(d.fla,1)+" A",
+    reqAmp: fmt(d.reqAmp,1)+" A",
+    chosenSize: d.chosen ? d.chosen.size : L.noneMet,
+    chosenAmp: d.chosen ? fmt(d.chosen.amp,0)+" A" : "—",
+    vdPct: d.chosen ? fmt(d.chosen.vdPct,2)+"%" : "—",
+    withstand: d.chosen ? fmt(d.chosen.wt,2)+" s" : "—",
+    faultKa: d.faultKa+" kA",
+    maxFuse: d.maxFuseStd+" A ("+stdCite+")",
+    maxBreaker: d.maxBreakerStd+" A ("+stdCite+")",
+    protResult: d.protOn ? (d.chosen && d.chosen.wt>=d.clearTime ? L.passWord : L.failWord) : L.notEvaluated
+  };
+}
+
+function exportWithTemplate(d){
+  const L = UI[currentLang];
+  try{
+    const zip = new PizZip(uploadedTemplateBuffer);
+    const docx = new window.docxtemplater(zip, {
+      paragraphLoop: true,
+      linebreaks: true,
+      // Word frequently splits a typed {tag} across several internal XML runs
+      // (spellcheck/autocorrect/formatting changes mid-word). Without this,
+      // docxtemplater sees fragments like "{ta" + "g}" and silently fails to
+      // match them — the single most common cause of "my template did nothing".
+      nullGetter: function(part){
+        // Report unknown placeholders instead of substituting a blank string,
+        // so a typo'd tag is visible in the output rather than vanishing.
+        return "«" + (part.value || "?") + "»";
+      }
+    });
+    docx.render(templateTagValues(d));
+    const out = docx.getZip().generate({ type: "blob", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+    const url = URL.createObjectURL(out);
+    const a = document.createElement("a");
+    a.href = url; a.download = "mv_transformer_primary_cable.docx";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url), 2000);
+    showTemplateStatus(L.templateExportOk, "var(--trace)");
+  } catch(err){
+    console.error("Template render error:", err);
+    let detail = err.message || String(err);
+    // docxtemplater packs per-tag problems into err.properties.errors
+    if(err.properties && err.properties.errors && err.properties.errors.length){
+      detail = err.properties.errors.map(e=>{
+        const ctx = (e.properties && e.properties.context) ? ` (near "${e.properties.context}")` : "";
+        return (e.properties && e.properties.explanation ? e.properties.explanation : e.message) + ctx;
+      }).join(" · ");
+    }
+    showTemplateStatus(L.templateErrorMsg + " " + detail, "var(--alarm)");
+    alert(L.templateErrorMsg + "\n\n" + detail);
+    exportWithBuiltInLayout(d);
+  }
+}
+
+function showTemplateStatus(msg, color){
+  const el = $("templateStatus");
+  if(!el) return;
+  el.textContent = msg;
+  el.style.color = color || "var(--trace)";
+}
+
+function exportWithBuiltInLayout(d){
+  const pageHtml = buildReportPageHTML(d, 1, 1, $("includeLedger").checked, $("includeSizesTable").checked, $("includeLogo").checked);
+  const doc = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+  <head><meta charset="utf-8"><title>MV Transformer Primary Cable Report</title>
+  <!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View></w:WordDocument></xml><![endif]-->
+  </head><body>${pageHtml}</body></html>`;
+  downloadBlob(doc, "application/msword", "mv_transformer_primary_cable.doc");
+}
+
+document.getElementById('exportWordBtn').addEventListener('click', () => {
+  const d = window._lastResults;
+  if(!d || !d.chosen) return;
+  if(uploadedTemplateBuffer){
+    exportWithTemplate(d);
+  } else {
+    exportWithBuiltInLayout(d);
+  }
+});
+
+function downloadBlob(content, mime, filename){
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 2000);
+}
+
+function buildLedgerRows(d){
+  const L = UI[currentLang];
+  const steps = buildLedgerSteps(d);
+  const rows = [["#","Formula","Note"]];
+  steps.forEach(s=>{
+    rows.push([String(s.num).padStart(2,'0')+" — "+s.title, "", ""]);
+    s.formula.split("\n").forEach(line=>{
+      if(line.trim()!=="") rows.push(["", line, ""]);
+    });
+    rows.push(["", "", s.note]);
+    rows.push(["","",""]);
+  });
+  return rows;
+}
+function buildSizesRows(d){
+  const L = UI[currentLang];
+  const rows = [[L.szThSize, L.szThAmp, L.szThVd, L.szThWithstand, L.szThOk]];
+  d.rows.forEach(r=>{
+    rows.push([r.size, fmt(r.amp,0)+" A", fmt(r.vdPct,2)+"%", fmt(r.wt,2), r.ok ? L.yes : L.no]);
+  });
+  return rows;
+}
+
+document.getElementById('exportExcelBtn').addEventListener('click', () => {
+  const rows = buildReportRows();
+  if(!rows) return;
+  const d = window._lastResults;
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  XLSX.utils.book_append_sheet(wb, ws, "MV Primary Cable");
+  if($("includeSizesTable").checked && d && d.chosen){
+    const wsSizes = XLSX.utils.aoa_to_sheet(buildSizesRows(d));
+    XLSX.utils.book_append_sheet(wb, wsSizes, "Sizes Evaluated");
+  }
+  if($("includeLedger").checked && d && d.chosen){
+    const wsLedger = XLSX.utils.aoa_to_sheet(buildLedgerRows(d));
+    XLSX.utils.book_append_sheet(wb, wsLedger, "Calculation Ledger");
+  }
+  XLSX.writeFile(wb, "mv_transformer_primary_cable.xlsx");
+});
+
+/* ===================== i18n ===================== */
+const UI = {
+  en: {
+    titleH1: "MV Transformer — Primary Cable Sizing",
+    titleSub: "Ampacity, voltage drop &amp; short-circuit thermal withstand for medium-voltage transformer primary feeders — NEC 450 / IEEE C57 / ICEA basis",
+    lblDwg: "Dwg No.", lblScale: "Scale", lblMethod: "Method", lblRev: "Rev",
+    topDiscB: "Reference tool only.",
+    topDiscTxt: "Preliminary sizing aid for a medium-voltage transformer primary feeder. Cable ampacity, reactance and short-circuit withstand values used are representative/typical figures — verify against ICEA P-32-382 / P-54-440, the cable manufacturer's data, and NEC Article 450 before finalizing a design. Not a substitute for a qualified electrical engineer's design and a formal short-circuit/coordination study.",
+    loadExampleTxt: "Load example",
+    step1Title: "Transformer", step1Small: "Rating, primary voltage, impedance",
+    lblKva: "Transformer rating (kVA)", lblPriV: "Primary voltage (kV, line-to-line)", lblImped: "Transformer impedance, %Z",
+    hintImped: "Typical %Z rises with rating — roughly 2–5% for smaller units, 5.5–7%+ for larger distribution-class units. Use the nameplate value once a unit is selected.",
+    step2Title: "Primary Cable", step2Small: "Length, material, insulation class, sets",
+    lblLength: "Length", lblUnit: "Unit", lblMat: "Conductor", lblInsulClass: "Insulation voltage class",
+    optCu: "Copper", optAl: "Aluminum",
+    lblSets: "Sets / phase (parallel)", lblPf: "Load power factor (for VD)", lblVdTarget: "Target voltage drop (%)",
+    hintStep2: "Insulation voltage class should be rated for the system voltage (100% or 133% insulation level per the cable manufacturer's recommendation for the grounding configuration in use).",
+    step3Title: "Upstream Short-Circuit", step3Small: "Available fault current at the primary terminals",
+    lblFaultKa: "Available fault current (kA symmetrical)", lblInitTemp: "Cable normal operating temperature (°C)", lblMaxTemp: "Cable max. short-circuit temperature (°C)",
+    hintStep3: "Default 90°C/250°C matches typical 90°C-rated EPR/XLPE shielded MV cable — confirm the exact short-circuit temperature limit against the cable manufacturer's data for the insulation actually selected.",
+    step4Title: "Primary Protection", optionalTag4: "(optional)", step4Small: "Clearing time at the fault current above, if known",
+    lblClearTime: "Protection clearing time at this fault level (seconds)",
+    hintStep4: "If you know the primary fuse/breaker's actual clearing time at the fault current entered in Step 3, enter it here to check the cable's short-circuit withstand against it. If left off, the tool instead reports how long the selected cable can withstand that fault current before reaching its thermal damage limit.",
+    resultTitle: "Result — Recommended Primary Cable", gaugeLbl: "Recommended size",
+    lblStatFla: "Transformer FLA (primary)", lblStatReqAmp: "Required ampacity (125% FLA)",
+    lblStatAmpacity: "Cable ampacity (this size)", lblStatVd: "Voltage drop, this length",
+    lblStatWithstand: "Short-circuit withstand time", lblStatMaxFuse: "Max primary fuse", lblStatMaxBreaker: "Max primary breaker",
+    printBtnLabel: "🖨 Print / Save as PDF", exportWordLabel: "📄 Export study (Word)", exportBtnLabel: "📊 Export study (Excel)",
+    ledgerTitle: "Calculation Ledger", ledgerTag: "FLA → ampacity → voltage drop → thermal withstand",
+    sizesTitle: "All Sizes Evaluated", szThSize: "Size", szThAmp: "Ampacity", szThVd: "VD%", szThWithstand: "Withstand (s)", szThOk: "Meets all?",
+    noneMet: "None met criteria", yes: "Yes", no: "No",
+    passTitle: "Recommended size found.", passBody: "{size} meets ampacity (≥{amp} A available), voltage-drop target and short-circuit withstand requirements entered.",
+    failTitle: "No listed size meets every requirement.", failBody: "Even the largest listed size ({size}) does not satisfy ampacity, voltage-drop and short-circuit withstand simultaneously — consider parallel sets, a shorter run, or a formal engineering study.",
+    protPassTitle: "Meets protection clearing time.", protPassBody: "Cable withstand ({wt} s) is greater than or equal to the entered protection clearing time ({ct} s) at this fault level.",
+    protFailTitle: "Does not clear in time.", protFailBody: "Cable withstand ({wt} s) is less than the entered protection clearing time ({ct} s) — the cable would be thermally damaged before the protection operates. Upsize the cable, add parallel sets, or use faster-clearing protection.",
+    noProtTitle: "No protection clearing time entered.", noProtBody: "At {ka} kA available fault current, this cable can withstand approximately {wt} seconds before reaching its short-circuit thermal damage limit. Enter your protection's actual clearing time in Step 4 to check against this value.",
+    lstep1Title: "Transformer full-load current (FLA)", lstep1Note: "Per NEC 450 / IEEE C57 practice — three-phase transformer FLA at the primary terminals, then a 125% continuous-load margin per the general NEC conductor-sizing principle (215.2/310).",
+    reqAmpLbl: "Required ampacity",
+    lstep2Title: "Cable selection by ampacity", lstep2Note: "Smallest listed size whose ampacity (adjusted for material, insulation voltage class, and parallel sets) meets or exceeds the required ampacity above.",
+    chosenSizeLine: "Selected: {size}, ampacity {amp} A", noSizeLine: "No size met the ampacity requirement.",
+    lstep3Title: "Voltage drop check", lstep3Note: "Three-phase voltage drop formula using the cable's resistance and reactance at the length and parallel-set count entered, checked against the target percentage in Step 2.",
+    parallelPhase: "parallel/phase", targetLbl: "target",
+    lstep4Title: "Short-circuit thermal withstand (ICEA)", lstep4Note: "ICEA P-32-382 short-circuit conductor temperature formula. Confirms the cable's insulation is not thermally damaged by the fault current for the duration it actually flows.",
+    icea_cu: "t = 0.0297 × (CM/I)² × log10((T2+234)/(T1+234))  [copper]",
+    icea_al: "t = 0.0125 × (CM/I)² × log10((T2+228)/(T1+228))  [aluminum]",
+    atFaultLbl: "at",
+    lblTag: "Equipment tag", lblStandard: "Governing standard",
+    optCsa: "CSA C22.1 (Canadian Electrical Code)", optNec: "NEC / NFPA 70 (Article 450)",
+    hintStandard: "Sets the code reference cited for primary overcurrent protection sizing in the results and report. CSA C22.1 governs by default; switch to NEC only where the project is under U.S. jurisdiction.",
+    citeNec: "NEC 450.3", citeCsa: "CSA C22.1 Section 26", citeNecShort: "NEC", citeCsaShort: "CSA",
+    lstep5Title: "Primary overcurrent protection sizing ({std})",
+    lstep5NoteNec: "Representative NEC Table 450.3(A)-style values for primary-only protection: transformers with impedance ≤6% permit fuses up to 300% FLA / breakers up to 600% FLA; impedance 6–10% (or where secondary protection is also provided) may reduce or increase these limits — verify the exact table value and scheme against the current NEC edition.",
+    lstep5NoteCsa: "Representative values following the same general structure as CSA C22.1's overcurrent protection provisions for transformers rated over 750 V (Section 26): transformers with impedance ≤6% shown at up to 300% FLA (fuse) / 600% FLA (breaker); higher-impedance units or units with secondary protection may follow different limits — verify the exact rule and percentage against the current CSA C22.1 edition, as this tool has not independently confirmed every CSA-specific value against NEC.",
+    savedTitle: "Report Pages", savedTag: "save each transformer/cable run, then compile them into one document",
+    savePageBtnLabel: "💾 Save this calculation as a page",
+    compileWordLabel: "📚 Compile selected → Word", compilePrintLabel: "🖨 Compile selected → Print/PDF",
+    hintSaved: "Saved pages are stored in this browser only (not uploaded anywhere). Compiling renumbers pages automatically based on the order and selection below.",
+    tagPrompt: "Enter an equipment tag for this calculation (e.g. TX-101):",
+    noSavedPages: "No saved report pages yet — calculate a cable run above, then save it as a page.",
+    untitledTag: "(untitled)", noSelectionAlert: "Select at least one saved page to compile.",
+    pageLbl: "Page", ofLbl: "of", noProtShort: "No protection clearing time entered — see withstand time above.",
+    repInputData: "Input Data", repResults: "Results", repBasis: "Basis",
+    repBasisLine: "Ampacity/voltage-drop/short-circuit basis per ICEA P-32-382 and standard 3-phase feeder practice; primary overcurrent protection sizing per {std}. Values are preliminary — see full disclaimer below.",
+    uploadTemplateLabel: "Report template (.docx, optional)", uploadTemplateHint: "Upload your firm's Word template to brand single-page exports with it. The template must contain these placeholders, written exactly as shown, wherever you want each value to appear: {tag} {standard} {date} {kva} {priV} {impedZ} {material} {insulClass} {length} {sets} {vdTarget} {fla} {reqAmp} {chosenSize} {chosenAmp} {vdPct} {withstand} {faultKa} {maxFuse} {protResult}. Currently applies to the single-page \"Export study (Word)\" button only — the compiled multi-page export uses the built-in layout above.",
+    templateLoadedMsg: "Template loaded: {name}", templateClearBtn: "✕ Remove template", templateErrorMsg: "Could not read this file as a Word template — using the built-in layout instead.",
+    templateNoTagsFound: "no OhmZone placeholders found in this document. Add tags such as {tag}, {kva}, {chosenSize} to the template body where you want values inserted. Type them in one go — if Word splits a tag with spellcheck or formatting it may not be recognised.",
+    templateTagsFound: "{n} of {total} placeholders found.",
+    templateTagsMissing: "Not present (will be left out): {list}.",
+    templateTagsUnknown: "Unrecognised tags that will render as «name»: {list}.",
+    templateExportOk: "Template export completed.",
+    lblIncludeLedger: "Include Calculation Ledger in report", lblIncludeSizes: "Include All Sizes Evaluated in report",
+    lblIncludeLogo: "Include OhmZone brand mark in report",
+    impedLbl: "Impedance", maxFuseLbl: "Max fuse", maxBreakerLbl: "Max breaker", nextStd: "next standard rating",
+    lstep6Title: "Protection clearing time vs. cable withstand", lstep6Note: "Compares the entered protection clearing time against the cable's calculated short-circuit thermal withstand time — the cable must be able to withstand the fault for at least as long as it takes the protection to clear it.",
+    withstandLbl: "Cable withstand", clearTimeLbl: "Protection clearing time",
+    resultPass: "Result: PASS — cable withstand ≥ clearing time.", resultFail: "Result: FAIL — cable withstand < clearing time.",
+    xlsParam: "Parameter", xlsValue: "Value", xlsKva: "Transformer rating (kVA)", xlsPriV: "Primary voltage",
+    xlsImpedZ: "Impedance %Z", xlsMat: "Conductor material", xlsInsulClass: "Insulation voltage class",
+    xlsLength: "Cable length", xlsSets: "Sets per phase",
+    xlsFla: "Transformer FLA", xlsReqAmp: "Required ampacity (125% FLA)",
+    xlsChosenSize: "Recommended cable size", xlsChosenAmp: "Cable ampacity",
+    xlsVdPct: "Voltage drop", xlsVdTarget: "Voltage drop target",
+    xlsWithstand: "Short-circuit withstand time", xlsFaultKa: "Available fault current",
+    xlsMaxFuse: "Max primary fuse (NEC 450.3)", xlsMaxBreaker: "Max primary breaker (NEC 450.3)",
+    xlsProtOn: "Protection clearing time provided", xlsClearTime: "Protection clearing time", xlsProtResult: "Protection coordination result",
+    passWord: "PASS", failWord: "FAIL", notEvaluated: "Not evaluated (no clearing time entered)",
+    copper: "Copper", aluminum: "Aluminum",
+    xlsDisclaimerLbl: "Disclaimer",
+    xlsDisclaimerBody: "Preliminary sizing aid only. Cable ampacity, reactance and short-circuit withstand values used are representative/typical figures — verify against ICEA P-32-382/P-54-440, the cable manufacturer's data, and the current NEC edition (Article 450) before finalizing a design. This tool does not replace a qualified electrical engineer's design or a formal short-circuit/protective-device coordination study.",
+    footerHtml: `<b>Method &amp; data notes.</b> Transformer full-load current is calculated per standard three-phase practice (FLA = kVA×1000/(√3×V_LL)), then increased by 125% as the required continuous-duty ampacity, consistent with the general NEC conductor-sizing principle used throughout this toolboard. <b>Cable ampacity</b> figures are representative values for single-conductor, shielded, 90°C EPR/XLPE medium-voltage cable in a typical duct-bank installation — actual ampacity depends heavily on installation method (duct bank vs. direct buried vs. free air), conductor spacing, soil thermal resistivity, ambient/burial temperature, and the specific cable construction, and must be confirmed against ICEA P-54-440 (or P-32-382 methodology) or the manufacturer's engineering data before use. <b>Reactance</b> is a simplified flat representative value (0.045 Ω/1000 ft) across all conductor sizes for a typical shielded-cable installation — actual reactance varies with conductor spacing/configuration (triplexed, cradled, or flat) and should be confirmed against manufacturer data for voltage-drop-critical designs. <b>Short-circuit thermal withstand</b> uses the ICEA P-32-382 conductor-heating formula (t = 0.0297×(CM/I)²×log₁₀((T2+234)/(T1+234)) for copper, with the 228 constant and 0.0125 coefficient for aluminum) — this is a standard, widely published formula, but the T1 (normal operating) and T2 (short-circuit damage limit) temperatures are user-adjustable defaults and should be confirmed against the actual cable insulation's rated limits. <b>Primary overcurrent protection</b> percentages follow the general structure of NEC Table 450.3(A) for primary-only protection (300%/600% for ≤6% impedance, 250%/400% above) — the actual table has additional rows for combined primary+secondary protection schemes and specific impedance bands; verify the applicable row against the current NEC edition and the actual protection scheme used. This tool is for preliminary planning only and does not replace verification by a qualified electrical professional against the current NEC edition, IEEE C57 series, and the authority having jurisdiction.`
+  },
+  fr: {
+    titleH1: "Transformateur MT — Dimensionnement du câble primaire",
+    titleSub: "Ampacité, chute de tension et tenue thermique au court-circuit pour les départs primaires de transformateurs à moyenne tension — base NEC 450 / IEEE C57 / ICEA",
+    lblDwg: "N° dessin", lblScale: "Échelle", lblMethod: "Méthode", lblRev: "Rév.",
+    topDiscB: "Outil de référence seulement.",
+    topDiscTxt: "Aide au dimensionnement préliminaire pour un départ primaire de transformateur à moyenne tension. Les valeurs d'ampacité, de réactance et de tenue au court-circuit du câble sont des chiffres représentatifs/typiques — vérifiez auprès de l'ICEA P-32-382 / P-54-440, des données du fabricant du câble et de l'article 450 du NEC avant de finaliser une conception. Ne remplace pas la conception d'un ingénieur électricien qualifié ni une étude formelle de court-circuit/coordination.",
+    loadExampleTxt: "Charger l'exemple",
+    step1Title: "Transformateur", step1Small: "Puissance, tension primaire, impédance",
+    lblKva: "Puissance du transformateur (kVA)", lblPriV: "Tension primaire (kV, ligne à ligne)", lblImped: "Impédance du transformateur, %Z",
+    hintImped: "Le %Z typique augmente avec la puissance — environ 2–5 % pour les petites unités, 5,5–7 %+ pour les grandes unités de classe distribution. Utilisez la valeur de plaque signalétique une fois l'unité sélectionnée.",
+    step2Title: "Câble primaire", step2Small: "Longueur, matériau, classe d'isolation, ensembles",
+    lblLength: "Longueur", lblUnit: "Unité", lblMat: "Conducteur", lblInsulClass: "Classe de tension d'isolation",
+    optCu: "Cuivre", optAl: "Aluminium",
+    lblSets: "Ensembles / phase (parallèle)", lblPf: "Facteur de puissance de la charge (pour la CT)", lblVdTarget: "Chute de tension cible (%)",
+    hintStep2: "La classe de tension d'isolation devrait être adaptée à la tension du système (niveau d'isolation 100 % ou 133 % selon la recommandation du fabricant de câble pour la configuration de mise à la terre utilisée).",
+    step3Title: "Court-circuit amont", step3Small: "Courant de défaut disponible aux bornes primaires",
+    lblFaultKa: "Courant de défaut disponible (kA symétrique)", lblInitTemp: "Température de service normale du câble (°C)", lblMaxTemp: "Température max. de court-circuit du câble (°C)",
+    hintStep3: "Les valeurs par défaut 90 °C/250 °C correspondent à un câble MT blindé EPR/XLPE typique à 90 °C — confirmez la limite exacte de température de court-circuit auprès des données du fabricant pour l'isolation réellement sélectionnée.",
+    step4Title: "Protection primaire", optionalTag4: "(facultatif)", step4Small: "Temps de déclenchement au courant de défaut ci-dessus, si connu",
+    lblClearTime: "Temps de déclenchement de la protection à ce niveau de défaut (secondes)",
+    hintStep4: "Si vous connaissez le temps de déclenchement réel du fusible/disjoncteur primaire au courant de défaut saisi à l'étape 3, entrez-le ici pour vérifier la tenue au court-circuit du câble par rapport à celui-ci. Si laissé vide, l'outil indique plutôt combien de temps le câble sélectionné peut supporter ce courant de défaut avant d'atteindre sa limite thermique.",
+    resultTitle: "Résultat — Câble primaire recommandé", gaugeLbl: "Section recommandée",
+    lblStatFla: "FLA du transformateur (primaire)", lblStatReqAmp: "Ampacité requise (125 % FLA)",
+    lblStatAmpacity: "Ampacité du câble (cette section)", lblStatVd: "Chute de tension, cette longueur",
+    lblStatWithstand: "Temps de tenue au court-circuit", lblStatMaxFuse: "Fusible primaire max.", lblStatMaxBreaker: "Disjoncteur primaire max.",
+    printBtnLabel: "🖨 Imprimer / Enregistrer en PDF", exportWordLabel: "📄 Exporter l'étude (Word)", exportBtnLabel: "📊 Exporter l'étude (Excel)",
+    ledgerTitle: "Registre de calcul", ledgerTag: "FLA → ampacité → chute de tension → tenue thermique",
+    sizesTitle: "Toutes les sections évaluées", szThSize: "Section", szThAmp: "Ampacité", szThVd: "CT%", szThWithstand: "Tenue (s)", szThOk: "Conforme?",
+    noneMet: "Aucune section ne satisfait aux critères", yes: "Oui", no: "Non",
+    passTitle: "Section recommandée trouvée.", passBody: "{size} répond à l'ampacité (≥{amp} A disponible), à la cible de chute de tension et aux exigences de tenue au court-circuit saisies.",
+    failTitle: "Aucune section listée ne répond à toutes les exigences.", failBody: "Même la plus grande section listée ({size}) ne satisfait pas simultanément l'ampacité, la chute de tension et la tenue au court-circuit — envisagez des ensembles en parallèle, un parcours plus court, ou une étude d'ingénierie formelle.",
+    protPassTitle: "Respecte le temps de déclenchement de la protection.", protPassBody: "La tenue du câble ({wt} s) est supérieure ou égale au temps de déclenchement de la protection saisi ({ct} s) à ce niveau de défaut.",
+    protFailTitle: "Ne dégage pas à temps.", protFailBody: "La tenue du câble ({wt} s) est inférieure au temps de déclenchement de la protection saisi ({ct} s) — le câble serait endommagé thermiquement avant que la protection n'agisse. Augmentez la section du câble, ajoutez des ensembles en parallèle, ou utilisez une protection à déclenchement plus rapide.",
+    noProtTitle: "Aucun temps de déclenchement de protection saisi.", noProtBody: "À {ka} kA de courant de défaut disponible, ce câble peut supporter environ {wt} secondes avant d'atteindre sa limite de dommage thermique au court-circuit. Entrez le temps de déclenchement réel de votre protection à l'étape 4 pour vérifier cette valeur.",
+    lstep1Title: "Courant à pleine charge du transformateur (FLA)", lstep1Note: "Selon la pratique NEC 450 / IEEE C57 — FLA triphasé du transformateur aux bornes primaires, puis une marge de charge continue de 125 % selon le principe général de dimensionnement des conducteurs du NEC (215.2/310).",
+    reqAmpLbl: "Ampacité requise",
+    lstep2Title: "Sélection du câble par ampacité", lstep2Note: "Plus petite section listée dont l'ampacité (ajustée selon le matériau, la classe de tension d'isolation et le nombre d'ensembles en parallèle) atteint ou dépasse l'ampacité requise ci-dessus.",
+    chosenSizeLine: "Sélectionné : {size}, ampacité {amp} A", noSizeLine: "Aucune section ne répond à l'exigence d'ampacité.",
+    lstep3Title: "Vérification de la chute de tension", lstep3Note: "Formule de chute de tension triphasée utilisant la résistance et la réactance du câble à la longueur et au nombre d'ensembles en parallèle saisis, vérifiée par rapport au pourcentage cible de l'étape 2.",
+    parallelPhase: "parallèle/phase", targetLbl: "cible",
+    lstep4Title: "Tenue thermique au court-circuit (ICEA)", lstep4Note: "Formule de température de conducteur au court-circuit de l'ICEA P-32-382. Confirme que l'isolation du câble n'est pas endommagée thermiquement par le courant de défaut pendant la durée où il circule réellement.",
+    icea_cu: "t = 0,0297 × (CM/I)² × log10((T2+234)/(T1+234))  [cuivre]",
+    icea_al: "t = 0,0125 × (CM/I)² × log10((T2+228)/(T1+228))  [aluminium]",
+    atFaultLbl: "à",
+    lblTag: "Repère de l'équipement", lblStandard: "Norme applicable",
+    optCsa: "CSA C22.1 (Code canadien de l'électricité)", optNec: "NEC / NFPA 70 (Article 450)",
+    hintStandard: "Détermine la référence normative citée pour le dimensionnement de la protection contre les surintensités primaires dans les résultats et le rapport. La CSA C22.1 s'applique par défaut; passez au NEC seulement si le projet relève de la juridiction américaine.",
+    citeNec: "NEC 450.3", citeCsa: "CSA C22.1 Section 26", citeNecShort: "NEC", citeCsaShort: "CSA",
+    lstep5Title: "Dimensionnement de la protection contre les surintensités primaires ({std})",
+    lstep5NoteNec: "Valeurs représentatives de type tableau 450.3(A) du NEC pour la protection primaire seulement : les transformateurs avec impédance ≤6 % permettent des fusibles jusqu'à 300 % FLA / disjoncteurs jusqu'à 600 % FLA; une impédance de 6–10 % (ou lorsqu'une protection secondaire est aussi fournie) peut réduire ou augmenter ces limites — vérifiez la valeur exacte du tableau et le schéma auprès de l'édition en vigueur du NEC.",
+    lstep5NoteCsa: "Valeurs représentatives suivant la structure générale des dispositions de protection contre les surintensités de la CSA C22.1 pour les transformateurs de plus de 750 V (section 26) : les transformateurs avec impédance ≤6 % sont montrés jusqu'à 300 % FLA (fusible) / 600 % FLA (disjoncteur); les unités à impédance plus élevée ou avec protection secondaire peuvent suivre des limites différentes — vérifiez la règle exacte et le pourcentage auprès de l'édition en vigueur de la CSA C22.1, cet outil n'ayant pas confirmé indépendamment chaque valeur propre à la CSA par rapport au NEC.",
+    savedTitle: "Pages du rapport", savedTag: "sauvegardez chaque câble/transformateur, puis compilez-les en un seul document",
+    savePageBtnLabel: "💾 Sauvegarder ce calcul comme page",
+    compileWordLabel: "📚 Compiler la sélection → Word", compilePrintLabel: "🖨 Compiler la sélection → Imprimer/PDF",
+    hintSaved: "Les pages sauvegardées sont stockées dans ce navigateur seulement (non téléversées). La compilation renumérote automatiquement les pages selon l'ordre et la sélection ci-dessous.",
+    tagPrompt: "Entrez un repère d'équipement pour ce calcul (p. ex. TX-101) :",
+    noSavedPages: "Aucune page de rapport sauvegardée pour l'instant — calculez un parcours de câble ci-dessus, puis sauvegardez-le comme page.",
+    untitledTag: "(sans titre)", noSelectionAlert: "Sélectionnez au moins une page sauvegardée à compiler.",
+    pageLbl: "Page", ofLbl: "de", noProtShort: "Aucun temps de déclenchement de protection saisi — voir le temps de tenue ci-dessus.",
+    repInputData: "Données d'entrée", repResults: "Résultats", repBasis: "Base",
+    repBasisLine: "Base d'ampacité/chute de tension/court-circuit selon l'ICEA P-32-382 et la pratique standard de départ triphasé; dimensionnement de la protection primaire selon {std}. Les valeurs sont préliminaires — voir l'avis complet ci-dessous.",
+    uploadTemplateLabel: "Modèle de rapport (.docx, facultatif)", uploadTemplateHint: "Téléversez le modèle Word de votre entreprise pour habiller les exports d'une seule page avec celui-ci. Le modèle doit contenir ces espaces réservés, écrits exactement comme indiqué, partout où vous voulez que chaque valeur apparaisse : {tag} {standard} {date} {kva} {priV} {impedZ} {material} {insulClass} {length} {sets} {vdTarget} {fla} {reqAmp} {chosenSize} {chosenAmp} {vdPct} {withstand} {faultKa} {maxFuse} {protResult}. S'applique actuellement seulement au bouton « Exporter l'étude (Word) » d'une seule page — l'export compilé multi-pages utilise la mise en page intégrée ci-dessus.",
+    templateLoadedMsg: "Modèle chargé : {name}", templateClearBtn: "✕ Retirer le modèle", templateErrorMsg: "Impossible de lire ce fichier comme modèle Word — utilisation de la mise en page intégrée à la place.",
+    templateNoTagsFound: "aucun espace réservé OhmZone trouvé dans ce document. Ajoutez des balises telles que {tag}, {kva}, {chosenSize} dans le corps du modèle là où vous voulez insérer les valeurs. Saisissez-les d'un seul coup — si Word divise une balise avec le correcteur ou la mise en forme, elle peut ne pas être reconnue.",
+    templateTagsFound: "{n} espaces réservés sur {total} trouvés.",
+    templateTagsMissing: "Absents (seront omis) : {list}.",
+    templateTagsUnknown: "Balises non reconnues qui s'afficheront comme «nom» : {list}.",
+    templateExportOk: "Export du modèle terminé.",
+    lblIncludeLedger: "Inclure le registre de calcul dans le rapport", lblIncludeSizes: "Inclure toutes les sections évaluées dans le rapport",
+    lblIncludeLogo: "Inclure la marque OhmZone dans le rapport",
+    impedLbl: "Impédance", maxFuseLbl: "Fusible max.", maxBreakerLbl: "Disjoncteur max.", nextStd: "calibre normalisé supérieur",
+    lstep6Title: "Temps de déclenchement de la protection vs tenue du câble", lstep6Note: "Compare le temps de déclenchement de la protection saisi à la tenue thermique au court-circuit calculée du câble — le câble doit pouvoir supporter le défaut au moins aussi longtemps qu'il faut à la protection pour l'éliminer.",
+    withstandLbl: "Tenue du câble", clearTimeLbl: "Temps de déclenchement de la protection",
+    resultPass: "Résultat : CONFORME — tenue du câble ≥ temps de déclenchement.", resultFail: "Résultat : NON CONFORME — tenue du câble < temps de déclenchement.",
+    xlsParam: "Paramètre", xlsValue: "Valeur", xlsKva: "Puissance du transformateur (kVA)", xlsPriV: "Tension primaire",
+    xlsImpedZ: "Impédance %Z", xlsMat: "Matériau du conducteur", xlsInsulClass: "Classe de tension d'isolation",
+    xlsLength: "Longueur du câble", xlsSets: "Ensembles par phase",
+    xlsFla: "FLA du transformateur", xlsReqAmp: "Ampacité requise (125 % FLA)",
+    xlsChosenSize: "Section de câble recommandée", xlsChosenAmp: "Ampacité du câble",
+    xlsVdPct: "Chute de tension", xlsVdTarget: "Chute de tension cible",
+    xlsWithstand: "Temps de tenue au court-circuit", xlsFaultKa: "Courant de défaut disponible",
+    xlsMaxFuse: "Fusible primaire max. (NEC 450.3)", xlsMaxBreaker: "Disjoncteur primaire max. (NEC 450.3)",
+    xlsProtOn: "Temps de déclenchement de protection fourni", xlsClearTime: "Temps de déclenchement de la protection", xlsProtResult: "Résultat de coordination de la protection",
+    passWord: "CONFORME", failWord: "NON CONFORME", notEvaluated: "Non évalué (aucun temps de déclenchement saisi)",
+    copper: "Cuivre", aluminum: "Aluminium",
+    xlsDisclaimerLbl: "Avis",
+    xlsDisclaimerBody: "Aide au dimensionnement préliminaire seulement. Les valeurs d'ampacité, de réactance et de tenue au court-circuit du câble utilisées sont des chiffres représentatifs/typiques — vérifiez auprès de l'ICEA P-32-382/P-54-440, des données du fabricant du câble et de l'édition en vigueur du NEC (article 450) avant de finaliser une conception. Cet outil ne remplace pas la conception d'un ingénieur électricien qualifié ni une étude formelle de coordination des dispositifs de protection/court-circuit.",
+    footerHtml: `<b>Notes sur la méthode et les données.</b> Le courant à pleine charge du transformateur est calculé selon la pratique triphasée standard (FLA = kVA×1000/(√3×V_LL)), puis augmenté de 125 % comme ampacité continue requise, conformément au principe général de dimensionnement des conducteurs du NEC utilisé dans l'ensemble de ce tableau d'outils. Les valeurs d'<b>ampacité du câble</b> sont des valeurs représentatives pour un câble à moyenne tension monoconducteur, blindé, EPR/XLPE à 90 °C dans une installation typique en banc de conduits — l'ampacité réelle dépend fortement de la méthode d'installation (banc de conduits vs enfouissement direct vs air libre), de l'espacement des conducteurs, de la résistivité thermique du sol, de la température ambiante/d'enfouissement et de la construction précise du câble, et doit être confirmée auprès de l'ICEA P-54-440 (ou de la méthodologie P-32-382) ou des données techniques du fabricant avant utilisation. La <b>réactance</b> est une valeur représentative plate simplifiée (0,045 Ω/1000 pi) pour toutes les sections de conducteur pour une installation de câble blindé typique — la réactance réelle varie selon l'espacement/la configuration des conducteurs (en trèfle, en berceau ou à plat) et devrait être confirmée auprès des données du fabricant pour les conceptions critiques en matière de chute de tension. La <b>tenue thermique au court-circuit</b> utilise la formule d'échauffement de conducteur de l'ICEA P-32-382 (t = 0,0297×(CM/I)²×log₁₀((T2+234)/(T1+234)) pour le cuivre, avec la constante 228 et le coefficient 0,0125 pour l'aluminium) — il s'agit d'une formule standard largement publiée, mais les températures T1 (service normal) et T2 (limite de dommage au court-circuit) sont des valeurs par défaut ajustables par l'utilisateur et devraient être confirmées auprès des limites nominales réelles de l'isolation du câble. Les pourcentages de <b>protection contre les surintensités primaires</b> suivent la structure générale du tableau 450.3(A) du NEC pour la protection primaire seulement (300 %/600 % pour une impédance ≤6 %, 250 %/400 % au-delà) — le tableau réel comporte des rangées additionnelles pour les schémas de protection primaire+secondaire combinés et des plages d'impédance précises; vérifiez la rangée applicable auprès de l'édition en vigueur du NEC et du schéma de protection réellement utilisé. Cet outil est destiné à la planification préliminaire seulement et ne remplace pas la vérification par un professionnel électricien qualifié selon l'édition en vigueur du NEC, la série IEEE C57, et l'autorité compétente.`
+  }
+};
+
+function applyStaticI18n(){
+  const L = UI[currentLang];
+  $('titleH1').textContent = L.titleH1;
+  $('titleSub').innerHTML = L.titleSub;
+  $('lblDwg').textContent = L.lblDwg; $('lblScale').textContent = L.lblScale; $('lblMethod').textContent = L.lblMethod; $('lblRev').textContent = L.lblRev;
+  $('topDiscB').textContent = L.topDiscB; $('topDiscTxt').textContent = L.topDiscTxt;
+  $('loadExampleTxt').textContent = L.loadExampleTxt;
+  $('step1Title').childNodes[0].textContent = L.step1Title + ' '; $('step1Small').textContent = L.step1Small;
+  $('lblTag').textContent = L.lblTag; $('lblStandard').textContent = L.lblStandard;
+  $('optCsa').textContent = L.optCsa; $('optNec').textContent = L.optNec;
+  $('hintStandard').textContent = L.hintStandard;
+  $('lblKva').textContent = L.lblKva; $('lblPriV').textContent = L.lblPriV; $('lblImped').textContent = L.lblImped;
+  $('hintImped').textContent = L.hintImped;
+  $('step2Title').childNodes[0].textContent = L.step2Title + ' '; $('step2Small').textContent = L.step2Small;
+  $('lblLength').textContent = L.lblLength; $('lblUnit').textContent = L.lblUnit; $('lblMat').textContent = L.lblMat; $('lblInsulClass').textContent = L.lblInsulClass;
+  $('optCu').textContent = L.optCu; $('optAl').textContent = L.optAl;
+  $('lblSets').textContent = L.lblSets; $('lblPf').textContent = L.lblPf; $('lblVdTarget').textContent = L.lblVdTarget;
+  $('hintStep2').textContent = L.hintStep2;
+  $('step3Title').childNodes[0].textContent = L.step3Title + ' '; $('step3Small').textContent = L.step3Small;
+  $('lblFaultKa').textContent = L.lblFaultKa; $('lblInitTemp').textContent = L.lblInitTemp; $('lblMaxTemp').textContent = L.lblMaxTemp;
+  $('hintStep3').textContent = L.hintStep3;
+  $('step4Title').childNodes[0].textContent = L.step4Title + ' '; $('optionalTag4').textContent = L.optionalTag4; $('step4Small').textContent = L.step4Small;
+  $('lblClearTime').textContent = L.lblClearTime; $('hintStep4').textContent = L.hintStep4;
+  $('resultTitle').textContent = L.resultTitle; $('gaugeLbl').textContent = L.gaugeLbl;
+  $('lblStatFla').textContent = L.lblStatFla; $('lblStatReqAmp').textContent = L.lblStatReqAmp;
+  $('lblStatAmpacity').textContent = L.lblStatAmpacity; $('lblStatVd').textContent = L.lblStatVd;
+  $('lblStatWithstand').textContent = L.lblStatWithstand; $('lblStatMaxFuse').textContent = L.lblStatMaxFuse; $('lblStatMaxBreaker').textContent = L.lblStatMaxBreaker;
+  $('printBtn').textContent = L.printBtnLabel; $('exportWordBtn').textContent = L.exportWordLabel; $('exportExcelBtn').textContent = L.exportBtnLabel;
+  $('ledgerTitle').textContent = L.ledgerTitle; $('ledgerTag').textContent = L.ledgerTag;
+  $('sizesTitle').textContent = L.sizesTitle; $('szThSize').textContent = L.szThSize; $('szThAmp').textContent = L.szThAmp;
+  $('szThVd').textContent = L.szThVd; $('szThWithstand').textContent = L.szThWithstand; $('szThOk').textContent = L.szThOk;
+  $('footerNote').innerHTML = L.footerHtml;
+  $('savedTitle').textContent = L.savedTitle; $('savedTag').textContent = L.savedTag;
+  $('savePageBtn').textContent = L.savePageBtnLabel;
+  $('compileWordBtn').textContent = L.compileWordLabel; $('compilePrintBtn').textContent = L.compilePrintLabel;
+  $('hintSaved').textContent = L.hintSaved;
+  $('lblUploadTemplate').textContent = L.uploadTemplateLabel;
+  $('hintUploadTemplate').textContent = L.uploadTemplateHint;
+  $('lblIncludeLedger').textContent = L.lblIncludeLedger;
+  $('lblIncludeSizes').textContent = L.lblIncludeSizes;
+  $('lblIncludeLogo').textContent = L.lblIncludeLogo;
+  renderSavedList();
+}
+
+function setLang(lang){
+  currentLang = lang;
+  $('btn-en').classList.toggle('active', lang==='en');
+  $('btn-fr').classList.toggle('active', lang==='fr');
+  document.documentElement.lang = lang;
+  try { localStorage.setItem('ohmzone-lang', lang); } catch(e) {}
+  applyStaticI18n();
+  recalc();
+}
+
+(function(){
+  let saved = 'en';
+  try { saved = localStorage.getItem('ohmzone-lang') || 'en'; } catch(e) {}
+  setLang(saved);
+})();
+</script>
+<div style="position:fixed;bottom:6px;right:12px;z-index:9999;font-family:monospace;font-size:10px;color:#5c7592;opacity:0.75;">© 2026 OhmZone. All rights reserved.</div>
+</body>
+</html>

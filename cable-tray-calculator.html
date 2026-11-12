@@ -1,0 +1,1395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cable Tray Fill Calculator</title>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3887318872951674" crossorigin="anonymous"></script>
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icon-16.png">
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="OhmZone">
+<meta name="theme-color" content="#0a1728">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --bg:#12161C; --panel:#1B212B; --panel-alt:#222A36; --line:#303B4A;
+    --txt:#EDEFF2; --muted:#8B96A8; --amber:#3b9eff; --danger:#E2584F; --success:#4FAE7A;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--txt); font-family:'Inter',sans-serif;}
+  h1,h3,.disp{font-family:'Oswald',sans-serif;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  header{border-bottom:1px solid var(--line); padding:22px 28px;}
+  .headline{display:flex; align-items:baseline; gap:14px; flex-wrap:wrap;}
+  h1{font-weight:700; font-size:26px; letter-spacing:.5px; margin:0; text-transform:uppercase;}
+  h1 span{color:var(--amber);}
+  .sub{margin:6px 0 0 36px; color:var(--muted); font-size:13.5px;}
+  .tag{font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--muted); letter-spacing:1px;}
+  .layout{display:grid; grid-template-columns:320px 1fr; align-items:start;}
+  .side{border-right:1px solid var(--line); padding:22px; display:flex; flex-direction:column; gap:22px; min-height:calc(100vh - 96px);}
+  .main{padding:28px;}
+  section h3{font-size:13px; letter-spacing:1px; text-transform:uppercase; color:var(--muted); margin:0 0 10px 0; font-weight:600; display:flex; align-items:center; justify-content:space-between;}
+  .field{display:flex; flex-direction:column; gap:4px; font-size:12px; color:var(--muted); margin-bottom:10px;}
+  select,input[type=number],input[type=text],input[type=date]{
+    background:var(--panel-alt); border:1px solid var(--line); border-radius:4px; padding:7px 9px;
+    color:var(--txt); font-family:'JetBrains Mono',monospace; font-size:13px; width:100%;
+  }
+  select:focus,input:focus,button:focus-visible{outline:2px solid var(--amber); outline-offset:2px;}
+  .type-row{display:flex; gap:6px;}
+  .type-btn{flex:1; font-size:11px; padding:7px 4px; border-radius:4px; border:1px solid var(--line);
+    background:var(--panel); color:var(--muted); cursor:pointer; font-family:'JetBrains Mono',monospace;}
+  .type-btn.active{border-color:var(--amber); background:#3b9eff22; color:var(--amber);}
+  .unit-toggle{display:flex; gap:4px; background:var(--panel); border:1px solid var(--line); border-radius:4px; padding:2px;}
+  .unit-toggle button{border:none; background:none; color:var(--muted); font-size:10.5px; font-family:'JetBrains Mono',monospace;
+    padding:3px 8px; border-radius:3px; cursor:pointer;}
+  .unit-toggle button.active{background:var(--amber); color:#1B1508; font-weight:700;}
+  .mode-row{display:flex; gap:6px; margin-bottom:12px;}
+  .mode-btn{flex:1; font-size:11px; padding:7px 4px; border-radius:4px; border:1px solid var(--line);
+    background:var(--panel); color:var(--muted); cursor:pointer; font-family:'Inter',sans-serif; font-weight:600;}
+  .mode-btn.active{border-color:var(--amber); background:#3b9eff22; color:var(--amber);}
+  .spec-box{font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--muted); background:var(--panel);
+    border:1px solid var(--line); border-radius:4px; padding:8px 10px; line-height:1.7; margin-bottom:10px;}
+  .insul-chip{display:inline-block; font-size:9.5px; font-family:'JetBrains Mono',monospace; color:var(--amber);
+    border:1px solid #3b9eff55; background:#3b9eff15; padding:1px 6px; border-radius:3px; margin-left:4px;}
+  .btn-primary{display:flex; align-items:center; justify-content:center; gap:6px; background:var(--amber); color:#1B1508;
+    border:none; border-radius:5px; padding:9px 12px; font-weight:600; font-size:13px; cursor:pointer; width:100%; font-family:'Inter',sans-serif;}
+  .btn-outline{display:flex; align-items:center; justify-content:center; gap:6px; background:var(--panel-alt); color:var(--txt);
+    border:1px solid var(--amber); border-radius:5px; padding:9px 12px; font-weight:600; font-size:13px; cursor:pointer; width:100%; font-family:'Inter',sans-serif; margin-top:4px;}
+  .circuit-row{display:flex; align-items:center; gap:8px; background:var(--panel); border:1px solid var(--line);
+    border-radius:4px; padding:6px 8px; margin-bottom:6px;}
+  .dot{width:10px; height:10px; border-radius:50%; flex-shrink:0;}
+  .circuit-row span.lbl{font-size:12px; flex:1; font-family:'JetBrains Mono',monospace;}
+  .remove-btn{background:none; border:none; color:var(--danger); cursor:pointer; padding:2px; font-size:14px;}
+  .circuit-list{max-height:200px; overflow-y:auto;}
+  .empty-note{color:var(--muted); font-size:12.5px; font-style:italic;}
+  .stats{display:flex; gap:14px; margin-bottom:20px; flex-wrap:wrap;}
+  .stat-card{background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:10px 16px; min-width:130px;}
+  .stat-card .lab{font-size:10.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.6px;}
+  .stat-card .val{font-family:'JetBrains Mono',monospace; font-size:20px; font-weight:700; margin-top:2px;}
+  .banner{display:flex; align-items:center; gap:10px; padding:12px 16px; border-radius:6px; font-size:13px;}
+  .drawing-wrap{background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:20px; margin-top:18px; overflow-x:auto;}
+  .footnote{color:var(--muted); font-size:11.5px; margin-top:14px; line-height:1.6; max-width:680px;}
+  .hint{font-size:10.5px; color:var(--muted); margin:6px 0 0 0;}
+  .legend{display:flex; gap:14px; flex-wrap:wrap; margin-top:10px; font-size:11px; color:var(--muted);}
+  .legend span.sw{display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:5px; vertical-align:middle;}
+
+  #reportView{display:none;}
+  @media print{
+    .no-print{display:none !important;}
+    #reportView{display:block !important;}
+    body,html{background:#fff !important; color:#1A1A1A;}
+    .page-break{page-break-before:always;}
+  }
+  .lang-switch{display:flex;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:3px;gap:2px;font-family:'JetBrains Mono',monospace;font-size:11px;}
+  .lang-switch button{border:none;background:transparent;color:var(--muted);padding:5px 12px;border-radius:13px;cursor:pointer;font-family:inherit;font-size:inherit;}
+  .lang-switch button.active{background:var(--amber);color:#1B1508;font-weight:700;}
+
+  @media (max-width:780px){
+    header{padding:52px 16px 16px;}
+    h1{font-size:19px;letter-spacing:.3px;}
+    h1 svg{width:18px;height:18px;}
+    .sub{margin:5px 0 0 26px;font-size:11.5px;}
+    .tag{font-size:10.5px;}
+    .layout{grid-template-columns:1fr;}
+    .side{border-right:none;border-bottom:1px solid var(--line);padding:16px;min-height:0;gap:16px;}
+    .main{padding:16px;}
+    .circuit-list{max-height:160px;}
+    .stats{gap:8px;margin-bottom:14px;}
+    .stat-card{min-width:0;flex:1 1 42%;padding:8px 10px;}
+    .stat-card .lab{font-size:9.5px;}
+    .stat-card .val{font-size:16px;}
+    .drawing-wrap{padding:10px;margin-top:12px;}
+    .banner{font-size:11.5px;padding:10px 12px;}
+    .footnote{font-size:10.5px;max-width:none;}
+    .legend{font-size:10px;gap:10px;}
+    .type-btn,.mode-btn{font-size:10px;padding:6px 3px;}
+    .lang-switch{top:8px !important;right:8px !important;}
+    .lang-switch button{padding:4px 9px;}
+    a[href="index.html"]{top:8px !important;left:8px !important;font-size:10px !important;padding:4px 10px !important;}
+  }
+</style>
+</head>
+<body>
+<a href="index.html" class="no-print" style="position:fixed;top:10px;left:12px;z-index:9999;font-family:monospace;font-size:11px;color:#8fa8c2;background:rgba(10,23,40,0.85);border:1px solid #234261;border-radius:14px;padding:5px 12px;text-decoration:none;">← OhmZone</a>
+<div class="lang-switch no-print" style="position:fixed;top:10px;right:12px;z-index:9999;">
+  <button type="button" id="btn-en" class="active" onclick="setLang('en')">EN</button>
+  <button type="button" id="btn-fr" onclick="setLang('fr')">FR</button>
+</div>
+
+<div class="no-print" id="app">
+  <header>
+    <div class="headline">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3b9eff" stroke-width="2.5"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      <h1 id="h1Title">Cable Tray Fill <span>Calculator</span></h1>
+      <span class="tag">CSA C22.1 · NEMA VE1 · NEC 392.22 (engineering reference)</span>
+    </div>
+    <p class="sub" id="subTitle">Tray fill &amp; spacing check — 575V / 1800RPM / 3-phase motor cable schedule · TECK90 3C, 1kV-rated cables</p>
+  </header>
+
+  <div class="layout">
+    <div class="side">
+      <section>
+        <h3 id="lblTraySpec">Tray specification <div class="unit-toggle" id="unitToggle"></div></h3>
+        <label class="field" id="lblWidth">Width
+          <select id="trayWidth"></select>
+        </label>
+        <label class="field" id="lblDepth">Depth
+          <select id="trayDepth"></select>
+        </label>
+        <label class="field" id="lblType">Type
+          <div class="type-row" id="trayTypeRow"></div>
+        </label>
+      </section>
+
+      <section>
+        <h3 id="lblAddCircuit">Add circuit</h3>
+        <div class="mode-row" id="addModeRow"></div>
+
+        <div id="motorMode">
+          <label class="field" id="lblMotorHp">Motor (HP)
+            <select id="motorSelect"></select>
+          </label>
+        </div>
+
+        <div id="directMode" style="display:none">
+          <label class="field" id="lblConductor">Conductor
+            <select id="conductorSelect"></select>
+          </label>
+          <label class="field" id="lblSpacingReq">Spacing requirement
+            <select id="spacingSelect">
+              <option value="0" id="optSp0">0% (bundled, touching)</option>
+              <option value="25" id="optSp25">25% of Ø</option>
+              <option value="100" id="optSp100">100% of Ø</option>
+            </select>
+          </label>
+          <label class="field" id="lblCablesPerCircuit">Cables per circuit
+            <select id="countSelect">
+              <option value="1" id="optCt1">1 (single 3C cable)</option>
+              <option value="2" id="optCt2">2 (2× parallel)</option>
+              <option value="3" id="optCt3">3 (3× parallel)</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="spec-box" id="specBox"></div>
+        <label class="field" id="lblQty">Qty (number of circuits)
+          <input type="number" id="qtyInput" min="1" value="1" />
+        </label>
+        <button class="btn-primary" id="addBtn">+ Add to tray</button>
+        <button class="btn-outline" id="importBtn" style="margin-top:6px;">⭱ Import circuits (Excel/CSV)</button>
+        <input type="file" id="importFile" accept=".xlsx,.xls,.csv" style="display:none;" />
+        <p class="hint" id="importHint">Columns: HP (or AWG + Material), Spacing%, Count, Qty. First row = headers.</p>
+      </section>
+
+      <section>
+        <h3><span id="circuitCountLabel">Circuits added (0)</span> <button class="btn-outline" id="loadExampleBtn" style="width:auto;padding:5px 10px;font-size:11px;">↻ Load example</button></h3>
+        <div class="circuit-list" id="circuitList"></div>
+      </section>
+
+      <section>
+        <h3 id="lblTitleBlock">Design brief / title block</h3>
+        <label class="field" id="lblCompany">Company / logo text
+          <input type="text" id="fieldCompany" value="AtkinsRéalis" />
+        </label>
+        <label class="field">Élément / Element
+          <input type="text" id="fieldElement" placeholder="e.g. Tray CT-104 fill check" />
+        </label>
+        <label class="field">N° projet / Project No.
+          <input type="text" id="fieldProjectNo" placeholder="e.g. 707455" />
+        </label>
+        <label class="field">Tâche / Task
+          <input type="text" id="fieldTask" value="Cable Tray Fill Calculation" />
+        </label>
+        <label class="field">Vérifié par / Checked by
+          <input type="text" id="fieldCheckedBy" placeholder="Name, P.Eng." />
+        </label>
+        <label class="field">Préparé par / Prepared by
+          <input type="text" id="fieldPreparedBy" placeholder="Name, P.Eng." />
+        </label>
+        <label class="field" id="lblDate">Date
+          <input type="date" id="fieldDate" />
+        </label>
+        <button class="btn-outline" id="exportBtn">⭳ Export report (PDF)</button>
+        <button class="btn-outline" id="exportWordBtn">⭳ Export report (Word .doc)</button>
+        <button class="btn-outline" id="exportExcelBtn">⭳ Export schedule (Excel .xls)</button>
+        <p class="hint" id="hintExport">PDF opens your browser's print dialog. Word/Excel download directly and open in Microsoft Office. All three share the same title block, methodology &amp; results.</p>
+      </section>
+    </div>
+
+    <div class="main">
+      <div class="stats" id="statsRow"></div>
+      <div id="fillBar" style="margin-bottom:16px;"></div>
+      <div class="banner" id="banner"></div>
+      <div class="drawing-wrap" id="drawingWrap"></div>
+      <div class="legend" id="legend"></div>
+      <p class="footnote" id="footnoteText">
+        Cables requiring maintained spacing (25% / 100% of Ø) are arranged in a single layer resting on the tray
+        floor — they are never stacked, since stacking would block the free-air clearance the spacing exists to
+        provide. Cables with no spacing requirement (0%, bundled) are grouped in their own zone beside — not on top
+        of — the spaced cables, and may stack among themselves. Where a spaced cable sits at the edge of the bundled
+        group, the required clearance is still maintained on that side. Area fill is checked against the commonly
+        referenced 40% guideline from NEC 392.22 / CSA C22.1. This tool is a design aid — final tray sizing should be
+        verified by a licensed electrical engineer against the applicable code edition and AHJ requirements.
+      </p>
+    </div>
+  </div>
+</div>
+
+<div id="reportView"></div>
+
+<script>
+/* ---------------- data ---------------- */
+const INSULATION_RATING = "1kV (1000V)";
+
+const CABLE_DATA = [
+  { hp: 0.5, kw: 0.4, count: 1, awg: "12", mat: "CU", dia: 20.3, spacing: 0, weight: 0.4 },
+  { hp: 0.75, kw: 0.6, count: 1, awg: "12", mat: "CU", dia: 20.3, spacing: 0, weight: 0.4 },
+  { hp: 1, kw: 0.8, count: 1, awg: "12", mat: "CU", dia: 20.3, spacing: 0, weight: 0.4 },
+  { hp: 1.5, kw: 1.1, count: 1, awg: "12", mat: "CU", dia: 20.3, spacing: 0, weight: 0.4 },
+  { hp: 2, kw: 1.5, count: 1, awg: "12", mat: "CU", dia: 20.3, spacing: 0, weight: 0.4 },
+  { hp: 3, kw: 2.2, count: 1, awg: "12", mat: "CU", dia: 20.3, spacing: 0, weight: 0.4 },
+  { hp: 5, kw: 3.7, count: 1, awg: "12", mat: "CU", dia: 20.3, spacing: 0, weight: 0.4 },
+  { hp: 7.5, kw: 5.5, count: 1, awg: "10", mat: "CU", dia: 22.4, spacing: 0, weight: 0.6 },
+  { hp: 10, kw: 7.5, count: 1, awg: "10", mat: "CU", dia: 22.4, spacing: 0, weight: 0.6 },
+  { hp: 15, kw: 11, count: 1, awg: "8", mat: "CU", dia: 23.9, spacing: 0, weight: 0.7 },
+  { hp: 20, kw: 15, count: 1, awg: "6", mat: "CU", dia: 28.7, spacing: 0, weight: 1.1 },
+  { hp: 25, kw: 18.5, count: 1, awg: "4", mat: "CU", dia: 31.8, spacing: 0, weight: 1.4 },
+  { hp: 30, kw: 22, count: 1, awg: "4", mat: "CU", dia: 31.8, spacing: 0, weight: 1.4 },
+  { hp: 40, kw: 30, count: 1, awg: "4", mat: "CU", dia: 31.8, spacing: 25, weight: 1.4 },
+  { hp: 50, kw: 37, count: 1, awg: "4", mat: "CU", dia: 31.8, spacing: 25, weight: 1.4 },
+  { hp: 60, kw: 45, count: 1, awg: "2/0", mat: "AL", dia: 42.8, spacing: 100, weight: 1.8 },
+  { hp: 75, kw: 55, count: 1, awg: "2/0", mat: "AL", dia: 42.8, spacing: 100, weight: 1.8 },
+  { hp: 100, kw: 75, count: 1, awg: "2/0", mat: "AL", dia: 42.8, spacing: 100, weight: 1.8 },
+  { hp: 125, kw: 90, count: 1, awg: "4/0", mat: "AL", dia: 49.4, spacing: 100, weight: 2.4 },
+  { hp: 150, kw: 110, count: 1, awg: "4/0", mat: "AL", dia: 49.4, spacing: 100, weight: 2.4 },
+  { hp: 200, kw: 150, count: 1, awg: "350", mat: "AL", dia: 60.8, spacing: 100, weight: 3.5 },
+  { hp: 250, kw: 185, count: 2, awg: "4/0", mat: "AL", dia: 49.4, spacing: 100, weight: 3.6 },
+  { hp: 300, kw: 225, count: 2, awg: "350", mat: "AL", dia: 60.7, spacing: 100, weight: 5.8 },
+  { hp: 350, kw: 260, count: 2, awg: "350", mat: "AL", dia: 60.7, spacing: 100, weight: 7.0 },
+  { hp: 400, kw: 300, count: 2, awg: "350", mat: "AL", dia: 60.7, spacing: 100, weight: 7.0 },
+  { hp: 450, kw: 330, count: 2, awg: "500", mat: "AL", dia: 66.98, spacing: 100, weight: 9.0 },
+  { hp: 500, kw: 375, count: 2, awg: "500", mat: "AL", dia: 66.98, spacing: 100, weight: 9.0 },
+  { hp: 600, kw: 450, count: 3, awg: "350", mat: "AL", dia: 60.7, spacing: 100, weight: 10.5 },
+  { hp: 700, kw: 515, count: 3, awg: "500", mat: "AL", dia: 66.98, spacing: 100, weight: 13.5 },
+  { hp: 800, kw: 600, count: 3, awg: "750", mat: "AL", dia: 77.3, spacing: 100, weight: 18.0 }
+];
+
+const CONDUCTOR_DATA = [
+  { awg: "12", mat: "CU", dia: 20.3, suggestedSpacing: 0 },
+  { awg: "10", mat: "CU", dia: 22.4, suggestedSpacing: 0 },
+  { awg: "8", mat: "CU", dia: 23.9, suggestedSpacing: 0 },
+  { awg: "6", mat: "CU", dia: 28.7, suggestedSpacing: 0 },
+  { awg: "4", mat: "CU", dia: 31.8, suggestedSpacing: 25 },
+  { awg: "1", mat: "CU", dia: 39.1, suggestedSpacing: 25, weight: 2.37 },
+  { awg: "1/0", mat: "CU", dia: 42.7, suggestedSpacing: 100, weight: 2.84 },
+  { awg: "2/0", mat: "CU", dia: 45.0, suggestedSpacing: 100, weight: 3.31 },
+  { awg: "3/0", mat: "CU", dia: 45.2, suggestedSpacing: 100, weight: 3.97 },
+  { awg: "4/0", mat: "CU", dia: 50.3, suggestedSpacing: 100, weight: 4.77 },
+  { awg: "250", mat: "CU", dia: 55.1, suggestedSpacing: 100, weight: 5.66 },
+  { awg: "350", mat: "CU", dia: 61.0, suggestedSpacing: 100, weight: 7.41 },
+  { awg: "500", mat: "CU", dia: 67.6, suggestedSpacing: 100, weight: 9.80 },
+  { awg: "750", mat: "CU", dia: 77.0, suggestedSpacing: 100, weight: 13.79 },
+  { awg: "2/0", mat: "AL", dia: 42.8, suggestedSpacing: 100 },
+  { awg: "4/0", mat: "AL", dia: 49.4, suggestedSpacing: 100 },
+  { awg: "350", mat: "AL", dia: 60.8, suggestedSpacing: 100 },
+  { awg: "500", mat: "AL", dia: 66.98, suggestedSpacing: 100 },
+  { awg: "750", mat: "AL", dia: 77.3, suggestedSpacing: 100 }
+];
+
+/* metric sizes for mm mode; standard commercial (whole-number) sizes for inch mode */
+const TRAY_WIDTHS_MM = [100,150,200,300,450,600,750,900,1050,1200];
+const TRAY_DEPTHS_MM = [50,75,100,150,200,250,300,400,450,600,750,900];
+const TRAY_WIDTHS_IN = [4,6,9,12,18,24,30,36,42,48];
+const TRAY_DEPTHS_IN = [2,3,4,5,6,8,9];
+const TRAY_TYPES_I18N = {
+  en: [{id:"ladder",label:"Ladder"},{id:"perf",label:"Perforated"},{id:"solid",label:"Solid bottom"}],
+  fr: [{id:"ladder",label:"Échelle"},{id:"perf",label:"Perforé"},{id:"solid",label:"Fond plein"}]
+};
+function TRAY_TYPES(){ return TRAY_TYPES_I18N[currentLang]; }
+const CIRCUIT_COLORS = ["#3b9eff","#5B8DEF","#4FAE7A","#C15FBE","#E2584F","#54C1C7","#B98B4E","#8B96A8"];
+
+let state = { trayWidth:450, trayDepth:100, trayType:"ladder", unit:(function(){ try{ return localStorage.getItem('ohmzone-unit')||'mm'; }catch(e){ return 'mm'; } })(), addMode:"motor", circuits:[] };
+
+function fmt(n,d=1){ return Number(n).toFixed(d).replace(/\.0+$/,"").replace(/(\.\d*[1-9])0+$/,"$1"); }
+/* AWG vs kcmil depends on the size itself, not the material — copper conductors
+   also move to kcmil sizing above 4/0, same as aluminum. */
+function isKcmilSize(awg){ return /^\d+$/.test(awg) && Number(awg) >= 250; }
+function sizeUnitLabel(awg){ return isKcmilSize(awg) ? "kcmil" : "AWG"; }
+function lenStr(mm, decimals){
+  if(state.unit==="mm") return `${fmt(mm, decimals!==undefined?decimals:1)} mm`;
+  return `${fmt(mm/25.4, decimals!==undefined?decimals:2)} in`;
+}
+
+/* ---------------- packing algorithm ----------------
+   Rule 1: cables that require maintained spacing (spacing>0) are placed in
+           ONE single layer resting on the tray floor — never stacked.
+   Rule 2: cables with no spacing requirement (0%) are grouped in their own
+           zone beside the spaced layer (not on top of it), and may stack.
+   Rule 3: the boundary between the two zones keeps the spaced cable's own
+           required clearance (its own % of its own Ø), even though the
+           bundled cable beside it needs none.
+------------------------------------------------------ */
+function layoutCables(circuits, trayWidth, trayDepth, margin=6){
+  const spacedItems = [], bundleItems = [];
+  circuits.forEach(c=>{
+    for(let q=0;q<c.qty;q++){
+      for(let k=0;k<c.spec.count;k++){
+        const it = { uid:`${c.id}-${q}-${k}`, dia:c.spec.dia, spacing:c.spec.spacing, color:c.color, label:c.label };
+        (it.spacing>0 ? spacedItems : bundleItems).push(it);
+      }
+    }
+  });
+  spacedItems.sort((a,b)=>b.dia-a.dia);
+  bundleItems.sort((a,b)=>b.dia-a.dia);
+
+  // ---- 1. single spaced layer, resting on the floor ----
+  let xCursor = margin;
+  const spacedCircles = [];
+  spacedItems.forEach((it, idx)=>{
+    const gap = idx===0 ? 0 : Math.max(spacedItems[idx-1].dia*spacedItems[idx-1].spacing/100, it.dia*it.spacing/100);
+    xCursor += gap;
+    spacedCircles.push({ ...it, x:xCursor, yBottom: margin });
+    xCursor += it.dia;
+  });
+  const spacedRowEndX = xCursor;
+  const spacedRowMaxDia = spacedItems.length ? Math.max(...spacedItems.map(i=>i.dia)) : 0;
+  const spacedOverflow = spacedRowEndX > trayWidth - margin;
+
+  // ---- 2. boundary clearance kept from the outer-most spaced cable ----
+  const boundaryGap = spacedItems.length ? spacedItems[spacedItems.length-1].dia*spacedItems[spacedItems.length-1].spacing/100 : 0;
+  const bundleStartX = spacedItems.length ? spacedRowEndX + boundaryGap : margin;
+  const bundleAvailWidth = Math.max(trayWidth - margin - bundleStartX, 0);
+
+  // ---- 3. bundle zone: may wrap into multiple stacked rows, touching (0% gap) ----
+  const bundleRows = [];
+  let cur = { items:[], width:0, maxDia:0 };
+  bundleItems.forEach(it=>{
+    if(cur.items.length===0 || cur.width+it.dia<=bundleAvailWidth){
+      cur.items.push({ ...it, xOffset:cur.width });
+      cur.width += it.dia;
+      cur.maxDia = Math.max(cur.maxDia, it.dia);
+    } else {
+      bundleRows.push(cur);
+      cur = { items:[{...it,xOffset:0}], width:it.dia, maxDia:it.dia };
+    }
+  });
+  if(cur.items.length) bundleRows.push(cur);
+  const bundleWidthOverflow = bundleRows.some(r=>r.width>bundleAvailWidth);
+
+  /* Upper rows nest into the valley between two touching cables below them —
+     the way cables actually settle in a tray (hexagonal/close packing), not
+     stacked square-on-square. For two touching circles of radius rA/rB below
+     and a circle of radius r resting in their valley, touching both:
+       horizontal midpoint between the two lower centers, and
+       vertical rise = sqrt((rA+r)^2 - dx^2)  where dx is the horizontal
+       offset from the left lower circle's center to the resting point.
+     This is exact when the row below is uniform diameter (the common case,
+     since same-size cables end up grouped in the same row by the greedy
+     left-to-right fill above) and a reasonable visual approximation when
+     row diameters differ. */
+  const bundleCircles = [];
+  let prevRow = null; // array of {cx, cy, r} for the row below, left-to-right
+  bundleRows.forEach(r=>{
+    const thisRow = [];
+    if(!prevRow || prevRow.length===0){
+      r.items.forEach(it=>{
+        const rad = it.dia/2;
+        thisRow.push({ cx: bundleStartX+it.xOffset+rad, cy: margin+rad, r:rad, it });
+      });
+    } else {
+      r.items.forEach((it,i)=>{
+        const rad = it.dia/2;
+        let cx, cy;
+        if(i < prevRow.length-1){
+          const a = prevRow[i], b = prevRow[i+1];
+          cx = (a.cx+b.cx)/2;
+          const dx = cx-a.cx;
+          const distTouch = a.r+rad;
+          const dySq = Math.max(distTouch*distTouch - dx*dx, (rad*0.25)*(rad*0.25));
+          cy = a.cy + Math.sqrt(dySq);
+        } else if(prevRow.length===1){
+          const a = prevRow[0];
+          cx = a.cx; cy = a.cy + a.r + rad;
+        } else {
+          // right-most item in a row with no partner to its right below:
+          // nest against the last lower-row circle, offset toward the row's fill direction
+          const b = prevRow[prevRow.length-1];
+          const dx = rad*0.6;
+          cx = b.cx + dx;
+          const distTouch = b.r+rad;
+          const dySq = Math.max(distTouch*distTouch - dx*dx, 0);
+          cy = b.cy + Math.sqrt(dySq);
+        }
+        thisRow.push({ cx, cy, r:rad, it });
+      });
+    }
+    thisRow.forEach(c=> bundleCircles.push({ ...c.it, x: c.cx-c.r, yBottom: c.cy-c.r }));
+    prevRow = thisRow;
+  });
+  const bundleStackHeight = prevRow && prevRow.length ? Math.max(...prevRow.map(c=>c.cy+c.r)) : margin;
+
+  const allCircles = spacedCircles.concat(bundleCircles);
+  const topFromFloor = Math.max(margin + spacedRowMaxDia, bundleStackHeight);
+  const totalHeightUsed = topFromFloor + margin;
+  const areaUsed = allCircles.reduce((s,it)=>s+Math.PI*(it.dia/2)**2,0);
+  const areaFillPct = (areaUsed/(trayWidth*trayDepth))*100;
+
+  return {
+    circles: allCircles.map(it=>({ ...it, yTopFromFloor: it.yBottom+it.dia })),
+    boundaryGap, boundaryGapX: spacedItems.length ? spacedRowEndX : null, bundleStartX,
+    totalHeightUsed,
+    fitsDepth: totalHeightUsed<=trayDepth,
+    widthOk: !spacedOverflow && !bundleWidthOverflow,
+    spacedOverflow, bundleWidthOverflow,
+    areaFillPct, areaUsed, trayArea: trayWidth*trayDepth, itemCount: allCircles.length,
+    hasSpaced: spacedItems.length>0, hasBundle: bundleItems.length>0
+  };
+}
+
+/* recommend the next standard tray width that would bring fill back under 40%, given current circuits */
+function recommendTrayWidth(circuits, currentWidth, currentDepth, unit){
+  const list = unit==="in" ? TRAY_WIDTHS_IN.map(w=>w*25.4) : TRAY_WIDTHS_MM;
+  const wider = list.filter(w=>w>currentWidth).sort((a,b)=>a-b);
+  for(const w of wider){
+    const l = layoutCables(circuits, w, currentDepth);
+    if(l.areaFillPct<=40 && l.fitsDepth && l.widthOk) return w;
+  }
+  return null;
+}
+
+/* total installed weight (kg/m of tray run) for the current circuit list, where cable weight data is available */
+function totalCircuitWeight(circuits){
+  let total = 0, missing = false;
+  circuits.forEach(c=>{
+    let w = c.spec.weight;
+    if(w===undefined || w===null){
+      const ref = CABLE_DATA.find(x=>x.awg===c.spec.awg && x.mat===c.spec.mat);
+      w = ref ? ref.weight : null;
+    }
+    if(w===null || w===undefined){ missing = true; return; }
+    total += w * c.spec.count * c.qty;
+  });
+  return { total, missing };
+}
+
+/* ---------------- TECK90 3C schematic symbol ---------------- */
+function svgNS(tag){ return document.createElementNS("http://www.w3.org/2000/svg", tag); }
+function circ(cx,cy,r,fill){ const c=svgNS("circle"); c.setAttribute("cx",cx); c.setAttribute("cy",cy); c.setAttribute("r",r); c.setAttribute("fill",fill); return c; }
+
+function buildTeckSymbol(id){
+  const sym = svgNS("symbol"); sym.setAttribute("id",id); sym.setAttribute("viewBox","0 0 100 100");
+  sym.appendChild(circ(50,50,48,"#17171A"));                 // outer PVC jacket
+  const armor = svgNS("circle");
+  armor.setAttribute("cx","50"); armor.setAttribute("cy","50"); armor.setAttribute("r","42");
+  armor.setAttribute("fill","none"); armor.setAttribute("stroke","#9AA1AA"); armor.setAttribute("stroke-width","6");
+  armor.setAttribute("stroke-dasharray","3.2 2.4");           // interlocked armor texture
+  sym.appendChild(armor);
+  sym.appendChild(circ(50,50,36,"#2B2B2E"));                 // inner bedding / binder tape
+  const positions = [[50,31],[67,60],[33,60]];
+  const insul = ["#A6372E","#2F5E9C","#3A3A3D"];              // phase A/B/C insulation (red / blue / black-grey)
+  positions.forEach((p,i)=>{
+    sym.appendChild(circ(p[0],p[1],15,insul[i]));
+    sym.appendChild(circ(p[0],p[1],7,"#C9884E"));             // copper conductor
+  });
+  sym.appendChild(circ(50,50,5,"#C9884E"));                   // bare bonding/ground conductor
+  return sym;
+}
+
+/* ---------------- SVG drawing (open-top tray, bottom-up stacking) ---------------- */
+function buildDrawing(layout, trayWidth, trayDepth, trayType, forPrint){
+  const px = 480/trayWidth;
+  const svgW = trayWidth*px+90;
+  const svgH = Math.max(trayDepth, layout.totalHeightUsed)*px+90;
+  const strokeMain = forPrint? "#333" : "#8B96A8";
+  const strokeLine = forPrint? "#bbb" : "#303B4A";
+  const topPad = 30;
+  const svg = svgNS("svg");
+  svg.setAttribute("width", svgW); svg.setAttribute("height", svgH);
+  svg.style.display="block"; svg.style.margin="0 auto";
+
+  const symId = "teck90-"+(forPrint?"print":"screen");
+  const defs = svgNS("defs");
+  defs.appendChild(buildTeckSymbol(symId));
+  const pattern = svgNS("pattern");
+  const patId = forPrint? "hatch-print":"hatch";
+  pattern.setAttribute("id",patId); pattern.setAttribute("patternUnits","userSpaceOnUse");
+  pattern.setAttribute("width","6"); pattern.setAttribute("height","6"); pattern.setAttribute("patternTransform","rotate(45)");
+  const pl = svgNS("line");
+  pl.setAttribute("x1","0"); pl.setAttribute("y1","0"); pl.setAttribute("x2","0"); pl.setAttribute("y2","6");
+  pl.setAttribute("stroke", strokeLine); pl.setAttribute("stroke-width","1.3");
+  pattern.appendChild(pl); defs.appendChild(pattern);
+  svg.appendChild(defs);
+
+  const left = 55, right = 55+trayWidth*px, top = topPad, bottom = topPad+trayDepth*px;
+
+  // open-top tray: left wall, floor, right wall only
+  const outline = svgNS("path");
+  outline.setAttribute("d", `M ${left} ${top} L ${left} ${bottom} L ${right} ${bottom} L ${right} ${top}`);
+  outline.setAttribute("fill","none"); outline.setAttribute("stroke", strokeMain); outline.setAttribute("stroke-width","2.5");
+  svg.appendChild(outline);
+
+  if(trayType==="solid"){
+    const r = svgNS("rect");
+    r.setAttribute("x", left); r.setAttribute("y", bottom-6); r.setAttribute("width", trayWidth*px); r.setAttribute("height","6");
+    r.setAttribute("fill", `url(#${patId})`); svg.appendChild(r);
+  } else if(trayType==="ladder"){
+    const rungs = Math.max(2, Math.floor((trayWidth*px)/50));
+    for(let i=0;i<rungs;i++){
+      const lx = left + ((i+1)*(right-left))/(rungs+1);
+      const l = svgNS("line");
+      l.setAttribute("x1", lx); l.setAttribute("x2", lx); l.setAttribute("y1", bottom-3); l.setAttribute("y2", bottom+3);
+      l.setAttribute("stroke", strokeMain); l.setAttribute("stroke-width","2.5"); svg.appendChild(l);
+    }
+  } else if(trayType==="perf"){
+    const r = svgNS("rect");
+    r.setAttribute("x", left); r.setAttribute("y", bottom-5); r.setAttribute("width", trayWidth*px); r.setAttribute("height","5");
+    r.setAttribute("fill", forPrint? "#eee":"#222A36"); r.setAttribute("stroke", strokeLine); svg.appendChild(r);
+  }
+
+  const dimColor = forPrint? "#555":"#8B96A8";
+  const wLine = svgNS("line");
+  wLine.setAttribute("x1",left); wLine.setAttribute("y1",top-16); wLine.setAttribute("x2",right); wLine.setAttribute("y2",top-16);
+  wLine.setAttribute("stroke",dimColor); wLine.setAttribute("stroke-width","1"); svg.appendChild(wLine);
+  const wText = svgNS("text");
+  wText.setAttribute("x", left+(right-left)/2); wText.setAttribute("y", top-22); wText.setAttribute("text-anchor","middle");
+  wText.setAttribute("font-family","monospace"); wText.setAttribute("font-size","11"); wText.setAttribute("fill",dimColor);
+  wText.textContent = lenStr(trayWidth,0); svg.appendChild(wText);
+
+  const dLine = svgNS("line");
+  dLine.setAttribute("x1",left-16); dLine.setAttribute("y1",top); dLine.setAttribute("x2",left-16); dLine.setAttribute("y2",bottom);
+  dLine.setAttribute("stroke",dimColor); dLine.setAttribute("stroke-width","1"); svg.appendChild(dLine);
+  const dText = svgNS("text"); const dtx = left-24, dty = top+(bottom-top)/2;
+  dText.setAttribute("x",dtx); dText.setAttribute("y",dty); dText.setAttribute("text-anchor","middle");
+  dText.setAttribute("font-family","monospace"); dText.setAttribute("font-size","11"); dText.setAttribute("fill",dimColor);
+  dText.setAttribute("transform",`rotate(-90 ${dtx} ${dty})`); dText.textContent = lenStr(trayDepth,0); svg.appendChild(dText);
+
+  // open-top corner marks
+  [left, right].forEach((x,i)=>{
+    const dir = i===0 ? -1 : 1;
+    const arrow = svgNS("path");
+    arrow.setAttribute("d", `M ${x} ${top} l ${dir*8} -10 M ${x} ${top} l ${dir*10} -4`);
+    arrow.setAttribute("stroke", strokeMain); arrow.setAttribute("stroke-width","1.4"); arrow.setAttribute("fill","none");
+    svg.appendChild(arrow);
+  });
+
+  // boundary marker between spaced layer and bundle zone — makes the required
+  // clearance kept by the last spaced cable an explicit, labeled zone instead
+  // of an unexplained gap before the touching bundle group
+  if(layout.hasSpaced && layout.hasBundle && layout.boundaryGap > 0){
+    const gx1 = left + layout.boundaryGapX*px;
+    const gx2 = left + layout.bundleStartX*px;
+    const gyTop = top + (trayDepth - (trayDepth-margin))*px;
+    const gyBot = top + trayDepth*px;
+    const zone = svgNS("rect");
+    zone.setAttribute("x", gx1); zone.setAttribute("y", top);
+    zone.setAttribute("width", Math.max(gx2-gx1,0)); zone.setAttribute("height", bottom-top);
+    zone.setAttribute("fill", forPrint? "rgba(0,0,0,0.04)":"rgba(139,150,168,0.06)");
+    zone.setAttribute("stroke", dimColor); zone.setAttribute("stroke-width","1"); zone.setAttribute("stroke-dasharray","3 3");
+    svg.appendChild(zone);
+    const gLabel = svgNS("text");
+    gLabel.setAttribute("x", (gx1+gx2)/2); gLabel.setAttribute("y", top-4); gLabel.setAttribute("text-anchor","middle");
+    gLabel.setAttribute("font-family","monospace"); gLabel.setAttribute("font-size","9"); gLabel.setAttribute("fill",dimColor);
+    gLabel.textContent = STR().clearanceZoneLbl.replace("{d}", lenStr(layout.boundaryGap,0));
+    svg.appendChild(gLabel);
+  }
+
+  // cables: TECK90 schematic + circuit-color identification ring
+  layout.circles.forEach(it=>{
+    const cx = left + it.x*px + (it.dia*px)/2;
+    const cyFromFloorCenter = it.yBottom + it.dia/2;
+    const cy = top + (trayDepth - cyFromFloorCenter)*px;
+    const r = (it.dia*px)/2;
+    const use = svgNS("use");
+    use.setAttribute("href", "#"+symId); use.setAttributeNS("http://www.w3.org/1999/xlink","href","#"+symId);
+    use.setAttribute("x", cx-r); use.setAttribute("y", cy-r); use.setAttribute("width", 2*r); use.setAttribute("height", 2*r);
+    svg.appendChild(use);
+    const ring = svgNS("circle");
+    ring.setAttribute("cx",cx); ring.setAttribute("cy",cy); ring.setAttribute("r", r-1);
+    ring.setAttribute("fill","none"); ring.setAttribute("stroke", it.color); ring.setAttribute("stroke-width","2.5");
+    svg.appendChild(ring);
+  });
+
+  if(!layout.fitsDepth || layout.spacedOverflow || layout.bundleWidthOverflow){
+    const warn = svgNS("text");
+    warn.setAttribute("x", left+6); warn.setAttribute("y", top+14);
+    warn.setAttribute("font-family","monospace"); warn.setAttribute("font-size","11"); warn.setAttribute("fill","#E2584F");
+    const Ld = UI[currentLang];
+    warn.textContent = layout.spacedOverflow ? Ld.svgWarnSpaced
+      : layout.bundleWidthOverflow ? Ld.svgWarnBundle
+      : Ld.svgWarnDepth;
+    svg.appendChild(warn);
+  }
+  return svg;
+}
+
+/* ---------------- render ---------------- */
+function render(){
+  const layout = layoutCables(state.circuits, state.trayWidth, state.trayDepth);
+  const fillLevel = (layout.areaFillPct<=40 && layout.fitsDepth && layout.widthOk) ? "ok"
+    : (layout.areaFillPct<=55 && layout.fitsDepth && layout.widthOk) ? "warn" : "bad";
+  const L = UI[currentLang];
+  const wgt = totalCircuitWeight(state.circuits);
+
+  const statsRow = document.getElementById("statsRow");
+  statsRow.innerHTML = "";
+  [[L.statAreaFill, fmt(layout.areaFillPct,1)+"%", fillLevel],
+   [L.statCables, layout.itemCount, "neutral"],
+   [L.statHeightUsed, lenStr(layout.totalHeightUsed,1), layout.fitsDepth?"ok":"bad"],
+   [L.statSpacedLayer, layout.hasSpaced ? L.oneRowFixed : "—", "neutral"],
+   [L.statWeight, layout.itemCount ? (fmt(wgt.total,1)+" kg/m"+(wgt.missing?" *":"")) : "—", "neutral"],
+   [L.statWeightLb, layout.itemCount ? (fmt(wgt.total*0.671969,1)+" lb/ft"+(wgt.missing?" *":"")) : "—", "neutral"]
+  ].forEach(([lab,val,tone])=>{
+    const color = tone==="ok"?"var(--success)":tone==="warn"?"var(--amber)":tone==="bad"?"var(--danger)":"var(--txt)";
+    const card = document.createElement("div"); card.className="stat-card";
+    card.innerHTML = `<div class="lab">${lab}</div><div class="val mono" style="color:${color}">${val}</div>`;
+    statsRow.appendChild(card);
+  });
+
+  // fill progress bar + remaining area
+  const fillBar = document.getElementById("fillBar");
+  if(fillBar){
+    const pct = Math.min(layout.areaFillPct, 100);
+    const barColor = fillLevel==="ok" ? "var(--success)" : fillLevel==="warn" ? "var(--amber)" : "var(--danger)";
+    const remainingArea = Math.max(layout.trayArea*0.40 - layout.areaUsed, 0); // remaining area to the 40% guideline
+    fillBar.innerHTML = `
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:4px;">
+        <span>0%</span><span style="color:${barColor};font-weight:600;">${fmt(layout.areaFillPct,1)}%</span><span>100%</span>
+      </div>
+      <div style="height:8px;border-radius:4px;background:var(--panel-alt);overflow:hidden;position:relative;">
+        <div style="position:absolute;left:0;top:0;bottom:0;width:40%;border-right:2px dashed var(--muted);"></div>
+        <div style="height:100%;width:${pct}%;background:${barColor};border-radius:4px;transition:width .2s;"></div>
+      </div>
+      <div style="font-size:10.5px;color:var(--muted);margin-top:4px;">${L.remainingToGuideline}: ${fmt(remainingArea,0)} mm² (${L.guidelineDashLabel})</div>
+    `;
+  }
+
+  const bad = fillLevel==="bad" || !layout.fitsDepth || !layout.widthOk;
+  const ok = fillLevel==="ok";
+  const color = bad ? "#E2584F" : ok ? "#4FAE7A" : "#3b9eff";
+  let msg = layout.spacedOverflow
+    ? L.msgSpacedOverflow
+    : layout.bundleWidthOverflow
+    ? L.msgBundleOverflow
+    : !layout.fitsDepth
+    ? L.msgHeightOverflow
+    : (bad ? L.msgFillExceeds
+      : ok ? L.msgWithinLimits
+      : L.msgApproachingLimit);
+  if(bad){
+    const rec = recommendTrayWidth(state.circuits, state.trayWidth, state.trayDepth, state.unit);
+    if(rec) msg += ` ${L.recommendedSize}: ${lenStr(rec,1)}.`;
+  }
+  const banner = document.getElementById("banner");
+  banner.style.background = color+"15"; banner.style.border = `1px solid ${color}55`;
+  banner.innerHTML = `<span style="color:${color}">${bad?"\u26a0":"\u2713"}</span><span>${msg}</span>`;
+
+  const dWrap = document.getElementById("drawingWrap");
+  dWrap.innerHTML = "";
+  dWrap.appendChild(buildDrawing(layout, state.trayWidth, state.trayDepth, state.trayType, false));
+
+  const legend = document.getElementById("legend");
+  legend.innerHTML = "";
+  const seen = new Set();
+  state.circuits.forEach(c=>{
+    if(seen.has(c.id)) return; seen.add(c.id);
+    const s = document.createElement("span");
+    s.innerHTML = `<span class="sw" style="background:${c.color}"></span>${c.label}`;
+    legend.appendChild(s);
+  });
+
+  const list = document.getElementById("circuitList");
+  document.getElementById("circuitCountLabel").textContent = `${L.circuitsAdded} (${state.circuits.length})`;
+  list.innerHTML = "";
+  if(state.circuits.length===0){
+    list.innerHTML = `<p class="empty-note">${L.noCablesYet}</p>`;
+  } else {
+    state.circuits.forEach(c=>{
+      const row = document.createElement("div"); row.className="circuit-row";
+      row.innerHTML = `<span class="dot" style="background:${c.color}"></span><span class="lbl">${c.label} × ${c.qty} ${c.spec.spacing>0?L.spacedTag:L.bundledTag}</span>`;
+      const dupBtn = document.createElement("button"); dupBtn.className="remove-btn"; dupBtn.style.color="var(--muted)"; dupBtn.innerHTML="⧉"; dupBtn.title=L.duplicateTitle;
+      dupBtn.onclick = ()=>{
+        const color = CIRCUIT_COLORS[state.circuits.length % CIRCUIT_COLORS.length];
+        state.circuits.push({ ...c, id:"c"+Date.now()+Math.random().toString(36).slice(2,6), color });
+        render();
+      };
+      const rmBtn = document.createElement("button"); rmBtn.className="remove-btn"; rmBtn.innerHTML="✕"; rmBtn.title=L.removeTitle;
+      rmBtn.onclick = ()=>{ state.circuits = state.circuits.filter(x=>x.id!==c.id); render(); };
+      row.appendChild(dupBtn); row.appendChild(rmBtn); list.appendChild(row);
+    });
+  }
+
+  window._lastLayout = layout;
+}
+
+/* ---------------- controls setup ---------------- */
+function nearestOf(list, mmValue){
+  return list.reduce((best,v)=> Math.abs(v-mmValue) < Math.abs(best-mmValue) ? v : best, list[0]);
+}
+function renderTraySelects(){
+  const isIn = state.unit==="in";
+  const widthList = isIn ? TRAY_WIDTHS_IN : TRAY_WIDTHS_MM;
+  const depthList = isIn ? TRAY_DEPTHS_IN : TRAY_DEPTHS_MM;
+
+  // snap current state to the nearest standard size in the newly-selected unit system
+  if(isIn){
+    state.trayWidth = nearestOf(widthList, state.trayWidth/25.4) * 25.4;
+    state.trayDepth = nearestOf(depthList, state.trayDepth/25.4) * 25.4;
+  } else {
+    state.trayWidth = nearestOf(widthList, state.trayWidth);
+    state.trayDepth = nearestOf(depthList, state.trayDepth);
+  }
+
+  const wSel = document.getElementById("trayWidth"); wSel.innerHTML = "";
+  widthList.forEach(w=>{
+    const mmVal = isIn ? w*25.4 : w;
+    const o = document.createElement("option"); o.value=mmVal; o.textContent = isIn ? `${w} in` : `${w} mm`;
+    if(Math.abs(mmVal-state.trayWidth)<0.01) o.selected=true;
+    wSel.appendChild(o);
+  });
+  const dSel = document.getElementById("trayDepth"); dSel.innerHTML = "";
+  depthList.forEach(d=>{
+    const mmVal = isIn ? d*25.4 : d;
+    const o = document.createElement("option"); o.value=mmVal; o.textContent = isIn ? `${d} in` : `${d} mm`;
+    if(Math.abs(mmVal-state.trayDepth)<0.01) o.selected=true;
+    dSel.appendChild(o);
+  });
+}
+function renderUnitToggle(){
+  const wrap = document.getElementById("unitToggle"); wrap.innerHTML = "";
+  [["mm","mm"],["in","in"]].forEach(([id,label])=>{
+    const b = document.createElement("button"); b.textContent = label; b.className = state.unit===id ? "active" : "";
+    b.onclick = ()=>{ state.unit=id; try{ localStorage.setItem('ohmzone-unit', id); }catch(e){} renderUnitToggle(); renderTraySelects(); renderSpecBox(); render(); };
+    wrap.appendChild(b);
+  });
+}
+function renderModeRow(){
+  const wrap = document.getElementById("addModeRow"); wrap.innerHTML = "";
+  const L = UI[currentLang];
+  [["motor",L.byMotor],["direct",L.byCableSpec]].forEach(([id,label])=>{
+    const b = document.createElement("button"); b.className = "mode-btn"+(state.addMode===id?" active":""); b.textContent = label;
+    b.onclick = ()=>{
+      state.addMode = id;
+      document.getElementById("motorMode").style.display = id==="motor" ? "block":"none";
+      document.getElementById("directMode").style.display = id==="direct" ? "block":"none";
+      renderModeRow(); renderSpecBox();
+    };
+    wrap.appendChild(b);
+  });
+}
+function importCircuitRows(rows){
+  const L = UI[currentLang];
+  let added = 0, skipped = 0;
+  rows.forEach(row=>{
+    // normalize keys to lowercase for flexible header matching
+    const r = {};
+    Object.keys(row).forEach(k=> r[k.trim().toLowerCase()] = row[k]);
+    const qty = Number(r.qty || r.quantity || 1) || 1;
+    const hp = r.hp!==undefined && r.hp!=="" ? Number(r.hp) : null;
+    let spec = null, label = "";
+    if(hp!==null){
+      const s = CABLE_DATA.reduce((best,c)=> Math.abs(c.hp-hp) < Math.abs((best?best.hp:Infinity)-hp) ? c : best, null);
+      if(s){
+        spec = { hp:s.hp, kw:s.kw, count: r.count ? Number(r.count) : s.count, awg:s.awg, mat:s.mat, dia:s.dia,
+                 spacing: r.spacing!==undefined && r.spacing!=="" ? Number(r.spacing) : s.spacing, weight:s.weight };
+        label = `${s.hp} HP · ${s.awg} AWG ${s.mat}`;
+      }
+    } else if(r.awg){
+      const mat = (r.material||r.mat||"CU").toString().toUpperCase().startsWith("A") ? "AL" : "CU";
+      const cd = CONDUCTOR_DATA.find(c=>String(c.awg)===String(r.awg).trim() && c.mat===mat);
+      if(cd){
+        const wRef = CABLE_DATA.find(x=>x.awg===cd.awg && x.mat===cd.mat);
+        spec = { hp:null, kw:null, count: r.count ? Number(r.count) : 1, awg:cd.awg, mat:cd.mat, dia:cd.dia,
+                 spacing: r.spacing!==undefined && r.spacing!=="" ? Number(r.spacing) : cd.suggestedSpacing,
+                 weight: wRef ? wRef.weight : null };
+        const sizeLabel = `${cd.awg} ${sizeUnitLabel(cd.awg)}`;
+        label = `${sizeLabel} ${cd.mat} (direct)`;
+      }
+    }
+    if(!spec){ skipped++; return; }
+    const color = CIRCUIT_COLORS[state.circuits.length % CIRCUIT_COLORS.length];
+    state.circuits.push({ id:"c"+Date.now()+Math.random().toString(36).slice(2,6), spec, qty, color, label });
+    added++;
+  });
+  render();
+  alert(`${L.importDone}: ${added} ${L.importAdded}${skipped ? `, ${skipped} ${L.importSkipped}` : ""}.`);
+}
+
+function currentSpec(){
+  if(state.addMode==="motor"){
+    const s = CABLE_DATA.find(c=>c.hp===Number(document.getElementById("motorSelect").value));
+    return s ? { hp:s.hp, kw:s.kw, count:s.count, awg:s.awg, mat:s.mat, dia:s.dia, spacing:s.spacing, weight:s.weight } : null;
+  } else {
+    const cd = CONDUCTOR_DATA.find(c=>c.awg+"|"+c.mat === document.getElementById("conductorSelect").value);
+    if(!cd) return null;
+    const wRef = CABLE_DATA.find(x=>x.awg===cd.awg && x.mat===cd.mat);
+    return { hp:null, kw:null, count:Number(document.getElementById("countSelect").value),
+             awg:cd.awg, mat:cd.mat, dia:cd.dia, spacing:Number(document.getElementById("spacingSelect").value),
+             weight: cd.weight !== undefined ? cd.weight : (wRef ? wRef.weight : null) };
+  }
+}
+function renderSpecBox(){
+  const s = currentSpec(); const box = document.getElementById("specBox");
+  const L = UI[currentLang];
+  if(!s){ box.innerHTML=""; return; }
+  const matLabel = s.mat==="CU"?L.copper:L.aluminum;
+  const sizeLabel = `${s.awg} ${sizeUnitLabel(s.awg)}`;
+  box.innerHTML = `${L.specLabel} ${sizeLabel} ${matLabel} · Ø${lenStr(s.dia,2)} × ${s.count} ${L.cablesPerCircuitShort}`
+    + `<br>${L.spacingRequiredLabel} ${s.spacing}% ${L.ofDia} ${s.spacing>0 ? L.singleLayer : L.bundledMayStack}`
+    + `<br>${L.insulationLabel}: <span class="insul-chip">${INSULATION_RATING}</span> · TECK90 3C`;
+}
+function setupTypeButtons(){
+  const typeRow = document.getElementById("trayTypeRow");
+  typeRow.innerHTML = "";
+  TRAY_TYPES().forEach(t=>{
+    const b = document.createElement("button"); b.className = "type-btn"+(state.trayType===t.id?" active":""); b.textContent = t.label;
+    b.onclick = ()=>{ state.trayType=t.id; setupTypeButtons(); render(); };
+    typeRow.appendChild(b);
+  });
+}
+function setupControls(){
+  renderUnitToggle(); renderTraySelects();
+  document.getElementById("trayWidth").onchange = e=>{ state.trayWidth=parseFloat(e.target.value); render(); };
+  document.getElementById("trayDepth").onchange = e=>{ state.trayDepth=parseFloat(e.target.value); render(); };
+
+  setupTypeButtons();
+  renderModeRow();
+
+  const motorSel = document.getElementById("motorSelect");
+  CABLE_DATA.forEach(c=>{
+    const o = document.createElement("option"); o.value=c.hp; o.textContent=`${c.hp} HP · ${c.kw} kW`; motorSel.appendChild(o);
+  });
+  motorSel.onchange = renderSpecBox;
+
+  const conductorSel = document.getElementById("conductorSelect");
+  CONDUCTOR_DATA.forEach(c=>{
+    const o = document.createElement("option"); o.value = c.awg+"|"+c.mat;
+    o.textContent = `${c.awg} ${sizeUnitLabel(c.awg)} — ${c.mat==="CU"?UI[currentLang].copper:UI[currentLang].aluminum}`;
+    conductorSel.appendChild(o);
+  });
+  conductorSel.onchange = ()=>{
+    const cd = CONDUCTOR_DATA.find(c=>c.awg+"|"+c.mat===conductorSel.value);
+    if(cd) document.getElementById("spacingSelect").value = String(cd.suggestedSpacing);
+    renderSpecBox();
+  };
+  document.getElementById("spacingSelect").onchange = renderSpecBox;
+  document.getElementById("countSelect").onchange = renderSpecBox;
+  renderSpecBox();
+
+  document.getElementById("fieldDate").value = new Date().toISOString().slice(0,10);
+
+  document.getElementById("addBtn").onclick = ()=>{
+    const s = currentSpec(); if(!s) return;
+    const qty = Number(document.getElementById("qtyInput").value)||1;
+    const color = CIRCUIT_COLORS[state.circuits.length % CIRCUIT_COLORS.length];
+    const sizeLabel = `${s.awg} ${sizeUnitLabel(s.awg)}`;
+    const label = s.hp ? `${s.hp} HP · ${sizeLabel} ${s.mat}` : `${sizeLabel} ${s.mat} (direct)`;
+    state.circuits.push({ id:"c"+Date.now()+Math.random().toString(36).slice(2,6), spec:s, qty, color, label });
+    render();
+  };
+  document.getElementById("exportBtn").onclick = ()=>{ buildReport(); window.print(); };
+  document.getElementById("exportWordBtn").onclick = ()=> exportWord();
+  document.getElementById("exportExcelBtn").onclick = ()=> exportExcel();
+
+  document.getElementById("importBtn").onclick = ()=> document.getElementById("importFile").click();
+  document.getElementById("importFile").onchange = (e)=>{
+    const file = e.target.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev)=>{
+      try{
+        const data = new Uint8Array(ev.target.result);
+        const wb = XLSX.read(data, {type:"array"});
+        const sheet = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(sheet, {defval:""});
+        importCircuitRows(rows);
+      }catch(err){
+        alert(UI[currentLang].importError + " " + err.message);
+      }
+      e.target.value = "";
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
+  document.getElementById("loadExampleBtn").onclick = ()=>{
+    if(state.circuits.length && !confirm(UI[currentLang].confirmReplace)) return;
+    state.circuits = [];
+    const example = [
+      { hp:5, qty:2 }, { hp:10, qty:3 }, { hp:25, qty:1 }, { hp:50, qty:1 },
+      { hp:100, qty:1 }, { hp:200, qty:1 }, { hp:1, qty:6 }
+    ];
+    example.forEach(ex=>{
+      const s = CABLE_DATA.find(c=>c.hp===ex.hp);
+      if(!s) return;
+      const color = CIRCUIT_COLORS[state.circuits.length % CIRCUIT_COLORS.length];
+      const sizeLabel = `${s.awg} ${sizeUnitLabel(s.awg)}`;
+      const label = `${s.hp} HP · ${sizeLabel} ${s.mat}`;
+      state.circuits.push({ id:"c"+Date.now()+Math.random().toString(36).slice(2,6), spec:{hp:s.hp,kw:s.kw,count:s.count,awg:s.awg,mat:s.mat,dia:s.dia,spacing:s.spacing,weight:s.weight}, qty:ex.qty, color, label });
+    });
+    render();
+  };
+}
+
+/* ---------------- Word / Excel export (Office HTML trick, no external libs) ---------------- */
+function downloadBlob(content, mime, filename){
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 2000);
+}
+
+function svgToPngDataUrl(svgEl, scale=2){
+  return new Promise((resolve,reject)=>{
+    const xml = new XMLSerializer().serializeToString(svgEl);
+    const svgBlob = new Blob([xml], { type: "image/svg+xml;charset=utf-8" });
+    const url = URL.createObjectURL(svgBlob);
+    const img = new Image();
+    img.onload = ()=>{
+      const w = Number(svgEl.getAttribute("width")), h = Number(svgEl.getAttribute("height"));
+      const canvas = document.createElement("canvas");
+      canvas.width = w*scale; canvas.height = h*scale;
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#fff"; ctx.fillRect(0,0,canvas.width,canvas.height);
+      ctx.scale(scale,scale);
+      ctx.drawImage(img,0,0);
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL("image/png"));
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
+}
+
+async function exportWord(){
+  buildReport(); // populates #reportView and window._lastLayout
+  const printSvg = document.getElementById("printDrawingWrap").querySelector("svg");
+  let imgTag = "<p><i>(cross-section image unavailable)</i></p>";
+  try{
+    const pngUrl = await svgToPngDataUrl(printSvg, 2);
+    imgTag = `<img src="${pngUrl}" style="width:${printSvg.getAttribute("width")}px" />`;
+  }catch(e){ /* fall back to placeholder text above */ }
+
+  const clone = document.getElementById("reportView").cloneNode(true);
+  const wrap = clone.querySelector("#printDrawingWrap");
+  if(wrap) wrap.innerHTML = imgTag;
+
+  const doc = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+  <head><meta charset="utf-8"><title>Cable Tray Fill Report</title>
+  <!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View></w:WordDocument></xml><![endif]-->
+  </head><body style="font-family:Calibri,Arial,sans-serif">${clone.innerHTML}<div style="position:fixed;bottom:6px;right:12px;z-index:9999;font-family:monospace;font-size:10px;color:#5c7592;opacity:0.75;">© 2026 OhmZone. All rights reserved.</div>
+</body></html>`;
+
+  const el = document.getElementById("fieldElement").value || "cable-tray-report";
+  downloadBlob(doc, "application/msword", `${el.replace(/[^a-z0-9]+/gi,"-")}.doc`);
+}
+
+function exportExcel(){
+  const layout = window._lastLayout || layoutCables(state.circuits, state.trayWidth, state.trayDepth);
+  const projNo = document.getElementById("fieldProjectNo").value || "";
+  const el = document.getElementById("fieldElement").value || "";
+  const task = document.getElementById("fieldTask").value || "";
+  const dateVal = document.getElementById("fieldDate").value || "";
+  const typeLabel = TRAY_TYPES().find(t=>t.id===state.trayType).label;
+  const L = UI[currentLang];
+
+  let rows = state.circuits.map(c=>{
+    const sizeLabel = `${c.spec.awg} ${sizeUnitLabel(c.spec.awg)}`;
+    return `<tr>
+      <td>${c.spec.hp ? `${c.spec.hp} HP (${c.spec.kw} kW)` : L.directSpec}</td>
+      <td>${sizeLabel}</td><td>${c.spec.mat==="CU"?UI[currentLang].copper:UI[currentLang].aluminum}</td>
+      <td>${lenStr(c.spec.dia,2)}</td><td>${c.spec.count}</td><td>${c.qty}</td>
+      <td>${c.spec.spacing}%</td><td>${c.spec.spacing>0?L.singleLayerShort2:L.bundledShort2}</td>
+    </tr>`;
+  }).join("") || `<tr><td colspan="8">${L.noCircuitsAdded}</td></tr>`;
+
+  const doc = `<html xmlns:x="urn:schemas-microsoft-com:office:excel">
+  <head><meta charset="utf-8">
+  <!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>
+  <x:Name>Tray Fill</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
+  </x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->
+  </head><body>
+  <table border="1">
+    <tr><td colspan="2" style="font-weight:bold;font-size:14px">NOTES DE CALCUL / DESIGN BRIEF</td></tr>
+    <tr><td>${L.xlsProjectNo}</td><td>${projNo}</td></tr>
+    <tr><td>${L.xlsElement}</td><td>${el}</td></tr>
+    <tr><td>${L.xlsTask}</td><td>${task}</td></tr>
+    <tr><td>${L.xlsDate}</td><td>${dateVal}</td></tr>
+    <tr><td>${L.repTrayWidth}</td><td>${lenStr(state.trayWidth,2)}</td></tr>
+    <tr><td>${L.repTrayDepth}</td><td>${lenStr(state.trayDepth,2)}</td></tr>
+    <tr><td>${L.repTrayType}</td><td>${typeLabel}</td></tr>
+    <tr><td>${L.xlsAreaFillPct}</td><td>${fmt(layout.areaFillPct,1)}</td></tr>
+    <tr><td>${L.statHeightUsed}</td><td>${lenStr(layout.totalHeightUsed,2)}</td></tr>
+    <tr><td>${L.repWeight} (kg/m)</td><td>${fmt(totalCircuitWeight(state.circuits).total,1)}</td></tr>
+    <tr><td>${L.repWeight} (lb/ft)</td><td>${fmt(totalCircuitWeight(state.circuits).total*0.671969,1)}</td></tr>
+    <tr><td></td><td></td></tr>
+    <tr>
+      <th>${L.thSource}</th><th>${L.thConductor}</th><th>${L.thMaterial}</th><th>${L.thCableOD}</th>
+      <th>${L.thCablesPerCircuit}</th><th>${L.thQty}</th><th>${L.xlsSpacingPct}</th><th>${L.xlsLayerType}</th>
+    </tr>
+    ${rows}
+  </table>
+  </body></html>`;
+
+  downloadBlob(doc, "application/vnd.ms-excel", `${(el||"cable-tray-schedule").replace(/[^a-z0-9]+/gi,"-")}.xls`);
+}
+
+/* ---------------- print report ---------------- */
+function titleBlockHtml(pageNum, totalPages){
+  const company = document.getElementById("fieldCompany").value || "";
+  const el = document.getElementById("fieldElement").value || "\u2014";
+  const projNo = document.getElementById("fieldProjectNo").value || "\u2014";
+  const task = document.getElementById("fieldTask").value || "\u2014";
+  const checkedBy = document.getElementById("fieldCheckedBy").value;
+  const preparedBy = document.getElementById("fieldPreparedBy").value;
+  const dateVal = document.getElementById("fieldDate").value || new Date().toISOString().slice(0,10);
+  return `
+  <table style="width:100%; border-collapse:collapse; border:1.5px solid #1A1A1A; font-size:11px; margin-bottom:16px">
+    <tr>
+      <td colspan="4" style="background:#1A2333; color:#fff; font-family:Oswald,sans-serif; font-weight:700; font-size:19px; letter-spacing:.5px; text-align:center; padding:10px; border:1px solid #1A1A1A">
+        NOTES DE CALCUL / DESIGN BRIEF
+      </td>
+    </tr>
+    <tr>
+      <td rowspan="2" style="width:22%; border:1px solid #999; padding:6px; text-align:center; vertical-align:middle">
+        <span style="font-family:Oswald,sans-serif; font-weight:700; font-size:20px; color:#2C3E45; letter-spacing:.2px">${company}</span>
+      </td>
+      <td style="width:38%; border:1px solid #999; padding:4px 8px; background:#EDEDED; font-weight:600; font-size:10px">ÉLÉMENT / ELEMENT</td>
+      <td style="width:20%; border:1px solid #999; padding:4px 8px; background:#EDEDED; font-weight:600; font-size:10px">N° projet / Project No.</td>
+      <td style="width:20%; border:1px solid #999; padding:4px 8px; background:#EDEDED; font-weight:600; font-size:10px">Tâche / Task</td>
+    </tr>
+    <tr>
+      <td style="border:1px solid #999; padding:8px; font-size:15px; font-weight:600">${el}</td>
+      <td style="border:1px solid #999; padding:8px; font-size:15px; text-align:center">${projNo}</td>
+      <td style="border:1px solid #999; padding:8px; font-size:15px; text-align:center">${task}</td>
+    </tr>
+    <tr>
+      <td style="border:1px solid #999; padding:6px 8px; font-size:10px; font-weight:600">Vérifié par / Checked by</td>
+      <td style="border:1px solid #999; padding:6px 8px">
+        <div style="border-bottom:1px solid #1A1A1A; height:26px"></div>
+        <div style="font-size:9.5px; color:#555; margin-top:2px">${checkedBy || "(signature)"}</div>
+      </td>
+      <td style="border:1px solid #999; padding:6px 8px; font-size:10px; font-weight:600">Date</td>
+      <td style="border:1px solid #999; padding:6px 8px; font-size:12px">${dateVal}</td>
+    </tr>
+    <tr>
+      <td style="border:1px solid #999; padding:6px 8px; font-size:10px; font-weight:600">Préparé par / Prepared by</td>
+      <td style="border:1px solid #999; padding:6px 8px">
+        <div style="border-bottom:1px solid #1A1A1A; height:26px"></div>
+        <div style="font-size:9.5px; color:#555; margin-top:2px">${preparedBy || "(signature)"}</div>
+      </td>
+      <td style="border:1px solid #999; padding:6px 8px; font-size:10px; font-weight:600">Page</td>
+      <td style="border:1px solid #999; padding:6px 8px; font-size:12px">${pageNum} de/of ${totalPages}</td>
+    </tr>
+  </table>`;
+}
+
+function buildReport(){
+  const layout = window._lastLayout || layoutCables(state.circuits, state.trayWidth, state.trayDepth);
+  const fillLevel = (layout.areaFillPct<=40 && layout.fitsDepth && layout.widthOk) ? "ok"
+    : (layout.areaFillPct<=55 && layout.fitsDepth && layout.widthOk) ? "warn" : "bad";
+  const typeLabel = TRAY_TYPES().find(t=>t.id===state.trayType).label;
+  const colorFlag = f => f==="ok" ? "#2E8B57" : f==="warn" ? "#B8860B" : "#C0392B";
+  const L = UI[currentLang];
+
+  let rowsHtml = state.circuits.map(c=>{
+    const sizeLabel = `${c.spec.awg} ${sizeUnitLabel(c.spec.awg)}`;
+    return `<tr style="border-bottom:1px solid #e2e2e2">
+      <td style="padding:5px 8px"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${c.color}"></span></td>
+      <td style="padding:5px 8px">${c.spec.hp ? `${c.spec.hp} HP (${c.spec.kw} kW)` : L.directSpec}</td>
+      <td style="padding:5px 8px">${sizeLabel}</td>
+      <td style="padding:5px 8px">${c.spec.mat==="CU"?UI[currentLang].copper:UI[currentLang].aluminum}</td>
+      <td style="padding:5px 8px">${lenStr(c.spec.dia,2)}</td>
+      <td style="padding:5px 8px">${c.spec.count}</td>
+      <td style="padding:5px 8px">${c.qty}</td>
+      <td style="padding:5px 8px">${c.spec.spacing}% ${c.spec.spacing>0?L.singleLayerShort:L.bundledShort}</td>
+    </tr>`;
+  }).join("") || `<tr><td colspan="8" style="padding:8px;font-style:italic;color:#777">${L.noCircuitsAdded}</td></tr>`;
+
+  const report = document.getElementById("reportView");
+  report.style.background="#fff"; report.style.color="#1A1A1A"; report.style.fontFamily="Inter, sans-serif"; report.style.padding="24px 32px";
+  report.innerHTML = `
+    ${titleBlockHtml(1,2)}
+
+    <div style="font-family:Oswald,sans-serif; font-size:16px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; margin-bottom:10px">${L.rep1Purpose}</div>
+    <p style="font-size:11.5px; line-height:1.7; margin:0 0 16px 0">${L.repPurposeBody}</p>
+
+    <div style="font-family:Oswald,sans-serif; font-size:16px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; margin-bottom:10px">${L.rep2Method}</div>
+    <p style="font-size:11.5px; line-height:1.7; margin:0 0 8px 0">${L.repMethodIntro}</p>
+    <ul style="font-size:11.5px; line-height:1.7; margin:0 0 16px 0; padding-left:18px">
+      <li>${L.repMethodSpaced}</li>
+      <li>${L.repMethodBundled}</li>
+    </ul>
+    <p style="font-size:11.5px; line-height:1.7; margin:0 0 16px 0">${L.repMethodFillCheck}</p>
+
+    <div style="font-family:Oswald,sans-serif; font-size:16px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; margin-bottom:10px">${L.rep3Assumptions}</div>
+    <ul style="font-size:11.5px; line-height:1.7; margin:0 0 16px 0; padding-left:18px">
+      <li>${L.repAssump1}</li>
+      <li>${L.repAssump2}</li>
+      <li>${L.repAssump3}</li>
+    </ul>
+
+    <div style="font-family:Oswald,sans-serif; font-size:16px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; margin-bottom:10px">${L.rep4Standards}</div>
+    <ul style="font-size:11.5px; line-height:1.7; margin:0 0 8px 0; padding-left:18px">
+      <li>${L.repStd1}</li>
+      <li>${L.repStd2}</li>
+      <li>${L.repStd3}</li>
+      <li>${L.repStd4}</li>
+    </ul>
+    <p style="font-size:9.5px; color:#777; line-height:1.6">${L.repClauseNote}</p>
+
+    <div class="page-break"></div>
+    ${titleBlockHtml(2,2)}
+
+    <div style="font-family:Oswald,sans-serif; font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:.5px; border-bottom:1px solid #ccc; padding-bottom:4px; margin-bottom:8px">${L.repTraySummary}</div>
+    <table style="width:100%; border-collapse:collapse; font-size:12px; margin-bottom:16px">
+      <tr>
+        <td style="padding:4px 8px; color:#666; font-weight:600; width:20%">${L.repTrayWidth}</td>
+        <td style="padding:4px 8px; width:30%">${lenStr(state.trayWidth,2)}</td>
+        <td style="padding:4px 8px; color:#666; font-weight:600; width:20%">${L.repTrayDepth}</td>
+        <td style="padding:4px 8px; width:30%">${lenStr(state.trayDepth,2)}</td>
+      </tr>
+      <tr>
+        <td style="padding:4px 8px; color:#666; font-weight:600">${L.repTrayType}</td>
+        <td style="padding:4px 8px">${typeLabel}</td>
+        <td style="padding:4px 8px; color:#666; font-weight:600">${L.repTotalCables}</td>
+        <td style="padding:4px 8px">${layout.itemCount}</td>
+      </tr>
+    </table>
+
+    <div style="font-family:Oswald,sans-serif; font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:.5px; border-bottom:1px solid #ccc; padding-bottom:4px; margin-bottom:8px">${L.repCircuitSchedule}</div>
+    <table style="width:100%; border-collapse:collapse; font-size:11px; margin-bottom:18px">
+      <thead><tr style="background:#F2F2F2">
+        ${["",L.thSource,L.thConductor,L.thMaterial,L.thCableOD,L.thCablesPerCircuit,L.thQty,L.thSpacing].map(h=>`<th style="text-align:left;padding:5px 8px;border-bottom:1.5px solid #1A1A1A">${h}</th>`).join("")}
+      </tr></thead>
+      <tbody>${rowsHtml}</tbody>
+    </table>
+
+    <div style="display:flex; gap:20px; margin-bottom:18px">
+      <div style="border:1px solid #ddd; border-radius:4px; padding:8px 14px; min-width:120px">
+        <div style="font-size:9.5px; color:#777; text-transform:uppercase">${L.repAreaFill}</div>
+        <div style="font-size:16px; font-weight:700; color:${colorFlag(fillLevel)}">${fmt(layout.areaFillPct,1)}%</div>
+      </div>
+      <div style="border:1px solid #ddd; border-radius:4px; padding:8px 14px; min-width:120px">
+        <div style="font-size:9.5px; color:#777; text-transform:uppercase">${L.repDepthUsed}</div>
+        <div style="font-size:16px; font-weight:700; color:${layout.fitsDepth?"#2E8B57":"#C0392B"}">${lenStr(layout.totalHeightUsed,2)} / ${lenStr(state.trayDepth,2)}</div>
+      </div>
+      <div style="border:1px solid #ddd; border-radius:4px; padding:8px 14px; min-width:120px">
+        <div style="font-size:9.5px; color:#777; text-transform:uppercase">${L.repResult}</div>
+        <div style="font-size:16px; font-weight:700; color:${colorFlag(fillLevel)}">${(fillLevel==="bad"||!layout.fitsDepth||!layout.widthOk)?L.repReviewRequired:L.repWithinGuideline}</div>
+      </div>
+      <div style="border:1px solid #ddd; border-radius:4px; padding:8px 14px; min-width:120px">
+        <div style="font-size:9.5px; color:#777; text-transform:uppercase">${L.repWeight}</div>
+        <div style="font-size:16px; font-weight:700; color:#1A1A1A">${fmt(totalCircuitWeight(state.circuits).total,1)} kg/m</div>
+        <div style="font-size:11px; color:#555;">${fmt(totalCircuitWeight(state.circuits).total*0.671969,1)} lb/ft</div>
+      </div>
+    </div>
+
+    <div style="font-family:Oswald,sans-serif; font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:.5px; border-bottom:1px solid #ccc; padding-bottom:4px; margin-bottom:10px">${L.repCrossSection}</div>
+    <div id="printDrawingWrap" style="border:1px solid #ccc; padding:12px; margin-bottom:12px"></div>
+
+    <p style="font-size:9.5px; color:#666; line-height:1.6">${L.repFooterNote.replace('{ins}', INSULATION_RATING)}</p>
+  `;
+  document.getElementById("printDrawingWrap").appendChild(buildDrawing(layout, state.trayWidth, state.trayDepth, state.trayType, true));
+}
+
+/* ===================== i18n ===================== */
+let currentLang = 'en';
+const UI = {
+  en: {
+    h1Title: 'Cable Tray Fill <span>Calculator</span>',
+    subTitle: "Tray fill &amp; spacing check — 575V / 1800RPM / 3-phase motor cable schedule · TECK90 3C, 1kV-rated cables",
+    lblTraySpec: "Tray specification", lblWidth: "Width", lblDepth: "Depth", lblType: "Type",
+    lblAddCircuit: "Add circuit", lblMotorHp: "Motor (HP)", lblConductor: "Conductor",
+    lblSpacingReq: "Spacing requirement", optSp0: "0% (bundled, touching)", optSp25: "25% of Ø", optSp100: "100% of Ø",
+    lblCablesPerCircuit: "Cables per circuit", optCt1: "1 (single 3C cable)", optCt2: "2 (2× parallel)", optCt3: "3 (3× parallel)",
+    lblQty: "Qty (number of circuits)", lblTitleBlock: "Design brief / title block", lblCompany: "Company / logo text",
+    lblDate: "Date", hintExport: "PDF opens your browser's print dialog. Word/Excel download directly and open in Microsoft Office. All three share the same title block, methodology &amp; results.",
+    footnoteText: "Cables requiring maintained spacing (25% / 100% of Ø) are arranged in a single layer resting on the tray floor — they are never stacked, since stacking would block the free-air clearance the spacing exists to provide. Cables with no spacing requirement (0%, bundled) are grouped in their own zone beside — not on top of — the spaced cables, and may stack among themselves. Where a spaced cable sits at the edge of the bundled group, the required clearance is still maintained on that side. Area fill is checked against the commonly referenced 40% guideline from NEC 392.22 / CSA C22.1. This tool is a design aid — final tray sizing should be verified by a licensed electrical engineer against the applicable code edition and AHJ requirements.",
+    statAreaFill: "Area fill", statCables: "Cables", statHeightUsed: "Height used", statSpacedLayer: "Spaced layer", oneRowFixed: "1 row (fixed)",
+    msgSpacedOverflow: "Spaced cables alone exceed the tray width — since they must stay in a single layer, choose a wider tray or reduce spaced circuits.",
+    msgBundleOverflow: "The bundled (0%) cable group doesn't fit beside the spaced layer — choose a wider tray.",
+    msgHeightOverflow: "Required stack height exceeds the selected tray depth — increase tray size or reduce cable count.",
+    msgFillExceeds: "Area fill exceeds the common 40% guideline — consider a larger tray.",
+    msgWithinLimits: "Layout is within depth, width, and the 40% fill guideline.",
+    msgApproachingLimit: "Approaching the fill limit — review spacing and heat-dissipation requirements.",
+    circuitsAdded: "Circuits added", noCablesYet: "No cables yet — add one above.",
+    spacedTag: "(spaced)", bundledTag: "(bundled)",
+    byMotor: "By motor (HP)", byCableSpec: "By cable spec",
+    copper: "Copper", aluminum: "Aluminum",
+    specLabel: "Spec", cablesPerCircuitShort: "cable(s)/circuit", spacingRequiredLabel: "Spacing required:", ofDia: "of Ø",
+    singleLayer: "(single layer)", bundledMayStack: "(bundled, may stack)", insulationLabel: "Insulation",
+    confirmReplace: "Replace current circuit list with the example schedule?",
+    directSpec: "Direct spec", singleLayerShort: "(single layer)", bundledShort: "(bundled)",
+    singleLayerShort2: "Single layer", bundledShort2: "Bundled",
+    noCircuitsAdded: "No circuits added.",
+    rep1Purpose: "1. Purpose",
+    repPurposeBody: "This brief determines whether the listed TECK90, 1kV-rated, 3-conductor motor feeder cables physically fit within the specified cable tray, while preserving the spacing needed for cable ampacity as installed and checking the overall cross-sectional fill against commonly referenced tray fill limits.",
+    rep2Method: "2. Method",
+    repMethodIntro: "Cables are grouped into two categories based on the spacing assigned in the project cable schedule:",
+    repMethodSpaced: "<b>Spaced cables</b> (25% / 100% of cable diameter) are arranged in a single layer resting on the tray floor. They are not stacked, since stacking would obstruct the free-air clearance the spacing is intended to provide. Where a spaced cable sits at the edge of a bundled group, its own required clearance is still kept on that side.",
+    repMethodBundled: "<b>Bundled cables</b> (0% spacing, typically smaller branch/control conductors) are grouped in their own zone beside the spaced layer and may be stacked, since no dedicated air clearance is required between them.",
+    repMethodFillCheck: "Overall cross-sectional area fill (sum of cable areas versus the internal tray area) is checked against the commonly referenced 40% guideline applied to multiconductor power/control cable trays.",
+    rep3Assumptions: "3. Assumptions &amp; limitations",
+    repAssump1: "Cable outer diameters and required spacing are taken from the project's 575V/1800RPM motor cable schedule (or from the direct conductor entry, where used).",
+    repAssump2: "The layout shown is a geometric packing approximation, not a manufacturer-certified tray fill calculation.",
+    repAssump3: "Final tray size, cable arrangement, and ampacity derating must be verified by a licensed electrical engineer against the applicable code edition and the authority having jurisdiction (AHJ).",
+    rep4Standards: "4. Reference standards",
+    repStd1: "CSA C22.1, Canadian Electrical Code, Part I — cable tray wiring methods and fill provisions",
+    repStd2: "NFPA 70 (NEC), Article 392 — cable trays, including Section 392.22 fill for multiconductor cables",
+    repStd3: "NEMA VE 1 — metal cable tray systems, construction and classification",
+    repStd4: "Cable manufacturer's submittal data — actual outer diameter, weight, and minimum bend radius",
+    repClauseNote: "Clause numbers above are typical references only; confirm the exact clause and edition in force for this project before relying on this brief for construction.",
+    repTraySummary: "Tray &amp; result summary", repTrayWidth: "Tray width", repTrayDepth: "Tray depth",
+    repTrayType: "Tray type", repTotalCables: "Total cables", repCircuitSchedule: "Circuit schedule",
+    thSource: "Source", thConductor: "Conductor", thMaterial: "Material", thCableOD: "Cable OD",
+    thCablesPerCircuit: "Cables/circuit", thQty: "Qty", thSpacing: "Spacing",
+    repAreaFill: "Area fill", repDepthUsed: "Depth used", repResult: "Result", repWeight: "Installed weight",
+    repReviewRequired: "Review required", repWithinGuideline: "Within guideline",
+    repCrossSection: "Cross-section (TECK90 3C, floor-up, tray open at top)",
+    repFooterNote: "This report is a design aid generated from a fixed cable schedule and a geometric packing approximation. Final tray sizing must be verified by a licensed electrical engineer against the applicable code edition and AHJ requirements. All cables are TECK90, rated {ins} insulation.",
+    xlsProjectNo: "Project No.", xlsElement: "Element", xlsTask: "Task", xlsDate: "Date",
+    xlsAreaFillPct: "Area fill %", xlsSpacingPct: "Spacing %", xlsLayerType: "Layer type",
+    statWeight: "Weight (installed, kg/m)", statWeightLb: "Weight (installed, lb/ft)", remainingToGuideline: "Remaining to guideline", guidelineDashLabel: "dashed line = 40% mark",
+    clearanceZoneLbl: "clearance kept: {d}",
+    recommendedSize: "Recommended next tray size", duplicateTitle: "Duplicate circuit", removeTitle: "Remove circuit",
+    importHintText: "Columns: HP (or AWG + Material), Spacing%, Count, Qty. First row = headers.",
+    importError: "Could not read file:", importDone: "Import complete", importAdded: "circuit row(s) added", importSkipped: "row(s) skipped (unrecognized)",
+    svgWarnSpaced: "\u26a0 spaced cables exceed tray width (single-layer rule)",
+    svgWarnBundle: "\u26a0 bundle exceeds available width",
+    svgWarnDepth: "\u26a0 exceeds tray depth",
+    importBtnText: "⭱ Import circuits (Excel/CSV)"
+  },
+  fr: {
+    h1Title: 'Calculateur de remplissage <span>de chemin de câbles</span>',
+    subTitle: "Vérification du remplissage et de l'espacement — liste de câbles moteur 575 V / 1800 tr/min / triphasé · TECK90 3C, câbles 1 kV",
+    lblTraySpec: "Caractéristiques du chemin de câbles", lblWidth: "Largeur", lblDepth: "Profondeur", lblType: "Type",
+    lblAddCircuit: "Ajouter un circuit", lblMotorHp: "Moteur (HP)", lblConductor: "Conducteur",
+    lblSpacingReq: "Exigence d'espacement", optSp0: "0 % (groupé, en contact)", optSp25: "25 % de Ø", optSp100: "100 % de Ø",
+    lblCablesPerCircuit: "Câbles par circuit", optCt1: "1 (câble 3C simple)", optCt2: "2 (2× en parallèle)", optCt3: "3 (3× en parallèle)",
+    lblQty: "Qté (nombre de circuits)", lblTitleBlock: "Fiche de calcul / cartouche", lblCompany: "Nom de l'entreprise / logo",
+    lblDate: "Date", hintExport: "Le PDF ouvre la boîte de dialogue d'impression du navigateur. Word/Excel se téléchargent directement et s'ouvrent dans Microsoft Office. Les trois partagent le même cartouche, la même méthodologie et les mêmes résultats.",
+    footnoteText: "Les câbles nécessitant un espacement maintenu (25 % / 100 % de Ø) sont disposés en une seule couche reposant sur le fond du chemin de câbles — ils ne sont jamais empilés, car l'empilement bloquerait le dégagement d'air libre que l'espacement vise à assurer. Les câbles sans exigence d'espacement (0 %, groupés) sont regroupés dans leur propre zone à côté — et non au-dessus — des câbles espacés, et peuvent s'empiler entre eux. Lorsqu'un câble espacé se trouve en bordure du groupe de câbles groupés, le dégagement requis est tout de même maintenu de ce côté. Le taux de remplissage de la section est vérifié par rapport au repère courant de 40 % de la norme NEC 392.22 / CSA C22.1. Cet outil est une aide à la conception — le dimensionnement final du chemin de câbles doit être vérifié par un ingénieur électricien agréé selon l'édition du code applicable et les exigences de l'autorité compétente.",
+    statAreaFill: "Remplissage", statCables: "Câbles", statHeightUsed: "Hauteur utilisée", statSpacedLayer: "Couche espacée", oneRowFixed: "1 rangée (fixe)",
+    msgSpacedOverflow: "Les câbles espacés seuls dépassent la largeur du chemin de câbles — comme ils doivent rester en une seule couche, choisissez un chemin plus large ou réduisez le nombre de circuits espacés.",
+    msgBundleOverflow: "Le groupe de câbles groupés (0 %) ne tient pas à côté de la couche espacée — choisissez un chemin plus large.",
+    msgHeightOverflow: "La hauteur d'empilement requise dépasse la profondeur du chemin sélectionné — augmentez la taille du chemin ou réduisez le nombre de câbles.",
+    msgFillExceeds: "Le taux de remplissage dépasse le repère courant de 40 % — envisagez un chemin plus grand.",
+    msgWithinLimits: "La disposition respecte la profondeur, la largeur et le repère de remplissage de 40 %.",
+    msgApproachingLimit: "Approche de la limite de remplissage — vérifiez l'espacement et les exigences de dissipation thermique.",
+    circuitsAdded: "Circuits ajoutés", noCablesYet: "Aucun câble pour l'instant — ajoutez-en un ci-dessus.",
+    spacedTag: "(espacé)", bundledTag: "(groupé)",
+    byMotor: "Par moteur (HP)", byCableSpec: "Par spec. de câble",
+    copper: "Cuivre", aluminum: "Aluminium",
+    specLabel: "Spec.", cablesPerCircuitShort: "câble(s)/circuit", spacingRequiredLabel: "Espacement requis :", ofDia: "de Ø",
+    singleLayer: "(couche unique)", bundledMayStack: "(groupé, empilable)", insulationLabel: "Isolation",
+    confirmReplace: "Remplacer la liste de circuits actuelle par l'exemple de programme?",
+    directSpec: "Spec. directe", singleLayerShort: "(couche unique)", bundledShort: "(groupé)",
+    singleLayerShort2: "Couche unique", bundledShort2: "Groupé",
+    noCircuitsAdded: "Aucun circuit ajouté.",
+    rep1Purpose: "1. Objet",
+    repPurposeBody: "Cette fiche détermine si les câbles moteur TECK90, 1 kV, 3 conducteurs, listés, s'insèrent physiquement dans le chemin de câbles spécifié, tout en préservant l'espacement nécessaire à l'ampacité des câbles installés et en vérifiant le taux de remplissage global de la section par rapport aux limites courantes de remplissage des chemins de câbles.",
+    rep2Method: "2. Méthode",
+    repMethodIntro: "Les câbles sont regroupés en deux catégories selon l'espacement assigné dans la liste de câbles du projet :",
+    repMethodSpaced: "Les <b>câbles espacés</b> (25 % / 100 % du diamètre du câble) sont disposés en une seule couche reposant sur le fond du chemin. Ils ne sont pas empilés, car l'empilement obstruerait le dégagement d'air libre que l'espacement vise à assurer. Lorsqu'un câble espacé se trouve en bordure d'un groupe de câbles groupés, son propre dégagement requis est tout de même maintenu de ce côté.",
+    repMethodBundled: "Les <b>câbles groupés</b> (espacement de 0 %, généralement des conducteurs de dérivation/contrôle plus petits) sont regroupés dans leur propre zone à côté de la couche espacée et peuvent être empilés, car aucun dégagement d'air dédié n'est requis entre eux.",
+    repMethodFillCheck: "Le taux de remplissage global de la section (somme des sections de câbles par rapport à la section interne du chemin) est vérifié par rapport au repère courant de 40 % appliqué aux chemins de câbles multiconducteurs de puissance/contrôle.",
+    rep3Assumptions: "3. Hypothèses et limites",
+    repAssump1: "Les diamètres extérieurs des câbles et l'espacement requis proviennent de la liste de câbles moteur 575 V/1800 tr/min du projet (ou de la saisie directe du conducteur, le cas échéant).",
+    repAssump2: "La disposition présentée est une approximation géométrique d'empaquetage, et non un calcul de remplissage certifié par le fabricant.",
+    repAssump3: "La taille finale du chemin, la disposition des câbles et le déclassement de l'ampacité doivent être vérifiés par un ingénieur électricien agréé selon l'édition du code applicable et l'autorité compétente (AHJ).",
+    rep4Standards: "4. Normes de référence",
+    repStd1: "CSA C22.1, Code canadien de l'électricité, Partie I — méthodes de câblage et dispositions de remplissage des chemins de câbles",
+    repStd2: "NFPA 70 (NEC), Article 392 — chemins de câbles, incluant la section 392.22 sur le remplissage des câbles multiconducteurs",
+    repStd3: "NEMA VE 1 — systèmes de chemins de câbles métalliques, construction et classification",
+    repStd4: "Données de soumission du fabricant de câbles — diamètre extérieur réel, poids et rayon de courbure minimal",
+    repClauseNote: "Les numéros d'articles ci-dessus sont des références typiques seulement; confirmez l'article et l'édition exacts en vigueur pour ce projet avant de vous fier à cette fiche pour la construction.",
+    repTraySummary: "Résumé du chemin et des résultats", repTrayWidth: "Largeur du chemin", repTrayDepth: "Profondeur du chemin",
+    repTrayType: "Type de chemin", repTotalCables: "Total des câbles", repCircuitSchedule: "Liste des circuits",
+    thSource: "Source", thConductor: "Conducteur", thMaterial: "Matériau", thCableOD: "Ø extérieur du câble",
+    thCablesPerCircuit: "Câbles/circuit", thQty: "Qté", thSpacing: "Espacement",
+    repAreaFill: "Remplissage", repDepthUsed: "Hauteur utilisée", repResult: "Résultat", repWeight: "Poids installé",
+    repReviewRequired: "Révision requise", repWithinGuideline: "Conforme au repère",
+    repCrossSection: "Coupe transversale (TECK90 3C, du fond vers le haut, chemin ouvert)",
+    repFooterNote: "Ce rapport est une aide à la conception générée à partir d'une liste de câbles fixe et d'une approximation géométrique d'empaquetage. Le dimensionnement final du chemin doit être vérifié par un ingénieur électricien agréé selon l'édition du code applicable et les exigences de l'autorité compétente. Tous les câbles sont TECK90, isolation {ins}.",
+    xlsProjectNo: "N° de projet", xlsElement: "Élément", xlsTask: "Tâche", xlsDate: "Date",
+    xlsAreaFillPct: "Remplissage %", xlsSpacingPct: "Espacement %", xlsLayerType: "Type de couche",
+    statWeight: "Poids (installé, kg/m)", statWeightLb: "Poids (installé, lb/ft)", remainingToGuideline: "Marge avant le repère", guidelineDashLabel: "ligne pointillée = repère de 40 %",
+    clearanceZoneLbl: "dégagement maintenu : {d}",
+    recommendedSize: "Prochaine taille de chemin recommandée", duplicateTitle: "Dupliquer le circuit", removeTitle: "Supprimer le circuit",
+    importHintText: "Colonnes : HP (ou AWG + Matériau), Espacement%, Count, Qty. La première rangée = en-têtes.",
+    importError: "Impossible de lire le fichier :", importDone: "Importation terminée", importAdded: "circuit(s) ajouté(s)", importSkipped: "rangée(s) ignorée(s) (non reconnue(s))",
+    svgWarnSpaced: "\u26a0 les câbles espacés dépassent la largeur du chemin (règle de la couche unique)",
+    svgWarnBundle: "\u26a0 le groupe dépasse la largeur disponible",
+    svgWarnDepth: "\u26a0 dépasse la profondeur du chemin",
+    importBtnText: "⭱ Importer les circuits (Excel/CSV)"
+  }
+};
+
+function applyStaticI18n(){
+  const L = UI[currentLang];
+  document.getElementById('h1Title').innerHTML = L.h1Title;
+  document.getElementById('subTitle').innerHTML = L.subTitle;
+  document.getElementById('lblTraySpec').childNodes[0].textContent = L.lblTraySpec + ' ';
+  document.getElementById('lblWidth').childNodes[0].textContent = L.lblWidth + ' ';
+  document.getElementById('lblDepth').childNodes[0].textContent = L.lblDepth + ' ';
+  document.getElementById('lblType').childNodes[0].textContent = L.lblType + ' ';
+  document.getElementById('lblAddCircuit').textContent = L.lblAddCircuit;
+  document.getElementById('lblMotorHp').childNodes[0].textContent = L.lblMotorHp + ' ';
+  document.getElementById('lblConductor').childNodes[0].textContent = L.lblConductor + ' ';
+  document.getElementById('lblSpacingReq').childNodes[0].textContent = L.lblSpacingReq + ' ';
+  document.getElementById('optSp0').textContent = L.optSp0;
+  document.getElementById('optSp25').textContent = L.optSp25;
+  document.getElementById('optSp100').textContent = L.optSp100;
+  document.getElementById('lblCablesPerCircuit').childNodes[0].textContent = L.lblCablesPerCircuit + ' ';
+  document.getElementById('optCt1').textContent = L.optCt1;
+  document.getElementById('optCt2').textContent = L.optCt2;
+  document.getElementById('optCt3').textContent = L.optCt3;
+  document.getElementById('lblQty').childNodes[0].textContent = L.lblQty + ' ';
+  document.getElementById('lblTitleBlock').textContent = L.lblTitleBlock;
+  document.getElementById('lblCompany').childNodes[0].textContent = L.lblCompany + ' ';
+  document.getElementById('lblDate').childNodes[0].textContent = L.lblDate + ' ';
+  document.getElementById('hintExport').innerHTML = L.hintExport;
+  document.getElementById('footnoteText').textContent = L.footnoteText;
+  document.getElementById('importBtn').textContent = L.importBtnText;
+  document.getElementById('importHint').textContent = L.importHintText;
+}
+
+function setLang(lang){
+  currentLang = lang;
+  document.getElementById('btn-en').classList.toggle('active', lang==='en');
+  document.getElementById('btn-fr').classList.toggle('active', lang==='fr');
+  document.documentElement.lang = lang;
+  try { localStorage.setItem('ohmzone-lang', lang); } catch(e) {}
+  applyStaticI18n();
+  renderUnitToggle();
+  renderModeRow();
+  renderSpecBox();
+  setupTypeButtons();
+  const conductorSel = document.getElementById("conductorSelect");
+  if(conductorSel){
+    conductorSel.innerHTML = "";
+    CONDUCTOR_DATA.forEach(c=>{
+      const o = document.createElement("option"); o.value = c.awg+"|"+c.mat;
+      o.textContent = `${c.awg} ${sizeUnitLabel(c.awg)} — ${c.mat==="CU"?UI[currentLang].copper:UI[currentLang].aluminum}`;
+      conductorSel.appendChild(o);
+    });
+  }
+  render();
+}
+
+(function(){
+  let saved = 'en';
+  try { saved = localStorage.getItem('ohmzone-lang') || 'en'; } catch(e) {}
+  currentLang = saved;
+  setupControls();
+  setLang(saved);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fire Alarm Detector Spacing & Coverage — NFPA 72</title>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3887318872951674" crossorigin="anonymous"></script>
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icon-16.png">
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="OhmZone">
+<meta name="theme-color" content="#0a1728">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.6/dist/pizzip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/docxtemplater@3.47.2/js/docxtemplater.js"></script>
+<style>
+@media print{ .no-print{display:none !important;} body{background:#fff !important;} }
+:root{
+  --bg:#080c14; --bg2:#0d1420; --panel:#111a2a; --panel-soft:#0c1220;
+  --line:#233350; --line-soft:#182238; --grid-line: rgba(96,140,196,0.09);
+  --ink:#e7edf7; --ink-dim:#8497b8; --ink-faint:#516085;
+  --trace:#3b9eff; --trace-soft:#1a3a5c; --gold:#e8b545;
+  --alarm:#ff5d77; --warn:#e3a83b; --radius:2px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',sans-serif;}
+body{background-image:linear-gradient(var(--grid-line) 1px,transparent 1px),linear-gradient(90deg,var(--grid-line) 1px,transparent 1px);background-size:28px 28px;min-height:100vh;}
+::selection{background:var(--trace);color:#04120f;}
+a{color:var(--trace);}
+input:focus-visible, select:focus-visible, button:focus-visible{outline:2px solid var(--trace);outline-offset:2px;}
+.lang-switch{display:flex;align-items:center;background:#0f2036;border:1px solid #2f5678;border-radius:16px;padding:3px;gap:2px;font-family:monospace;font-size:11px;position:fixed;top:10px;right:12px;z-index:9999;}
+.lang-switch button{border:none;background:transparent;color:#8fa8c2;padding:5px 12px;border-radius:13px;cursor:pointer;font-family:inherit;font-size:inherit;}
+.lang-switch button.active{background:var(--trace);color:#04120f;font-weight:700;}
+
+.titleblock{border-bottom:1px solid var(--line);background:linear-gradient(180deg,rgba(17,26,42,.9),rgba(13,20,32,.7));padding:18px 22px;display:flex;flex-wrap:wrap;gap:14px 28px;align-items:flex-end;justify-content:space-between;}
+.titleblock .brand{display:flex;align-items:baseline;gap:12px;}
+.titleblock .brand .mark{width:34px;height:34px;border:1.5px solid var(--trace);border-radius:3px;display:flex;align-items:center;justify-content:center;color:var(--trace);font-family:'IBM Plex Mono';font-weight:700;font-size:11px;flex:none;box-shadow:0 0 14px rgba(59, 158, 255,.18) inset;}
+.titleblock h1{font-family:'IBM Plex Sans Condensed';font-weight:700;letter-spacing:.3px;font-size:20px;margin:0;text-transform:uppercase;}
+.titleblock .sub{color:var(--ink-dim);font-size:12.5px;margin-top:2px;}
+.stamp{display:grid;grid-template-columns:repeat(4,auto);gap:0 22px;font-family:'IBM Plex Mono';font-size:10.5px;color:var(--ink-dim);}
+.stamp div b{display:block;color:var(--ink-faint);font-weight:500;font-size:9px;letter-spacing:.06em;text-transform:uppercase;}
+.stamp div span{color:var(--trace);font-weight:600;font-size:12px;}
+
+.top-disclaimer{max-width:1480px;margin:14px auto 0;padding:10px 16px;border:1px solid var(--warn);background:rgba(227,168,59,.07);border-radius:var(--radius);font-size:11.5px;color:var(--ink-dim);line-height:1.6;}
+.top-disclaimer b{color:var(--warn);}
+
+.app{display:grid;grid-template-columns:400px 1fr;gap:1px;background:var(--line);max-width:1480px;margin:0 auto;}
+@media (max-width:1000px){ .app{grid-template-columns:1fr;} }
+.steps{background:var(--bg2);padding:18px 16px 40px;display:flex;flex-direction:column;gap:14px;}
+.canvas-col{background:var(--line);display:flex;flex-direction:column;gap:1px;}
+.canvas-col > *{background:var(--bg2);}
+
+.step{border:1px solid var(--line-soft);border-radius:var(--radius);background:var(--panel-soft);overflow:hidden;}
+.step-head{display:flex;align-items:center;gap:10px;padding:11px 13px;background:var(--panel);cursor:pointer;user-select:none;border-bottom:1px solid var(--line-soft);}
+.step-num{font-family:'IBM Plex Mono';font-size:11px;font-weight:600;color:var(--bg);background:var(--trace);width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none;}
+.step.optional .step-num{background:var(--ink-faint);color:var(--bg2);}
+.step.optional.on .step-num{background:var(--gold);}
+.step-title{font-size:13px;font-weight:600;letter-spacing:.2px;flex:1;}
+.step-title small{display:block;font-weight:400;color:var(--ink-dim);font-size:10.5px;margin-top:1px;}
+.chev{color:var(--ink-faint);font-size:11px;transition:transform .15s;}
+.step.closed .chev{transform:rotate(-90deg);}
+.step-body{padding:13px;display:flex;flex-direction:column;gap:11px;}
+.step.closed .step-body{display:none;}
+
+label.field{display:flex;flex-direction:column;gap:5px;font-size:11.5px;color:var(--ink-dim);}
+label.field b{color:var(--ink);font-weight:500;font-size:12px;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;}
+input[type=number],input[type=text],select{background:var(--bg2);border:1px solid var(--line);color:var(--ink);font-family:'IBM Plex Mono';font-size:13px;padding:8px 9px;border-radius:var(--radius);width:100%;}
+select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238497b8'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:26px;}
+input:focus,select:focus{border-color:var(--trace);}
+
+.seg{display:flex;border:1px solid var(--line);border-radius:20px;overflow:hidden;width:max-content;flex-wrap:wrap;}
+.seg button{background:transparent;border:none;color:var(--ink-dim);font-family:'IBM Plex Mono';font-size:10.5px;padding:5px 12px;cursor:pointer;}
+.seg button.active{background:var(--trace);color:#04120f;font-weight:600;}
+
+.switch{position:relative;width:34px;height:19px;flex:none;}
+.switch input{opacity:0;width:0;height:0;position:absolute;}
+.switch .track{position:absolute;inset:0;background:var(--line);border-radius:20px;transition:.15s;}
+.switch .track:before{content:'';position:absolute;width:13px;height:13px;left:3px;top:3px;background:var(--ink-dim);border-radius:50%;transition:.15s;}
+.switch input:checked + .track{background:var(--trace-soft);border:1px solid var(--trace);}
+.switch input:checked + .track:before{transform:translateX(15px);background:var(--trace);}
+
+.hint{font-size:10.5px;color:var(--ink-faint);line-height:1.5;}
+.hint em{color:var(--ink-dim);font-style:normal;}
+.example-btn{align-self:flex-start;font-family:'IBM Plex Mono';font-size:11px;font-weight:600;color:#0a1220;background:var(--trace);border:1px solid var(--trace);padding:9px 16px;border-radius:20px;cursor:pointer;box-shadow:0 4px 12px -4px var(--trace-soft);}
+.example-btn:hover{filter:brightness(1.08);}
+.add-btn{font-family:'IBM Plex Mono';font-size:11px;font-weight:600;color:#0a1220;background:var(--gold);border:1px solid var(--gold);padding:6px 12px;border-radius:6px;cursor:pointer;align-self:flex-start;}
+.add-btn:hover{filter:brightness(1.06);}
+.item-row{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--panel);border:1px solid var(--line-soft);border-radius:var(--radius);font-size:11.5px;}
+.item-row .lbl{flex:1;color:var(--ink);}
+.item-row .lbl small{display:block;color:var(--ink-faint);font-size:9.5px;}
+.item-row button{background:transparent;border:none;color:var(--alarm);cursor:pointer;font-size:14px;padding:2px 6px;}
+.empty-note{font-size:11px;color:var(--ink-faint);font-style:italic;padding:8px 2px;}
+
+.panel{padding:16px;}
+.panel-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px;gap:10px;flex-wrap:wrap;}
+.panel-head h2{font-family:'IBM Plex Sans Condensed';font-size:13px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-dim);margin:0;font-weight:600;}
+.panel-head .tag{font-family:'IBM Plex Mono';font-size:10px;color:var(--ink-faint);}
+
+.result-grid{display:grid;grid-template-columns:220px 1fr;gap:16px;align-items:center;}
+@media (max-width:640px){ .result-grid{grid-template-columns:1fr;} }
+.gauge-box{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.gauge-num{font-family:'IBM Plex Mono';font-weight:700;font-size:26px;color:var(--gold);text-align:center;}
+.gauge-lbl{font-size:10px;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.1em;text-align:center;}
+.stat-list{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+@media (max-width:480px){ .stat-list{grid-template-columns:1fr;} }
+.stat{border:1px solid var(--line-soft);border-radius:var(--radius);padding:9px 11px;background:var(--panel-soft);}
+.stat .k{font-size:10px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.06em;}
+.stat .v{font-family:'IBM Plex Mono';font-size:15px;font-weight:600;margin-top:3px;}
+.stat.hot{border-color:var(--gold);background:linear-gradient(180deg,rgba(232,181,69,.08),transparent);}
+.stat.hot .v{color:var(--gold);}
+
+.risk-box{border-radius:var(--radius);padding:11px 13px;margin-top:12px;font-size:12px;line-height:1.6;border:1px solid;}
+.risk-ok{border-color:var(--trace);background:rgba(59, 158, 255,.06);color:var(--ink-dim);}
+.risk-warn{border-color:var(--warn);background:rgba(227,168,59,.08);color:var(--ink-dim);}
+.risk-alarm{border-color:var(--alarm);background:rgba(255,93,119,.08);color:var(--ink-dim);}
+.risk-box b{color:var(--ink);}
+
+.ref-table{width:100%;border-collapse:collapse;font-size:11px;}
+.ref-table th,.ref-table td{padding:6px 8px;border-bottom:1px solid var(--line-soft);text-align:left;}
+.ref-table th{color:var(--ink-faint);font-weight:500;text-transform:uppercase;font-size:9px;letter-spacing:.06em;}
+.ref-table td{color:var(--ink-dim);font-family:'IBM Plex Mono';}
+
+.ledger{display:flex;flex-direction:column;}
+.lstep{padding:13px 16px;border-bottom:1px solid var(--line-soft);display:grid;grid-template-columns:26px 1fr;gap:12px;}
+.lstep:last-child{border-bottom:none;}
+.lstep .ln{font-family:'IBM Plex Mono';color:var(--ink-faint);font-size:11px;padding-top:2px;}
+.lstep h3{margin:0 0 5px;font-size:12.5px;font-weight:600;color:var(--ink);}
+.lstep .formula{font-family:'IBM Plex Mono';font-size:12px;color:var(--trace);background:rgba(59, 158, 255,.06);padding:8px 10px;border-radius:var(--radius);border:1px solid var(--trace-soft);margin:6px 0;overflow-x:auto;white-space:pre;}
+.cite{font-size:9.5px;color:var(--ink-faint);margin-top:6px;line-height:1.5;border-left:2px solid var(--line);padding-left:8px;}
+.cite b{color:var(--ink-dim);font-weight:500;}
+.clause{font-family:'IBM Plex Mono';font-size:9.5px;color:var(--gold);background:rgba(232,181,69,.08);border:1px solid rgba(232,181,69,.25);border-radius:3px;padding:1px 5px;margin-right:4px;white-space:nowrap;}
+
+footer.note{max-width:1480px;margin:22px auto 60px;padding:0 16px;font-size:10.5px;color:var(--ink-faint);line-height:1.7;}
+footer.note b{color:var(--ink-dim);}
+</style>
+</head>
+<body>
+<a href="index.html" class="no-print" style="position:fixed;top:10px;left:12px;z-index:9999;font-family:monospace;font-size:11px;color:#8fa8c2;background:rgba(10,23,40,0.85);border:1px solid #234261;border-radius:14px;padding:5px 12px;text-decoration:none;">← OhmZone</a>
+<div class="lang-switch no-print">
+  <button type="button" id="btn-en" class="active" onclick="setLang('en')">EN</button>
+  <button type="button" id="btn-fr" onclick="setLang('fr')">FR</button>
+</div>
+
+<div class="titleblock">
+  <div class="brand">
+    <div class="mark">FA</div>
+    <div>
+      <h1 id="titleH1">Fire Alarm Detector Spacing & Coverage</h1>
+      <div class="sub" id="titleSub">Secondary (standby) power calculation — NFPA 72 §18.3.7</div>
+    </div>
+  </div>
+  <div class="stamp">
+    <div><b id="lblDwg">Dwg No.</b><span>FA-001</span></div>
+    <div><b id="lblScale">Scale</b><span>NTS</span></div>
+    <div><b id="lblMethod">Method</b><span>NFPA 72</span></div>
+    <div><b id="lblRev">Rev</b><span id="revTag">—</span></div>
+  </div>
+</div>
+
+<div class="top-disclaimer no-print">
+  <b id="topDiscB">Preliminary screening aid only.</b> <span id="topDiscTxt">This tool applies the standard NFPA 72 Chapter 17 smooth-ceiling spacing rule (nominal listed spacing, 0.7x rule for maximum point-to-detector distance, <=15 ft from a wall) using a simplified rectangular grid solver. It does not model beamed/sloped ceilings, high air-flow returns, or the Annex A adjustment figures in detail -- rooms with those conditions, or ceilings above 40 ft not using a performance-based design, must be laid out by a qualified fire alarm professional per the current NFPA 72 edition and Annex A guidance.</span>
+</div>
+
+<div class="app">
+  <div class="steps">
+    <button class="example-btn" id="loadExample">&#9656; <span id="loadExampleTxt">Load example</span></button>
+
+    <!-- STEP 1: DETECTOR TYPE & SPACING -->
+    <div class="step" id="step1">
+      <div class="step-head" data-toggle="step1">
+        <div class="step-num">1</div>
+        <div class="step-title" id="step1Title">Detector Type &amp; Spacing<small id="step1Small">Tag, detector type, listed nominal spacing</small></div>
+        <div class="chev">&#9662;</div>
+      </div>
+      <div class="step-body">
+        <label class="field"><b id="lblTag">Room / area tag</b>
+          <input type="text" id="eqTag" placeholder="e.g. RM-101">
+        </label>
+        <label class="field"><b id="lblDetType">Detector type</b>
+          <div class="seg" id="detTypeSeg">
+            <button data-u="smoke" class="active">Smoke</button>
+            <button data-u="heat">Heat</button>
+          </div>
+        </label>
+        <label class="field"><b id="lblNomSpacing">Listed nominal spacing (ft)</b>
+          <input type="number" id="nomSpacing" value="30" min="10" max="70" step="1">
+        </label>
+        <div class="hint" id="hintStep1"></div>
+      </div>
+    </div>
+
+    <!-- STEP 2: ROOM GEOMETRY -->
+    <div class="step" id="step2">
+      <div class="step-head" data-toggle="step2">
+        <div class="step-num">2</div>
+        <div class="step-title" id="step2Title">Room Geometry<small id="step2Small">Dimensions, ceiling height and type</small></div>
+        <div class="chev">&#9662;</div>
+      </div>
+      <div class="step-body">
+        <div class="row2">
+          <label class="field"><b id="lblRoomL">Room length (ft)</b>
+            <input type="number" id="roomL" value="60" min="1" step="1">
+          </label>
+          <label class="field"><b id="lblRoomW">Room width (ft)</b>
+            <input type="number" id="roomW" value="40" min="1" step="1">
+          </label>
+        </div>
+        <label class="field"><b id="lblCeilH">Ceiling height (ft)</b>
+          <input type="number" id="ceilH" value="12" min="1" step="0.5">
+        </label>
+        <label class="field"><b id="lblCeilType">Ceiling type</b>
+          <select id="ceilTypeSel">
+            <option value="smooth" selected>Smooth, level</option>
+            <option value="beamed">Beamed / obstructed</option>
+            <option value="sloped">Sloped / peaked</option>
+          </select>
+        </label>
+        <label class="field" style="flex-direction:row;align-items:center;gap:8px;">
+          <input type="checkbox" id="perfDesignOn" style="width:auto;">
+          <span id="lblPerfDesignOn">Performance-based design in use (required if ceiling &gt;40 ft)</span>
+        </label>
+        <div class="hint" id="hintStep2"></div>
+      </div>
+    </div>
+
+    <!-- STEP 3: CORRIDOR MODE -->
+    <div class="step optional" id="step3">
+      <div class="step-head" data-toggle="step3">
+        <div class="step-num">3</div>
+        <div class="step-title" id="step3Title">Corridor Mode <span style="color:var(--ink-faint)" id="optionalTag3">(optional)</span><small id="step3Small">Single-row centerline layout for narrow corridors</small></div>
+        <label class="switch" onclick="event.stopPropagation()">
+          <input type="checkbox" id="corridorOn"><span class="track"></span>
+        </label>
+      </div>
+      <div class="step-body">
+        <div class="hint" id="hintStep3"></div>
+      </div>
+    </div>
+  </div>
+  <div class="canvas-col">
+    <div class="panel">
+      <div class="panel-head"><h2 id="resultTitle">Result - Detector Layout</h2></div>
+      <div class="result-grid">
+        <div class="gauge-box">
+          <div class="gauge-num" id="gaugeNum">-</div>
+          <div class="gauge-lbl" id="gaugeLbl">Detectors required</div>
+        </div>
+        <div class="stat-list">
+          <div class="stat hot"><div class="k" id="lblStatWorstDist">Worst-case point distance</div><div class="v" id="statWorstDist">-</div></div>
+          <div class="stat"><div class="k" id="lblStat07">0.7x spacing limit</div><div class="v" id="stat07">-</div></div>
+          <div class="stat"><div class="k" id="lblStatGridSpacing">Grid spacing used</div><div class="v" id="statGridSpacing">-</div></div>
+          <div class="stat"><div class="k" id="lblStatWallDist">Max wall distance</div><div class="v" id="statWallDist">-</div></div>
+          <div class="stat"><div class="k" id="lblStatArea">Room area</div><div class="v" id="statArea">-</div></div>
+          <div class="stat"><div class="k" id="lblStatAreaPer">Area per detector</div><div class="v" id="statAreaPer">-</div></div>
+        </div>
+      </div>
+      <div id="verdictBox"></div>
+      <div id="heightBox"></div>
+      <div id="ceilTypeBox"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2 id="diagramTitle">Layout Diagram</h2><span class="tag" id="diagramTag">schematic grid, to scale</span></div>
+      <div style="background:#0a0e18;border:1px solid var(--line-soft);border-radius:var(--radius);overflow-x:auto;"><svg id="layoutSvg" viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;height:auto;"></svg></div>
+    </div>
+
+    <div class="panel no-print" style="border:none;background:transparent;">
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px;font-size:11.5px;color:var(--ink-dim);">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+          <input type="checkbox" id="includeLedger" checked style="width:auto;">
+          <span id="lblIncludeLedger">Include Calculation Ledger in report</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+          <input type="checkbox" id="includeLogo" checked style="width:auto;">
+          <span id="lblIncludeLogo">Include OhmZone brand mark in report</span>
+        </label>
+      </div>
+      <div class="btn-row" style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button id="printBtn" style="padding:9px 16px;border-radius:8px;border:1px solid #2f5678;background:#0f2036;color:#c8d8e8;cursor:pointer;font-family:inherit;">Print / Save as PDF</button>
+        <button id="exportWordBtn" style="padding:9px 16px;border-radius:8px;border:1px solid #2f5678;background:#0f2036;color:#c8d8e8;cursor:pointer;font-family:inherit;">Export study (Word)</button>
+        <button id="exportExcelBtn" style="padding:9px 16px;border-radius:8px;border:1px solid #2f5678;background:#0f2036;color:#c8d8e8;cursor:pointer;font-family:inherit;">Export study (Excel)</button>
+      </div>
+      <div style="border-top:1px dashed var(--line);margin-top:14px;padding-top:12px;">
+        <label class="field"><b id="lblUploadTemplate">Report template (.docx, optional)</b>
+          <input type="file" id="templateFile" accept=".docx">
+        </label>
+        <div id="templateStatus" style="font-size:11px;color:var(--trace);margin-top:4px;"></div>
+        <div class="hint" id="hintUploadTemplate" style="margin-top:6px;"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2 id="ledgerTitle">Calculation Ledger</h2><span class="tag" id="ledgerTag">clause-by-clause</span></div>
+      <div class="ledger" id="ledger"></div>
+    </div>
+  </div>
+</div>
+
+<footer class="note" id="footerNote"></footer>
+
+<script>
+const $ = id => document.getElementById(id);
+function fmt(n,d=2){ if(n===undefined||n===null||isNaN(n)) return "\u2014"; return Number(n).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d}); }
+
+let currentLang = 'en';
+let state = { detType:"smoke" };
+
+document.querySelectorAll(".step-head").forEach(h=>{
+  h.addEventListener("click", ()=>{ $(h.dataset.toggle).classList.toggle("closed"); });
+});
+function wireOptionalToggle(stepId, checkboxId){
+  const cb = $(checkboxId), step = $(stepId);
+  const sync = ()=> step.classList.toggle("on", cb.checked);
+  cb.addEventListener("change", ()=>{ sync(); recalc(); });
+  sync();
+}
+wireOptionalToggle("step3","corridorOn");
+
+$("detTypeSeg").addEventListener("click", e=>{
+  const b = e.target.closest("button"); if(!b) return;
+  document.querySelectorAll("#detTypeSeg button").forEach(x=>x.classList.remove("active"));
+  b.classList.add("active");
+  state.detType = b.dataset.u;
+  $("nomSpacing").value = state.detType==="smoke" ? 30 : 50;
+  recalc();
+});
+
+["eqTag","nomSpacing","roomL","roomW","ceilH","ceilTypeSel"].forEach(id=>{
+  $(id).addEventListener("input", recalc);
+  $(id).addEventListener("change", recalc);
+});
+$("perfDesignOn").addEventListener("change", recalc);
+
+$("loadExample").addEventListener("click", ()=>{
+  $("eqTag").value = "RM-101";
+  state.detType = "smoke";
+  document.querySelectorAll("#detTypeSeg button").forEach(x=>x.classList.toggle("active", x.dataset.u==="smoke"));
+  $("nomSpacing").value = 30;
+  $("roomL").value = 60; $("roomW").value = 40; $("ceilH").value = 12;
+  $("ceilTypeSel").value = "smooth";
+  $("perfDesignOn").checked = false;
+  $("corridorOn").checked = false;
+  wireOptionalToggle("step3","corridorOn");
+  recalc();
+});
+
+/* ===== core calc ===== */
+/* Simplified rectangular grid solver: finds the smallest detector count grid
+   (nx columns x ny rows) such that (a) center-to-center spacing along each
+   axis does not exceed the listed nominal spacing, and (b) the farthest point
+   from any detector (the corner of each grid cell) does not exceed 0.7x the
+   nominal spacing -- the standard NFPA 72 smooth-ceiling coverage rule. This
+   is a screening-level simplification of a real detector layout, which in
+   practice also accounts for room shape, obstructions, HVAC diffusers, and
+   the Annex A adjustment figures. */
+function solveGrid(L, W, S, corridorMode){
+  if(corridorMode){
+    // single row along the centerline -- valid per Annex guidance for
+    // corridors not exceeding ~30 ft (9.1 m) in width
+    for(let nx=1; nx<=60; nx++){
+      const dx = L/nx;
+      if(dx>S) continue;
+      const halfDiag = Math.sqrt(Math.pow(dx/2,2) + Math.pow(W/2,2));
+      if(halfDiag <= 0.7*S) return {nx, ny:1, count:nx, dx, dy:W, halfDiag, wallDist:W/2};
+    }
+    return null;
+  }
+  for(let n=1; n<=400; n++){
+    for(let nx=1; nx<=20; nx++){
+      const ny = Math.ceil(n/nx);
+      if(nx*ny !== n) continue;
+      const dx = L/nx, dy = W/ny;
+      if(dx>S || dy>S) continue;
+      const halfDiag = Math.sqrt(Math.pow(dx/2,2) + Math.pow(dy/2,2));
+      if(halfDiag <= 0.7*S){
+        const wallDist = Math.max(dx/2, dy/2);
+        return {nx, ny, count:nx*ny, dx, dy, halfDiag, wallDist};
+      }
+    }
+  }
+  return null;
+}
+
+function calcAll(){
+  const detType = state.detType;
+  const S = parseFloat($("nomSpacing").value)||30;
+  const L = parseFloat($("roomL").value)||1;
+  const W = parseFloat($("roomW").value)||1;
+  const ceilH = parseFloat($("ceilH").value)||10;
+  const ceilType = $("ceilTypeSel").value;
+  const perfDesign = $("perfDesignOn").checked;
+  const corridorMode = $("corridorOn").checked;
+
+  const grid = solveGrid(L, W, S, corridorMode);
+  const area = L*W;
+  const areaPer = grid ? area/grid.count : null;
+
+  const highCeiling = ceilH > 40;
+  const highCeilingOk = !highCeiling || perfDesign;
+
+  return {detType, S, L, W, ceilH, ceilType, perfDesign, corridorMode, grid, area, areaPer,
+    highCeiling, highCeilingOk, tag: $("eqTag").value.trim()};
+}
+
+function recalc(){
+  const L = UI[currentLang];
+  const d = calcAll();
+
+  if(d.grid){
+    $("gaugeNum").textContent = d.grid.count;
+    $("statWorstDist").textContent = fmt(d.grid.halfDiag,1)+" ft";
+    $("stat07").textContent = fmt(0.7*d.S,1)+" ft";
+    $("statGridSpacing").textContent = fmt(d.grid.dx,1)+" x "+fmt(d.grid.dy,1)+" ft";
+    $("statWallDist").textContent = fmt(d.grid.wallDist,1)+" ft";
+    $("statArea").textContent = fmt(d.area,0)+" ft\u00b2";
+    $("statAreaPer").textContent = fmt(d.areaPer,0)+" ft\u00b2";
+  } else {
+    $("gaugeNum").textContent = "\u2014";
+    $("statWorstDist").textContent = "\u2014"; $("stat07").textContent = fmt(0.7*d.S,1)+" ft";
+    $("statGridSpacing").textContent = "\u2014"; $("statWallDist").textContent = "\u2014";
+    $("statArea").textContent = fmt(d.area,0)+" ft\u00b2"; $("statAreaPer").textContent = "\u2014";
+  }
+  $("revTag").textContent = new Date().toISOString().slice(0,10);
+
+  const verdictBox = $("verdictBox");
+  if(!d.grid){
+    verdictBox.innerHTML = "<div class=\"risk-box risk-alarm\"><b>"+L.noSolutionTitle+"</b> "+L.noSolutionBody+"</div>";
+  } else {
+    verdictBox.innerHTML = "<div class=\"risk-box risk-ok\"><b>"+L.solutionTitle+"</b> "+L.solutionBody.replace('{count}',d.grid.count).replace('{dist}',fmt(d.grid.halfDiag,1)).replace('{limit}',fmt(0.7*d.S,1))+"</div>";
+  }
+
+  const heightBox = $("heightBox");
+  if(d.highCeiling && !d.highCeilingOk){
+    heightBox.innerHTML = "<div class=\"risk-box risk-alarm\"><b>"+L.heightFailTitle+"</b> "+L.heightFailBody+"</div>";
+  } else if(d.highCeiling){
+    heightBox.innerHTML = "<div class=\"risk-box risk-warn\"><b>"+L.heightWarnTitle+"</b> "+L.heightWarnBody+"</div>";
+  } else {
+    heightBox.innerHTML = "";
+  }
+
+  const ceilTypeBox = $("ceilTypeBox");
+  if(d.ceilType!=="smooth"){
+    ceilTypeBox.innerHTML = "<div class=\"risk-box risk-warn\"><b>"+L.ceilTypeWarnTitle+"</b> "+(d.ceilType==="beamed"?L.ceilTypeBeamedBody:L.ceilTypeSlopedBody)+"</div>";
+  } else {
+    ceilTypeBox.innerHTML = "";
+  }
+
+  renderDiagram(d);
+  renderLedger(d);
+  window._lastResults = d;
+}
+
+/* ===== layout diagram ===== */
+function renderDiagram(d){
+  const svg = $("layoutSvg");
+  if(!d.grid){ svg.innerHTML=""; return; }
+  const padding = 30;
+  const W_px = 600, H_px = 400;
+  const availW = W_px - padding*2, availH = H_px - padding*2;
+  const scale = Math.min(availW/d.L, availH/d.W);
+  const roomW_px = d.L*scale, roomH_px = d.W*scale;
+  const offX = (W_px-roomW_px)/2, offY = (H_px-roomH_px)/2;
+
+  let s = "";
+  s += "<rect x=\""+offX+"\" y=\""+offY+"\" width=\""+roomW_px+"\" height=\""+roomH_px+"\" fill=\"#0d1420\" stroke=\"#3b9eff\" stroke-width=\"1.5\"/>";
+  const coverageR = 0.7*d.S*scale;
+  for(let i=0;i<d.grid.nx;i++){
+    for(let j=0;j<d.grid.ny;j++){
+      const cx = offX + (i+0.5)*d.grid.dx*scale;
+      const cy = offY + (j+0.5)*d.grid.dy*scale;
+      s += "<circle cx=\""+cx+"\" cy=\""+cy+"\" r=\""+coverageR+"\" fill=\"#3b9eff\" fill-opacity=\"0.06\" stroke=\"#3b9eff\" stroke-opacity=\"0.25\" stroke-width=\"1\"/>";
+      s += "<circle cx=\""+cx+"\" cy=\""+cy+"\" r=\"4\" fill=\"#e8b545\" stroke=\"#0a0e18\" stroke-width=\"1\"/>";
+    }
+  }
+  s += "<text x=\""+(offX+roomW_px/2)+"\" y=\""+(offY+roomH_px+18)+"\" text-anchor=\"middle\" font-family=\"IBM Plex Mono\" font-size=\"11\" fill=\"#8497b8\">"+fmt(d.L,0)+" ft</text>";
+  s += "<text x=\""+(offX-8)+"\" y=\""+(offY+roomH_px/2)+"\" text-anchor=\"end\" font-family=\"IBM Plex Mono\" font-size=\"11\" fill=\"#8497b8\" transform=\"rotate(-90 "+(offX-8)+" "+(offY+roomH_px/2)+")\">"+fmt(d.W,0)+" ft</text>";
+  svg.setAttribute("viewBox","0 0 "+W_px+" "+H_px);
+  svg.innerHTML = s;
+}
+
+/* ===== ledger ===== */
+function buildLedgerSteps(d){
+  const L = UI[currentLang];
+  const steps = [];
+
+  steps.push({num:1, title:L.ls1Title, clause:"NFPA 72 \u00a717.7.4.2.3.1", note:L.ls1Note, formula:
+L.nomSpacingLbl+" = "+fmt(d.S,1)+" ft ("+(d.detType==="smoke"?L.detSmoke:L.detHeat)+")\n"+
+L.the07Lbl+" = 0.7 \u00d7 "+fmt(d.S,1)+" = "+fmt(0.7*d.S,2)+" ft\n"+
+L.wallMaxLbl+" = "+fmt(d.S,1)+"/2 = "+fmt(d.S/2,2)+" ft"});
+
+  steps.push({num:2, title:L.ls2Title, clause:"\u2014", note:L.ls2Note, formula:
+L.roomLbl+" = "+fmt(d.L,0)+" \u00d7 "+fmt(d.W,0)+" ft = "+fmt(d.area,0)+" ft\u00b2\n"+
+(d.corridorMode ? L.corridorModeLbl : L.gridModeLbl)});
+
+  if(d.grid){
+    steps.push({num:3, title:L.ls3Title, clause:"\u2014", note:L.ls3Note, formula:
+"nx \u00d7 ny = "+d.grid.nx+" \u00d7 "+d.grid.ny+" = "+d.grid.count+" "+L.detectorsLbl+"\n"+
+"dx = L/nx = "+fmt(d.L,0)+"/"+d.grid.nx+" = "+fmt(d.grid.dx,2)+" ft\n"+
+"dy = W/ny = "+fmt(d.W,0)+"/"+d.grid.ny+" = "+fmt(d.grid.dy,2)+" ft"});
+
+    steps.push({num:4, title:L.ls4Title, clause:"0.7\u00d7 rule", note:L.ls4Note, formula:
+"half-diagonal = \u221a((dx/2)\u00b2 + (dy/2)\u00b2)\n"+
+"             = \u221a(("+fmt(d.grid.dx/2,2)+")\u00b2 + ("+fmt(d.grid.dy/2,2)+")\u00b2)\n"+
+"             = "+fmt(d.grid.halfDiag,3)+" ft\n"+
+L.limitLbl+" = "+fmt(0.7*d.S,2)+" ft \u2192 "+(d.grid.halfDiag<=0.7*d.S?L.resultPass:L.resultFail)});
+
+    steps.push({num:5, title:L.ls5Title, clause:"\u226515 ft from wall", note:L.ls5Note, formula:
+L.wallDistLbl+" = max(dx/2, dy/2) = "+fmt(d.grid.wallDist,2)+" ft \u2192 "+(d.grid.wallDist<=d.S/2?L.resultPass:L.resultFail)});
+  } else {
+    steps.push({num:3, title:L.ls3FailTitle, clause:"\u2014", note:L.ls3FailNote, formula:L.ls3FailFormula});
+  }
+
+  if(d.highCeiling){
+    steps.push({num:6, title:L.ls6Title, clause:">40 ft", note:L.ls6Note, formula:
+L.ceilHLbl+" = "+fmt(d.ceilH,1)+" ft > 40 ft\n"+
+L.perfDesignLbl+": "+(d.perfDesign?L.yes:L.no)+" \u2192 "+(d.highCeilingOk?L.resultPass:L.resultFail)});
+  }
+  return steps;
+}
+function renderLedger(d){
+  const steps = buildLedgerSteps(d);
+  $("ledger").innerHTML = steps.map(function(s){ return "<div class=\"lstep\"><div class=\"ln\">"+String(s.num).padStart(2,'0')+"</div><div>"+
+    "<h3><span class=\"clause\">"+s.clause+"</span>"+s.title+"</h3><div class=\"formula\">"+s.formula+"</div><div class=\"cite\">"+s.note+"</div></div></div>"; }).join("");
+}
+
+/* ===== report ===== */
+function buildReportPageHTML(d, includeLedger, includeLogo){
+  const L = UI[currentLang];
+  const today = new Date().toLocaleDateString(currentLang==='fr'?'fr-CA':'en-CA');
+  const cell = function(k,v){ return "<td style=\"padding:2.5pt 6pt 2.5pt 0;color:#333;font-size:9.5pt;white-space:nowrap;\">"+k+"</td><td style=\"padding:2.5pt 14pt 2.5pt 0;font-weight:600;font-size:9.5pt;border-bottom:0.5pt solid #ddd;\">"+v+"</td>"; };
+  const gridRows = function(pairs){
+    let html = "";
+    for(let i=0;i<pairs.length;i+=2){
+      const a = pairs[i], b = pairs[i+1];
+      html += "<tr>"+cell(a[0],a[1])+(b?cell(b[0],b[1]):"<td></td><td></td>")+"</tr>";
+    }
+    return html;
+  };
+  const sectionHead = function(t){ return "<div style=\"font-size:9.5pt;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;border-bottom:1pt solid #1a1a1a;padding-bottom:2pt;margin:12pt 0 5pt;\">"+t+"</div>"; };
+
+  const inputPairs = [
+    [L.lblDetType, d.detType==="smoke"?L.detSmoke:L.detHeat], [L.lblNomSpacing, fmt(d.S,1)+" ft"],
+    [L.lblRoomL, fmt(d.L,0)+" ft"], [L.lblRoomW, fmt(d.W,0)+" ft"],
+    [L.lblCeilH, fmt(d.ceilH,1)+" ft"], [L.lblCeilType, d.ceilType]
+  ];
+  const resultPairs = d.grid ? [
+    [L.gaugeLbl, d.grid.count], [L.lblStatWorstDist, fmt(d.grid.halfDiag,1)+" ft"],
+    [L.lblStat07, fmt(0.7*d.S,1)+" ft"], [L.lblStatGridSpacing, fmt(d.grid.dx,1)+" x "+fmt(d.grid.dy,1)+" ft"],
+    [L.lblStatArea, fmt(d.area,0)+" ft\u00b2"], [L.xlsResult, L.passWord]
+  ] : [[L.gaugeLbl, "\u2014"]];
+
+  let ledgerHtml = "";
+  if(includeLedger){
+    const steps = buildLedgerSteps(d);
+    ledgerHtml = sectionHead(L.ledgerTitle) + "<table style=\"width:100%;border-collapse:collapse;\">" +
+      steps.map(function(s){ return "<tr>"+
+        "<td style=\"padding:5pt 8pt 5pt 0;border-bottom:0.5pt solid #e5e5e5;font-size:8.5pt;font-weight:700;vertical-align:top;\">"+String(s.num).padStart(2,'0')+"</td>"+
+        "<td style=\"padding:5pt 8pt;border-bottom:0.5pt solid #e5e5e5;vertical-align:top;\">"+
+          "<div style=\"font-size:8.5pt;font-weight:700;margin-bottom:2pt;\"><span style=\"color:#b8860b;font-family:'Courier New',monospace;font-size:7.5pt;margin-right:5pt;\">"+s.clause+"</span>"+s.title+"</div>"+
+          "<div style=\"font-family:'Courier New',monospace;font-size:8pt;color:#333;line-height:1.5;\">"+s.formula.split("\n").map(function(l){ return l===""?"&nbsp;":l; }).join("<br>")+"</div>"+
+          "<div style=\"font-size:7.5pt;color:#888;margin-top:3pt;\">"+s.note+"</div>"+
+        "</td></tr>"; }).join("") + "</table>";
+  }
+
+  return "" +
+  "<div style=\"font-family:Arial,Helvetica,sans-serif;color:#1a1a1a;background:#fff;padding:4pt 2pt;font-size:9.5pt;line-height:1.4;\">" +
+    "<table style=\"width:100%;border-collapse:collapse;border-bottom:1.5pt solid #1a1a1a;padding-bottom:6pt;margin-bottom:4pt;\">" +
+      "<tr><td style=\"font-size:13pt;font-weight:700;padding-bottom:6pt;\">"+$('titleH1').textContent+"</td>"+
+      "<td style=\"text-align:right;font-size:8.5pt;color:#555;padding-bottom:6pt;\">"+(includeLogo?'\u03a9 OHMZONE':'')+"</td></tr>"+
+      "<tr><td style=\"font-size:9pt;color:#333;\"><b>"+L.lblTag+":</b> "+(d.tag || L.untitledTag)+"&nbsp;&nbsp;<b>"+L.lblMethod+":</b> NFPA 72</td>"+
+      "<td style=\"text-align:right;font-size:8.5pt;color:#555;\">"+today+"</td></tr>"+
+    "</table>" +
+    sectionHead(L.repInputData) +
+    "<table style=\"width:100%;border-collapse:collapse;\">"+gridRows(inputPairs)+"</table>" +
+    sectionHead(L.repResults) +
+    "<table style=\"width:100%;border-collapse:collapse;\">"+gridRows(resultPairs)+"</table>" +
+    ledgerHtml +
+    "<p style=\"font-size:7.5pt;color:#888;margin-top:14pt;border-top:0.5pt solid #ddd;padding-top:6pt;\">"+L.disclaimerBody+"</p>" +
+  "</div>";
+}
+
+function downloadBlob(content, mime, filename){
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+}
+
+$("printBtn").addEventListener("click", function(){
+  const d = window._lastResults;
+  if(!d) return;
+  const html = buildReportPageHTML(d, $("includeLedger").checked, $("includeLogo").checked);
+  const w = window.open("", "_blank");
+  w.document.write("<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>"+$('titleH1').textContent+"</title>"+
+  "<style>body{margin:0;padding:18px;} @media print{body{padding:0;}}</style></head>"+
+  "<body>"+html+"<scr"+"ipt>window.onload=function(){window.print();};</scr"+"ipt></body></html>");
+  w.document.close();
+});
+
+/* ===== report template upload ===== */
+let uploadedTemplateBuffer = null, uploadedTemplateName = "";
+$("templateFile").addEventListener("change", function(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev){ uploadedTemplateBuffer = ev.target.result; uploadedTemplateName = file.name; inspectTemplate(file.name); };
+  reader.readAsArrayBuffer(file);
+});
+function templateTagValues(d){
+  const L = UI[currentLang];
+  const today = new Date().toLocaleDateString(currentLang==='fr'?'fr-CA':'en-CA');
+  return {
+    tag: d.tag || L.untitledTag, date: today,
+    detType: d.detType==="smoke"?L.detSmoke:L.detHeat, nomSpacing: fmt(d.S,1)+" ft",
+    roomL: fmt(d.L,0)+" ft", roomW: fmt(d.W,0)+" ft",
+    count: d.grid?String(d.grid.count):"\u2014", worstDist: d.grid?fmt(d.grid.halfDiag,1)+" ft":"\u2014",
+    result: d.grid?L.passWord:L.failWord
+  };
+}
+function showTemplateStatus(msg, color){ const el=$("templateStatus"); if(el){ el.textContent=msg; el.style.color=color||"var(--trace)"; } }
+function inspectTemplate(fileName){
+  const L = UI[currentLang];
+  const known = Object.keys(templateTagValues(window._lastResults || calcAll()));
+  try{
+    const zip = new PizZip(uploadedTemplateBuffer);
+    let xml = "";
+    Object.keys(zip.files).forEach(function(name){
+      if(/^word\/(document|header\d*|footer\d*)\.xml$/.test(name)) xml += zip.files[name].asText();
+    });
+    const plain = xml.replace(/<[^>]+>/g, "");
+    const found = known.filter(function(k){ return plain.includes("{"+k+"}"); });
+    const missing = known.filter(function(k){ return !found.includes(k); });
+    const allTags = Array.from(plain.matchAll(/\{([a-zA-Z0-9_]+)\}/g)).map(function(m){ return m[1]; });
+    const unknown = Array.from(new Set(allTags.filter(function(t){ return !known.includes(t); })));
+    let msg = L.templateLoadedMsg.replace("{name}", fileName) + " \u2014 ";
+    let color = "var(--trace)";
+    if(found.length === 0){ msg += L.templateNoTagsFound; color = "var(--alarm)"; }
+    else {
+      msg += L.templateTagsFound.replace("{n}", found.length).replace("{total}", known.length);
+      if(missing.length) msg += " " + L.templateTagsMissing.replace("{list}", missing.join(", "));
+      if(unknown.length){ msg += " " + L.templateTagsUnknown.replace("{list}", unknown.join(", ")); color = "var(--warn)"; }
+      if(missing.length && !unknown.length) color = "var(--warn)";
+    }
+    showTemplateStatus(msg, color);
+  } catch(err){
+    console.error(err);
+    showTemplateStatus(L.templateErrorMsg + " " + (err.message||""), "var(--alarm)");
+  }
+}
+function exportWithTemplate(d){
+  const L = UI[currentLang];
+  try{
+    const zip = new PizZip(uploadedTemplateBuffer);
+    const docx = new window.docxtemplater(zip, { paragraphLoop:true, linebreaks:true, nullGetter:function(p){ return "\u00ab"+(p.value||"?")+"\u00bb"; } });
+    docx.render(templateTagValues(d));
+    const out = docx.getZip().generate({ type:"blob", mimeType:"application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+    const url = URL.createObjectURL(out);
+    const a = document.createElement("a"); a.href=url; a.download="fire_alarm_detector_spacing_calc.docx";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+    showTemplateStatus(L.templateExportOk, "var(--trace)");
+  } catch(err){
+    console.error(err);
+    let detail = err.message || String(err);
+    if(err.properties && err.properties.errors && err.properties.errors.length){
+      detail = err.properties.errors.map(function(e){ return (e.properties&&e.properties.explanation?e.properties.explanation:e.message); }).join(" \u00b7 ");
+    }
+    showTemplateStatus(L.templateErrorMsg+" "+detail, "var(--alarm)");
+    alert(L.templateErrorMsg+"\n\n"+detail);
+    exportWithBuiltInLayout(d);
+  }
+}
+function exportWithBuiltInLayout(d){
+  const html = buildReportPageHTML(d, $("includeLedger").checked, $("includeLogo").checked);
+  const doc = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>"+
+  "<head><meta charset=\"utf-8\"><title>Fire Alarm Detector Spacing</title>"+
+  "<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View></w:WordDocument></xml><![endif]--></head><body>"+html+"</body></html>";
+  downloadBlob(doc, "application/msword", "fire_alarm_detector_spacing_calc.doc");
+}
+$("exportWordBtn").addEventListener("click", function(){
+  const d = window._lastResults;
+  if(!d) return;
+  if(uploadedTemplateBuffer) exportWithTemplate(d); else exportWithBuiltInLayout(d);
+});
+
+$("exportExcelBtn").addEventListener("click", function(){
+  const d = window._lastResults;
+  if(!d) return;
+  const L = UI[currentLang];
+  const main = [
+    [L.repInputData,""],
+    [L.lblTag, d.tag || L.untitledTag],
+    [L.lblDetType, d.detType], [L.lblNomSpacing, fmt(d.S,1)],
+    [L.lblRoomL, fmt(d.L,0)], [L.lblRoomW, fmt(d.W,0)],
+    [L.lblCeilH, fmt(d.ceilH,1)], [L.lblCeilType, d.ceilType],
+    ["",""], [L.repResults,""]
+  ];
+  if(d.grid){
+    main.push([L.gaugeLbl, d.grid.count]);
+    main.push([L.lblStatWorstDist, fmt(d.grid.halfDiag,1)]);
+    main.push([L.lblStat07, fmt(0.7*d.S,1)]);
+    main.push([L.lblStatGridSpacing, fmt(d.grid.dx,1)+" x "+fmt(d.grid.dy,1)]);
+    main.push([L.lblStatArea, fmt(d.area,0)]);
+  }
+  main.push(["",""]); main.push([L.disclaimerLbl, L.disclaimerBody]);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(main), "Detector Spacing");
+
+  if($("includeLedger").checked){
+    const led = [["#","Formula","Note"]];
+    buildLedgerSteps(d).forEach(function(s){
+      led.push([String(s.num).padStart(2,'0')+" \u2014 "+s.title,"",""]);
+      s.formula.split("\n").forEach(function(l){ if(l.trim()!=="") led.push(["", l, ""]); });
+      led.push(["","",s.note]); led.push(["","",""]);
+    });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(led), "Calculation Ledger");
+  }
+  XLSX.writeFile(wb, "fire_alarm_detector_spacing_calc.xlsx");
+});
+
+/* ===================== i18n ===================== */
+const UI = {
+  en: {
+    titleH1:"Fire Alarm Detector Spacing &amp; Coverage", titleSub:"Smooth-ceiling smoke/heat detector spacing \u2014 NFPA 72 Chapter 17",
+    lblDwg:"Dwg No.", lblScale:"Scale", lblMethod:"Method", lblRev:"Rev",
+    topDiscB:"Preliminary screening aid only.",
+    topDiscTxt:"This tool applies the standard NFPA 72 Chapter 17 smooth-ceiling spacing rule (nominal listed spacing, 0.7x rule for maximum point-to-detector distance, \u226415 ft from a wall) using a simplified rectangular grid solver. It does not model beamed/sloped ceilings, high air-flow returns, or the Annex A adjustment figures in detail \u2014 rooms with those conditions, or ceilings above 40 ft not using a performance-based design, must be laid out by a qualified fire alarm professional per the current NFPA 72 edition and Annex A guidance.",
+    loadExampleTxt:"Load example",
+    step1Title:"Detector Type &amp; Spacing", step1Small:"Tag, detector type, listed nominal spacing",
+    lblTag:"Room / area tag", lblDetType:"Detector type", detSmoke:"Smoke", detHeat:"Heat", lblNomSpacing:"Listed nominal spacing (ft)",
+    hintStep1:"Smoke detectors on a smooth ceiling commonly use 30 ft nominal spacing (NFPA 72 \u00a717.7.4.2.3.1); heat detectors are listed for a specific spacing by the manufacturer (commonly 50 ft, but always confirm against the actual listing, including any ceiling-height derating). The 0.7\u00d7 rule requires every point on the ceiling to be within 0.7\u00d7 the nominal spacing of the nearest detector (30 ft \u2192 21 ft), and no detector may be more than half the nominal spacing (15 ft at 30 ft spacing) from a wall.",
+    step2Title:"Room Geometry", step2Small:"Dimensions, ceiling height and type",
+    lblRoomL:"Room length (ft)", lblRoomW:"Room width (ft)", lblCeilH:"Ceiling height (ft)", lblCeilType:"Ceiling type",
+    lblPerfDesignOn:"Performance-based design in use (required if ceiling &gt;40 ft)",
+    hintStep2:"Rooms with a smooth, level ceiling can use the standard listed spacing directly. Beamed, obstructed, or sloped ceilings require the Annex A spacing adjustments (not modeled in detail by this tool) \u2014 a qualified professional should verify the specific layout. Ceilings above 40 ft generally require a performance-based (engineered) design rather than the standard listed spacing table, per current NFPA 72 guidance.",
+    step3Title:"Corridor Mode", optionalTag3:"(optional)", step3Small:"Single-row centerline layout for narrow corridors",
+    hintStep3:"For corridors not exceeding approximately 30 ft in width, detectors may commonly be spaced along the centerline at up to the nominal listed spacing, per NFPA 72 Annex guidance \u2014 this mode places a single row of detectors along the room's length instead of a full 2D grid.",
+    resultTitle:"Result \u2014 Detector Layout", gaugeLbl:"Detectors required",
+    lblStatWorstDist:"Worst-case point distance", lblStat07:"0.7\u00d7 spacing limit", lblStatGridSpacing:"Grid spacing used",
+    lblStatWallDist:"Max wall distance", lblStatArea:"Room area", lblStatAreaPer:"Area per detector",
+    noSolutionTitle:"No valid grid found within the search range.", noSolutionBody:"The room may be unusually large or narrow for the entered spacing \u2014 try a smaller nominal spacing, split the room into smaller sections, or use corridor mode if applicable.",
+    solutionTitle:"Layout found.", solutionBody:"{count} detectors satisfy both the nominal spacing and the 0.7\u00d7 rule \u2014 worst-case point-to-detector distance is {dist} ft, within the {limit} ft limit.",
+    heightFailTitle:"Ceiling height exceeds 40 ft without performance-based design.", heightFailBody:"Per current NFPA 72 guidance, ceilings above 40 ft generally require an engineered performance-based design rather than the standard listed spacing table \u2014 check the performance-based design box in Step 2 if this has been done, or revise the design approach.",
+    heightWarnTitle:"High ceiling \u2014 performance-based design noted.", heightWarnBody:"Ceiling exceeds 40 ft; performance-based design has been indicated. Standard listed spacing does not directly apply \u2014 this calculation is for reference only and must be superseded by the actual engineered design.",
+    ceilTypeWarnTitle:"Non-smooth ceiling \u2014 spacing adjustment required.", ceilTypeBeamedBody:"Beamed or obstructed ceilings require spacing adjustments per NFPA 72 Annex A (detector placement relative to beam depth and spacing) \u2014 not modeled by this simplified grid tool. A qualified professional must verify the specific layout.", ceilTypeSlopedBody:"Sloped or peaked ceilings require adjusted detector placement per NFPA 72 Annex A (typically including a detector near the peak) \u2014 not modeled by this simplified grid tool. A qualified professional must verify the specific layout.",
+    diagramTitle:"Layout Diagram", diagramTag:"schematic grid, to scale",
+    lblIncludeLedger:"Include Calculation Ledger in report", lblIncludeLogo:"Include OhmZone brand mark in report",
+    printBtnLabel:"Print / Save as PDF", exportWordLabel:"Export study (Word)", exportBtnLabel:"Export study (Excel)",
+    lblUploadTemplate:"Report template (.docx, optional)",
+    hintUploadTemplate:"Upload your firm's Word template to brand exports with it. The template must contain plain-text placeholders exactly as shown: {tag} {date} {detType} {nomSpacing} {roomL} {roomW} {count} {worstDist} {result}. Type each tag in one uninterrupted go \u2014 Word's autocorrect/spellcheck can split a tag across internal runs.",
+    templateLoadedMsg:"Template loaded: {name}", templateErrorMsg:"Could not read this file as a Word template \u2014 using the built-in layout instead.",
+    templateNoTagsFound:"no OhmZone placeholders found in this document.", templateTagsFound:"{n} of {total} placeholders found.",
+    templateTagsMissing:"Not present (will be left out): {list}.", templateTagsUnknown:"Unrecognised tags that will render as \u00abname\u00bb: {list}.", templateExportOk:"Template export completed.",
+    ledgerTitle:"Calculation Ledger", ledgerTag:"clause-by-clause",
+    ls1Title:"Spacing basis", ls1Note:"The nominal listed spacing is the manufacturer/UL-listed spacing for the specific detector. The 0.7\u00d7 rule and the maximum wall distance (half the nominal spacing) both follow from NFPA 72 \u00a717.7.4.2.3.1 for smooth-ceiling installations.",
+    nomSpacingLbl:"Nominal spacing", the07Lbl:"0.7\u00d7 limit", wallMaxLbl:"Max wall distance",
+    ls2Title:"Room area and layout mode", ls2Note:"Total floor area is used for reference (nominal coverage is often cited as approximately 900 ft\u00b2 per smoke detector at 30 ft spacing, i.e. the area of a 30\u00d730 ft square) \u2014 the actual grid solution below governs the real layout.",
+    roomLbl:"Room", corridorModeLbl:"Corridor mode: single row along centerline", gridModeLbl:"Standard mode: 2D grid layout",
+    ls3Title:"Grid solution", ls3Note:"The smallest grid (fewest detectors) satisfying both the nominal spacing constraint and the 0.7\u00d7 worst-point rule, found by search over candidate row/column counts.",
+    detectorsLbl:"detectors",
+    ls3FailTitle:"No grid solution found", ls3FailNote:"The search did not find a valid grid within the tested range (up to 400 detectors) \u2014 the room dimensions may be extreme relative to the spacing, or an input value may need review.",
+    ls3FailFormula:"No solution \u2014 review room dimensions and nominal spacing.",
+    ls4Title:"0.7\u00d7 rule check (worst-case point)", ls4Note:"The worst-case point on the ceiling is the corner of each detector's grid cell \u2014 its distance to the nearest detector is the half-diagonal of the cell, which must not exceed 0.7\u00d7 the nominal spacing.",
+    limitLbl:"Limit", resultPass:"PASS", resultFail:"FAIL",
+    ls5Title:"Wall distance check", ls5Note:"No detector should be more than half the nominal spacing from the nearest wall \u2014 for 30 ft nominal spacing, this is the commonly cited 15 ft maximum.",
+    wallDistLbl:"Max wall distance",
+    ls6Title:"Ceiling height / performance-based design check", ls6Note:"Current NFPA 72 guidance requires an engineered performance-based design, rather than the standard listed spacing table, for ceilings above 40 ft.",
+    ceilHLbl:"Ceiling height", perfDesignLbl:"Performance-based design indicated",
+    repInputData:"Input Data", repResults:"Results", untitledTag:"(untitled)", yes:"Yes", no:"No", xlsResult:"Result", passWord:"PASS", failWord:"FAIL",
+    disclaimerLbl:"Disclaimer",
+    disclaimerBody:"Preliminary screening aid only. Applies the standard NFPA 72 Chapter 17 smooth-ceiling spacing rule using a simplified rectangular grid solver. Does not model beamed/sloped ceilings, obstructions, HVAC effects, or the Annex A adjustment figures in detail. Ceilings above 40 ft require a performance-based design. Final detector layout must be documented and submitted per the AHJ's requirements and reviewed by a qualified fire alarm professional.",
+    footerHtml:"<b>Method &amp; data notes.</b> This tool applies the smooth-ceiling detector spacing rule of <b>NFPA 72 \u00a717.7.4.2.3.1</b>: a nominal listed spacing (commonly 30 ft for smoke detectors on a smooth ceiling; heat detectors per the specific manufacturer listing, commonly around 50 ft), the 0.7\u00d7 rule (every point on the ceiling must be within 0.7\u00d7 the nominal spacing of the nearest detector), and a maximum wall distance of half the nominal spacing. The <b>grid solver</b> searches for the smallest rectangular row/column layout satisfying both constraints simultaneously, using the half-diagonal of each detector's coverage cell as the worst-case point-to-detector distance \u2014 this is a simplified, screening-level geometric model of a real detector layout, which in practice must also account for room shape irregularities, obstructions, HVAC diffusers and airflow patterns, and the detailed adjustment figures in <b>NFPA 72 Annex A</b> for beamed ceilings, sloped/peaked ceilings, and other non-smooth conditions \u2014 none of which are modeled in detail by this tool. <b>Corridor mode</b> places detectors in a single row along the centerline, consistent with commonly cited Annex guidance for corridors not exceeding approximately 30 ft in width. Ceilings above <b>40 ft</b> generally require an engineered performance-based design rather than the standard listed spacing table, per current NFPA 72 guidance \u2014 this tool flags that condition but does not perform a performance-based design itself. This tool does not include a manufacturer device spacing/coverage database, does not model heat detector ceiling-height derating tables in detail, and does not perform battery, voltage drop/NAC loading, or audibility calculations \u2014 those are separate modules. Preliminary planning aid only; final detector layout must be documented, submitted, and reviewed per the authority having jurisdiction's requirements by a qualified fire alarm professional, referencing the current NFPA 72 edition and Annex A guidance in full."
+  },
+  fr: {
+    titleH1:"Espacement et couverture des d\u00e9tecteurs d'alarme incendie", titleSub:"Espacement des d\u00e9tecteurs de fum\u00e9e/chaleur \u00e0 plafond lisse \u2014 NFPA 72 chapitre 17",
+    lblDwg:"N\u00b0 dessin", lblScale:"\u00c9chelle", lblMethod:"M\u00e9thode", lblRev:"R\u00e9v.",
+    topDiscB:"Aide \u00e0 l'\u00e9valuation pr\u00e9liminaire seulement.",
+    topDiscTxt:"Cet outil applique la r\u00e8gle standard d'espacement \u00e0 plafond lisse du chapitre 17 de la NFPA 72 (espacement nominal homologu\u00e9, r\u00e8gle de 0,7\u00d7 pour la distance maximale point-d\u00e9tecteur, \u226415 pi d'un mur) en utilisant un solveur de grille rectangulaire simplifi\u00e9. Il ne mod\u00e9lise pas en d\u00e9tail les plafonds \u00e0 poutres/en pente, les retours \u00e0 haut d\u00e9bit d'air, ni les figures d'ajustement de l'annexe A \u2014 les pi\u00e8ces avec ces conditions, ou les plafonds au-dessus de 40 pi sans conception bas\u00e9e sur la performance, doivent \u00eatre am\u00e9nag\u00e9s par un professionnel qualifi\u00e9 en alarme incendie selon l'\u00e9dition en vigueur de la NFPA 72 et les directives de l'annexe A.",
+    loadExampleTxt:"Charger l'exemple",
+    step1Title:"Type de d\u00e9tecteur et espacement", step1Small:"Rep\u00e8re, type de d\u00e9tecteur, espacement nominal homologu\u00e9",
+    lblTag:"Rep\u00e8re de la pi\u00e8ce / zone", lblDetType:"Type de d\u00e9tecteur", detSmoke:"Fum\u00e9e", detHeat:"Chaleur", lblNomSpacing:"Espacement nominal homologu\u00e9 (pi)",
+    hintStep1:"Les d\u00e9tecteurs de fum\u00e9e sur un plafond lisse utilisent couramment un espacement nominal de 30 pi (NFPA 72 \u00a717.7.4.2.3.1); les d\u00e9tecteurs de chaleur sont homologu\u00e9s pour un espacement sp\u00e9cifique par le fabricant (couramment 50 pi, mais confirmez toujours aupr\u00e8s de l'homologation r\u00e9elle, incluant tout d\u00e9classement selon la hauteur du plafond). La r\u00e8gle de 0,7\u00d7 exige que chaque point du plafond soit \u00e0 moins de 0,7\u00d7 l'espacement nominal du d\u00e9tecteur le plus proche (30 pi \u2192 21 pi), et aucun d\u00e9tecteur ne doit \u00eatre \u00e0 plus de la moiti\u00e9 de l'espacement nominal (15 pi \u00e0 30 pi d'espacement) d'un mur.",
+    step2Title:"G\u00e9om\u00e9trie de la pi\u00e8ce", step2Small:"Dimensions, hauteur et type de plafond",
+    lblRoomL:"Longueur de la pi\u00e8ce (pi)", lblRoomW:"Largeur de la pi\u00e8ce (pi)", lblCeilH:"Hauteur du plafond (pi)", lblCeilType:"Type de plafond",
+    lblPerfDesignOn:"Conception bas\u00e9e sur la performance utilis\u00e9e (requise si plafond &gt;40 pi)",
+    hintStep2:"Les pi\u00e8ces \u00e0 plafond lisse et de niveau peuvent utiliser directement l'espacement nominal homologu\u00e9. Les plafonds \u00e0 poutres, obstru\u00e9s ou en pente exigent les ajustements d'espacement de l'annexe A (non mod\u00e9lis\u00e9s en d\u00e9tail par cet outil) \u2014 un professionnel qualifi\u00e9 devrait v\u00e9rifier l'am\u00e9nagement sp\u00e9cifique. Les plafonds au-dessus de 40 pi exigent g\u00e9n\u00e9ralement une conception bas\u00e9e sur la performance (ing\u00e9nierie) plut\u00f4t que le tableau d'espacement homologu\u00e9 standard, selon les directives actuelles de la NFPA 72.",
+    step3Title:"Mode corridor", optionalTag3:"(facultatif)", step3Small:"Am\u00e9nagement en une rang\u00e9e sur l'axe central pour corridors \u00e9troits",
+    hintStep3:"Pour les corridors ne d\u00e9passant pas environ 30 pi de largeur, les d\u00e9tecteurs peuvent couramment \u00eatre espac\u00e9s le long de l'axe central jusqu'\u00e0 l'espacement nominal homologu\u00e9, selon les directives de l'annexe de la NFPA 72 \u2014 ce mode place une seule rang\u00e9e de d\u00e9tecteurs le long de la longueur de la pi\u00e8ce plut\u00f4t qu'une grille 2D compl\u00e8te.",
+    resultTitle:"R\u00e9sultat \u2014 Am\u00e9nagement des d\u00e9tecteurs", gaugeLbl:"D\u00e9tecteurs requis",
+    lblStatWorstDist:"Distance du point le plus d\u00e9favorable", lblStat07:"Limite d'espacement 0,7\u00d7", lblStatGridSpacing:"Espacement de grille utilis\u00e9",
+    lblStatWallDist:"Distance maximale au mur", lblStatArea:"Superficie de la pi\u00e8ce", lblStatAreaPer:"Superficie par d\u00e9tecteur",
+    noSolutionTitle:"Aucune grille valide trouv\u00e9e dans la plage de recherche.", noSolutionBody:"La pi\u00e8ce peut \u00eatre inhabituellement grande ou \u00e9troite pour l'espacement saisi \u2014 essayez un espacement nominal plus petit, divisez la pi\u00e8ce en sections plus petites, ou utilisez le mode corridor si applicable.",
+    solutionTitle:"Am\u00e9nagement trouv\u00e9.", solutionBody:"{count} d\u00e9tecteurs satisfont \u00e0 la fois l'espacement nominal et la r\u00e8gle de 0,7\u00d7 \u2014 la distance point-d\u00e9tecteur la plus d\u00e9favorable est de {dist} pi, dans la limite de {limit} pi.",
+    heightFailTitle:"La hauteur du plafond d\u00e9passe 40 pi sans conception bas\u00e9e sur la performance.", heightFailBody:"Selon les directives actuelles de la NFPA 72, les plafonds au-dessus de 40 pi exigent g\u00e9n\u00e9ralement une conception d'ing\u00e9nierie bas\u00e9e sur la performance plut\u00f4t que le tableau d'espacement homologu\u00e9 standard \u2014 cochez la case de conception bas\u00e9e sur la performance \u00e0 l'\u00e9tape 2 si cela a \u00e9t\u00e9 fait, ou r\u00e9visez l'approche de conception.",
+    heightWarnTitle:"Plafond \u00e9lev\u00e9 \u2014 conception bas\u00e9e sur la performance not\u00e9e.", heightWarnBody:"Le plafond d\u00e9passe 40 pi; une conception bas\u00e9e sur la performance a \u00e9t\u00e9 indiqu\u00e9e. L'espacement homologu\u00e9 standard ne s'applique pas directement \u2014 ce calcul est \u00e0 titre de r\u00e9f\u00e9rence seulement et doit \u00eatre remplac\u00e9 par la conception d'ing\u00e9nierie r\u00e9elle.",
+    ceilTypeWarnTitle:"Plafond non lisse \u2014 ajustement d'espacement requis.", ceilTypeBeamedBody:"Les plafonds \u00e0 poutres ou obstru\u00e9s exigent des ajustements d'espacement selon l'annexe A de la NFPA 72 (placement des d\u00e9tecteurs par rapport \u00e0 la profondeur et l'espacement des poutres) \u2014 non mod\u00e9lis\u00e9s par cet outil de grille simplifi\u00e9. Un professionnel qualifi\u00e9 doit v\u00e9rifier l'am\u00e9nagement sp\u00e9cifique.", ceilTypeSlopedBody:"Les plafonds en pente ou en pointe exigent un placement ajust\u00e9 des d\u00e9tecteurs selon l'annexe A de la NFPA 72 (incluant g\u00e9n\u00e9ralement un d\u00e9tecteur pr\u00e8s du fa\u00eete) \u2014 non mod\u00e9lis\u00e9s par cet outil de grille simplifi\u00e9. Un professionnel qualifi\u00e9 doit v\u00e9rifier l'am\u00e9nagement sp\u00e9cifique.",
+    diagramTitle:"Sch\u00e9ma d'am\u00e9nagement", diagramTag:"grille sch\u00e9matique, \u00e0 l'\u00e9chelle",
+    lblIncludeLedger:"Inclure le registre de calcul dans le rapport", lblIncludeLogo:"Inclure la marque OhmZone dans le rapport",
+    printBtnLabel:"Imprimer / Enregistrer en PDF", exportWordLabel:"Exporter l'\u00e9tude (Word)", exportBtnLabel:"Exporter l'\u00e9tude (Excel)",
+    lblUploadTemplate:"Mod\u00e8le de rapport (.docx, facultatif)",
+    hintUploadTemplate:"T\u00e9l\u00e9versez le mod\u00e8le Word de votre entreprise pour habiller les exports. Le mod\u00e8le doit contenir des espaces r\u00e9serv\u00e9s en texte brut exactement comme indiqu\u00e9 : {tag} {date} {detType} {nomSpacing} {roomL} {roomW} {count} {worstDist} {result}. Saisissez chaque balise d'un seul coup \u2014 le correcteur/la v\u00e9rification orthographique de Word peut diviser une balise.",
+    templateLoadedMsg:"Mod\u00e8le charg\u00e9 : {name}", templateErrorMsg:"Impossible de lire ce fichier comme mod\u00e8le Word \u2014 utilisation de la mise en page int\u00e9gr\u00e9e \u00e0 la place.",
+    templateNoTagsFound:"aucun espace r\u00e9serv\u00e9 OhmZone trouv\u00e9 dans ce document.", templateTagsFound:"{n} espaces r\u00e9serv\u00e9s sur {total} trouv\u00e9s.",
+    templateTagsMissing:"Absents (seront omis) : {list}.", templateTagsUnknown:"Balises non reconnues qui s'afficheront comme \u00abnom\u00bb : {list}.", templateExportOk:"Export du mod\u00e8le termin\u00e9.",
+    ledgerTitle:"Registre de calcul", ledgerTag:"article par article",
+    ls1Title:"Base d'espacement", ls1Note:"L'espacement nominal homologu\u00e9 est l'espacement homologu\u00e9 par le fabricant/UL pour le d\u00e9tecteur sp\u00e9cifique. La r\u00e8gle de 0,7\u00d7 et la distance maximale au mur (moiti\u00e9 de l'espacement nominal) d\u00e9coulent toutes deux de la NFPA 72 \u00a717.7.4.2.3.1 pour les installations \u00e0 plafond lisse.",
+    nomSpacingLbl:"Espacement nominal", the07Lbl:"Limite 0,7\u00d7", wallMaxLbl:"Distance maximale au mur",
+    ls2Title:"Superficie de la pi\u00e8ce et mode d'am\u00e9nagement", ls2Note:"La superficie totale au sol est utilis\u00e9e \u00e0 titre de r\u00e9f\u00e9rence (la couverture nominale est souvent cit\u00e9e comme environ 900 pi\u00b2 par d\u00e9tecteur de fum\u00e9e \u00e0 30 pi d'espacement, soit la superficie d'un carr\u00e9 de 30\u00d730 pi) \u2014 la solution de grille r\u00e9elle ci-dessous d\u00e9termine l'am\u00e9nagement r\u00e9el.",
+    roomLbl:"Pi\u00e8ce", corridorModeLbl:"Mode corridor : rang\u00e9e unique sur l'axe central", gridModeLbl:"Mode standard : am\u00e9nagement en grille 2D",
+    ls3Title:"Solution de grille", ls3Note:"La plus petite grille (le moins de d\u00e9tecteurs) satisfaisant \u00e0 la fois la contrainte d'espacement nominal et la r\u00e8gle du point le plus d\u00e9favorable de 0,7\u00d7, trouv\u00e9e par recherche sur les combinaisons candidates de rang\u00e9es/colonnes.",
+    detectorsLbl:"d\u00e9tecteurs",
+    ls3FailTitle:"Aucune solution de grille trouv\u00e9e", ls3FailNote:"La recherche n'a pas trouv\u00e9 de grille valide dans la plage test\u00e9e (jusqu'\u00e0 400 d\u00e9tecteurs) \u2014 les dimensions de la pi\u00e8ce peuvent \u00eatre extr\u00eames par rapport \u00e0 l'espacement, ou une valeur saisie peut n\u00e9cessiter une r\u00e9vision.",
+    ls3FailFormula:"Aucune solution \u2014 r\u00e9visez les dimensions de la pi\u00e8ce et l'espacement nominal.",
+    ls4Title:"V\u00e9rification de la r\u00e8gle de 0,7\u00d7 (point le plus d\u00e9favorable)", ls4Note:"Le point le plus d\u00e9favorable du plafond est le coin de la cellule de grille de chaque d\u00e9tecteur \u2014 sa distance au d\u00e9tecteur le plus proche est la demi-diagonale de la cellule, qui ne doit pas d\u00e9passer 0,7\u00d7 l'espacement nominal.",
+    limitLbl:"Limite", resultPass:"CONFORME", resultFail:"NON CONFORME",
+    ls5Title:"V\u00e9rification de la distance au mur", ls5Note:"Aucun d\u00e9tecteur ne devrait \u00eatre \u00e0 plus de la moiti\u00e9 de l'espacement nominal du mur le plus proche \u2014 pour un espacement nominal de 30 pi, c'est le maximum de 15 pi couramment cit\u00e9.",
+    wallDistLbl:"Distance maximale au mur",
+    ls6Title:"V\u00e9rification de la hauteur de plafond / conception bas\u00e9e sur la performance", ls6Note:"Les directives actuelles de la NFPA 72 exigent une conception d'ing\u00e9nierie bas\u00e9e sur la performance, plut\u00f4t que le tableau d'espacement homologu\u00e9 standard, pour les plafonds au-dessus de 40 pi.",
+    ceilHLbl:"Hauteur du plafond", perfDesignLbl:"Conception bas\u00e9e sur la performance indiqu\u00e9e",
+    repInputData:"Donn\u00e9es d'entr\u00e9e", repResults:"R\u00e9sultats", untitledTag:"(sans titre)", yes:"Oui", no:"Non", xlsResult:"R\u00e9sultat", passWord:"CONFORME", failWord:"NON CONFORME",
+    disclaimerLbl:"Avis",
+    disclaimerBody:"Aide \u00e0 l'\u00e9valuation pr\u00e9liminaire seulement. Applique la r\u00e8gle standard d'espacement \u00e0 plafond lisse du chapitre 17 de la NFPA 72 en utilisant un solveur de grille rectangulaire simplifi\u00e9. Ne mod\u00e9lise pas en d\u00e9tail les plafonds \u00e0 poutres/en pente, les obstructions, les effets de CVC, ni les figures d'ajustement de l'annexe A. Les plafonds au-dessus de 40 pi exigent une conception bas\u00e9e sur la performance. L'am\u00e9nagement final des d\u00e9tecteurs doit \u00eatre document\u00e9 et soumis selon les exigences de l'AHJ et r\u00e9vis\u00e9 par un professionnel qualifi\u00e9 en alarme incendie.",
+    footerHtml:"<b>Notes sur la m\u00e9thode et les donn\u00e9es.</b> Cet outil applique la r\u00e8gle d'espacement des d\u00e9tecteurs \u00e0 plafond lisse de la <b>NFPA 72 \u00a717.7.4.2.3.1</b> : un espacement nominal homologu\u00e9 (couramment 30 pi pour les d\u00e9tecteurs de fum\u00e9e sur plafond lisse; les d\u00e9tecteurs de chaleur selon l'homologation sp\u00e9cifique du fabricant, couramment environ 50 pi), la r\u00e8gle de 0,7\u00d7 (chaque point du plafond doit \u00eatre \u00e0 moins de 0,7\u00d7 l'espacement nominal du d\u00e9tecteur le plus proche), et une distance maximale au mur \u00e9gale \u00e0 la moiti\u00e9 de l'espacement nominal. Le <b>solveur de grille</b> recherche le plus petit am\u00e9nagement rectangulaire en rang\u00e9es/colonnes satisfaisant simultan\u00e9ment les deux contraintes, en utilisant la demi-diagonale de la cellule de couverture de chaque d\u00e9tecteur comme distance point-d\u00e9tecteur la plus d\u00e9favorable \u2014 il s'agit d'un mod\u00e8le g\u00e9om\u00e9trique simplifi\u00e9 de niveau \u00e9valuation d'un am\u00e9nagement de d\u00e9tecteurs r\u00e9el, qui en pratique doit aussi tenir compte des irr\u00e9gularit\u00e9s de forme de la pi\u00e8ce, des obstructions, des diffuseurs de CVC et des sch\u00e9mas d'\u00e9coulement d'air, ainsi que des figures d'ajustement d\u00e9taill\u00e9es de l'<b>annexe A de la NFPA 72</b> pour les plafonds \u00e0 poutres, en pente/pointe, et autres conditions non lisses \u2014 aucune n'est mod\u00e9lis\u00e9e en d\u00e9tail par cet outil. Le <b>mode corridor</b> place les d\u00e9tecteurs en une seule rang\u00e9e le long de l'axe central, conform\u00e9ment aux directives de l'annexe couramment cit\u00e9es pour les corridors ne d\u00e9passant pas environ 30 pi de largeur. Les plafonds au-dessus de <b>40 pi</b> exigent g\u00e9n\u00e9ralement une conception d'ing\u00e9nierie bas\u00e9e sur la performance plut\u00f4t que le tableau d'espacement homologu\u00e9 standard, selon les directives actuelles de la NFPA 72 \u2014 cet outil signale cette condition mais n'effectue pas lui-m\u00eame de conception bas\u00e9e sur la performance. Cet outil n'inclut pas de base de donn\u00e9es d'espacement/couverture de dispositifs de fabricant, ne mod\u00e9lise pas en d\u00e9tail les tableaux de d\u00e9classement de hauteur de plafond pour d\u00e9tecteurs de chaleur, et n'effectue pas les calculs de batterie, de chute de tension/charge NAC, ni d'audibilit\u00e9 \u2014 ce sont des modules s\u00e9par\u00e9s. Aide \u00e0 la planification pr\u00e9liminaire seulement; l'am\u00e9nagement final des d\u00e9tecteurs doit \u00eatre document\u00e9, soumis et r\u00e9vis\u00e9 selon les exigences de l'autorit\u00e9 comp\u00e9tente par un professionnel qualifi\u00e9 en alarme incendie, en r\u00e9f\u00e9rence \u00e0 l'\u00e9dition en vigueur de la NFPA 72 et aux directives compl\u00e8tes de l'annexe A."
+  }
+};
+
+function applyStaticI18n(){
+  const L = UI[currentLang];
+  $('titleH1').innerHTML=L.titleH1; $('titleSub').textContent=L.titleSub;
+  $('lblDwg').textContent=L.lblDwg; $('lblScale').textContent=L.lblScale; $('lblMethod').textContent=L.lblMethod; $('lblRev').textContent=L.lblRev;
+  $('topDiscB').textContent=L.topDiscB; $('topDiscTxt').textContent=L.topDiscTxt;
+  $('loadExampleTxt').textContent=L.loadExampleTxt;
+  $('step1Title').childNodes[0].innerHTML=L.step1Title+' '; $('step1Small').textContent=L.step1Small;
+  $('lblTag').textContent=L.lblTag; $('lblDetType').textContent=L.lblDetType;
+  $('lblNomSpacing').textContent=L.lblNomSpacing; $('hintStep1').innerHTML=L.hintStep1;
+  $('step2Title').childNodes[0].textContent=L.step2Title+' '; $('step2Small').textContent=L.step2Small;
+  $('lblRoomL').textContent=L.lblRoomL; $('lblRoomW').textContent=L.lblRoomW;
+  $('lblCeilH').textContent=L.lblCeilH; $('lblCeilType').textContent=L.lblCeilType;
+  $('lblPerfDesignOn').innerHTML=L.lblPerfDesignOn; $('hintStep2').innerHTML=L.hintStep2;
+  $('step3Title').childNodes[0].textContent=L.step3Title+' '; $('optionalTag3').textContent=L.optionalTag3; $('step3Small').textContent=L.step3Small;
+  $('hintStep3').textContent=L.hintStep3;
+  $('resultTitle').innerHTML=L.resultTitle; $('gaugeLbl').textContent=L.gaugeLbl;
+  $('lblStatWorstDist').textContent=L.lblStatWorstDist; $('lblStat07').textContent=L.lblStat07;
+  $('lblStatGridSpacing').textContent=L.lblStatGridSpacing; $('lblStatWallDist').textContent=L.lblStatWallDist;
+  $('lblStatArea').textContent=L.lblStatArea; $('lblStatAreaPer').textContent=L.lblStatAreaPer;
+  $('diagramTitle').textContent=L.diagramTitle; $('diagramTag').textContent=L.diagramTag;
+  $('lblIncludeLedger').textContent=L.lblIncludeLedger; $('lblIncludeLogo').textContent=L.lblIncludeLogo;
+  $('printBtn').textContent=L.printBtnLabel; $('exportWordBtn').textContent=L.exportWordLabel; $('exportExcelBtn').textContent=L.exportBtnLabel;
+  $('lblUploadTemplate').textContent=L.lblUploadTemplate; $('hintUploadTemplate').textContent=L.hintUploadTemplate;
+  $('ledgerTitle').textContent=L.ledgerTitle; $('ledgerTag').textContent=L.ledgerTag;
+  $('footerNote').innerHTML=L.footerHtml;
+}
+
+function setLang(lang){
+  currentLang = lang;
+  $('btn-en').classList.toggle('active', lang==='en');
+  $('btn-fr').classList.toggle('active', lang==='fr');
+  document.documentElement.lang = lang;
+  try { localStorage.setItem('ohmzone-lang', lang); } catch(e) {}
+  applyStaticI18n();
+  recalc();
+}
+(function(){
+  let saved='en';
+  try{ saved=localStorage.getItem('ohmzone-lang')||'en'; }catch(e){}
+  setLang(saved);
+})();
+</script>
+<div style="position:fixed;bottom:6px;right:12px;z-index:9999;font-family:monospace;font-size:10px;color:#5c7592;opacity:0.75;">© 2026 OhmZone. All rights reserved.</div>
+</body>
+</html>

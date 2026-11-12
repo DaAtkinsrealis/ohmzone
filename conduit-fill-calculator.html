@@ -1,0 +1,1783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conduit Fill Calculator — CSA C22.1</title>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3887318872951674" crossorigin="anonymous"></script>
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icon-16.png">
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="OhmZone">
+<meta name="theme-color" content="#0a1728">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.6/dist/pizzip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/docxtemplater@3.47.2/js/docxtemplater.js"></script>
+<style>
+@media print{
+  .no-print{display:none !important;}
+  body{background:#fff !important;}
+}
+:root{
+  --bg:#080c14; --bg2:#0d1420; --panel:#111a2a; --panel-soft:#0c1220;
+  --line:#233350; --line-soft:#182238; --grid-line: rgba(96,140,196,0.09);
+  --ink:#e7edf7; --ink-dim:#8497b8; --ink-faint:#516085;
+  --trace:#3b9eff; --trace-soft:#1a3a5c; --gold:#e8b545;
+  --alarm:#ff5d77; --alarm-soft:#4a1f2b; --warn:#e3a83b; --warn-soft:#4a3a1a;
+  --radius:2px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',sans-serif;}
+body{
+  background-image:linear-gradient(var(--grid-line) 1px, transparent 1px),linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size:28px 28px; min-height:100vh;
+}
+::selection{background:var(--trace);color:#04120f;}
+a{color:var(--trace);}
+.mono{font-family:'IBM Plex Mono',monospace;}
+input:focus-visible, select:focus-visible, button:focus-visible{outline:2px solid var(--trace); outline-offset:2px;}
+.lang-switch{display:flex;align-items:center;background:#0f2036;border:1px solid #2f5678;border-radius:16px;padding:3px;gap:2px;font-family:monospace;font-size:11px;position:fixed;top:10px;right:12px;z-index:9999;}
+.lang-switch button{border:none;background:transparent;color:#8fa8c2;padding:5px 12px;border-radius:13px;cursor:pointer;font-family:inherit;font-size:inherit;}
+.lang-switch button.active{background:var(--trace);color:#04120f;font-weight:700;}
+
+.titleblock{border-bottom:1px solid var(--line); background:linear-gradient(180deg, rgba(17,26,42,.9), rgba(13,20,32,.7)); padding:18px 22px; display:flex; flex-wrap:wrap; gap:14px 28px; align-items:flex-end; justify-content:space-between;}
+.titleblock .brand{display:flex; align-items:baseline; gap:12px;}
+.titleblock .brand .mark{width:34px;height:34px;border:1.5px solid var(--trace); border-radius:3px; display:flex;align-items:center;justify-content:center;color:var(--trace); font-family:'IBM Plex Mono';font-weight:700;font-size:13px;flex:none; box-shadow:0 0 14px rgba(59, 158, 255,.18) inset;}
+.titleblock h1{font-family:'IBM Plex Sans Condensed'; font-weight:700; letter-spacing:.3px; font-size:20px; margin:0; text-transform:uppercase;}
+.titleblock .sub{color:var(--ink-dim); font-size:12.5px; margin-top:2px;}
+.stamp{display:grid; grid-template-columns:repeat(4,auto); gap:0 22px; font-family:'IBM Plex Mono'; font-size:10.5px; color:var(--ink-dim);}
+.stamp div b{display:block; color:var(--ink-faint); font-weight:500; font-size:9px; letter-spacing:.06em; text-transform:uppercase;}
+.stamp div span{color:var(--trace); font-weight:600; font-size:12px;}
+
+.top-disclaimer{max-width:1480px; margin:14px auto 0; padding:10px 16px; border:1px solid var(--warn); background:rgba(227,168,59,.07); border-radius:var(--radius); font-size:11.5px; color:var(--ink-dim); line-height:1.6;}
+.top-disclaimer b{color:var(--warn);}
+
+.app{display:grid; grid-template-columns:400px 1fr; gap:1px; background:var(--line); max-width:1480px; margin:0 auto;}
+@media (max-width:980px){ .app{grid-template-columns:1fr;} }
+.steps{background:var(--bg2); padding:18px 16px 40px; display:flex; flex-direction:column; gap:14px;}
+.canvas-col{background:var(--bg2); display:flex; flex-direction:column; gap:1px; background:var(--line);}
+.canvas-col > *{background:var(--bg2);}
+
+.step{border:1px solid var(--line-soft); border-radius:var(--radius); background:var(--panel-soft); overflow:hidden;}
+.step-head{display:flex; align-items:center; gap:10px; padding:11px 13px; background:var(--panel); cursor:pointer; user-select:none; border-bottom:1px solid var(--line-soft);}
+.step-num{font-family:'IBM Plex Mono'; font-size:11px; font-weight:600; color:var(--bg); background:var(--trace); width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex:none;}
+.step-title{font-size:13px; font-weight:600; letter-spacing:.2px; flex:1;}
+.step-title small{display:block; font-weight:400; color:var(--ink-dim); font-size:10.5px; margin-top:1px;}
+.chev{color:var(--ink-faint); font-size:11px; transition:transform .15s;}
+.step.closed .chev{transform:rotate(-90deg);}
+.step-body{padding:13px; display:flex; flex-direction:column; gap:11px;}
+.step.closed .step-body{display:none;}
+
+label.field{display:flex; flex-direction:column; gap:5px; font-size:11.5px; color:var(--ink-dim);}
+label.field b{color:var(--ink); font-weight:500; font-size:12px;}
+.row2{display:grid; grid-template-columns:1fr 1fr; gap:9px;}
+.row3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:9px;}
+.row4{display:grid; grid-template-columns:1fr 1fr 1fr auto; gap:9px; align-items:end;}
+
+input[type=number], input[type=text], select{background:var(--bg2); border:1px solid var(--line); color:var(--ink); font-family:'IBM Plex Mono'; font-size:13px; padding:8px 9px; border-radius:var(--radius); width:100%;}
+select{appearance:none; -webkit-appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238497b8'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 10px center; padding-right:26px;}
+input:focus, select:focus{border-color:var(--trace);}
+
+.seg{display:flex; border:1px solid var(--line); border-radius:20px; overflow:hidden; width:max-content; flex-wrap:wrap;}
+.seg button{background:transparent; border:none; color:var(--ink-dim); font-family:'IBM Plex Mono'; font-size:10.5px; padding:5px 12px; cursor:pointer;}
+.seg button.active{background:var(--trace); color:#04120f; font-weight:600;}
+
+.switch{position:relative; width:34px; height:19px; flex:none;}
+.switch input{opacity:0; width:0; height:0; position:absolute;}
+.switch .track{position:absolute; inset:0; background:var(--line); border-radius:20px; transition:.15s;}
+.switch .track:before{content:''; position:absolute; width:13px; height:13px; left:3px; top:3px; background:var(--ink-dim); border-radius:50%; transition:.15s;}
+.switch input:checked + .track{background:var(--trace-soft); border:1px solid var(--trace);}
+.switch input:checked + .track:before{transform:translateX(15px); background:var(--trace);}
+
+.hint{font-size:10.5px; color:var(--ink-faint); line-height:1.5;}
+.hint em{color:var(--ink-dim); font-style:normal;}
+
+.example-btn{align-self:flex-start; font-family:'IBM Plex Mono'; font-size:11px; font-weight:600; color:#0a1220; background:var(--trace); border:1px solid var(--trace); padding:9px 16px; border-radius:20px; cursor:pointer; box-shadow:0 4px 12px -4px var(--trace-soft);}
+.example-btn:hover{filter:brightness(1.08);}
+
+.mode-tabs{display:flex; gap:6px; flex-wrap:wrap;}
+#singleEntry, #cableEntry{display:flex; flex-direction:column; gap:11px;}
+.mtab{font-family:'IBM Plex Mono'; font-size:11px; padding:7px 12px; border-radius:16px; border:1px solid var(--line); background:var(--bg2); color:var(--ink-dim); cursor:pointer;}
+.mtab.active{background:var(--trace-soft); border-color:var(--trace); color:var(--trace); font-weight:600;}
+
+.add-btn{font-family:'IBM Plex Mono'; font-size:11.5px; font-weight:600; color:#0a1220; background:var(--gold); border:1px solid var(--gold); padding:8px 14px; border-radius:6px; cursor:pointer; align-self:flex-start;}
+.add-btn:hover{filter:brightness(1.06);}
+
+.item-list{display:flex; flex-direction:column; gap:6px; margin-top:4px;}
+.item-row{display:flex; align-items:center; gap:8px; padding:7px 10px; background:var(--panel); border:1px solid var(--line-soft); border-radius:var(--radius); font-size:11.5px;}
+.item-row .lbl{flex:1; color:var(--ink);}
+.item-row .lbl small{display:block;color:var(--ink-faint);font-size:9.5px;}
+.item-row button{background:transparent; border:none; color:var(--alarm); cursor:pointer; font-size:14px; padding:2px 6px;}
+.empty-note{font-size:11px; color:var(--ink-faint); font-style:italic; padding:8px 2px;}
+
+.panel{padding:16px;}
+.panel-head{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:10px; gap:10px; flex-wrap:wrap;}
+.panel-head h2{font-family:'IBM Plex Sans Condensed'; font-size:13px; text-transform:uppercase; letter-spacing:.1em; color:var(--ink-dim); margin:0; font-weight:600;}
+.panel-head .tag{font-family:'IBM Plex Mono'; font-size:10px; color:var(--ink-faint);}
+
+.result-grid{display:grid; grid-template-columns:220px 1fr; gap:16px; align-items:center;}
+@media (max-width:640px){ .result-grid{grid-template-columns:1fr;} }
+.sld-wrap{border:1px solid var(--line-soft); border-radius:var(--radius); overflow:hidden; background:
+  repeating-linear-gradient(0deg, transparent, transparent 27px, var(--grid-line) 28px),
+  repeating-linear-gradient(90deg, transparent, transparent 27px, var(--grid-line) 28px), var(--panel-soft);
+}
+#fillDiagram{display:block; width:100%; height:auto; max-height:420px;}
+.construction-card{display:flex; gap:14px; align-items:center; padding:12px; border:1px solid var(--line-soft); border-radius:var(--radius); background:var(--panel-soft); flex-wrap:wrap;}
+.construction-svg-wrap{flex:none; width:110px; height:110px; background:#0a1220; border-radius:var(--radius); border:1px solid var(--line-soft);}
+.construction-info{flex:1; min-width:200px;}
+.construction-info .name{font-size:12.5px; font-weight:600; color:var(--ink); margin-bottom:4px;}
+.construction-info .layers{font-size:10.5px; color:var(--ink-dim); line-height:1.6;}
+.construction-info .mfrlink{font-size:10.5px; margin-top:6px;}
+.construction-info .mfrlink a{color:var(--trace); text-decoration:none; border-bottom:1px dotted var(--trace);}
+.gauge-box{display:flex; flex-direction:column; align-items:center; gap:4px;}
+.gauge-num{font-family:'IBM Plex Mono'; font-weight:700; font-size:34px;}
+.gauge-num.ok{color:var(--trace);}
+.gauge-num.bad{color:var(--alarm);}
+.gauge-lbl{font-size:10px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:.1em;}
+.fillbar-wrap{width:100%;}
+.fillbar{height:10px; border-radius:5px; background:var(--panel-soft); border:1px solid var(--line-soft); overflow:hidden; position:relative; margin-top:6px;}
+.fillbar .fill{height:100%; border-radius:5px;}
+.fillbar .fill.ok{background:var(--trace);}
+.fillbar .fill.bad{background:var(--alarm);}
+.fillbar .marker{position:absolute; top:-2px; bottom:-2px; width:2px; background:var(--warn);}
+
+.stat-list{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+@media (max-width:480px){ .stat-list{grid-template-columns:1fr;} }
+.stat{border:1px solid var(--line-soft); border-radius:var(--radius); padding:9px 11px; background:var(--panel-soft);}
+.stat .k{font-size:10px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.06em;}
+.stat .v{font-family:'IBM Plex Mono'; font-size:16px; font-weight:600; margin-top:3px;}
+.stat.hot{border-color:var(--gold); background:linear-gradient(180deg, rgba(232,181,69,.08), transparent);}
+.stat.hot .v{color:var(--gold);}
+
+.risk-box{border-radius:var(--radius); padding:11px 13px; margin-top:12px; font-size:12px; line-height:1.6; border:1px solid;}
+.risk-ok{border-color:var(--trace); background:rgba(59, 158, 255,.06); color:var(--ink-dim);}
+.risk-warn{border-color:var(--warn); background:rgba(227,168,59,.08); color:var(--ink-dim);}
+.risk-alarm{border-color:var(--alarm); background:rgba(255,93,119,.08); color:var(--ink-dim);}
+.risk-box b{color:var(--ink);}
+
+.ref-table{width:100%; border-collapse:collapse; font-size:11px;}
+.ref-table th, .ref-table td{padding:6px 8px; border-bottom:1px solid var(--line-soft); text-align:left;}
+.ref-table th{color:var(--ink-faint); font-weight:500; text-transform:uppercase; font-size:9px; letter-spacing:.06em;}
+.ref-table td{color:var(--ink-dim); font-family:'IBM Plex Mono';}
+.ref-table tr.hl td{color:var(--gold); font-weight:600;}
+.tbl-scroll{max-height:260px; overflow-y:auto; border:1px solid var(--line-soft); border-radius:var(--radius);}
+
+.ledger{display:flex; flex-direction:column;}
+.lstep{padding:13px 16px; border-bottom:1px solid var(--line-soft); display:grid; grid-template-columns:26px 1fr; gap:12px;}
+.lstep:last-child{border-bottom:none;}
+.lstep .ln{font-family:'IBM Plex Mono'; color:var(--ink-faint); font-size:11px; padding-top:2px;}
+.lstep h3{margin:0 0 5px; font-size:12.5px; font-weight:600; color:var(--ink);}
+.lstep .formula{font-family:'IBM Plex Mono'; font-size:12px; color:var(--trace); background:rgba(59, 158, 255,.06); padding:8px 10px; border-radius:var(--radius); border:1px solid var(--trace-soft); margin:6px 0; overflow-x:auto; white-space:pre;}
+.cite{font-size:9.5px; color:var(--ink-faint); margin-top:6px; line-height:1.5; border-left:2px solid var(--line); padding-left:8px;}
+.cite b{color:var(--ink-dim); font-weight:500;}
+
+footer.note{max-width:1480px; margin:22px auto 60px; padding:0 16px; font-size:10.5px; color:var(--ink-faint); line-height:1.7;}
+footer.note b{color:var(--ink-dim);}
+</style>
+</head>
+<body>
+<a href="index.html" class="no-print" style="position:fixed;top:10px;left:12px;z-index:9999;font-family:monospace;font-size:11px;color:#8fa8c2;background:rgba(10,23,40,0.85);border:1px solid #234261;border-radius:14px;padding:5px 12px;text-decoration:none;">← OhmZone</a>
+<div class="lang-switch no-print">
+  <button type="button" id="btn-en" class="active" onclick="setLang('en')">EN</button>
+  <button type="button" id="btn-fr" onclick="setLang('fr')">FR</button>
+</div>
+
+<div class="titleblock">
+  <div class="brand">
+    <div class="mark">CF</div>
+    <div>
+      <h1 id="titleH1">Conduit Fill Calculator</h1>
+      <div class="sub" id="titleSub">CSA C22.1 (CEC) Rule 12-910 / Table 8 — raceway fill for insulated conductors and cables</div>
+    </div>
+  </div>
+  <div class="stamp">
+    <div><b id="lblDwg">Dwg No.</b><span>CF-001</span></div>
+    <div><b id="lblScale">Scale</b><span>NTS</span></div>
+    <div><b id="lblMethod">Method</b><span>CEC Table 8/9</span></div>
+    <div><b id="lblRev">Rev</b><span id="revTag">—</span></div>
+  </div>
+</div>
+
+<div class="top-disclaimer no-print">
+  <b id="topDiscB">Reference tool only.</b> <span id="topDiscTxt">Conductor and conduit area values below are representative/typical figures for planning purposes. Always verify actual areas against the current edition of CSA C22.1 Tables 6, 8, 9 and 10 (or the manufacturer's data for the specific insulation/cable) before finalizing a design. Whole-cable entries are taken from a project-specific cable schedule and should be re-verified against that source.</span>
+</div>
+
+<div class="app">
+  <div class="steps">
+
+    <button class="example-btn" id="loadExample">▸ <span id="loadExampleTxt">Load example</span></button>
+
+    <!-- STEP 1: CONDUIT -->
+    <div class="step" id="step1">
+      <div class="step-head" data-toggle="step1">
+        <div class="step-num">1</div>
+        <div class="step-title" id="step1Title">Conduit<small id="step1Small">Type, trade size, nipple</small></div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="step-body">
+        <label class="field"><b id="lblTag">Equipment / raceway tag</b>
+          <input type="text" id="eqTag" placeholder="e.g. CT-101">
+        </label>
+        <label class="field"><b id="lblConduitType">Conduit type</b>
+          <select id="conduitType"></select>
+        </label>
+        <label class="field"><b id="lblConduitSize">Trade size (metric designator)</b>
+          <select id="conduitSize"></select>
+        </label>
+        <label class="field" style="flex-direction:row;align-items:center;gap:8px;">
+          <input type="checkbox" id="isNipple" style="width:auto;">
+          <span id="lblNipple">Nipple (raceway run ≤ 600 mm) — allows 60% fill</span>
+        </label>
+        <div class="hint" id="hintStep1">Metric designators shown correspond to common imperial trade sizes: 16→½", 21→¾", 27→1", 35→1¼", 41→1½", 53→2", 63→2½", 78→3", 91→3½", 103→4", 129→5", 155→6".</div>
+      </div>
+    </div>
+
+    <!-- STEP 2: CONDUCTORS -->
+    <div class="step" id="step2">
+      <div class="step-head" data-toggle="step2">
+        <div class="step-num">2</div>
+        <div class="step-title" id="step2Title">Conductors &amp; Cables<small id="step2Small">Add individual conductors or whole multiconductor cables</small></div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="step-body">
+        <div class="mode-tabs" id="modeTabs">
+          <button class="mtab active" data-m="single">— <span id="tabSingleTxt">Individual conductors</span></button>
+          <button class="mtab" data-m="cable">— <span id="tabCableTxt">Whole cable (schedule)</span></button>
+        </div>
+
+        <!-- single conductor entry -->
+        <div id="singleEntry">
+          <div class="row3">
+            <label class="field"><b id="lblInsul">Insulation</b>
+              <select id="insulSel"></select>
+            </label>
+            <label class="field"><b id="lblAwg">Size</b>
+              <select id="awgSel"></select>
+            </label>
+            <label class="field"><b id="lblQty1">Qty</b>
+              <input type="number" id="qty1" value="3" min="1" step="1">
+            </label>
+          </div>
+          <label class="field" style="flex-direction:row;align-items:center;gap:8px;">
+            <input type="checkbox" id="isGround1" style="width:auto;">
+            <span id="lblIsGround1">This is a bonding/grounding conductor</span>
+          </label>
+          <label class="field" style="flex-direction:row;align-items:center;gap:8px;">
+            <input type="checkbox" id="isBare1" style="width:auto;">
+            <span id="lblIsBare1">Bare (no insulation) — uses conductor metal area only</span>
+          </label>
+          <button class="add-btn" id="addSingleBtn">+ <span id="addSingleTxt">Add</span></button>
+        </div>
+
+        <!-- whole cable entry -->
+        <div id="cableEntry" style="display:none;">
+          <label class="field"><b id="lblCableCat">Cable category</b>
+            <select id="cableCatSel"></select>
+          </label>
+          <label class="field"><b id="lblCableType">Cable</b>
+            <select id="cableTypeSel"></select>
+          </label>
+          <div class="row2">
+            <label class="field"><b id="lblQty2">Qty</b>
+              <input type="number" id="qty2" value="1" min="1" step="1">
+            </label>
+            <label class="field"><b id="lblCondPerCable">Conductors counted per cable</b>
+              <input type="number" id="condPerCable" value="1" min="1" step="1">
+            </label>
+          </div>
+          <div class="hint" id="hintCableCount">Per CEC practice, a multiconductor cable's own overall area is used, but the cable itself is normally counted as one raceway occupant for the 1/2/3+ fill-percentage bracket. Adjust "conductors counted per cable" only if your AHJ requires counting each conductor within the cable separately.</div>
+          <button class="add-btn" id="addCableBtn">+ <span id="addCableTxt">Add</span></button>
+        </div>
+
+        <div class="item-list" id="itemList"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="canvas-col">
+    <div class="panel">
+      <div class="panel-head"><h2 id="resultTitle">Result — Conduit Fill</h2></div>
+      <div class="result-grid">
+        <div class="gauge-box">
+          <div class="gauge-num" id="gaugeNum">—</div>
+          <div class="gauge-lbl" id="gaugeLbl">% fill (actual)</div>
+          <div class="fillbar-wrap"><div class="fillbar"><div class="fill" id="fillBarInner" style="width:0%;"></div><div class="marker" id="fillBarMarker" style="left:0%;"></div></div></div>
+        </div>
+        <div class="stat-list">
+          <div class="stat hot"><div class="k" id="lblStatAllowed">Max allowed fill</div><div class="v" id="statAllowed">—</div></div>
+          <div class="stat"><div class="k" id="lblStatCount">Conductor/cable count</div><div class="v" id="statCount">—</div></div>
+          <div class="stat"><div class="k" id="lblStatArea">Total conductor area</div><div class="v" id="statArea">—</div></div>
+          <div class="stat"><div class="k" id="lblStatConduitArea">Conduit internal area</div><div class="v" id="statConduitArea">—</div></div>
+          <div class="stat"><div class="k" id="lblStatID">Conduit inner diameter (ID)</div><div class="v" id="statID">—</div></div>
+          <div class="stat"><div class="k" id="lblStatOD">Conduit outer diameter (OD)</div><div class="v" id="statOD">—</div></div>
+        </div>
+      </div>
+      <div id="verdictBox"></div>
+      <div id="suggestBox"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2 id="diagramTitle">Cross-Section</h2><span class="tag" id="diagramTag">to scale, illustrative packing</span></div>
+      <div class="sld-wrap"><svg id="fillDiagram" viewBox="0 0 320 320" xmlns="http://www.w3.org/2000/svg"></svg></div>
+      <div id="diagramLegend" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;font-size:10.5px;color:var(--ink-dim);"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2 id="constructionTitle">Cable Construction Reference</h2><span class="tag" id="constructionTag">schematic — see manufacturer link for the actual product photo</span></div>
+      <div id="constructionCards" style="display:flex;flex-direction:column;gap:14px;"></div>
+    </div>
+
+    <div class="panel no-print" style="border:none;background:transparent;">
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px;font-size:11.5px;color:var(--ink-dim);">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+          <input type="checkbox" id="includeLedger" checked style="width:auto;">
+          <span id="lblIncludeLedger">Include Calculation Ledger in report</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+          <input type="checkbox" id="includeItemsTable" checked style="width:auto;">
+          <span id="lblIncludeItems">Include item list in report</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+          <input type="checkbox" id="includeLogo" checked style="width:auto;">
+          <span id="lblIncludeLogo">Include OhmZone brand mark in report</span>
+        </label>
+      </div>
+      <div class="btn-row" style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button id="printBtn" style="padding:9px 16px;border-radius:8px;border:1px solid #2f5678;background:#0f2036;color:#c8d8e8;cursor:pointer;font-family:inherit;">🖨 Print / Save as PDF</button>
+        <button id="exportWordBtn" style="padding:9px 16px;border-radius:8px;border:1px solid #2f5678;background:#0f2036;color:#c8d8e8;cursor:pointer;font-family:inherit;">📄 Export study (Word)</button>
+        <button id="exportExcelBtn" style="padding:9px 16px;border-radius:8px;border:1px solid #2f5678;background:#0f2036;color:#c8d8e8;cursor:pointer;font-family:inherit;">📊 Export study (Excel)</button>
+      </div>
+      <div style="border-top:1px dashed var(--line);margin-top:14px;padding-top:12px;">
+        <label class="field"><b id="lblUploadTemplate">Report template (.docx, optional)</b>
+          <input type="file" id="templateFile" accept=".docx">
+        </label>
+        <div id="templateStatus" style="font-size:11px;color:var(--trace);margin-top:4px;"></div>
+        <div class="hint" id="hintUploadTemplate" style="margin-top:6px;"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2 id="ledgerTitle">Calculation Ledger</h2><span class="tag" id="ledgerTag">CEC Table 8/9 method</span></div>
+      <div class="ledger" id="ledger"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2 id="fillTableTitle">CEC Table 8 — Maximum Fill</h2></div>
+      <table class="ref-table">
+        <thead><tr><th id="fillThCount">Number of conductors</th><th id="fillThPct">Max fill</th></tr></thead>
+        <tbody id="fillTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<footer class="note" id="footerNote"></footer>
+
+<script>
+const $ = id => document.getElementById(id);
+function fmt(n,d=2){ if(n===undefined||n===null||isNaN(n)) return "—"; return Number(n).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d}); }
+function mm2FromInDia(inches){ const mm = inches*25.4; return Math.PI/4*mm*mm; }
+
+/* ===================== reference data ===================== */
+/* Representative insulated-conductor cross-sectional areas (mm²), by insulation family and size.
+   These are TYPICAL figures for common 600V building-wire insulation types — verify against
+   CSA C22.1 Table 6 / 10 (or manufacturer data) for the exact insulation/size in use. */
+const INSUL_TYPES = ["RW90","TWU75"];
+const CONDUCTOR_AREA = {
+  RW90: { // heavier-wall 90°C thermoset (XLPE/EPR-type) building wire, representative
+    "14":8.0,"12":10.9,"10":14.0,"8":21.2,"6":28.6,"4":38.0,"3":43.7,"2":50.3,"1":66.4,
+    "1/0":76.4,"2/0":87.9,"3/0":101.9,"4/0":118.4,
+    "250":138.9,"300":152.7,"350":167.0,"400":180.3,"500":203.9,"600":240.5,"700":264.0,"750":275.0,"1000":345.0
+  },
+  TWU75: { // lighter-wall 75°C PVC/nylon-jacket wet-location building wire, representative
+    "14":5.9,"12":8.1,"10":10.5,"8":14.6,"6":21.2,"4":27.7,"3":32.7,"2":38.0,"1":51.8,
+    "1/0":60.8,"2/0":71.3,"3/0":84.2,"4/0":99.7,
+    "250":118.8,"300":132.1,"350":145.4,"400":157.4,"500":178.5,"600":213.8,"700":235.9,"750":246.7,"1000":312.9
+  }
+};
+const AWG_ORDER = ["14","12","10","8","6","4","3","2","1","1/0","2/0","3/0","4/0","250","300","350","400","500","600","700","750","1000"];
+
+/* Bare (uninsulated) conductor cross-sectional area, mm² — the conductor metal only.
+   Derived from the standard AWG/kcmil circular-mil areas (1 cmil = 5.067×10⁻⁴ mm²),
+   so these are exact for the nominal conductor size rather than representative estimates.
+   Used when a bonding/grounding conductor is run bare, which is common practice. */
+const BARE_AREA = {
+  "14":2.08, "12":3.31, "10":5.26, "8":8.37, "6":13.30, "4":21.15, "3":26.66, "2":33.63, "1":42.41,
+  "1/0":53.51, "2/0":67.44, "3/0":85.03, "4/0":107.22,
+  "250":126.68, "300":152.01, "350":177.35, "400":202.68, "500":253.35,
+  "600":304.02, "700":354.70, "750":380.03, "1000":506.71
+};
+
+/* Representative internal cross-sectional areas (mm²) by conduit type and metric trade designator.
+   Verify against CSA C22.1 Table 9 (or the manufacturer) for the exact conduit product in use. */
+const CONDUIT_TYPE_SIZES = {
+  EMT:  [16,21,27,35,41,53,63,78,91,103,129,155],
+  RMC:  [16,21,27,35,41,53,63,78,91,103,129,155],
+  PVC:  [16,21,27,35,41,53,63,78,91,103,129,155],
+  HDPE: [2,3,4,5,6,8,10,12,14,16,18,20,24]  // nominal IPS size, inches
+};
+const CONDUIT_AREA = {
+  EMT:  {16:196, 21:343, 27:556, 35:968, 41:1314, 53:2165, 63:3089, 78:4770, 91:6379, 103:8213, 129:13050, 155:18821},
+  RMC:  {16:179, 21:314, 27:527, 35:911, 41:1245, 53:2043, 63:2934, 78:4517, 91:6082, 103:7845, 129:12546, 155:18158},
+  PVC:  {16:201, 21:352, 27:573, 35:995, 41:1349, 53:2226, 63:3186, 78:4914, 91:6605, 103:8500, 129:13541, 155:19547},
+  /* HDPE (IPS, SDR11 / DR11) internal area computed from GF Piping Systems "IPS HDPE Pipe Chart" (Part #10014098),
+     average ID at DR11 — this is real published pipe dimensional data, not a representative estimate. */
+  HDPE: {2:1862, 3:4047, 4:6688, 5:10215, 6:14498, 8:24567, 10:38168, 12:53684, 14:64713, 16:84517, 18:107006, 20:132095, 24:190194}
+};
+/* Outer diameter, mm — for display only (does not affect fill calculation).
+   EMT/RMC/PVC share a common nominal external diameter per trade size (standard North American practice);
+   HDPE OD is the actual pipe OD from the GF Piping Systems chart. Representative for EMT/RMC/PVC — verify against
+   the specific product; HDPE values are as published. */
+const CONDUIT_OD_MM = {
+  EMT:  {16:17.93, 21:23.42, 27:29.54, 35:38.35, 41:44.20, 53:55.80, 63:73.02, 78:88.90, 91:101.60, 103:114.30, 129:141.30, 155:168.27},
+  RMC:  {16:17.93, 21:23.42, 27:29.54, 35:38.35, 41:44.20, 53:55.80, 63:73.02, 78:88.90, 91:101.60, 103:114.30, 129:141.30, 155:168.27},
+  PVC:  {16:17.93, 21:23.42, 27:29.54, 35:38.35, 41:44.20, 53:55.80, 63:73.02, 78:88.90, 91:101.60, 103:114.30, 129:141.30, 155:168.27},
+  HDPE: {2:60.33, 3:88.90, 4:114.30, 5:141.30, 6:168.27, 8:219.08, 10:273.05, 12:323.85, 14:355.60, 16:406.40, 18:457.20, 20:508.00, 24:609.60}
+};
+
+/* whole-cable data, from project cable schedule (电缆数据.pdf) — OD in inches, weight in lbs/ft */
+const CABLE_CATS = ["MV1C_CU","MV1C_AL","C2_CU","C3_CU","C3_AL","C4_CU","C4_AL","CTRL","INSTR","FIRE","NET"];
+const CABLE_DATA = [
+  // Alimentation 1C (Cuivre) — MV
+  {cat:"MV1C_CU", label:"1C #2 TC(MV-105) 15KV CU 133%+SHLD", od:0.985, wt:0.626},
+  {cat:"MV1C_CU", label:"1C #1 TC(MV-105) 15KV CU 133%+SHLD", od:1.016, wt:0.701},
+  {cat:"MV1C_CU", label:"1C #1/0 TC(MV-105) 15KV CU 133%+SHLD", od:1.053, wt:0.793},
+  {cat:"MV1C_CU", label:"1C #2/0 TC(MV-105) 15KV CU 133%+SHLD", od:1.093, wt:0.904},
+  {cat:"MV1C_CU", label:"1C #3/0 TC(MV-105) 15KV CU 133%+SHLD", od:1.140, wt:1.042},
+  {cat:"MV1C_CU", label:"1C #4/0 TC(MV-105) 15KV CU 133%+SHLD", od:1.192, wt:1.210},
+  {cat:"MV1C_CU", label:"1C #250 TC(MV-105) 15KV CU 133%+SHLD", od:1.246, wt:1.362},
+  {cat:"MV1C_CU", label:"1C #350 TC(MV-105) 15KV CU 133%+SHLD", od:1.342, wt:1.732},
+  {cat:"MV1C_CU", label:"1C #500 TC(MV-105) 15KV CU 133%+SHLD", od:1.462, wt:2.268},
+  {cat:"MV1C_CU", label:"1C #600 TC(MV-105) 15KV CU 133%+SHLD", od:1.570, wt:2.626},
+  {cat:"MV1C_CU", label:"1C #750 TC(MV-105) 15KV CU 133%+SHLD", od:1.665, wt:3.146},
+  {cat:"MV1C_CU", label:"1C #1000 TC(MV-105) 15KV CU 133%+SHLD", od:1.877, wt:4.099},
+  {cat:"MV1C_CU", label:"1C #1 TC(MV-105) 25KV CU 133%+SHLD", od:1.239, wt:0.909},
+  {cat:"MV1C_CU", label:"1C #1/0 TC(MV-105) 25KV CU 133%+SHLD", od:1.279, wt:1.009},
+  {cat:"MV1C_CU", label:"1C #2/0 TC(MV-105) 25KV CU 133%+SHLD", od:1.322, wt:1.129},
+  {cat:"MV1C_CU", label:"1C #3/0 TC(MV-105) 25KV CU 133%+SHLD", od:1.373, wt:1.278},
+  {cat:"MV1C_CU", label:"1C #4/0 TC(MV-105) 25KV CU 133%+SHLD", od:1.429, wt:1.459},
+  {cat:"MV1C_CU", label:"1C #250 TC(MV-105) 25KV CU 133%+SHLD", od:1.484, wt:1.622, note:"OD corrected from apparent source typo (4.484) to fit the size progression — verify."},
+  {cat:"MV1C_CU", label:"1C #350 TC(MV-105) 25KV CU 133%+SHLD", od:1.587, wt:2.015},
+  {cat:"MV1C_CU", label:"1C #500 TC(MV-105) 25KV CU 133%+SHLD", od:1.715, wt:2.582},
+  {cat:"MV1C_CU", label:"1C #750 TC(MV-105) 25KV CU 133%+SHLD", od:1.963, wt:3.615},
+  {cat:"MV1C_CU", label:"1C #1000 TC(MV-105) 25KV CU 133%+SHLD", od:2.112, wt:4.514},
+  // Alimentation 1C (Aluminium) — MV
+  {cat:"MV1C_AL", label:"1C #2 TC(MV-105) 15KV ALU 133%+SHLD", od:0.985, wt:0.482},
+  {cat:"MV1C_AL", label:"1C #1 TC(MV-105) 15KV ALU 133%+SHLD", od:1.016, wt:0.518},
+  {cat:"MV1C_AL", label:"1C #1/0 TC(MV-105) 15KV ALU 133%+SHLD", od:1.053, wt:0.562},
+  {cat:"MV1C_AL", label:"1C #2/0 TC(MV-105) 15KV ALU 133%+SHLD", od:1.093, wt:0.613},
+  {cat:"MV1C_AL", label:"1C #3/0 TC(MV-105) 15KV ALU 133%+SHLD", od:1.140, wt:0.677},
+  {cat:"MV1C_AL", label:"1C #4/0 TC(MV-105) 15KV ALU 133%+SHLD", od:1.192, wt:0.751},
+  {cat:"MV1C_AL", label:"1C #250 TC(MV-105) 15KV ALU 133%+SHLD", od:1.246, wt:0.825},
+  {cat:"MV1C_AL", label:"1C #350 TC(MV-105) 15KV ALU 133%+SHLD", od:1.342, wt:0.982},
+  {cat:"MV1C_AL", label:"1C #500 TC(MV-105) 15KV ALU 133%+SHLD", od:1.462, wt:1.201},
+  {cat:"MV1C_AL", label:"1C #600 TC(MV-105) 15KV ALU 133%+SHLD", od:1.570, wt:1.378},
+  {cat:"MV1C_AL", label:"1C #750 TC(MV-105) 15KV ALU 133%+SHLD", od:1.665, wt:1.582},
+  {cat:"MV1C_AL", label:"1C #1000 TC(MV-105) 15KV ALU 133%+SHLD", od:1.877, wt:2.020},
+  {cat:"MV1C_AL", label:"1C #1/0 TC(MV-105) 35KV ALU 133%+SHLD", od:1.453, wt:0.985},
+  {cat:"MV1C_AL", label:"1C #2/0 TC(MV-105) 35KV ALU 133%+SHLD", od:1.493, wt:1.049},
+  {cat:"MV1C_AL", label:"1C #3/0 TC(MV-105) 35KV ALU 133%+SHLD", od:1.540, wt:1.127},
+  {cat:"MV1C_AL", label:"1C #4/0 TC(MV-105) 35KV ALU 133%+SHLD", od:1.592, wt:1.217},
+  {cat:"MV1C_AL", label:"1C #250 TC(MV-105) 35KV ALU 133%+SHLD", od:1.646, wt:1.308},
+  {cat:"MV1C_AL", label:"1C #350 TC(MV-105) 35KV ALU 133%+SHLD", od:1.742, wt:1.495},
+  {cat:"MV1C_AL", label:"1C #500 TC(MV-105) 35KV ALU 133%+SHLD", od:1.922, wt:1.856},
+  {cat:"MV1C_AL", label:"1C #750 TC(MV-105) 35KV ALU 133%+SHLD", od:2.125, wt:2.311},
+  {cat:"MV1C_AL", label:"1C #1000 TC(MV-105) 35KV ALU 133%+SHLD", od:2.277, wt:2.702},
+  // 2C Cuivre
+  {cat:"C2_CU", label:"2C #14 TECK 1000V CU+GND", od:0.730, wt:0.219},
+  {cat:"C2_CU", label:"2C #12 TECK 1000V CU+GND", od:0.770, wt:0.255},
+  {cat:"C2_CU", label:"2C #10 TECK 1000V CU+GND", od:0.810, wt:0.291},
+  {cat:"C2_CU", label:"2C #8 TECK 1000V CU+GND", od:0.900, wt:0.392},
+  {cat:"C2_CU", label:"2C #6 TECK 1000V CU+GND", od:1.020, wt:0.556},
+  {cat:"C2_CU", label:"2C #4 TECK 1000V CU+GND", od:1.160, wt:0.744},
+  {cat:"C2_CU", label:"2C #3 TECK 1000V CU+GND", od:1.230, wt:0.905},
+  {cat:"C2_CU", label:"2C #2 TECK 1000V CU+GND", od:1.280, wt:1.030},
+  {cat:"C2_CU", label:"2C #1 TECK 1000V CU+GND", od:1.420, wt:1.235},
+  {cat:"C2_CU", label:"2C #1/0 TECK 1000V CU+GND", od:1.530, wt:1.425},
+  {cat:"C2_CU", label:"2C #2/0 TECK 1000V CU+GND", od:1.580, wt:1.660},
+  {cat:"C2_CU", label:"2C #3/0 TECK 1000V CU+GND", od:1.690, wt:1.995},
+  {cat:"C2_CU", label:"2C #4/0 TECK 1000V CU+GND", od:1.790, wt:2.350},
+  {cat:"C2_CU", label:"2C #250 TECK 1000V CU+GND", od:1.930, wt:2.779},
+  {cat:"C2_CU", label:"2C #300 TECK 1000V CU+GND", od:2.115, wt:3.341},
+  {cat:"C2_CU", label:"2C #350 TECK 1000V CU+GND", od:2.180, wt:3.650},
+  {cat:"C2_CU", label:"2C #400 TECK 1000V CU+GND", od:2.295, wt:4.147},
+  {cat:"C2_CU", label:"2C #500 TECK 1000V CU+GND", od:2.450, wt:4.895},
+  {cat:"C2_CU", label:"2C #750 TECK 1000V CU+GND", od:2.790, wt:6.872},
+  {cat:"C2_CU", label:"2C #1000 TECK 1000V CU+GND", od:3.100, wt:8.993},
+  // 3C Cuivre
+  {cat:"C3_CU", label:"3C #14 TECK 1000V CU+GND", od:0.760, wt:0.261},
+  {cat:"C3_CU", label:"3C #12 TECK 1000V CU+GND", od:0.800, wt:0.299},
+  {cat:"C3_CU", label:"3C #10 TECK 1000V CU+GND", od:0.880, wt:0.374},
+  {cat:"C3_CU", label:"3C #8 TECK 1000V CU+GND", od:0.940, wt:0.486},
+  {cat:"C3_CU", label:"3C #6 TECK 1000V CU+GND", od:1.130, wt:0.724},
+  {cat:"C3_CU", label:"3C #4 TECK 1000V CU+GND", od:1.250, wt:0.970},
+  {cat:"C3_CU", label:"3C #3 TECK 1000V CU+GND", od:1.300, wt:1.136},
+  {cat:"C3_CU", label:"3C #2 TECK 1000V CU+GND", od:1.370, wt:1.311},
+  {cat:"C3_CU", label:"3C #1 TECK 1000V CU+GND", od:1.540, wt:1.593},
+  {cat:"C3_CU", label:"3C #1/0 TECK 1000V CU+GND", od:1.680, wt:1.906},
+  {cat:"C3_CU", label:"3C #2/0 TECK 1000V CU+GND", od:1.770, wt:2.225},
+  {cat:"C3_CU", label:"3C #3/0 TECK 1000V CU+GND", od:1.780, wt:2.666},
+  {cat:"C3_CU", label:"3C #4/0 TECK 1000V CU+GND", od:1.980, wt:3.207},
+  {cat:"C3_CU", label:"3C #250 TECK 1000V CU+GND", od:2.170, wt:3.800},
+  {cat:"C3_CU", label:"3C #300 TECK 1000V CU+GND", od:2.350, wt:4.460},
+  {cat:"C3_CU", label:"3C #350 TECK 1000V CU+GND", od:2.400, wt:4.979},
+  {cat:"C3_CU", label:"3C #400 TECK 1000V CU+GND", od:2.455, wt:5.719},
+  {cat:"C3_CU", label:"3C #500 TECK 1000V CU+GND", od:2.660, wt:6.586},
+  {cat:"C3_CU", label:"3C #600 TECK 1000V CU+GND", od:2.790, wt:7.948},
+  {cat:"C3_CU", label:"3C #750 TECK 1000V CU+GND", od:3.030, wt:9.267},
+  {cat:"C3_CU", label:"3C #1000 TECK 1000V CU+GND", od:3.440, wt:12.184},
+  {cat:"C3_CU", label:"3C #6 TECK 5KV CU+GND", od:1.370, wt:0.927},
+  {cat:"C3_CU", label:"3C #4 TECK 5KV CU+GND", od:1.470, wt:1.138},
+  {cat:"C3_CU", label:"3C #2 TECK 5KV CU+GND", od:1.590, wt:1.148, note:"Weight per source table — appears low relative to size progression, verify."},
+  {cat:"C3_CU", label:"3C #1 TECK 5KV CU+GND", od:1.690, wt:1.175, note:"Weight per source table — appears low relative to size progression, verify."},
+  {cat:"C3_CU", label:"3C #1/0 TECK 5KV CU+GND", od:1.770, wt:2.012},
+  {cat:"C3_CU", label:"3C #2/0 TECK 5KV CU+GND", od:1.860, wt:2.334},
+  {cat:"C3_CU", label:"3C #3/0 TECK 5KV CU+GND", od:1.970, wt:2.835},
+  {cat:"C3_CU", label:"3C #4/0 TECK 5KV CU+GND", od:2.080, wt:3.328},
+  {cat:"C3_CU", label:"3C #250 TECK 5KV CU+GND", od:2.250, wt:3.910},
+  {cat:"C3_CU", label:"3C #300 TECK 5KV CU+GND", od:2.330, wt:4.616},
+  {cat:"C3_CU", label:"3C #350 TECK 5KV CU+GND", od:2.490, wt:5.102},
+  {cat:"C3_CU", label:"3C #400 TECK 5KV CU+GND", od:2.550, wt:5.836},
+  {cat:"C3_CU", label:"3C #500 TECK 5KV CU+GND", od:2.750, wt:6.721},
+  {cat:"C3_CU", label:"3C #600 TECK 5KV CU+GND", od:2.890, wt:8.110},
+  {cat:"C3_CU", label:"3C #750 TECK 5KV CU+GND", od:3.140, wt:9.469},
+  {cat:"C3_CU", label:"3C #1000 TECK 5KV CU+GND", od:3.540, wt:13.790},
+  {cat:"C3_CU", label:"3C #6 TECK 5KV CU+GND+SHLD", od:1.540, wt:1.120},
+  {cat:"C3_CU", label:"3C #4 TECK 5KV CU+GND+SHLD", od:1.630, wt:1.350},
+  {cat:"C3_CU", label:"3C #2 TECK 5KV CU+GND+SHLD", od:1.770, wt:1.174, note:"Weight per source table — appears low relative to size progression, verify."},
+  {cat:"C3_CU", label:"3C #1 TECK 5KV CU+GND+SHLD", od:1.830, wt:1.960},
+  {cat:"C3_CU", label:"3C #1/0 TECK 5KV CU+GND+SHLD", od:1.910, wt:2.290},
+  {cat:"C3_CU", label:"3C #2/0 TECK 5KV CU+GND+SHLD", od:2.010, wt:2.620},
+  {cat:"C3_CU", label:"3C #3/0 TECK 5KV CU+GND+SHLD", od:2.170, wt:3.210},
+  {cat:"C3_CU", label:"3C #4/0 TECK 5KV CU+GND+SHLD", od:2.290, wt:3.720},
+  {cat:"C3_CU", label:"3C #250 TECK 5KV CU+GND+SHLD", od:2.430, wt:4.300},
+  {cat:"C3_CU", label:"3C #300 TECK 5KV CU+GND+SHLD", od:2.495, wt:4.980},
+  {cat:"C3_CU", label:"3C #350 TECK 5KV CU+GND+SHLD", od:2.590, wt:5.638},
+  {cat:"C3_CU", label:"3C #400 TECK 5KV CU+GND+SHLD", od:2.695, wt:6.202},
+  {cat:"C3_CU", label:"3C #500 TECK 5KV CU+GND+SHLD", od:2.900, wt:7.130},
+  {cat:"C3_CU", label:"3C #600 TECK 5KV CU+GND+SHLD", od:3.025, wt:8.471},
+  {cat:"C3_CU", label:"3C #750 TECK 5KV CU+GND+SHLD", od:3.420, wt:10.330},
+  {cat:"C3_CU", label:"3C #1000 TECK 5KV CU+GND+SHLD", od:3.750, wt:13.080},
+  {cat:"C3_CU", label:"3C #2 TECK 15kV CU 133%+SHLD", od:2.430, wt:2.665},
+  {cat:"C3_CU", label:"3C #1 TECK 15kV CU 133%+SHLD", od:2.490, wt:3.089},
+  {cat:"C3_CU", label:"3C #1/0 TECK 15kV CU 133%+SHLD", od:2.580, wt:3.300},
+  {cat:"C3_CU", label:"3C #2/0 TECK 15kV CU 133%+SHLD", od:2.670, wt:3.650},
+  {cat:"C3_CU", label:"3C #3/0 TECK 15kV CU 133%+SHLD", od:2.770, wt:4.140},
+  {cat:"C3_CU", label:"3C #4/0 TECK 15kV CU 133%+SHLD", od:2.880, wt:4.680},
+  {cat:"C3_CU", label:"3C #250 TECK 15kV CU 133%+SHLD", od:3.000, wt:5.275},
+  {cat:"C3_CU", label:"3C #350 TECK 15kV CU 133%+SHLD", od:3.330, wt:6.842},
+  {cat:"C3_CU", label:"3C #500 TECK 15kV CU 133%+SHLD", od:3.590, wt:8.513},
+  {cat:"C3_CU", label:"3C #750 TECK 15kV CU 133%+SHLD", od:4.000, wt:11.507},
+  {cat:"C3_CU", label:"3C #1 TECK 28kV CU 133%+SHLD", od:3.100, wt:3.980},
+  {cat:"C3_CU", label:"3C #1/0 TECK 28KV CU 133%+SHLD", od:3.180, wt:4.360},
+  {cat:"C3_CU", label:"3C #2/0 TECK 28KV CU 133%+SHLD", od:3.360, wt:4.950},
+  {cat:"C3_CU", label:"3C #3/0 TECK 28KV CU 133%+SHLD", od:3.460, wt:5.490},
+  {cat:"C3_CU", label:"3C #4/0 TECK 28KV CU 133%+SHLD", od:3.580, wt:6.090},
+  {cat:"C3_CU", label:"3C #250 TECK 28KV CU 133%+SHLD", od:3.700, wt:6.660},
+  {cat:"C3_CU", label:"3C #350 TECK 28KV CU 133%+SHLD", od:4.000, wt:7.960},
+  {cat:"C3_CU", label:"3C #500 TECK 28KV CU 133%+SHLD", od:4.150, wt:8.080},
+  // 3C Aluminium
+  {cat:"C3_AL", label:"3C #6 ACWU 600V ALU+GND", od:0.879, wt:0.325},
+  {cat:"C3_AL", label:"3C #4 ACWU 600V ALU+GND", od:1.020, wt:0.415},
+  {cat:"C3_AL", label:"3C #2 ACWU 600V ALU+GND", od:1.093, wt:0.530},
+  {cat:"C3_AL", label:"3C #1 ACWU 600V ALU+GND", od:1.248, wt:0.632},
+  {cat:"C3_AL", label:"3C #1/0 ACWU 600V ALU+GND", od:1.207, wt:0.637},
+  {cat:"C3_AL", label:"3C #2/0 ACWU 600V ALU+GND", od:1.375, wt:0.850},
+  {cat:"C3_AL", label:"3C #3/0 ACWU 600V ALU+GND", od:1.476, wt:0.996},
+  {cat:"C3_AL", label:"3C #4/0 ACWU 600V ALU+GND", od:1.584, wt:1.161},
+  {cat:"C3_AL", label:"3C #250 ACWU 600V ALU+GND", od:1.839, wt:1.493},
+  {cat:"C3_AL", label:"3C #350 ACWU 600V ALU+GND", od:2.043, wt:1.885},
+  {cat:"C3_AL", label:"3C #500 ACWU 600V ALU+GND", od:2.304, wt:2.485},
+  {cat:"C3_AL", label:"3C #600 ACWU 600V ALU+GND", od:2.563, wt:3.035},
+  {cat:"C3_AL", label:"3C #750 ACWU 600V ALU+GND", od:2.763, wt:3.597},
+  {cat:"C3_AL", label:"3C #6 TECK 1000V ALU+GND", od:1.033, wt:0.454},
+  {cat:"C3_AL", label:"3C #4 TECK 1000V ALU+GND", od:1.222, wt:0.639},
+  {cat:"C3_AL", label:"3C #3 TECK 1000V ALU+GND", od:1.285, wt:0.696},
+  {cat:"C3_AL", label:"3C #2 TECK 1000V ALU+GND", od:1.351, wt:0.806},
+  {cat:"C3_AL", label:"3C #1 TECK 1000V ALU+GND", od:1.500, wt:0.918},
+  {cat:"C3_AL", label:"3C #1/0 TECK 1000V ALU+GND", od:1.595, wt:1.025},
+  {cat:"C3_AL", label:"3C #2/0 TECK 1000V ALU+GND", od:1.685, wt:1.176},
+  {cat:"C3_AL", label:"3C #3/0 TECK 1000V ALU+GND", od:1.784, wt:1.333},
+  {cat:"C3_AL", label:"3C #4/0 TECK 1000V ALU+GND", od:1.946, wt:1.614},
+  {cat:"C3_AL", label:"3C #250 TECK 1000V ALU+GND", od:2.147, wt:1.948},
+  {cat:"C3_AL", label:"3C #300 TECK 1000V ALU+GND", od:2.252, wt:2.200},
+  {cat:"C3_AL", label:"3C #350 TECK 1000V ALU+GND", od:2.392, wt:2.370},
+  {cat:"C3_AL", label:"3C #400 TECK 1000V ALU+GND", od:2.470, wt:2.650},
+  {cat:"C3_AL", label:"3C #500 TECK 1000V ALU+GND", od:2.637, wt:3.056},
+  {cat:"C3_AL", label:"3C #600 TECK 1000V ALU+GND", od:2.805, wt:3.453},
+  {cat:"C3_AL", label:"3C #750 TECK 1000V ALU+GND", od:3.042, wt:4.051},
+  // 4C Cuivre
+  {cat:"C4_CU", label:"4C #14 TECK 1000V CU+GND", od:0.800, wt:0.290},
+  {cat:"C4_CU", label:"4C #12 TECK 1000V CU+GND", od:0.880, wt:0.357},
+  {cat:"C4_CU", label:"4C #10 TECK 1000V CU+GND", od:0.930, wt:0.455},
+  {cat:"C4_CU", label:"4C #8 TECK 1000V CU+GND", od:1.000, wt:0.548},
+  {cat:"C4_CU", label:"4C #6 TECK 1000V CU+GND", od:1.250, wt:0.907},
+  {cat:"C4_CU", label:"4C #4 TECK 1000V CU+GND", od:1.350, wt:1.168},
+  {cat:"C4_CU", label:"4C #3 TECK 1000V CU+GND", od:1.400, wt:1.373},
+  {cat:"C4_CU", label:"4C #2 TECK 1000V CU+GND", od:1.460, wt:1.583},
+  {cat:"C4_CU", label:"4C #1 TECK 1000V CU+GND", od:1.720, wt:2.032},
+  {cat:"C4_CU", label:"4C #1/0 TECK 1000V CU+GND", od:1.810, wt:2.365},
+  {cat:"C4_CU", label:"4C #2/0 TECK 1000V CU+GND", od:1.910, wt:2.745},
+  {cat:"C4_CU", label:"4C #3/0 TECK 1000V CU+GND", od:2.030, wt:3.398},
+  {cat:"C4_CU", label:"4C #4/0 TECK 1000V CU+GND", od:2.210, wt:4.170},
+  {cat:"C4_CU", label:"4C #250 TECK 1000V CU+GND", od:2.350, wt:4.789},
+  {cat:"C4_CU", label:"4C #350 TECK 1000V CU+GND", od:2.600, wt:6.307},
+  {cat:"C4_CU", label:"4C #500 TECK 1000V CU+GND", od:2.900, wt:8.438},
+  {cat:"C4_CU", label:"4C #750 TECK 1000V CU+GND", od:3.420, wt:12.411},
+  // 4C Aluminium
+  {cat:"C4_AL", label:"4C #6 ACWU 600V ALU+GND", od:1.010, wt:0.392},
+  {cat:"C4_AL", label:"4C #4 ACWU 600V ALU+GND", od:1.187, wt:0.634},
+  {cat:"C4_AL", label:"4C #2 ACWU 600V ALU+GND", od:1.130, wt:0.520},
+  {cat:"C4_AL", label:"4C #1 ACWU 600V ALU+GND", od:1.315, wt:0.772},
+  {cat:"C4_AL", label:"4C #1/0 ACWU 600V ALU+GND", od:1.407, wt:0.889},
+  {cat:"C4_AL", label:"4C #2/0 ACWU 600V ALU+GND", od:1.503, wt:1.037},
+  {cat:"C4_AL", label:"4C #3/0 ACWU 600V ALU+GND", od:1.723, wt:1.337},
+  {cat:"C4_AL", label:"4C #4/0 ACWU 600V ALU+GND", od:1.844, wt:1.556},
+  {cat:"C4_AL", label:"4C #250 ACWU 600V ALU+GND", od:2.010, wt:1.836},
+  {cat:"C4_AL", label:"4C #350 ACWU 600V ALU+GND", od:2.239, wt:2.335},
+  {cat:"C4_AL", label:"4C #500 ACWU 600V ALU+GND", od:2.561, wt:3.165},
+  {cat:"C4_AL", label:"4C #750 ACWU 600V ALU+GND", od:3.042, wt:4.482},
+  {cat:"C4_AL", label:"4C #1/0 TECK 1000V ALU+GND", od:1.727, wt:1.251},
+  {cat:"C4_AL", label:"4C #2/0 TECK 1000V ALU+GND", od:1.823, wt:1.410},
+  {cat:"C4_AL", label:"4C #3/0 TECK 1000V ALU+GND", od:1.987, wt:1.680},
+  {cat:"C4_AL", label:"4C #4/0 TECK 1000V ALU+GND", od:2.173, wt:2.066},
+  {cat:"C4_AL", label:"4C #250 TECK 1000V ALU+GND", od:2.330, wt:2.409},
+  {cat:"C4_AL", label:"4C #300 TECK 1000V ALU+GND", od:2.477, wt:2.661},
+  {cat:"C4_AL", label:"4C #350 TECK 1000V ALU+GND", od:2.587, wt:2.957},
+  {cat:"C4_AL", label:"4C #400 TECK 1000V ALU+GND", od:2.691, wt:3.236},
+  {cat:"C4_AL", label:"4C #500 TECK 1000V ALU+GND", od:2.872, wt:3.376},
+  {cat:"C4_AL", label:"4C #600 TECK 1000V ALU+GND", od:3.055, wt:4.267},
+  {cat:"C4_AL", label:"4C #750 TECK 1000V ALU+GND", od:3.380, wt:5.017},
+  // Contrôle / multiconducteur
+  {cat:"CTRL", label:"2C #16 ARMÉ CTRL BLEU 600V CU+GND", od:0.650, wt:0.177},
+  {cat:"CTRL", label:"3C #16 ARMÉ CTRL BLEU 600V CU+GND", od:0.670, wt:0.196},
+  {cat:"CTRL", label:"4C #16 ARMÉ CTRL BLEU 600V CU+GND", od:0.700, wt:0.217},
+  {cat:"CTRL", label:"5C #16 ARMÉ CTRL BLEU 600V CU+GND", od:0.730, wt:0.241},
+  {cat:"CTRL", label:"6C #16 ARMÉ CTRL BLEU 600V CU+GND", od:0.798, wt:0.264},
+  {cat:"CTRL", label:"7C #16 ARMÉ CTRL BLEU 600V CU+GND", od:0.834, wt:0.276},
+  {cat:"CTRL", label:"8C #16 ARMÉ CTRL BLEU 600V CU+GND", od:0.897, wt:0.300},
+  {cat:"CTRL", label:"10C #16 ARMÉ CTRL BLEU 600V CU+GND", od:0.920, wt:0.373},
+  {cat:"CTRL", label:"12C #16 ARMÉ CTRL BLEU 600V CU+GND", od:0.950, wt:0.407},
+  {cat:"CTRL", label:"15C #16 ARMÉ CTRL BLEU 600V CU+GND", od:0.990, wt:0.459},
+  {cat:"CTRL", label:"20C #16 ARMÉ CTRL BLEU 600V CU+GND", od:1.070, wt:0.545},
+  {cat:"CTRL", label:"25C #16 ARMÉ CTRL BLEU 600V CU+GND", od:1.220, wt:0.730},
+  {cat:"CTRL", label:"30C #16 ARMÉ CTRL BLEU 600V CU+GND", od:1.280, wt:0.811},
+  {cat:"CTRL", label:"40C #16 ARMÉ CTRL BLEU 600V CU+GND", od:1.380, wt:0.974},
+  {cat:"CTRL", label:"50C #16 ARMÉ CTRL BLEU 600V CU+GND", od:1.480, wt:1.141},
+  {cat:"CTRL", label:"2C #14 TECK NOIR 600V CU+GND", od:0.670, wt:0.195},
+  {cat:"CTRL", label:"3C #14 TECK NOIR 600V CU+GND", od:0.690, wt:0.226},
+  {cat:"CTRL", label:"4C #14 TECK NOIR 600V CU+GND", od:0.720, wt:0.256},
+  {cat:"CTRL", label:"5C #14 TECK NOIR 600V CU+GND", od:0.760, wt:0.290},
+  {cat:"CTRL", label:"6C #14 TECK NOIR 600V CU+GND", od:0.800, wt:0.316},
+  {cat:"CTRL", label:"7C #14 TECK NOIR 600V CU+GND", od:0.820, wt:0.338},
+  {cat:"CTRL", label:"8C #14 TECK NOIR 600V CU+GND", od:0.870, wt:0.373},
+  {cat:"CTRL", label:"10C #14 TECK NOIR 600V CU+GND", od:0.960, wt:0.451},
+  {cat:"CTRL", label:"12C #14 TECK NOIR 600V CU+GND", od:0.990, wt:0.511},
+  {cat:"CTRL", label:"15C #14 TECK NOIR 600V CU+GND", od:1.040, wt:0.586},
+  {cat:"CTRL", label:"20C #14 TECK NOIR 600V CU+GND", od:1.210, wt:0.789},
+  {cat:"CTRL", label:"25C #14 TECK NOIR 600V CU+GND", od:1.300, wt:0.958},
+  {cat:"CTRL", label:"30C #14 TECK NOIR 600V CU+GND", od:1.360, wt:1.015},
+  {cat:"CTRL", label:"40C #14 TECK NOIR 600V CU+GND", od:1.480, wt:1.234},
+  {cat:"CTRL", label:"50C #14 TECK NOIR 600V CU+GND", od:1.600, wt:1.463},
+  {cat:"CTRL", label:"2C #12 TECK NOIR 600V CU+GND", od:0.700, wt:0.228},
+  {cat:"CTRL", label:"3C #12 TECK NOIR 600V CU+GND", od:0.730, wt:0.254},
+  {cat:"CTRL", label:"4C #12 TECK NOIR 600V CU+GND", od:0.770, wt:0.293},
+  {cat:"CTRL", label:"5C #12 TECK NOIR 600V CU+GND", od:0.810, wt:0.350},
+  {cat:"CTRL", label:"6C #12 TECK NOIR 600V CU+GND", od:0.890, wt:0.416},
+  {cat:"CTRL", label:"7C #12 TECK NOIR 600V CU+GND", od:0.910, wt:0.443},
+  {cat:"CTRL", label:"8C #12 TECK NOIR 600V CU+GND", od:0.940, wt:0.492},
+  {cat:"CTRL", label:"10C #12 TECK NOIR 600V CU+GND", od:1.040, wt:0.555},
+  {cat:"CTRL", label:"12C #12 TECK NOIR 600V CU+GND", od:1.100, wt:0.653},
+  {cat:"CTRL", label:"15C #12 TECK NOIR 600V CU+GND", od:1.160, wt:0.757},
+  {cat:"CTRL", label:"20C #12 TECK NOIR 600V CU+GND", od:1.320, wt:0.986},
+  {cat:"CTRL", label:"25C #12 TECK NOIR 600V CU+GND", od:1.420, wt:1.210},
+  {cat:"CTRL", label:"30C #12 TECK NOIR 600V CU+GND", od:1.490, wt:1.320},
+  {cat:"CTRL", label:"40C #12 TECK NOIR 600V CU+GND", od:1.640, wt:1.725},
+  {cat:"CTRL", label:"50C #12 TECK NOIR 600V CU+GND", od:1.770, wt:2.055},
+  {cat:"CTRL", label:"2C #10 TECK NOIR 600V CU+GND", od:0.750, wt:0.275},
+  {cat:"CTRL", label:"3C #10 TECK NOIR 600V CU+GND", od:0.780, wt:0.327},
+  {cat:"CTRL", label:"4C #10 TECK NOIR 600V CU+GND", od:0.830, wt:0.413},
+  {cat:"CTRL", label:"5C #10 TECK NOIR 600V CU+GND", od:0.910, wt:0.473},
+  {cat:"CTRL", label:"6C #10 TECK NOIR 600V CU+GND", od:0.960, wt:0.515},
+  {cat:"CTRL", label:"8C #10 TECK NOIR 600V CU+GND", od:1.020, wt:0.613},
+  {cat:"CTRL", label:"10C #10 TECK NOIR 600V CU+GND", od:1.160, wt:0.828},
+  {cat:"CTRL", label:"12C #10 TECK NOIR 600V CU+GND", od:1.230, wt:0.916},
+  {cat:"CTRL", label:"15C #10 TECK NOIR 600V CU+GND", od:1.300, wt:1.084},
+  {cat:"CTRL", label:"20C #10 TECK NOIR 600V CU+GND", od:1.440, wt:1.316},
+  {cat:"CTRL", label:"25C #10 TECK NOIR 600V CU+GND", od:1.550, wt:1.612},
+  {cat:"CTRL", label:"30C #10 TECK NOIR 600V CU+GND", od:1.650, wt:1.821},
+  {cat:"CTRL", label:"40C #10 TECK NOIR 600V CU+GND", od:1.810, wt:2.278},
+  {cat:"CTRL", label:"50C #10 TECK NOIR 600V CU+GND", od:1.970, wt:2.820},
+  // Instrumentation
+  {cat:"INSTR", label:"1PR #16 ARMÉ INSTRUM GRIS 300V+SHLD", od:0.620, wt:0.160},
+  {cat:"INSTR", label:"2PR #16 ARMÉ INSTRUM GRIS 300V+SHLD", od:0.676, wt:0.209},
+  {cat:"INSTR", label:"4PR #16 ARMÉ INSTRUM GRIS 300V+SHLD", od:0.912, wt:0.356},
+  {cat:"INSTR", label:"6PR #16 ARMÉ INSTRUM GRIS 300V+SHLD", od:1.029, wt:0.453},
+  {cat:"INSTR", label:"8PR #16 ARMÉ INSTRUM GRIS 300V+SHLD", od:1.126, wt:0.571},
+  {cat:"INSTR", label:"12PR #16 ARMÉ INSTRUM GRIS 300V+SHLD", od:1.335, wt:0.798},
+  {cat:"INSTR", label:"16PR #16 ARMÉ INSTRUM GRIS 300V+SHLD", od:1.442, wt:0.956},
+  {cat:"INSTR", label:"24PR #16 ARMÉ INSTRUM GRIS 300V+SHLD", od:1.682, wt:1.308},
+  {cat:"INSTR", label:"36PR #16 ARMÉ INSTRUM GRIS 300V+SHLD", od:1.918, wt:1.976},
+  {cat:"INSTR", label:"50PR #16 ARMÉ INSTRUM GRIS 300V+SHLD", od:2.347, wt:2.455},
+  {cat:"INSTR", label:"2TR #16 ARMÉ INSTRUM GRIS 300V+SHLD", od:0.874, wt:0.311},
+  {cat:"INSTR", label:"4TR #16 ARMÉ INSTRUM GRIS 300V+SHLD", od:0.964, wt:0.423},
+  {cat:"INSTR", label:"6TR #16 ARMÉ INSTRUM GRIS 300V+SHLD", od:1.130, wt:0.590},
+  {cat:"INSTR", label:"8TR #16 ARMÉ INSTRUM GRIS 300V+SHLD", od:1.239, wt:0.741},
+  {cat:"INSTR", label:"12TR #16 ARMÉ INSTRUM GRIS 300V+SHLD", od:1.429, wt:0.986},
+  {cat:"INSTR", label:"16TR #16 ARMÉ INSTRUM GRIS 300V+SHLD", od:1.565, wt:1.225},
+  {cat:"INSTR", label:"24TR #16 ARMÉ INSTRUM GRIS 300V+SHLD", od:1.810, wt:1.658},
+  {cat:"INSTR", label:"36TR #16 ARMÉ INSTRUM GRIS 300V+SHLD", od:2.304, wt:2.494},
+  // Fire alarm
+  {cat:"FIRE", label:"3C #18 ARMÉ SÉCURITÉ ROUGE 300V+SHLD GLOBAL", od:0.402, wt:0.069},
+  {cat:"FIRE", label:"5C #18 ARMÉ SÉCURITÉ ROUGE 300V+SHLD GLOBAL", od:0.450, wt:0.070},
+  {cat:"FIRE", label:"3C #18 ARMÉ SÉCURITÉ ROUGE 300V", od:0.415, wt:0.075},
+  {cat:"FIRE", label:"4C #18 ARMÉ SÉCURITÉ ROUGE 300V", od:0.420, wt:0.081},
+  {cat:"FIRE", label:"5C #18 ARMÉ SÉCURITÉ ROUGE 300V", od:0.449, wt:0.104},
+  {cat:"FIRE", label:"8C #18 ARMÉ SÉCURITÉ ROUGE 300V", od:0.460, wt:0.132},
+  {cat:"FIRE", label:"3C #16 ARMÉ SÉCURITÉ ROUGE 300V", od:0.410, wt:0.075},
+  {cat:"FIRE", label:"5C #16 ARMÉ SÉCURITÉ ROUGE 300V", od:0.421, wt:0.094},
+  {cat:"FIRE", label:"3C #14 ARMÉ SÉCURITÉ ROUGE 300V", od:0.483, wt:0.483, note:"Weight equals OD in source table — likely a transcription artifact, verify."},
+  {cat:"FIRE", label:"5C #14 ARMÉ SÉCURITÉ ROUGE 300V", od:0.490, wt:0.490, note:"Weight equals OD in source table — likely a transcription artifact, verify."},
+  // Networking
+  {cat:"NET", label:"2 FIBRES OPT. ARMÉ NOIR", od:0.520, wt:0.121},
+  {cat:"NET", label:"4 FIBRES OPT. ARMÉ NOIR", od:0.550, wt:0.128},
+  {cat:"NET", label:"6 FIBRES OPT. ARMÉ NOIR", od:0.560, wt:0.132},
+  {cat:"NET", label:"8 FIBRES OPT. ARMÉ NOIR", od:0.580, wt:0.135},
+  {cat:"NET", label:"12 FIBRES OPT. ARMÉ NOIR", od:0.590, wt:0.146},
+  {cat:"NET", label:"24 FIBRES OPT. ARMÉ NOIR", od:0.650, wt:0.158},
+  {cat:"NET", label:"36 FIBRES OPT. ARMÉ NOIR", od:0.960, wt:0.376},
+  {cat:"NET", label:"48 FIBRES OPT. ARMÉ NOIR", od:0.950, wt:0.368},
+  {cat:"NET", label:"72 FIBRES OPT. ARMÉ NOIR", od:1.100, wt:0.472},
+  {cat:"NET", label:"96 FIBRES OPT. ARMÉ NOIR", od:1.290, wt:0.569},
+  {cat:"NET", label:"144 FIBRES OPT. ARMÉ NOIR", od:1.350, wt:0.676},
+  {cat:"NET", label:"4PR #23 CAT6 ARMÉ BLEU 300V+SHLD GLOBAL", od:0.725, wt:0.172},
+  {cat:"NET", label:"4PR #23 CAT6 ARMÉ NOIR", od:0.688, wt:0.154},
+];
+
+let currentLang = 'en';
+let state = { conduitType:"EMT", conduitSize:53, nipple:false, mode:"single", items:[] };
+let itemSeq = 1;
+
+/* ===== step collapse ===== */
+document.querySelectorAll(".step-head").forEach(h=>{
+  h.addEventListener("click", ()=>{ $(h.dataset.toggle).classList.toggle("closed"); });
+});
+
+/* ===== conduit type/size ===== */
+function populateConduitControls(){
+  const L = UI[currentLang];
+  const typeSel = $("conduitType");
+  typeSel.innerHTML = Object.keys(CONDUIT_AREA).map(t=>`<option value="${t}">${L["conduit_"+t]}</option>`).join("");
+  typeSel.value = state.conduitType;
+  refreshConduitSizeOptions();
+}
+function refreshConduitSizeOptions(){
+  const sizeSel = $("conduitSize");
+  const sizes = CONDUIT_TYPE_SIZES[state.conduitType];
+  if(state.conduitType==="HDPE"){
+    sizeSel.innerHTML = sizes.map(s=>`<option value="${s}">${s}" IPS (SDR11)</option>`).join("");
+  } else {
+    sizeSel.innerHTML = sizes.map(s=>`<option value="${s}">${s} mm (${imperialTag(s)})</option>`).join("");
+  }
+  if(!sizes.includes(state.conduitSize)) state.conduitSize = sizes[Math.min(5,sizes.length-1)];
+  sizeSel.value = state.conduitSize;
+}
+function imperialTag(mm){
+  const map = {16:'½"',21:'¾"',27:'1"',35:'1¼"',41:'1½"',53:'2"',63:'2½"',78:'3"',91:'3½"',103:'4"',129:'5"',155:'6"'};
+  return map[mm]||"";
+}
+$("conduitType").addEventListener("change", e=>{ state.conduitType=e.target.value; refreshConduitSizeOptions(); recalc(); });
+$("conduitSize").addEventListener("change", e=>{ state.conduitSize=Number(e.target.value); recalc(); });
+$("isNipple").addEventListener("change", e=>{ state.nipple=e.target.checked; recalc(); });
+
+/* ===== mode tabs ===== */
+$("modeTabs").addEventListener("click", e=>{
+  const b = e.target.closest(".mtab"); if(!b) return;
+  document.querySelectorAll("#modeTabs .mtab").forEach(x=>x.classList.remove("active"));
+  b.classList.add("active");
+  state.mode = b.dataset.m;
+  $("singleEntry").style.display = state.mode==="single" ? "flex":"none";
+  $("cableEntry").style.display = state.mode==="cable" ? "flex":"none";
+});
+
+/* ===== single conductor controls ===== */
+function populateSingleControls(){
+  const L = UI[currentLang];
+  $("insulSel").innerHTML = INSUL_TYPES.map(t=>`<option value="${t}">${L["insul_"+t]}</option>`).join("");
+  $("awgSel").innerHTML = AWG_ORDER.map(a=>`<option value="${a}">${a} ${isNaN(Number(a))?"":( 'AWG'.length?( /^[0-9]+$/.test(a) && Number(a)>=250 ? "kcmil":"AWG"):'')}`).join("");
+  // simpler label build:
+  $("awgSel").innerHTML = AWG_ORDER.map(a=>{
+    const isKcmil = /^\d+$/.test(a) && Number(a) >= 250;
+    return `<option value="${a}">${a} ${isKcmil?"kcmil":"AWG"}</option>`;
+  }).join("");
+}
+$("isBare1").addEventListener("change", ()=>{
+  const bare = $("isBare1").checked;
+  $("insulSel").disabled = bare;
+  $("insulSel").style.opacity = bare ? 0.4 : 1;
+});
+
+$("addSingleBtn").addEventListener("click", ()=>{
+  const insul = $("insulSel").value;
+  const awg = $("awgSel").value;
+  const qty = Math.max(1, parseInt($("qty1").value)||1);
+  const isGround = $("isGround1").checked;
+  const bare = $("isBare1").checked;
+  // A bare bonding/grounding conductor has no insulation, so its area is the
+  // conductor metal alone rather than the insulated overall area.
+  const areaEach = bare ? BARE_AREA[awg] : CONDUCTOR_AREA[insul][awg];
+  const isKcmil = /^\d+$/.test(awg) && Number(awg) >= 250;
+  state.items.push({
+    id: "i"+(itemSeq++), kind:"single", insul, awg, qty, isGround, bare,
+    areaEach, sizeLabel: awg + (isKcmil?" kcmil":" AWG")
+  });
+  renderItemList();
+  recalc();
+});
+
+/* ===== whole cable controls ===== */
+function populateCableControls(){
+  const L = UI[currentLang];
+  const catSel = $("cableCatSel");
+  catSel.innerHTML = CABLE_CATS.map(c=>`<option value="${c}">${L["cat_"+c]}</option>`).join("");
+  refreshCableTypeOptions();
+}
+function refreshCableTypeOptions(){
+  const cat = $("cableCatSel").value;
+  const opts = CABLE_DATA.filter(c=>c.cat===cat);
+  $("cableTypeSel").innerHTML = opts.map((c,i)=>`<option value="${cat}|${i}">${c.label} (Ø${c.od}")</option>`).join("");
+}
+$("cableCatSel").addEventListener("change", refreshCableTypeOptions);
+$("addCableBtn").addEventListener("click", ()=>{
+  const [cat, idxStr] = $("cableTypeSel").value.split("|");
+  const opts = CABLE_DATA.filter(c=>c.cat===cat);
+  const c = opts[Number(idxStr)];
+  if(!c) return;
+  const qty = Math.max(1, parseInt($("qty2").value)||1);
+  const countPer = Math.max(1, parseInt($("condPerCable").value)||1);
+  const areaEach = mm2FromInDia(c.od);
+  state.items.push({
+    id: "i"+(itemSeq++), kind:"cable", label:c.label, od:c.od, qty, countPer,
+    areaEach, note:c.note||null, cat
+  });
+  renderItemList();
+  recalc();
+});
+
+/* ===== item list ===== */
+function renderItemList(){
+  const L = UI[currentLang];
+  const list = $("itemList");
+  if(state.items.length===0){
+    list.innerHTML = `<div class="empty-note">${L.noItemsYet}</div>`;
+    return;
+  }
+  list.innerHTML = state.items.map(it=>{
+    if(it.kind==="single"){
+      const insulLabel = it.bare ? L.bareTag : UI[currentLang]["insul_"+it.insul];
+      const odMm = Math.sqrt(4*it.areaEach/Math.PI);
+      return `<div class="item-row">
+        <span class="lbl">${it.sizeLabel} · ${insulLabel} × ${it.qty}${it.isGround?` <small>(${L.groundTag})</small>`:""}
+        <small>Ø${fmt(odMm,1)} mm (${fmt(odMm/25.4,2)}") · ${fmt(it.areaEach,1)} mm² ${L.eachLbl}</small></span>
+        <button onclick="removeItem('${it.id}')">✕</button>
+      </div>`;
+    } else {
+      const odMm = it.od*25.4;
+      return `<div class="item-row">
+        <span class="lbl">${it.label} × ${it.qty}
+        <small>Ø${it.od}" (${fmt(odMm,1)} mm) · ${fmt(it.areaEach,1)} mm² ${L.eachLbl}${it.note?` — ⚠ ${it.note}`:""}</small></span>
+        <button onclick="removeItem('${it.id}')">✕</button>
+      </div>`;
+    }
+  }).join("");
+}
+function removeItem(id){
+  state.items = state.items.filter(i=>i.id!==id);
+  renderItemList();
+  recalc();
+}
+
+/* ===== example ===== */
+$("loadExample").addEventListener("click", ()=>{
+  state.conduitType="EMT"; state.conduitSize=53; state.nipple=false;
+  $("conduitType").value="EMT"; $("conduitSize").value=53; $("isNipple").checked=false;
+  state.items = [];
+  itemSeq = 1;
+  const push = (insul,awg,qty,isGround)=>{
+    const isKcmil = /^\d+$/.test(awg) && Number(awg) >= 250;
+    state.items.push({id:"i"+(itemSeq++), kind:"single", insul, awg, qty, isGround,
+      areaEach:CONDUCTOR_AREA[insul][awg], sizeLabel: awg+(isKcmil?" kcmil":" AWG")});
+  };
+  push("RW90","4/0",3,false);
+  push("RW90","4/0",1,true);
+  renderItemList();
+  recalc();
+});
+
+/* ===== cross-section packing diagram ===== */
+const ITEM_COLORS = ["#3b9eff","#e8b545","#7ea6ff","#ff9d6c","#c792ea","#8fe0a0","#ff8fb3","#a0d2ff"];
+function packCircles(circles, containerRadius){
+  // circles: [{r, ...}] sorted largest-first. Greedy tangent-candidate packing (illustrative, not a true optimal pack).
+  const placed = [];
+  circles.forEach(c=>{
+    let best = null, bestDist = Infinity;
+    if(placed.length===0){
+      if(c.r <= containerRadius) best = {x:0,y:0};
+    } else {
+      const candidates = [{x:0,y:0}];
+      // candidates tangent to each already-placed circle
+      placed.forEach(p=>{
+        for(let ang=0; ang<360; ang+=10){
+          const rad = ang*Math.PI/180;
+          const dist = p.r + c.r + 0.4;
+          candidates.push({x:p.x+dist*Math.cos(rad), y:p.y+dist*Math.sin(rad)});
+        }
+      });
+      // candidates hugging the container wall — needed for symmetric arrangements
+      // (e.g. several equal-size circles) that a purely center-seeking search would miss
+      const wallDist = containerRadius - c.r;
+      if(wallDist >= 0){
+        for(let ang=0; ang<360; ang+=8){
+          const rad = ang*Math.PI/180;
+          candidates.push({x:wallDist*Math.cos(rad), y:wallDist*Math.sin(rad)});
+        }
+      }
+      candidates.forEach(cand=>{
+        const distFromCenter = Math.hypot(cand.x,cand.y);
+        if(distFromCenter + c.r > containerRadius + 0.05) return;
+        const overlaps = placed.some(p=> Math.hypot(cand.x-p.x, cand.y-p.y) < (p.r + c.r - 0.3));
+        if(overlaps) return;
+        if(distFromCenter < bestDist){ bestDist = distFromCenter; best = cand; }
+      });
+    }
+    placed.push(Object.assign({}, c, best ? {x:best.x, y:best.y, fits:true} : {x:0, y:0, fits:false}));
+  });
+  return placed;
+}
+
+function renderDiagram(idMm, odMm, maxPct, actualPct){
+  const svg = $("fillDiagram");
+  const L = UI[currentLang];
+  const VB = 340;
+  const pad = 26;
+  const cx = VB/2, cy = VB/2;
+
+  // Scale to the OUTER diameter when we have it, so the conduit wall is drawn
+  // to scale; otherwise fall back to scaling on the bore alone.
+  const outerRadiusPx = (VB - pad*2) / 2;
+  const scale = (odMm && odMm > 0)
+    ? outerRadiusPx / (odMm/2)
+    : (idMm>0 ? outerRadiusPx / (idMm/2) : 1);
+  const boreRadiusPx = (idMm/2) * scale;
+  const wallMm = (odMm && odMm > 0) ? (odMm - idMm)/2 : null;
+
+  // build circle list from items, one svg circle per unit (qty expanded), colored per item group
+  let circles = [];
+  const legendMap = [];
+  state.items.forEach((it, idx)=>{
+    const color = ITEM_COLORS[idx % ITEM_COLORS.length];
+    const dMm = Math.sqrt(4*it.areaEach/Math.PI);
+    const rPx = (dMm/2) * scale;
+    const label = it.kind==="single"
+      ? (it.sizeLabel+" "+(it.bare ? L.bareTag : UI[currentLang]["insul_"+it.insul]))
+      : it.label;
+    const count = it.qty;
+    for(let i=0;i<count;i++){
+      circles.push({r:rPx, color, label});
+    }
+    legendMap.push({color, label, count: it.qty});
+  });
+  circles.sort((a,b)=>b.r-a.r);
+  const placed = packCircles(circles, boreRadiusPx);
+  const anyOverflow = placed.some(p=>!p.fits);
+
+  let svgInner = "";
+  // conduit wall drawn as an annulus between OD and ID
+  if(wallMm !== null && odMm > idMm){
+    svgInner += `<circle cx="${cx}" cy="${cy}" r="${outerRadiusPx}" fill="#1c2b42" stroke="#8497b8" stroke-width="1"/>`;
+    svgInner += `<circle cx="${cx}" cy="${cy}" r="${boreRadiusPx}" fill="var(--panel-soft)" stroke="var(--gold)" stroke-width="1.2"/>`;
+  } else {
+    svgInner += `<circle cx="${cx}" cy="${cy}" r="${boreRadiusPx}" fill="none" stroke="var(--gold)" stroke-width="2" stroke-dasharray="4 3"/>`;
+  }
+
+  placed.forEach(p=>{
+    if(!p.fits) return;
+    svgInner += `<circle cx="${cx+p.x}" cy="${cy+p.y}" r="${Math.max(p.r,1.5)}" fill="${p.color}" fill-opacity="0.75" stroke="#04120f" stroke-width="0.6"/>`;
+  });
+
+  // wall thickness dimension marker (from bore edge out to OD edge, at the top)
+  if(wallMm !== null && odMm > idMm){
+    const yTop = cy - outerRadiusPx;
+    const yBore = cy - boreRadiusPx;
+    svgInner += `<line x1="${cx+outerRadiusPx*0.42}" y1="${yTop}" x2="${cx+outerRadiusPx*0.42}" y2="${yBore}" stroke="var(--trace)" stroke-width="1"/>`;
+    svgInner += `<line x1="${cx+outerRadiusPx*0.42-4}" y1="${yTop}" x2="${cx+outerRadiusPx*0.42+4}" y2="${yTop}" stroke="var(--trace)" stroke-width="1"/>`;
+    svgInner += `<line x1="${cx+outerRadiusPx*0.42-4}" y1="${yBore}" x2="${cx+outerRadiusPx*0.42+4}" y2="${yBore}" stroke="var(--trace)" stroke-width="1"/>`;
+    svgInner += `<text x="${cx+outerRadiusPx*0.42+8}" y="${(yTop+yBore)/2+3}" font-family="IBM Plex Mono" font-size="8.5" fill="var(--trace)">${L.wallLbl} ${fmt(wallMm,1)} mm</text>`;
+  }
+
+  const caption = (wallMm !== null)
+    ? L.diagramODCaption.replace('{id}', fmt(idMm,1)).replace('{od}', fmt(odMm,1)).replace('{wall}', fmt(wallMm,1))
+    : L.diagramIDCaption.replace('{id}', fmt(idMm,1));
+  svgInner += `<text x="${cx}" y="${VB-6}" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="var(--ink-faint)">${caption}</text>`;
+  if(anyOverflow){
+    svgInner += `<text x="${cx}" y="14" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="var(--alarm)">${L.diagramOverflowNote}</text>`;
+  }
+  svg.setAttribute("viewBox", `0 0 ${VB} ${VB}`);
+  svg.innerHTML = svgInner;
+
+  const legend = $("diagramLegend");
+  if(legendMap.length===0){
+    legend.innerHTML = `<span>${L.diagramNoItems}</span>`;
+  } else {
+    legend.innerHTML = legendMap.map(l=>`<span style="display:flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:50%;background:${l.color};display:inline-block;"></span>${l.label} × ${l.count}</span>`).join("");
+  }
+}
+
+/* ===================== cable construction reference ===================== */
+/* Schematic (illustrative, not photographic) cross-sections showing typical
+   layer construction by cable family — colors/geometry are representative
+   engineering drawings, not a reproduction of any specific manufacturer's
+   product photography. A direct link to the manufacturer's own product page
+   is provided alongside each so the actual certified cross-section can be
+   viewed at the source. */
+const MFR_LINKS = {
+  armored: {name:"Nexans — TECK90", url:"https://www.nexans.ca/en/products-and-solutions/energy/power-cables"},
+  mv: {name:"Nexans — MV shielded cable", url:"https://www.nexans.ca/en/products-and-solutions/energy/power-cables"},
+  instrumentation: {name:"Belden — instrumentation cable", url:"https://www.belden.com/products/industrial-cable/instrumentation-cable"},
+  simple: {name:"Nexans — fire alarm/security cable", url:"https://www.nexans.ca/en/"},
+  fiber: {name:"Corning — armored fiber optic cable", url:"https://www.corning.com/optical-communications/"},
+  cat6: {name:"Belden — CAT6 cable", url:"https://www.belden.com/products/enterprise-connectivity/copper-cables/cat6"}
+};
+
+function familyFor(item){
+  if(item.kind==="single") return item.bare ? "bare" : "insulated";
+  const cat = item.cat;
+  if(["C2_CU","C3_CU","C3_AL","C4_CU","C4_AL","CTRL"].includes(cat)) return "armored";
+  if(["MV1C_CU","MV1C_AL"].includes(cat)) return "mv";
+  if(cat==="INSTR") return "instrumentation";
+  if(cat==="FIRE") return "simple";
+  if(cat==="NET") return item.label && item.label.includes("FIBRES") ? "fiber" : "cat6";
+  return "simple";
+}
+
+function svgWrap(inner){ return `<svg viewBox="0 0 120 120" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">${inner}</svg>`; }
+
+function constructionSVG(family){
+  const cx=60, cy=60;
+  if(family==="bare"){
+    return svgWrap(`<circle cx="${cx}" cy="${cy}" r="22" fill="#d4924a" stroke="#8a5a28" stroke-width="1.5"/>`);
+  }
+  if(family==="insulated"){
+    return svgWrap(`
+      <circle cx="${cx}" cy="${cy}" r="30" fill="#2a3a52" stroke="#516085" stroke-width="1"/>
+      <circle cx="${cx}" cy="${cy}" r="16" fill="#d4924a" stroke="#8a5a28" stroke-width="1.2"/>`);
+  }
+  if(family==="armored"){
+    const positions = [[0,-14],[12,7],[-12,7]];
+    const conductors = positions.map(([dx,dy])=>`
+      <circle cx="${cx+dx}" cy="${cy+dy}" r="9" fill="#2a3a52" stroke="#516085" stroke-width="0.8"/>
+      <circle cx="${cx+dx}" cy="${cy+dy}" r="5" fill="#d4924a"/>`).join("");
+    return svgWrap(`
+      <circle cx="${cx}" cy="${cy}" r="48" fill="#161f30" stroke="#516085" stroke-width="1"/>
+      <circle cx="${cx}" cy="${cy}" r="41" fill="none" stroke="#8497b8" stroke-width="1.4" stroke-dasharray="2 2.5"/>
+      <circle cx="${cx}" cy="${cy}" r="36" fill="#0e1524"/>
+      ${conductors}
+      <circle cx="${cx+2}" cy="${cy+18}" r="3.5" fill="#4a7d4a" stroke="#2f5a2f" stroke-width="0.6"/>`);
+  }
+  if(family==="mv"){
+    return svgWrap(`
+      <circle cx="${cx}" cy="${cy}" r="48" fill="#1a1a1a" stroke="#516085" stroke-width="1"/>
+      <circle cx="${cx}" cy="${cy}" r="42" fill="none" stroke="#c8863a" stroke-width="2.5"/>
+      <circle cx="${cx}" cy="${cy}" r="38" fill="#5a2a2a" stroke="#3a1a1a" stroke-width="1"/>
+      <circle cx="${cx}" cy="${cy}" r="30" fill="#1a1a1a" stroke="none"/>
+      <circle cx="${cx}" cy="${cy}" r="20" fill="#d4924a" stroke="#8a5a28" stroke-width="1.2"/>`);
+  }
+  if(family==="instrumentation"){
+    return svgWrap(`
+      <circle cx="${cx}" cy="${cy}" r="42" fill="#161f30" stroke="#516085" stroke-width="1"/>
+      <circle cx="${cx}" cy="${cy}" r="35" fill="none" stroke="#8497b8" stroke-width="1.2" stroke-dasharray="2 2"/>
+      <circle cx="${cx-13}" cy="${cy}" r="12" fill="#2a3a52" stroke="#516085" stroke-width="0.8"/>
+      <circle cx="${cx-13}" cy="${cy}" r="6" fill="#d4924a"/>
+      <circle cx="${cx+13}" cy="${cy}" r="12" fill="#2a3a52" stroke="#516085" stroke-width="0.8"/>
+      <circle cx="${cx+13}" cy="${cy}" r="6" fill="#c94f4f"/>`);
+  }
+  if(family==="cat6"){
+    const pairs = [[-14,-14,'#c94f4f','#e8b545'],[14,-14,'#4fa8e0','#e8e8e8'],[-14,14,'#4a9d5a','#8a5aca'],[14,14,'#e8834f','#6b7a8a']];
+    const twists = pairs.map(([dx,dy,c1,c2])=>`
+      <circle cx="${cx+dx-4}" cy="${cy+dy}" r="5.5" fill="${c1}" stroke="#0a1220" stroke-width="0.6"/>
+      <circle cx="${cx+dx+4}" cy="${cy+dy}" r="5.5" fill="${c2}" stroke="#0a1220" stroke-width="0.6"/>`).join("");
+    return svgWrap(`
+      <circle cx="${cx}" cy="${cy}" r="44" fill="#161f30" stroke="#516085" stroke-width="1"/>
+      ${twists}
+      <line x1="${cx-30}" y1="${cy}" x2="${cx+30}" y2="${cy}" stroke="#516085" stroke-width="0.6" opacity="0"/>`);
+  }
+  if(family==="fiber"){
+    return svgWrap(`
+      <circle cx="${cx}" cy="${cy}" r="44" fill="#161f30" stroke="#516085" stroke-width="1"/>
+      <circle cx="${cx-16}" cy="${cy-8}" r="3" fill="#c8863a" stroke="#8a5a28" stroke-width="0.5"/>
+      <circle cx="${cx+16}" cy="${cy-8}" r="3" fill="#c8863a" stroke="#8a5a28" stroke-width="0.5"/>
+      <circle cx="${cx-16}" cy="${cy+16}" r="3" fill="#c8863a" stroke="#8a5a28" stroke-width="0.5"/>
+      <circle cx="${cx+16}" cy="${cy+16}" r="3" fill="#c8863a" stroke="#8a5a28" stroke-width="0.5"/>
+      <circle cx="${cx}" cy="${cy+2}" r="6" fill="none" stroke="#8497b8" stroke-width="1" stroke-dasharray="1.5 1.5"/>
+      <circle cx="${cx}" cy="${cy+2}" r="3" fill="#e8e030"/>`);
+  }
+  if(family==="simple"){
+    const positions = [[-10,0],[10,0],[0,-14]];
+    const c = positions.map(([dx,dy],i)=>`<circle cx="${cx+dx}" cy="${cy+dy}" r="6" fill="${['#c94f4f','#4fa8e0','#4a9d5a'][i]}" stroke="#0a1220" stroke-width="0.6"/>`).join("");
+    return svgWrap(`
+      <circle cx="${cx}" cy="${cy}" r="34" fill="#161f30" stroke="#516085" stroke-width="1"/>
+      ${c}`);
+  }
+  return svgWrap("");
+}
+
+function renderConstructionCards(){
+  const L = UI[currentLang];
+  const container = $("constructionCards");
+  if(state.items.length===0){
+    container.innerHTML = `<div class="empty-note">${L.constructionEmpty}</div>`;
+    return;
+  }
+  const seen = new Map();
+  state.items.forEach(it=>{
+    const fam = familyFor(it);
+    const label = it.kind==="single" ? (it.sizeLabel+" · "+(it.bare?L.bareTag:UI[currentLang]["insul_"+it.insul])) : it.label;
+    const key = fam+"|"+label;
+    if(!seen.has(key)) seen.set(key, {fam, label});
+  });
+  container.innerHTML = [...seen.values()].map(({fam,label})=>{
+    const mfr = MFR_LINKS[fam];
+    const layersKey = "layers_"+fam;
+    return `<div class="construction-card">
+      <div class="construction-svg-wrap">${constructionSVG(fam)}</div>
+      <div class="construction-info">
+        <div class="name">${label}</div>
+        <div class="layers">${L[layersKey] || ""}</div>
+        ${mfr ? `<div class="mfrlink">${L.viewActualLbl} <a href="${mfr.url}" target="_blank" rel="noopener">${mfr.name}</a></div>` : ""}
+      </div>
+    </div>`;
+  }).join("");
+}
+
+/* ===== core calc ===== */
+function recalc(){
+  const L = UI[currentLang];
+  let totalArea = 0, totalCount = 0;
+  state.items.forEach(it=>{
+    totalArea += it.areaEach * it.qty;
+    if(it.kind==="single"){
+      totalCount += it.qty;
+    } else {
+      totalCount += it.qty * it.countPer;
+    }
+  });
+
+  let maxPct;
+  if(state.nipple){ maxPct = 60; }
+  else if(totalCount<=0){ maxPct = 40; }
+  else if(totalCount===1){ maxPct = 53; }
+  else if(totalCount===2){ maxPct = 31; }
+  else { maxPct = 40; }
+
+  const conduitArea = CONDUIT_AREA[state.conduitType][state.conduitSize];
+  const actualPct = conduitArea>0 ? (totalArea/conduitArea*100) : 0;
+  const pass = actualPct <= maxPct && totalCount>0;
+
+  $("gaugeNum").textContent = fmt(actualPct,1)+"%";
+  $("gaugeNum").className = "gauge-num " + (totalCount>0 ? (pass?"ok":"bad") : "");
+  $("fillBarInner").style.width = Math.min(actualPct,100)+"%";
+  $("fillBarInner").className = "fill " + (pass?"ok":"bad");
+  $("fillBarMarker").style.left = Math.min(maxPct,100)+"%";
+  $("statAllowed").textContent = maxPct+"%";
+  $("statCount").textContent = totalCount;
+  $("statArea").textContent = fmt(totalArea,1)+" mm²";
+  $("statConduitArea").textContent = fmt(conduitArea,1)+" mm²";
+  const conduitID_mm = Math.sqrt(4*conduitArea/Math.PI);
+  const conduitOD_mm = (CONDUIT_OD_MM[state.conduitType] && CONDUIT_OD_MM[state.conduitType][state.conduitSize]) || null;
+  $("statID").textContent = fmt(conduitID_mm,1)+" mm (" + fmt(conduitID_mm/25.4,2) + "\")";
+  $("statOD").textContent = conduitOD_mm ? (fmt(conduitOD_mm,1)+" mm (" + fmt(conduitOD_mm/25.4,2) + "\")") : "—";
+  $("revTag").textContent = new Date().toISOString().slice(0,10);
+
+  renderDiagram(conduitID_mm, conduitOD_mm, maxPct, actualPct);
+  renderConstructionCards();
+
+  const verdictBox = $("verdictBox");
+  const suggestBox = $("suggestBox");
+  if(totalCount===0){
+    verdictBox.innerHTML = `<div class="risk-box risk-warn"><b>${L.noItemsTitle}</b> ${L.noItemsBody}</div>`;
+    suggestBox.innerHTML = "";
+  } else if(pass){
+    verdictBox.innerHTML = `<div class="risk-box risk-ok"><b>${L.passTitle}</b> ${L.passBody.replace('{pct}',fmt(actualPct,1)).replace('{max}',maxPct)}</div>`;
+    suggestBox.innerHTML = "";
+  } else {
+    verdictBox.innerHTML = `<div class="risk-box risk-alarm"><b>${L.failTitle}</b> ${L.failBody.replace('{pct}',fmt(actualPct,1)).replace('{max}',maxPct)}</div>`;
+    // suggest next size
+    const sizesAsc = CONDUIT_TYPE_SIZES[state.conduitType].slice().sort((a,b)=>a-b);
+    const next = sizesAsc.find(s=>{
+      const a = CONDUIT_AREA[state.conduitType][s];
+      return (totalArea/a*100) <= maxPct;
+    });
+    if(next){
+      const sizeLabel = state.conduitType==="HDPE" ? (next+"\" IPS (SDR11)") : (next+" mm ("+imperialTag(next)+")");
+      suggestBox.innerHTML = `<div class="risk-box risk-warn"><b>${L.suggestTitle}</b> ${L.suggestBody.replace('{size}',sizeLabel)}</div>`;
+    } else {
+      suggestBox.innerHTML = `<div class="risk-box risk-warn"><b>${L.suggestTitle}</b> ${L.suggestNone}</div>`;
+    }
+  }
+
+  renderLedger({totalArea, totalCount, maxPct, conduitArea, actualPct, pass});
+  window._lastResults = {totalArea, totalCount, maxPct, conduitArea, actualPct, pass,
+    conduitType:state.conduitType, conduitSize:state.conduitSize, nipple:state.nipple, items:state.items.slice(),
+    tag: $("eqTag").value.trim(), conduitID_mm, conduitOD_mm};
+}
+
+function buildLedgerSteps(d){
+  const L = UI[currentLang];
+  const itemLines = state.items.map(it=>{
+    if(it.kind==="single"){
+      const insLbl = it.bare ? L.bareTag : UI[currentLang]["insul_"+it.insul];
+      return `${it.sizeLabel} (${insLbl})${it.isGround?" ["+L.groundTag+"]":""}: ${it.qty} × ${fmt(it.areaEach,2)} mm² = ${fmt(it.areaEach*it.qty,2)} mm²`;
+    }
+    return `${it.label}: ${it.qty} × ${fmt(it.areaEach,2)} mm² = ${fmt(it.areaEach*it.qty,2)} mm² (${L.countedAs} ${it.qty*it.countPer})`;
+  }).join("\n") || L.noItemsShort;
+
+  return [
+    {num:1, title:L.lstep1Title, formula:itemLines, note:L.lstep1Note},
+    {num:2, title:L.lstep2Title, formula:
+`${L.totalConductorsLbl} = ${d.totalCount}
+${L.totalAreaLbl} = ${fmt(d.totalArea,2)} mm²`, note:L.lstep2Note},
+    {num:3, title:L.lstep3Title, formula:
+`${state.nipple ? L.nippleRuleApplied : (d.totalCount<=1 ? L.rule1 : d.totalCount===2 ? L.rule2 : L.rule3plus)}
+${L.maxFillLbl} = ${d.maxPct}%`, note:L.lstep3Note},
+    {num:4, title:L.lstep4Title, formula:
+`${L.conduitAreaLbl} (${state.conduitType}, ${state.conduitSize} mm) = ${fmt(d.conduitArea,2)} mm²`, note:L.lstep4Note},
+    {num:5, title:L.lstep5Title, formula:
+`${L.actualFillLbl} = (${fmt(d.totalArea,2)} / ${fmt(d.conduitArea,2)}) × 100 = ${fmt(d.actualPct,2)}%
+${d.pass ? L.resultPass : L.resultFail}`, note:L.lstep5Note}
+  ];
+}
+function renderLedger(d){
+  const steps = buildLedgerSteps(d);
+  $("ledger").innerHTML = steps.map(s=>lstep(s.num, s.title, s.formula, s.note)).join("");
+}
+function lstep(n,title,formula,note){
+  return `<div class="lstep"><div class="ln">${String(n).padStart(2,'0')}</div><div>
+    <h3>${title}</h3>
+    <div class="formula">${formula}</div>
+    <div class="cite">${note}</div>
+  </div></div>`;
+}
+
+function renderFillTable(){
+  const L = UI[currentLang];
+  $("fillTableBody").innerHTML = `
+    <tr class="${state.items.reduce((s,i)=>s+(i.kind==='single'?i.qty:i.qty*i.countPer),0)===1?'hl':''}"><td>1</td><td>53%</td></tr>
+    <tr class="${state.items.reduce((s,i)=>s+(i.kind==='single'?i.qty:i.qty*i.countPer),0)===2?'hl':''}"><td>2</td><td>31%</td></tr>
+    <tr class="${state.items.reduce((s,i)=>s+(i.kind==='single'?i.qty:i.qty*i.countPer),0)>=3?'hl':''}"><td>3 ${L.orMore}</td><td>40%</td></tr>
+    <tr class="${state.nipple?'hl':''}"><td>${L.nippleRow}</td><td>60%</td></tr>
+  `;
+}
+
+/* ===== export ===== */
+function downloadBlob(content, mime, filename){
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 2000);
+}
+
+/* ===== report (compact grid style, matching MV Transformer Primary Cable Sizing) ===== */
+function buildReportPageHTML(d, includeLedger, includeItems, includeLogo){
+  const L = UI[currentLang];
+  const today = new Date().toLocaleDateString(currentLang==='fr'?'fr-CA':'en-CA');
+  const cell = (k,v)=>`<td style="padding:2.5pt 6pt 2.5pt 0;color:#333;font-size:9.5pt;white-space:nowrap;">${k}</td><td style="padding:2.5pt 14pt 2.5pt 0;font-weight:600;font-size:9.5pt;border-bottom:0.5pt solid #ddd;">${v}</td>`;
+  const gridRows = (pairs)=>{
+    let html = "";
+    for(let i=0;i<pairs.length;i+=2){
+      const a = pairs[i], b = pairs[i+1];
+      html += `<tr>${cell(a[0],a[1])}${b?cell(b[0],b[1]):'<td></td><td></td>'}</tr>`;
+    }
+    return html;
+  };
+  const sectionHead = (t)=>`<div style="font-size:9.5pt;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;border-bottom:1pt solid #1a1a1a;padding-bottom:2pt;margin:12pt 0 5pt;">${t}</div>`;
+
+  const inputPairs = [
+    [L.lblConduitType, d.conduitType], [L.lblConduitSize, d.conduitSize+" mm ("+imperialTag(d.conduitSize)+")"],
+    [L.lblNipple, d.nipple?L.yes:L.no], [L.statID_lbl, fmt(d.conduitID_mm,1)+" mm"],
+    [L.statOD_lbl, d.conduitOD_mm?fmt(d.conduitOD_mm,1)+" mm":"—"], ["",""]
+  ];
+  const resultPairs = [
+    [L.gaugeLbl, fmt(d.actualPct,1)+"%"], [L.lblStatAllowed, d.maxPct+"%"],
+    [L.lblStatCount, d.totalCount], [L.lblStatArea, fmt(d.totalArea,1)+" mm²"],
+    [L.lblStatConduitArea, fmt(d.conduitArea,1)+" mm²"], [L.xlsResult, d.pass?L.passWord:L.failWord]
+  ];
+
+  let itemsHtml = "";
+  if(includeItems){
+    const rows = d.items.map(it=>{
+      if(it.kind==="single"){
+        const insLbl = it.bare ? L.bareTag : UI[currentLang]["insul_"+it.insul];
+        return `<tr>
+          <td style="padding:3pt 8pt;border-bottom:0.5pt solid #e5e5e5;font-size:8.5pt;">${it.sizeLabel} (${insLbl})${it.isGround?" ["+L.groundTag+"]":""}</td>
+          <td style="padding:3pt 8pt;border-bottom:0.5pt solid #e5e5e5;font-size:8.5pt;">${it.qty}</td>
+          <td style="padding:3pt 8pt;border-bottom:0.5pt solid #e5e5e5;font-size:8.5pt;">${fmt(it.areaEach,2)} mm²</td>
+        </tr>`;
+      }
+      return `<tr>
+        <td style="padding:3pt 8pt;border-bottom:0.5pt solid #e5e5e5;font-size:8.5pt;">${it.label}</td>
+        <td style="padding:3pt 8pt;border-bottom:0.5pt solid #e5e5e5;font-size:8.5pt;">${it.qty}</td>
+        <td style="padding:3pt 8pt;border-bottom:0.5pt solid #e5e5e5;font-size:8.5pt;">${fmt(it.areaEach,2)} mm²</td>
+      </tr>`;
+    }).join("");
+    itemsHtml = sectionHead(L.xlsItemsHeader) + `<table style="width:100%;border-collapse:collapse;">
+      <tr>
+        <td style="padding:4pt 8pt;font-size:7.5pt;font-weight:700;text-transform:uppercase;color:#666;border-bottom:1pt solid #999;">${L.repItem}</td>
+        <td style="padding:4pt 8pt;font-size:7.5pt;font-weight:700;text-transform:uppercase;color:#666;border-bottom:1pt solid #999;">${L.repQty}</td>
+        <td style="padding:4pt 8pt;font-size:7.5pt;font-weight:700;text-transform:uppercase;color:#666;border-bottom:1pt solid #999;">${L.repAreaEach}</td>
+      </tr>${rows}</table>`;
+  }
+
+  let ledgerHtml = "";
+  if(includeLedger){
+    const steps = buildLedgerSteps(d);
+    ledgerHtml = sectionHead(L.ledgerTitle) + `<table style="width:100%;border-collapse:collapse;">` +
+      steps.map(s=>`<tr>
+        <td style="padding:5pt 8pt 5pt 0;border-bottom:0.5pt solid #e5e5e5;font-size:8.5pt;font-weight:700;vertical-align:top;">${String(s.num).padStart(2,'0')}</td>
+        <td style="padding:5pt 8pt;border-bottom:0.5pt solid #e5e5e5;vertical-align:top;">
+          <div style="font-size:8.5pt;font-weight:700;margin-bottom:2pt;">${s.title}</div>
+          <div style="font-family:'Courier New',monospace;font-size:8pt;color:#333;line-height:1.5;">${s.formula.split("\n").map(l=>l===""?"&nbsp;":l).join("<br>")}</div>
+          <div style="font-size:7.5pt;color:#888;margin-top:3pt;">${s.note}</div>
+        </td></tr>`).join("") + `</table>`;
+  }
+
+  return `
+  <div style="font-family:Arial,Helvetica,sans-serif;color:#1a1a1a;background:#fff;padding:4pt 2pt;font-size:9.5pt;line-height:1.4;">
+    <table style="width:100%;border-collapse:collapse;border-bottom:1.5pt solid #1a1a1a;padding-bottom:6pt;margin-bottom:4pt;">
+      <tr><td style="font-size:13pt;font-weight:700;padding-bottom:6pt;">${L.titleH1}</td>
+      <td style="text-align:right;font-size:8.5pt;color:#555;padding-bottom:6pt;">${includeLogo?'Ω OHMZONE':''}</td></tr>
+      <tr><td style="font-size:9pt;color:#333;"><b>${L.lblTag}:</b> ${d.tag || L.untitledTag} &nbsp;&nbsp; <b>${L.lblMethod}:</b> CSA C22.1</td>
+      <td style="text-align:right;font-size:8.5pt;color:#555;">${today}</td></tr>
+    </table>
+    ${sectionHead(L.repInputData)}
+    <table style="width:100%;border-collapse:collapse;">${gridRows(inputPairs)}</table>
+    ${sectionHead(L.repResults)}
+    <table style="width:100%;border-collapse:collapse;">${gridRows(resultPairs)}</table>
+    ${itemsHtml}
+    ${ledgerHtml}
+    <p style="font-size:7.5pt;color:#888;margin-top:14pt;border-top:0.5pt solid #ddd;padding-top:6pt;">${L.xlsDisclaimerBody}</p>
+  </div>`;
+}
+
+document.getElementById('printBtn').addEventListener('click', () => {
+  const d = window._lastResults;
+  if(!d) return;
+  const html = buildReportPageHTML(d, $("includeLedger").checked, $("includeItemsTable").checked, $("includeLogo").checked);
+  const w = window.open("", "_blank");
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${$('titleH1').textContent}</title>
+  <style>body{margin:0;padding:18px;} @media print{body{padding:0;}}</style></head>
+  <body>${html}<script>window.onload=()=>window.print();<\/script></body></html>`);
+  w.document.close();
+});
+
+/* ===== report template upload ===== */
+let uploadedTemplateBuffer = null, uploadedTemplateName = "";
+document.getElementById("templateFile").addEventListener("change", (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev)=>{ uploadedTemplateBuffer = ev.target.result; uploadedTemplateName = file.name; inspectTemplate(file.name); };
+  reader.readAsArrayBuffer(file);
+});
+function templateTagValues(d){
+  const L = UI[currentLang];
+  const today = new Date().toLocaleDateString(currentLang==='fr'?'fr-CA':'en-CA');
+  return {
+    tag: d.tag || L.untitledTag, standard: "CSA C22.1", date: today,
+    conduitType: d.conduitType, conduitSize: d.conduitSize+" mm ("+imperialTag(d.conduitSize)+")",
+    nipple: d.nipple?L.yes:L.no, conduitID: fmt(d.conduitID_mm,1)+" mm", conduitOD: d.conduitOD_mm?fmt(d.conduitOD_mm,1)+" mm":"—",
+    actualPct: fmt(d.actualPct,1)+"%", maxPct: d.maxPct+"%", count: String(d.totalCount),
+    totalArea: fmt(d.totalArea,1)+" mm²", conduitArea: fmt(d.conduitArea,1)+" mm²",
+    result: d.pass?L.passWord:L.failWord
+  };
+}
+function showTemplateStatus(msg, color){ const el=$("templateStatus"); if(el){ el.textContent=msg; el.style.color=color||"var(--trace)"; } }
+function inspectTemplate(fileName){
+  const L = UI[currentLang];
+  const known = Object.keys(templateTagValues(window._lastResults || {}));
+  try{
+    const zip = new PizZip(uploadedTemplateBuffer);
+    let xml = "";
+    Object.keys(zip.files).forEach(name=>{
+      if(/^word\/(document|header\d*|footer\d*)\.xml$/.test(name)) xml += zip.files[name].asText();
+    });
+    const plain = xml.replace(/<[^>]+>/g, "");
+    const found = known.filter(k => plain.includes("{"+k+"}"));
+    const missing = known.filter(k => !found.includes(k));
+    const allTags = [...plain.matchAll(/\{([a-zA-Z0-9_]+)\}/g)].map(m=>m[1]);
+    const unknown = [...new Set(allTags.filter(t => !known.includes(t)))];
+    let msg = L.templateLoadedMsg.replace("{name}", fileName) + " — ";
+    let color = "var(--trace)";
+    if(found.length === 0){ msg += L.templateNoTagsFound; color = "var(--alarm)"; }
+    else {
+      msg += L.templateTagsFound.replace("{n}", found.length).replace("{total}", known.length);
+      if(missing.length) msg += " " + L.templateTagsMissing.replace("{list}", missing.join(", "));
+      if(unknown.length){ msg += " " + L.templateTagsUnknown.replace("{list}", unknown.join(", ")); color = "var(--warn)"; }
+      if(missing.length && !unknown.length) color = "var(--warn)";
+    }
+    showTemplateStatus(msg, color);
+  } catch(err){
+    console.error(err);
+    showTemplateStatus(L.templateErrorMsg + " " + (err.message||""), "var(--alarm)");
+  }
+}
+function exportWithTemplate(d){
+  const L = UI[currentLang];
+  try{
+    const zip = new PizZip(uploadedTemplateBuffer);
+    const docx = new window.docxtemplater(zip, { paragraphLoop:true, linebreaks:true, nullGetter:p=>"«"+(p.value||"?")+"»" });
+    docx.render(templateTagValues(d));
+    const out = docx.getZip().generate({ type:"blob", mimeType:"application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+    const url = URL.createObjectURL(out);
+    const a = document.createElement("a"); a.href=url; a.download="conduit_fill_study.docx";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url), 2000);
+    showTemplateStatus(L.templateExportOk, "var(--trace)");
+  } catch(err){
+    console.error(err);
+    let detail = err.message || String(err);
+    if(err.properties && err.properties.errors && err.properties.errors.length){
+      detail = err.properties.errors.map(e=>(e.properties&&e.properties.explanation?e.properties.explanation:e.message)).join(" · ");
+    }
+    showTemplateStatus(L.templateErrorMsg+" "+detail, "var(--alarm)");
+    alert(L.templateErrorMsg+"\n\n"+detail);
+    exportWithBuiltInLayout(d);
+  }
+}
+function exportWithBuiltInLayout(d){
+  const html = buildReportPageHTML(d, $("includeLedger").checked, $("includeItemsTable").checked, $("includeLogo").checked);
+  const doc = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+  <head><meta charset="utf-8"><title>Conduit Fill Report</title>
+  <!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View></w:WordDocument></xml><![endif]--></head><body>${html}</body></html>`;
+  downloadBlob(doc, "application/msword", "conduit_fill_study.doc");
+}
+document.getElementById('exportWordBtn').addEventListener('click', () => {
+  const d = window._lastResults;
+  if(!d) return;
+  if(uploadedTemplateBuffer) exportWithTemplate(d); else exportWithBuiltInLayout(d);
+});
+
+document.getElementById('exportExcelBtn').addEventListener('click', () => {
+  const d = window._lastResults;
+  if(!d) return;
+  const L = UI[currentLang];
+  const wb = XLSX.utils.book_new();
+  const main = [
+    [L.repInputData,""],
+    [L.lblTag, d.tag || L.untitledTag],
+    [L.lblConduitType, d.conduitType], [L.lblConduitSize, d.conduitSize+" mm ("+imperialTag(d.conduitSize)+")"],
+    [L.lblNipple, d.nipple?L.yes:L.no], [L.statID_lbl, fmt(d.conduitID_mm,1)], [L.statOD_lbl, d.conduitOD_mm?fmt(d.conduitOD_mm,1):"—"],
+    ["",""], [L.repResults,""],
+    [L.gaugeLbl, fmt(d.actualPct,1)], [L.lblStatAllowed, d.maxPct],
+    [L.lblStatCount, d.totalCount], [L.lblStatArea, fmt(d.totalArea,1)],
+    [L.lblStatConduitArea, fmt(d.conduitArea,1)], [L.xlsResult, d.pass?L.passWord:L.failWord],
+    ["",""], [L.xlsDisclaimerLbl, L.xlsDisclaimerBody]
+  ];
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(main), "Conduit Fill");
+
+  if($("includeItemsTable").checked){
+    const items = [[L.repItem, L.repQty, L.repAreaEach]];
+    d.items.forEach(it=>{
+      if(it.kind==="single"){
+        const insLbl = it.bare ? L.bareTag : UI[currentLang]["insul_"+it.insul];
+        items.push([it.sizeLabel+" ("+insLbl+")"+(it.isGround?" ["+L.groundTag+"]":""), it.qty, fmt(it.areaEach,2)]);
+      } else {
+        items.push([it.label, it.qty, fmt(it.areaEach,2)]);
+      }
+    });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(items), "Items");
+  }
+
+  if($("includeLedger").checked){
+    const led = [["#","Formula","Note"]];
+    buildLedgerSteps(d).forEach(s=>{
+      led.push([String(s.num).padStart(2,'0')+" — "+s.title,"",""]);
+      s.formula.split("\n").forEach(l=>{ if(l.trim()!=="") led.push(["", l, ""]); });
+      led.push(["","",s.note]); led.push(["","",""]);
+    });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(led), "Calculation Ledger");
+  }
+  XLSX.writeFile(wb, "conduit_fill_study.xlsx");
+});
+
+/* ===================== i18n ===================== */
+const UI = {
+  en: {
+    titleH1: "Conduit Fill Calculator",
+    titleSub: "CSA C22.1 (CEC) Rule 12-910 / Table 8 — raceway fill for insulated conductors and cables",
+    lblDwg: "Dwg No.", lblScale: "Scale", lblMethod: "Method", lblRev: "Rev",
+    topDiscB: "Reference tool only.",
+    topDiscTxt: "Conductor and conduit area values below are representative/typical figures for planning purposes. Always verify actual areas against the current edition of CSA C22.1 Tables 6, 8, 9 and 10 (or the manufacturer's data for the specific insulation/cable) before finalizing a design. Whole-cable entries are taken from a project-specific cable schedule and should be re-verified against that source.",
+    loadExampleTxt: "Load example",
+    step1Title: "Conduit", step1Small: "Type, trade size, nipple",
+    lblConduitType: "Conduit type", lblConduitSize: "Trade size (metric designator)",
+    lblNipple: "Nipple (raceway run ≤ 600 mm) — allows 60% fill",
+    hintStep1: "Metric designators shown correspond to common imperial trade sizes: 16→½\", 21→¾\", 27→1\", 35→1¼\", 41→1½\", 53→2\", 63→2½\", 78→3\", 91→3½\", 103→4\", 129→5\", 155→6\".",
+    step2Title: "Conductors &amp; Cables", step2Small: "Add individual conductors or whole multiconductor cables",
+    tabSingleTxt: "Individual conductors", tabCableTxt: "Whole cable (schedule)",
+    lblInsul: "Insulation", lblAwg: "Size", lblQty1: "Qty",
+    lblIsGround1: "This is a bonding/grounding conductor",
+    addSingleTxt: "Add",
+    lblCableCat: "Cable category", lblCableType: "Cable", lblQty2: "Qty", lblCondPerCable: "Conductors counted per cable",
+    hintCableCount: "Per CEC practice, a multiconductor cable's own overall area is used, but the cable itself is normally counted as one raceway occupant for the 1/2/3+ fill-percentage bracket. Adjust \"conductors counted per cable\" only if your AHJ requires counting each conductor within the cable separately.",
+    addCableTxt: "Add",
+    noItemsYet: "No conductors or cables added yet.",
+    groundTag: "ground", eachLbl: "each", bareTag: "bare", wallLbl: "wall",
+    lblTag: "Equipment / raceway tag",
+    constructionTitle: "Cable Construction Reference", constructionTag: "schematic — see manufacturer link for the actual product photo",
+    constructionEmpty: "Add conductors or cables to see their typical construction.",
+    viewActualLbl: "View actual product cross-section:",
+    layers_bare: "Bare conductor — no insulation, conductor metal only (grounding/bonding use).",
+    layers_insulated: "Insulated conductor — conductor + single insulation wall (RW90/TWU75-type).",
+    layers_armored: "Individually insulated conductors + bare bonding conductor, cabled together, binder tape, interlocked aluminum armor, PVC outer jacket (TECK90-style).",
+    layers_mv: "Copper/aluminum conductor, extruded conductor shield, XLPE/EPR insulation, insulation shield, copper wire/tape concentric shield, PVC/CPE outer jacket.",
+    layers_instrumentation: "Twisted, individually shielded pairs or triads, overall shield, PVC outer jacket.",
+    layers_simple: "Small unshielded conductors, PVC outer jacket — typical fire alarm/security cable.",
+    layers_fiber: "Central strength member, buffered fibers, aramid yarn, corrugated armor, outer jacket.",
+    layers_cat6: "4 twisted copper pairs, optional overall shield, PVC/LSZH outer jacket.",
+    lblIsBare1: "Bare (no insulation) — uses conductor metal area only",
+    diagramODCaption: "ID {id} mm · OD {od} mm · wall {wall} mm",
+    resultTitle: "Result — Conduit Fill", gaugeLbl: "% fill (actual)",
+    lblStatAllowed: "Max allowed fill", lblStatCount: "Conductor/cable count",
+    lblStatArea: "Total conductor area", lblStatConduitArea: "Conduit internal area",
+    printBtnLabel: "🖨 Print / Save as PDF", exportWordLabel: "📄 Export study (Word)", exportBtnLabel: "📊 Export study (Excel)",
+    ledgerTitle: "Calculation Ledger", ledgerTag: "CEC Table 8/9 method",
+    fillTableTitle: "CEC Table 8 — Maximum Fill", fillThCount: "Number of conductors", fillThPct: "Max fill",
+    orMore: "or more", nippleRow: "Nipple (≤600 mm)",
+    lblStatID: "Conduit inner diameter (ID)", lblStatOD: "Conduit outer diameter (OD)",
+    diagramTitle: "Cross-Section", diagramTag: "to scale, illustrative packing",
+    diagramIDCaption: "ID {id} mm (dashed = conduit wall)", diagramOverflowNote: "⚠ some items don't fit at this scale — see fill % above",
+    diagramNoItems: "Add conductors or cables to see the cross-section.",
+    conduit_EMT: "EMT (electrical metallic tubing)", conduit_RMC: "RMC (rigid metal conduit)", conduit_PVC: "PVC (rigid, Type EB1/DB2)", conduit_HDPE: "HDPE (IPS, SDR11)",
+    insul_RW90: "RW90 (90°C thermoset, heavier wall)", insul_TWU75: "TWU75 (75°C PVC/nylon, lighter wall)",
+    cat_MV1C_CU: "MV single-conductor, copper (15/25 kV)", cat_MV1C_AL: "MV single-conductor, aluminum (15/35 kV)",
+    cat_C2_CU: "2-conductor TECK, copper", cat_C3_CU: "3-conductor TECK, copper", cat_C3_AL: "3-conductor, aluminum",
+    cat_C4_CU: "4-conductor TECK, copper", cat_C4_AL: "4-conductor, aluminum",
+    cat_CTRL: "Control / multiconductor", cat_INSTR: "Instrumentation (PR/TR)", cat_FIRE: "Fire alarm / security", cat_NET: "Networking (fiber/CAT6)",
+    noItemsTitle: "No conductors or cables entered.", noItemsBody: "Add at least one conductor or cable in Step 2 to calculate fill.",
+    passTitle: "Within CEC Table 8 limit.", passBody: "Actual fill {pct}% is at or below the {max}% maximum for this conductor/cable count.",
+    failTitle: "Exceeds CEC Table 8 limit.", failBody: "Actual fill {pct}% exceeds the {max}% maximum for this conductor/cable count — a larger conduit is required.",
+    suggestTitle: "Suggested minimum trade size.", suggestBody: "The next standard {size} conduit (same type) would bring the fill within the allowed limit, based on the conductors/cables currently entered.",
+    suggestNone: "No standard size in this list brings the fill within the allowed limit — reconsider the conductor grouping or split into multiple raceways.",
+    lstep1Title: "Conductors &amp; cables entered", lstep1Note: "Each entry's area comes from the representative conductor-area table (for individual conductors) or is computed from the cable's overall outer diameter (for whole cables), per πD²/4.",
+    lstep2Title: "Total count and total area", lstep2Note: "Total area is the arithmetic sum of every conductor/cable area × quantity — CEC Rule 12-910 requires cross-sectional area addition, not diameter addition.",
+    totalConductorsLbl: "Total conductors/cables (for bracket)", totalAreaLbl: "Total conductor area",
+    lstep3Title: "Applicable maximum fill (CEC Table 8)",
+    rule1: "1 conductor/cable in raceway → 53% maximum.", rule2: "2 conductors/cables in raceway → 31% maximum (most restrictive case).", rule3plus: "3 or more conductors/cables in raceway → 40% maximum.",
+    nippleRuleApplied: "Nipple (≤600 mm run) → 60% maximum applies regardless of conductor count.",
+    maxFillLbl: "Applicable maximum", lstep3Note: "Per CSA C22.1 Rule 12-910 / Table 8. The 2-conductor case is the most restrictive of the three main brackets and is easy to miss if you default to 40%.",
+    lstep4Title: "Conduit internal area", lstep4Note: "Representative internal cross-sectional area for the selected conduit type and metric trade size — verify against CSA C22.1 Table 9 for the specific product.",
+    conduitAreaLbl: "Conduit internal area",
+    lstep5Title: "Actual fill vs. allowed", lstep5Note: "Pass/fail is determined by comparing actual fill percentage against the bracket-specific maximum from Step 3 — not a flat 40% in every case.",
+    actualFillLbl: "Actual fill", resultPass: "Result: PASS — within the allowed maximum.", resultFail: "Result: FAIL — exceeds the allowed maximum.",
+    noItemsShort: "(no items entered)", countedAs: "counted as",
+    xlsParam: "Parameter", xlsValue: "Value", xlsConduitType: "Conduit type", xlsConduitSize: "Trade size",
+    xlsNipple: "Nipple (≤600mm)", xlsCount: "Conductor/cable count", xlsTotalArea: "Total conductor area (mm²)",
+    xlsConduitArea: "Conduit internal area (mm²)", xlsMaxPct: "Max allowed fill (%)", xlsActualPct: "Actual fill (%)",
+    xlsResult: "Result", passWord: "PASS", failWord: "FAIL", yes:"Yes", no:"No",
+    xlsItemsHeader: "Conductors / cables in this raceway:",
+    lblIncludeLedger: "Include Calculation Ledger in report", lblIncludeItems: "Include item list in report", lblIncludeLogo: "Include OhmZone brand mark in report",
+    lblUploadTemplate: "Report template (.docx, optional)",
+    hintUploadTemplate: "Upload your firm's Word template to brand exports with it. The template must contain plain-text placeholders exactly as shown, wherever you want each value inserted: {tag} {standard} {date} {conduitType} {conduitSize} {nipple} {conduitID} {conduitOD} {actualPct} {maxPct} {count} {totalArea} {conduitArea} {result}. Type each tag in one uninterrupted go — Word's autocorrect/spellcheck can split a tag across internal runs, which stops it from being recognised.",
+    templateLoadedMsg: "Template loaded: {name}", templateErrorMsg: "Could not read this file as a Word template — using the built-in layout instead.",
+    templateNoTagsFound: "no OhmZone placeholders found in this document. Add tags such as {tag}, {actualPct}, {result} to the template.",
+    templateTagsFound: "{n} of {total} placeholders found.", templateTagsMissing: "Not present (will be left out): {list}.",
+    templateTagsUnknown: "Unrecognised tags that will render as «name»: {list}.", templateExportOk: "Template export completed.",
+    statID_lbl: "Conduit inner diameter (ID)", statOD_lbl: "Conduit outer diameter (OD)",
+    repInputData: "Input Data", repResults: "Results", repItem: "Item", repQty: "Qty", repAreaEach: "Area each", untitledTag: "(untitled)",
+    xlsDisclaimerLbl: "Disclaimer",
+    xlsDisclaimerBody: "Reference tool only. Conductor, cable and conduit areas used are representative/typical figures — verify against the current CSA C22.1 Tables 6, 8, 9, 10 and manufacturer data before finalizing a design. Grounding/bonding conductors must be included in the fill calculation. Conduit fill compliance does not by itself confirm ampacity/derating adequacy.",
+    footerHtml: `<b>Method &amp; data notes.</b> This calculator follows CSA C22.1 (Canadian Electrical Code, Part I) Rule 12-910 and the accompanying Table 8 maximum-fill percentages (1 conductor: 53%, 2 conductors: 31%, 3 or more: 40%, nipples ≤600 mm: 60%). Individual insulated-conductor cross-sectional areas are representative figures for common 600 V building-wire insulation families (RW90, TWU75) and are <b>not</b> a substitute for CSA C22.1 Table 6/10 or the manufacturer's exact conductor data — insulation wall thickness varies by product and must be confirmed for the specific wire selected. Conduit internal cross-sectional areas are similarly representative and must be confirmed against CSA C22.1 Table 9 for the exact conduit product and type. Whole-cable entries (TECK, ACWU, MV shielded cable, control, instrumentation, fire alarm, and networking cable) are calculated directly from a project-specific cable outer-diameter schedule using π·D²/4 — a small number of entries in that schedule showed apparent internal inconsistencies (an outer diameter and a couple of weight values that didn't fit the surrounding size progression); those entries are flagged inline and should be re-verified against the original manufacturer datasheet before use. <b>HDPE (IPS, SDR11)</b> internal and outer diameter data is taken directly from GF Piping Systems' published "IPS HDPE Pipe Chart" (Part #10014098) — this is real manufacturer dimensional data, not an estimate; if a different SDR/DR rating is required for a given application, the actual ID for that rating should be substituted. <b>Grounding and bonding conductors must be included</b>&nbsp;in the fill calculation — this is a commonly missed step. Conduit fill compliance is independent of ampacity/derating: a raceway that passes the fill check may still require conductor derating for conductor count, ambient temperature, or bundling per CEC Section 4. The cross-section diagram is an illustrative circle-packing approximation for visualization only — it is not a certified layout drawing and does not guarantee pullability. This tool does not evaluate bend count, pulling tension, or jam ratios for long or heavily-belled runs — these should be checked separately for difficult pulls. This is a preliminary planning aid only and does not replace verification by a qualified electrical professional against the current CEC edition and the authority having jurisdiction.`
+  },
+  fr: {
+    titleH1: "Calculateur de remplissage de conduit",
+    titleSub: "CSA C22.1 (CCE) Règle 12-910 / Tableau 8 — remplissage de canalisation pour conducteurs isolés et câbles",
+    lblDwg: "N° dessin", lblScale: "Échelle", lblMethod: "Méthode", lblRev: "Rév.",
+    topDiscB: "Outil de référence seulement.",
+    topDiscTxt: "Les valeurs de surface des conducteurs et des conduits ci-dessous sont des chiffres représentatifs/typiques à des fins de planification. Vérifiez toujours les surfaces réelles auprès de l'édition en vigueur des tableaux 6, 8, 9 et 10 de la CSA C22.1 (ou des données du fabricant pour l'isolation/le câble précis) avant de finaliser une conception. Les entrées de câbles entiers proviennent d'une liste de câbles propre au projet et doivent être revérifiées auprès de cette source.",
+    loadExampleTxt: "Charger l'exemple",
+    step1Title: "Conduit", step1Small: "Type, taille commerciale, mamelon",
+    lblConduitType: "Type de conduit", lblConduitSize: "Taille commerciale (désignateur métrique)",
+    lblNipple: "Mamelon (parcours de canalisation ≤ 600 mm) — permet un remplissage de 60 %",
+    hintStep1: "Les désignateurs métriques indiqués correspondent aux tailles commerciales impériales courantes : 16→½\", 21→¾\", 27→1\", 35→1¼\", 41→1½\", 53→2\", 63→2½\", 78→3\", 91→3½\", 103→4\", 129→5\", 155→6\".",
+    step2Title: "Conducteurs et câbles", step2Small: "Ajoutez des conducteurs individuels ou des câbles multiconducteurs entiers",
+    tabSingleTxt: "Conducteurs individuels", tabCableTxt: "Câble entier (liste)",
+    lblInsul: "Isolation", lblAwg: "Section", lblQty1: "Qté",
+    lblIsGround1: "Il s'agit d'un conducteur de liaison/mise à la terre",
+    addSingleTxt: "Ajouter",
+    lblCableCat: "Catégorie de câble", lblCableType: "Câble", lblQty2: "Qté", lblCondPerCable: "Conducteurs comptés par câble",
+    hintCableCount: "Selon la pratique du CCE, la surface globale propre du câble multiconducteur est utilisée, mais le câble lui-même est normalement compté comme un seul occupant de canalisation pour le palier de remplissage 1/2/3+. Ajustez « conducteurs comptés par câble » seulement si votre autorité compétente exige de compter chaque conducteur du câble séparément.",
+    addCableTxt: "Ajouter",
+    noItemsYet: "Aucun conducteur ou câble ajouté pour l'instant.",
+    groundTag: "mise à la terre", eachLbl: "chacun", bareTag: "nu", wallLbl: "paroi",
+    lblTag: "Repère de l'équipement / de la canalisation",
+    constructionTitle: "Référence de construction des câbles", constructionTag: "schéma — voir le lien du fabricant pour la photo réelle du produit",
+    constructionEmpty: "Ajoutez des conducteurs ou des câbles pour voir leur construction typique.",
+    viewActualLbl: "Voir la coupe transversale réelle du produit :",
+    layers_bare: "Conducteur nu — sans isolation, métal du conducteur seulement (usage de mise à la terre/liaison).",
+    layers_insulated: "Conducteur isolé — conducteur + une paroi d'isolation (type RW90/TWU75).",
+    layers_armored: "Conducteurs isolés individuellement + conducteur de liaison nu, câblés ensemble, ruban de liage, armure interlock en aluminium, gaine extérieure PVC (type TECK90).",
+    layers_mv: "Conducteur cuivre/aluminium, écran de conducteur extrudé, isolation XLPE/EPR, écran d'isolation, écran concentrique en fils/ruban de cuivre, gaine extérieure PVC/CPE.",
+    layers_instrumentation: "Paires ou triades torsadées, blindées individuellement, blindage global, gaine extérieure PVC.",
+    layers_simple: "Petits conducteurs non blindés, gaine extérieure PVC — câble typique d'alarme incendie/sécurité.",
+    layers_fiber: "Membrane de renfort central, fibres tubées, fils d'aramide, armure ondulée, gaine extérieure.",
+    layers_cat6: "4 paires torsadées en cuivre, blindage global facultatif, gaine extérieure PVC/LSZH.",
+    lblIsBare1: "Nu (sans isolation) — utilise seulement la section du métal conducteur",
+    diagramODCaption: "ID {id} mm · OD {od} mm · paroi {wall} mm",
+    resultTitle: "Résultat — Remplissage du conduit", gaugeLbl: "% de remplissage (réel)",
+    lblStatAllowed: "Remplissage max. permis", lblStatCount: "Nombre de conducteurs/câbles",
+    lblStatArea: "Surface totale des conducteurs", lblStatConduitArea: "Surface interne du conduit",
+    printBtnLabel: "🖨 Imprimer / Enregistrer en PDF", exportWordLabel: "📄 Exporter l'étude (Word)", exportBtnLabel: "📊 Exporter l'étude (Excel)",
+    ledgerTitle: "Registre de calcul", ledgerTag: "méthode des tableaux 8/9 du CCE",
+    fillTableTitle: "Tableau 8 du CCE — Remplissage maximal", fillThCount: "Nombre de conducteurs", fillThPct: "Remplissage max.",
+    orMore: "ou plus", nippleRow: "Mamelon (≤600 mm)",
+    lblStatID: "Diamètre intérieur du conduit (ID)", lblStatOD: "Diamètre extérieur du conduit (OD)",
+    diagramTitle: "Coupe transversale", diagramTag: "à l'échelle, empaquetage illustratif",
+    diagramIDCaption: "ID {id} mm (pointillé = paroi du conduit)", diagramOverflowNote: "⚠ certains éléments ne tiennent pas à cette échelle — voir le % de remplissage ci-dessus",
+    diagramNoItems: "Ajoutez des conducteurs ou des câbles pour voir la coupe transversale.",
+    conduit_EMT: "EMT (tube électrique métallique)", conduit_RMC: "RMC (conduit métallique rigide)", conduit_PVC: "PVC (rigide, type EB1/DB2)", conduit_HDPE: "HDPE (IPS, SDR11)",
+    insul_RW90: "RW90 (thermodurcissable 90 °C, paroi plus épaisse)", insul_TWU75: "TWU75 (PVC/nylon 75 °C, paroi plus mince)",
+    cat_MV1C_CU: "Monoconducteur MT, cuivre (15/25 kV)", cat_MV1C_AL: "Monoconducteur MT, aluminium (15/35 kV)",
+    cat_C2_CU: "TECK 2 conducteurs, cuivre", cat_C3_CU: "TECK 3 conducteurs, cuivre", cat_C3_AL: "3 conducteurs, aluminium",
+    cat_C4_CU: "TECK 4 conducteurs, cuivre", cat_C4_AL: "4 conducteurs, aluminium",
+    cat_CTRL: "Contrôle / multiconducteur", cat_INSTR: "Instrumentation (PR/TR)", cat_FIRE: "Alarme incendie / sécurité", cat_NET: "Réseautique (fibre/CAT6)",
+    noItemsTitle: "Aucun conducteur ou câble saisi.", noItemsBody: "Ajoutez au moins un conducteur ou un câble à l'étape 2 pour calculer le remplissage.",
+    passTitle: "Conforme à la limite du tableau 8 du CCE.", passBody: "Le remplissage réel de {pct} % est égal ou inférieur au maximum de {max} % pour ce nombre de conducteurs/câbles.",
+    failTitle: "Dépasse la limite du tableau 8 du CCE.", failBody: "Le remplissage réel de {pct} % dépasse le maximum de {max} % pour ce nombre de conducteurs/câbles — un conduit plus grand est requis.",
+    suggestTitle: "Taille commerciale minimale suggérée.", suggestBody: "Le prochain conduit normalisé de {size} (même type) ramènerait le remplissage sous la limite permise, selon les conducteurs/câbles actuellement saisis.",
+    suggestNone: "Aucune taille normalisée de cette liste ne ramène le remplissage sous la limite permise — reconsidérez le groupement des conducteurs ou répartissez-les dans plusieurs canalisations.",
+    lstep1Title: "Conducteurs et câbles saisis", lstep1Note: "La surface de chaque entrée provient du tableau de surface de conducteur représentatif (pour les conducteurs individuels) ou est calculée à partir du diamètre extérieur global du câble (pour les câbles entiers), selon πD²/4.",
+    lstep2Title: "Nombre total et surface totale", lstep2Note: "La surface totale est la somme arithmétique de chaque surface de conducteur/câble × quantité — la règle 12-910 du CCE exige l'addition des surfaces transversales, non l'addition des diamètres.",
+    totalConductorsLbl: "Total des conducteurs/câbles (pour le palier)", totalAreaLbl: "Surface totale des conducteurs",
+    lstep3Title: "Remplissage maximal applicable (Tableau 8 du CCE)",
+    rule1: "1 conducteur/câble dans la canalisation → 53 % maximum.", rule2: "2 conducteurs/câbles dans la canalisation → 31 % maximum (cas le plus restrictif).", rule3plus: "3 conducteurs/câbles ou plus dans la canalisation → 40 % maximum.",
+    nippleRuleApplied: "Mamelon (parcours ≤600 mm) → maximum de 60 % s'applique peu importe le nombre de conducteurs.",
+    maxFillLbl: "Maximum applicable", lstep3Note: "Selon la règle 12-910 / tableau 8 de la CSA C22.1. Le cas à 2 conducteurs est le plus restrictif des trois paliers principaux et est facile à manquer si l'on suppose 40 % par défaut.",
+    lstep4Title: "Surface interne du conduit", lstep4Note: "Surface transversale interne représentative pour le type de conduit et la taille commerciale métrique sélectionnés — vérifiez auprès du tableau 9 de la CSA C22.1 pour le produit précis.",
+    conduitAreaLbl: "Surface interne du conduit",
+    lstep5Title: "Remplissage réel vs permis", lstep5Note: "La conformité est déterminée en comparant le pourcentage de remplissage réel au maximum spécifique au palier de l'étape 3 — pas un 40 % fixe dans tous les cas.",
+    actualFillLbl: "Remplissage réel", resultPass: "Résultat : CONFORME — sous le maximum permis.", resultFail: "Résultat : NON CONFORME — dépasse le maximum permis.",
+    noItemsShort: "(aucun élément saisi)", countedAs: "compté comme",
+    xlsParam: "Paramètre", xlsValue: "Valeur", xlsConduitType: "Type de conduit", xlsConduitSize: "Taille commerciale",
+    xlsNipple: "Mamelon (≤600mm)", xlsCount: "Nombre de conducteurs/câbles", xlsTotalArea: "Surface totale des conducteurs (mm²)",
+    xlsConduitArea: "Surface interne du conduit (mm²)", xlsMaxPct: "Remplissage max. permis (%)", xlsActualPct: "Remplissage réel (%)",
+    xlsResult: "Résultat", passWord: "CONFORME", failWord: "NON CONFORME", yes:"Oui", no:"Non",
+    xlsItemsHeader: "Conducteurs / câbles dans cette canalisation :",
+    lblIncludeLedger: "Inclure le registre de calcul dans le rapport", lblIncludeItems: "Inclure la liste des éléments dans le rapport", lblIncludeLogo: "Inclure la marque OhmZone dans le rapport",
+    lblUploadTemplate: "Modèle de rapport (.docx, facultatif)",
+    hintUploadTemplate: "Téléversez le modèle Word de votre entreprise pour habiller les exports. Le modèle doit contenir des espaces réservés en texte brut exactement comme indiqué, là où vous voulez insérer chaque valeur : {tag} {standard} {date} {conduitType} {conduitSize} {nipple} {conduitID} {conduitOD} {actualPct} {maxPct} {count} {totalArea} {conduitArea} {result}. Saisissez chaque balise d'un seul coup — le correcteur/la vérification orthographique de Word peut diviser une balise, l'empêchant d'être reconnue.",
+    templateLoadedMsg: "Modèle chargé : {name}", templateErrorMsg: "Impossible de lire ce fichier comme modèle Word — utilisation de la mise en page intégrée à la place.",
+    templateNoTagsFound: "aucun espace réservé OhmZone trouvé dans ce document. Ajoutez des balises telles que {tag}, {actualPct}, {result} au modèle.",
+    templateTagsFound: "{n} espaces réservés sur {total} trouvés.", templateTagsMissing: "Absents (seront omis) : {list}.",
+    templateTagsUnknown: "Balises non reconnues qui s'afficheront comme «nom» : {list}.", templateExportOk: "Export du modèle terminé.",
+    statID_lbl: "Diamètre intérieur du conduit (ID)", statOD_lbl: "Diamètre extérieur du conduit (OD)",
+    repInputData: "Données d'entrée", repResults: "Résultats", repItem: "Élément", repQty: "Qté", repAreaEach: "Surface chacun", untitledTag: "(sans titre)",
+    xlsDisclaimerLbl: "Avis",
+    xlsDisclaimerBody: "Outil de référence seulement. Les surfaces des conducteurs, câbles et conduits utilisées sont des chiffres représentatifs/typiques — vérifiez auprès des tableaux 6, 8, 9, 10 en vigueur de la CSA C22.1 et des données du fabricant avant de finaliser une conception. Les conducteurs de mise à la terre/liaison doivent être inclus dans le calcul de remplissage. La conformité du remplissage du conduit ne confirme pas à elle seule l'adéquation de l'ampacité/du déclassement.",
+    footerHtml: `<b>Notes sur la méthode et les données.</b> Ce calculateur suit la règle 12-910 de la CSA C22.1 (Code canadien de l'électricité, Partie I) et les pourcentages de remplissage maximal du tableau 8 qui l'accompagne (1 conducteur : 53 %, 2 conducteurs : 31 %, 3 ou plus : 40 %, mamelons ≤600 mm : 60 %). Les surfaces transversales des conducteurs isolés individuels sont des chiffres représentatifs pour les familles d'isolation courantes de fils de bâtiment 600 V (RW90, TWU75) et <b>ne remplacent pas</b> le tableau 6/10 de la CSA C22.1 ni les données exactes du fabricant — l'épaisseur de paroi de l'isolation varie selon le produit et doit être confirmée pour le fil précis sélectionné. Les surfaces transversales internes des conduits sont également représentatives et doivent être confirmées auprès du tableau 9 de la CSA C22.1 pour le produit et le type de conduit exacts. Les entrées de câbles entiers (TECK, ACWU, câble blindé MT, contrôle, instrumentation, alarme incendie et câble réseau) sont calculées directement à partir d'une liste de diamètres extérieurs de câbles propre au projet à l'aide de π·D²/4 — un petit nombre d'entrées de cette liste présentaient des incohérences internes apparentes (un diamètre extérieur et quelques valeurs de poids qui ne correspondaient pas à la progression de taille environnante); ces entrées sont signalées directement dans la liste et devraient être revérifiées auprès de la fiche technique originale du fabricant avant utilisation. Les données de diamètre intérieur et extérieur pour le <b>HDPE (IPS, SDR11)</b> proviennent directement du « IPS HDPE Pipe Chart » publié par GF Piping Systems (n° de pièce 10014098) — il s'agit de données dimensionnelles réelles du fabricant, non d'une estimation; si une cote SDR/DR différente est requise pour une application donnée, l'ID réel de cette cote devrait être substitué. <b>Les conducteurs de mise à la terre et de liaison doivent être inclus</b>&nbsp;dans le calcul de remplissage — c'est une étape souvent oubliée. La conformité du remplissage du conduit est indépendante de l'ampacité/du déclassement : une canalisation qui réussit la vérification de remplissage peut tout de même nécessiter un déclassement des conducteurs pour le nombre de conducteurs, la température ambiante ou le groupement selon la section 4 du CCE. Le diagramme de coupe transversale est une approximation illustrative d'empaquetage de cercles à des fins de visualisation seulement — il ne s'agit pas d'un dessin de disposition certifié et ne garantit pas la tirabilité. Cet outil n'évalue pas le nombre de coudes, la tension de tirage ni les ratios de blocage pour les parcours longs ou fortement coudés — ceux-ci doivent être vérifiés séparément pour les tirages difficiles. Il s'agit d'une aide à la planification préliminaire seulement qui ne remplace pas la vérification par un professionnel électricien qualifié selon l'édition en vigueur du CCE et l'autorité compétente.`
+  }
+};
+
+function applyStaticI18n(){
+  const L = UI[currentLang];
+  $('titleH1').textContent = L.titleH1;
+  $('titleSub').textContent = L.titleSub;
+  $('lblDwg').textContent = L.lblDwg;
+  $('lblScale').textContent = L.lblScale;
+  $('lblMethod').textContent = L.lblMethod;
+  $('lblRev').textContent = L.lblRev;
+  $('topDiscB').textContent = L.topDiscB;
+  $('topDiscTxt').textContent = L.topDiscTxt;
+  $('loadExampleTxt').textContent = L.loadExampleTxt;
+  $('lblTag').textContent = L.lblTag;
+  $('constructionTitle').textContent = L.constructionTitle;
+  $('constructionTag').textContent = L.constructionTag;
+  $('step1Title').childNodes[0].textContent = L.step1Title + ' ';
+  $('step1Small').textContent = L.step1Small;
+  $('lblConduitType').textContent = L.lblConduitType;
+  $('lblConduitSize').textContent = L.lblConduitSize;
+  $('lblNipple').textContent = L.lblNipple;
+  $('hintStep1').textContent = L.hintStep1;
+  $('step2Title').childNodes[0].textContent = L.step2Title + ' ';
+  $('step2Small').textContent = L.step2Small;
+  $('tabSingleTxt').textContent = L.tabSingleTxt;
+  $('tabCableTxt').textContent = L.tabCableTxt;
+  $('lblInsul').textContent = L.lblInsul;
+  $('lblAwg').textContent = L.lblAwg;
+  $('lblQty1').textContent = L.lblQty1;
+  $('lblIsGround1').textContent = L.lblIsGround1;
+  $('lblIsBare1').textContent = L.lblIsBare1;
+  $('addSingleTxt').textContent = L.addSingleTxt;
+  $('lblCableCat').textContent = L.lblCableCat;
+  $('lblCableType').textContent = L.lblCableType;
+  $('lblQty2').textContent = L.lblQty2;
+  $('lblCondPerCable').textContent = L.lblCondPerCable;
+  $('hintCableCount').textContent = L.hintCableCount;
+  $('addCableTxt').textContent = L.addCableTxt;
+  $('resultTitle').textContent = L.resultTitle;
+  $('gaugeLbl').textContent = L.gaugeLbl;
+  $('lblStatAllowed').textContent = L.lblStatAllowed;
+  $('lblStatCount').textContent = L.lblStatCount;
+  $('lblStatArea').textContent = L.lblStatArea;
+  $('lblStatConduitArea').textContent = L.lblStatConduitArea;
+  $('lblStatID').textContent = L.lblStatID;
+  $('lblStatOD').textContent = L.lblStatOD;
+  $('diagramTitle').textContent = L.diagramTitle;
+  $('diagramTag').textContent = L.diagramTag;
+  $('printBtn').textContent = L.printBtnLabel;
+  $('exportWordBtn').textContent = L.exportWordLabel;
+  $('exportExcelBtn').textContent = L.exportBtnLabel;
+  $('ledgerTitle').textContent = L.ledgerTitle;
+  $('ledgerTag').textContent = L.ledgerTag;
+  $('fillTableTitle').textContent = L.fillTableTitle;
+  $('fillThCount').textContent = L.fillThCount;
+  $('fillThPct').textContent = L.fillThPct;
+  $('footerNote').innerHTML = L.footerHtml;
+  $('lblIncludeLedger').textContent = L.lblIncludeLedger;
+  $('lblIncludeItems').textContent = L.lblIncludeItems;
+  $('lblIncludeLogo').textContent = L.lblIncludeLogo;
+  $('lblUploadTemplate').textContent = L.lblUploadTemplate;
+  $('hintUploadTemplate').textContent = L.hintUploadTemplate;
+  populateConduitControls();
+  populateSingleControls();
+  populateCableControls();
+  renderItemList();
+  renderFillTable();
+}
+
+function setLang(lang){
+  currentLang = lang;
+  $('btn-en').classList.toggle('active', lang==='en');
+  $('btn-fr').classList.toggle('active', lang==='fr');
+  document.documentElement.lang = lang;
+  try { localStorage.setItem('ohmzone-lang', lang); } catch(e) {}
+  applyStaticI18n();
+  recalc();
+}
+
+(function(){
+  let saved = 'en';
+  try { saved = localStorage.getItem('ohmzone-lang') || 'en'; } catch(e) {}
+  setLang(saved);
+})();
+</script>
+<div style="position:fixed;bottom:6px;right:12px;z-index:9999;font-family:monospace;font-size:10px;color:#5c7592;opacity:0.75;">© 2026 OhmZone. All rights reserved.</div>
+</body>
+</html>

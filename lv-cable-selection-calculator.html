@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LV Equipment Cable Selection — CSA C22.1</title>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3887318872951674" crossorigin="anonymous"></script>
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icon-16.png">
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="OhmZone">
+<meta name="theme-color" content="#0a1728">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.6/dist/pizzip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/docxtemplater@3.47.2/js/docxtemplater.js"></script>
+<style>
+@media print{ .no-print{display:none !important;} body{background:#fff !important;} }
+:root{
+  --bg:#080c14; --bg2:#0d1420; --panel:#111a2a; --panel-soft:#0c1220;
+  --line:#233350; --line-soft:#182238; --grid-line: rgba(96,140,196,0.09);
+  --ink:#e7edf7; --ink-dim:#8497b8; --ink-faint:#516085;
+  --trace:#3b9eff; --trace-soft:#1a3a5c; --gold:#e8b545;
+  --alarm:#ff5d77; --warn:#e3a83b; --radius:2px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',sans-serif;}
+body{background-image:linear-gradient(var(--grid-line) 1px,transparent 1px),linear-gradient(90deg,var(--grid-line) 1px,transparent 1px);background-size:28px 28px;min-height:100vh;}
+::selection{background:var(--trace);color:#04120f;}
+a{color:var(--trace);}
+input:focus-visible, select:focus-visible, button:focus-visible{outline:2px solid var(--trace);outline-offset:2px;}
+.lang-switch{display:flex;align-items:center;background:#0f2036;border:1px solid #2f5678;border-radius:16px;padding:3px;gap:2px;font-family:monospace;font-size:11px;position:fixed;top:10px;right:12px;z-index:9999;}
+.lang-switch button{border:none;background:transparent;color:#8fa8c2;padding:5px 12px;border-radius:13px;cursor:pointer;font-family:inherit;font-size:inherit;}
+.lang-switch button.active{background:var(--trace);color:#04120f;font-weight:700;}
+
+.titleblock{border-bottom:1px solid var(--line);background:linear-gradient(180deg,rgba(17,26,42,.9),rgba(13,20,32,.7));padding:18px 22px;display:flex;flex-wrap:wrap;gap:14px 28px;align-items:flex-end;justify-content:space-between;}
+.titleblock .brand{display:flex;align-items:baseline;gap:12px;}
+.titleblock .brand .mark{width:34px;height:34px;border:1.5px solid var(--trace);border-radius:3px;display:flex;align-items:center;justify-content:center;color:var(--trace);font-family:'IBM Plex Mono';font-weight:700;font-size:12px;flex:none;box-shadow:0 0 14px rgba(59, 158, 255,.18) inset;}
+.titleblock h1{font-family:'IBM Plex Sans Condensed';font-weight:700;letter-spacing:.3px;font-size:20px;margin:0;text-transform:uppercase;}
+.titleblock .sub{color:var(--ink-dim);font-size:12.5px;margin-top:2px;}
+.stamp{display:grid;grid-template-columns:repeat(4,auto);gap:0 22px;font-family:'IBM Plex Mono';font-size:10.5px;color:var(--ink-dim);}
+.stamp div b{display:block;color:var(--ink-faint);font-weight:500;font-size:9px;letter-spacing:.06em;text-transform:uppercase;}
+.stamp div span{color:var(--trace);font-weight:600;font-size:12px;}
+
+.top-disclaimer{max-width:1480px;margin:14px auto 0;padding:10px 16px;border:1px solid var(--warn);background:rgba(227,168,59,.07);border-radius:var(--radius);font-size:11.5px;color:var(--ink-dim);line-height:1.6;}
+.top-disclaimer b{color:var(--warn);}
+
+.app{display:grid;grid-template-columns:400px 1fr;gap:1px;background:var(--line);max-width:1480px;margin:0 auto;}
+@media (max-width:980px){ .app{grid-template-columns:1fr;} }
+.steps{background:var(--bg2);padding:18px 16px 40px;display:flex;flex-direction:column;gap:14px;}
+.canvas-col{background:var(--line);display:flex;flex-direction:column;gap:1px;}
+.canvas-col > *{background:var(--bg2);}
+
+.step{border:1px solid var(--line-soft);border-radius:var(--radius);background:var(--panel-soft);overflow:hidden;}
+.step-head{display:flex;align-items:center;gap:10px;padding:11px 13px;background:var(--panel);cursor:pointer;user-select:none;border-bottom:1px solid var(--line-soft);}
+.step-num{font-family:'IBM Plex Mono';font-size:11px;font-weight:600;color:var(--bg);background:var(--trace);width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none;}
+.step-title{font-size:13px;font-weight:600;letter-spacing:.2px;flex:1;}
+.step-title small{display:block;font-weight:400;color:var(--ink-dim);font-size:10.5px;margin-top:1px;}
+.chev{color:var(--ink-faint);font-size:11px;transition:transform .15s;}
+.step.closed .chev{transform:rotate(-90deg);}
+.step-body{padding:13px;display:flex;flex-direction:column;gap:11px;}
+.step.closed .step-body{display:none;}
+
+label.field{display:flex;flex-direction:column;gap:5px;font-size:11.5px;color:var(--ink-dim);}
+label.field b{color:var(--ink);font-weight:500;font-size:12px;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+input[type=number],input[type=text],select{background:var(--bg2);border:1px solid var(--line);color:var(--ink);font-family:'IBM Plex Mono';font-size:13px;padding:8px 9px;border-radius:var(--radius);width:100%;}
+select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238497b8'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:26px;}
+input:focus,select:focus{border-color:var(--trace);}
+
+.seg{display:flex;border:1px solid var(--line);border-radius:20px;overflow:hidden;width:max-content;flex-wrap:wrap;}
+.seg button{background:transparent;border:none;color:var(--ink-dim);font-family:'IBM Plex Mono';font-size:10.5px;padding:5px 12px;cursor:pointer;}
+.seg button.active{background:var(--trace);color:#04120f;font-weight:600;}
+
+.hint{font-size:10.5px;color:var(--ink-faint);line-height:1.5;}
+.hint em{color:var(--ink-dim);font-style:normal;}
+.example-btn{align-self:flex-start;font-family:'IBM Plex Mono';font-size:11px;font-weight:600;color:#0a1220;background:var(--trace);border:1px solid var(--trace);padding:9px 16px;border-radius:20px;cursor:pointer;box-shadow:0 4px 12px -4px var(--trace-soft);}
+.example-btn:hover{filter:brightness(1.08);}
+
+.panel{padding:16px;}
+.panel-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px;gap:10px;flex-wrap:wrap;}
+.panel-head h2{font-family:'IBM Plex Sans Condensed';font-size:13px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-dim);margin:0;font-weight:600;}
+.panel-head .tag{font-family:'IBM Plex Mono';font-size:10px;color:var(--ink-faint);}
+
+.result-grid{display:grid;grid-template-columns:220px 1fr;gap:16px;align-items:center;}
+@media (max-width:640px){ .result-grid{grid-template-columns:1fr;} }
+.gauge-box{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.gauge-num{font-family:'IBM Plex Mono';font-weight:700;font-size:26px;color:var(--gold);text-align:center;}
+.gauge-lbl{font-size:10px;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.1em;text-align:center;}
+.stat-list{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+@media (max-width:480px){ .stat-list{grid-template-columns:1fr;} }
+.stat{border:1px solid var(--line-soft);border-radius:var(--radius);padding:9px 11px;background:var(--panel-soft);}
+.stat .k{font-size:10px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.06em;}
+.stat .v{font-family:'IBM Plex Mono';font-size:15px;font-weight:600;margin-top:3px;}
+.stat.hot{border-color:var(--gold);background:linear-gradient(180deg,rgba(232,181,69,.08),transparent);}
+.stat.hot .v{color:var(--gold);}
+
+.risk-box{border-radius:var(--radius);padding:11px 13px;margin-top:12px;font-size:12px;line-height:1.6;border:1px solid;}
+.risk-ok{border-color:var(--trace);background:rgba(59, 158, 255,.06);color:var(--ink-dim);}
+.risk-warn{border-color:var(--warn);background:rgba(227,168,59,.08);color:var(--ink-dim);}
+.risk-alarm{border-color:var(--alarm);background:rgba(255,93,119,.08);color:var(--ink-dim);}
+.risk-box b{color:var(--ink);}
+
+.ref-table{width:100%;border-collapse:collapse;font-size:11px;}
+.ref-table th,.ref-table td{padding:6px 8px;border-bottom:1px solid var(--line-soft);text-align:left;}
+.ref-table th{color:var(--ink-faint);font-weight:500;text-transform:uppercase;font-size:9px;letter-spacing:.06em;}
+.ref-table td{color:var(--ink-dim);font-family:'IBM Plex Mono';}
+.ref-table tr.hl td{color:var(--gold);font-weight:600;}
+
+.ledger{display:flex;flex-direction:column;}
+.lstep{padding:13px 16px;border-bottom:1px solid var(--line-soft);display:grid;grid-template-columns:26px 1fr;gap:12px;}
+.lstep:last-child{border-bottom:none;}
+.lstep .ln{font-family:'IBM Plex Mono';color:var(--ink-faint);font-size:11px;padding-top:2px;}
+.lstep h3{margin:0 0 5px;font-size:12.5px;font-weight:600;color:var(--ink);}
+.lstep .formula{font-family:'IBM Plex Mono';font-size:12px;color:var(--trace);background:rgba(59, 158, 255,.06);padding:8px 10px;border-radius:var(--radius);border:1px solid var(--trace-soft);margin:6px 0;overflow-x:auto;white-space:pre;}
+.cite{font-size:9.5px;color:var(--ink-faint);margin-top:6px;line-height:1.5;border-left:2px solid var(--line);padding-left:8px;}
+.cite b{color:var(--ink-dim);font-weight:500;}
+.clause{font-family:'IBM Plex Mono';font-size:9.5px;color:var(--gold);background:rgba(232,181,69,.08);border:1px solid rgba(232,181,69,.25);border-radius:3px;padding:1px 5px;margin-right:4px;white-space:nowrap;}
+
+footer.note{max-width:1480px;margin:22px auto 60px;padding:0 16px;font-size:10.5px;color:var(--ink-faint);line-height:1.7;}
+footer.note b{color:var(--ink-dim);}
+</style>
+</head>
+<body>
+<a href="index.html" class="no-print" style="position:fixed;top:10px;left:12px;z-index:9999;font-family:monospace;font-size:11px;color:#8fa8c2;background:rgba(10,23,40,0.85);border:1px solid #234261;border-radius:14px;padding:5px 12px;text-decoration:none;">← OhmZone</a>
+<div class="lang-switch no-print">
+  <button type="button" id="btn-en" class="active" onclick="setLang('en')">EN</button>
+  <button type="button" id="btn-fr" onclick="setLang('fr')">FR</button>
+</div>
+
+<div class="titleblock">
+  <div class="brand">
+    <div class="mark">LV</div>
+    <div>
+      <h1 id="titleH1">LV Equipment Cable Selection</h1>
+      <div class="sub" id="titleSub">Feeder cable sizing to MCC / switchgear / switchboard / panel — CSA C22.1 Tables 1–4</div>
+    </div>
+  </div>
+  <div class="stamp">
+    <div><b id="lblDwg">Dwg No.</b><span>LV-001</span></div>
+    <div><b id="lblScale">Scale</b><span>NTS</span></div>
+    <div><b id="lblMethod">Method</b><span>CSA C22.1 Tbl 1–4</span></div>
+    <div><b id="lblRev">Rev</b><span id="revTag">—</span></div>
+  </div>
+</div>
+
+<div class="top-disclaimer no-print">
+  <b id="topDiscB">Reference tool only.</b> <span id="topDiscTxt">Ampacity values are the commonly published CSA C22.1 Table 2/4 figures for ≤3 current-carrying conductors at 30°C ambient — verify against the current edition for the exact size, and against Table 1/3 directly for single-conductor free-air installations, where this tool uses a derived approximation. Final selection must be reviewed by a qualified electrical professional.</span>
+</div>
+
+<div class="app">
+  <div class="steps">
+
+    <button class="example-btn" id="loadExample">▸ <span id="loadExampleTxt">Load example</span></button>
+
+    <!-- STEP 1: LOAD -->
+    <div class="step" id="step1">
+      <div class="step-head" data-toggle="step1">
+        <div class="step-num">1</div>
+        <div class="step-title" id="step1Title">Load<small id="step1Small">Tag, current, continuous duty</small></div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="step-body">
+        <label class="field"><b id="lblTag">Equipment tag</b>
+          <input type="text" id="eqTag" placeholder="e.g. MCC-1, FDR-101">
+        </label>
+        <label class="field"><b id="lblLoadA">Load current (A)</b>
+          <input type="number" id="loadA" value="150" min="0.1" step="0.1">
+        </label>
+        <label class="field"><b id="lblContinuous">Is this a continuous load (operates ≥3 h)?</b>
+          <div class="seg" id="continuousSeg">
+            <button data-v="yes" class="active">Yes</button>
+            <button data-v="no">No</button>
+          </div>
+        </label>
+        <div class="hint" id="hintStep1"></div>
+      </div>
+    </div>
+
+    <!-- STEP 2: TEMPERATURE -->
+    <div class="step" id="step2">
+      <div class="step-head" data-toggle="step2">
+        <div class="step-num">2</div>
+        <div class="step-title" id="step2Title">Temperature Ratings<small id="step2Small">Conductor insulation vs. equipment terminals</small></div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="step-body">
+        <label class="field"><b id="lblInsulTemp">Conductor insulation rating</b>
+          <div class="seg" id="insulTempSeg">
+            <button data-v="75" class="active">75°C</button>
+            <button data-v="90">90°C</button>
+          </div>
+        </label>
+        <label class="field"><b id="lblTermTemp">Equipment terminal rating</b>
+          <div class="seg" id="termTempSeg">
+            <button data-v="60">60°C</button>
+            <button data-v="75" class="active">75°C</button>
+            <button data-v="90">90°C</button>
+          </div>
+        </label>
+        <div class="hint" id="hintStep2"></div>
+      </div>
+    </div>
+
+    <!-- STEP 3: MATERIAL & INSTALLATION -->
+    <div class="step" id="step3">
+      <div class="step-head" data-toggle="step3">
+        <div class="step-num">3</div>
+        <div class="step-title" id="step3Title">Material &amp; Installation<small id="step3Small">Copper/aluminum, raceway or free air</small></div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="step-body">
+        <label class="field"><b id="lblMat">Conductor material</b>
+          <div class="seg" id="matSeg">
+            <button data-v="cu" class="active">Copper</button>
+            <button data-v="al">Aluminum</button>
+          </div>
+        </label>
+        <label class="field"><b id="lblInstall">Installation method</b>
+          <div class="seg" id="installSeg">
+            <button data-v="raceway" class="active">≤3 in raceway/cable</button>
+            <button data-v="freeair">Single conductor, free air</button>
+          </div>
+        </label>
+        <div class="hint" id="hintStep3"></div>
+      </div>
+    </div>
+
+    <!-- STEP 4: BREAKER TYPE -->
+    <div class="step" id="step4">
+      <div class="step-head" data-toggle="step4">
+        <div class="step-num">4</div>
+        <div class="step-title" id="step4Title">Overcurrent Device<small id="step4Small">80%-rated vs. 100%-rated breaker</small></div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="step-body">
+        <label class="field"><b id="lblBreakerType">Breaker duty rating</b>
+          <div class="seg" id="breakerSeg">
+            <button data-v="80" class="active">80% rated (standard)</button>
+            <button data-v="100">100% rated</button>
+          </div>
+        </label>
+        <div class="hint" id="hintStep4"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="canvas-col">
+    <div class="panel">
+      <div class="panel-head"><h2 id="resultTitle">Result — Recommended Cable</h2></div>
+      <div class="result-grid">
+        <div class="gauge-box">
+          <div class="gauge-num" id="gaugeNum">—</div>
+          <div class="gauge-lbl" id="gaugeLbl">Recommended size</div>
+        </div>
+        <div class="stat-list">
+          <div class="stat hot"><div class="k" id="lblStatReqAmp">Required ampacity</div><div class="v" id="statReqAmp">—</div></div>
+          <div class="stat"><div class="k" id="lblStatColumn">Ampacity column used</div><div class="v" id="statColumn">—</div></div>
+          <div class="stat"><div class="k" id="lblStatSets">Parallel sets per phase</div><div class="v" id="statSets">—</div></div>
+          <div class="stat"><div class="k" id="lblStatAmpacity">Ampacity (per set / total)</div><div class="v" id="statAmpacity">—</div></div>
+          <div class="stat"><div class="k" id="lblStatBreaker">Standard breaker size</div><div class="v" id="statBreaker">—</div></div>
+          <div class="stat"><div class="k" id="lblStatTable">Table used</div><div class="v" id="statTable">—</div></div>
+        </div>
+      </div>
+      <div id="verdictBox"></div>
+      <div id="breakerNoteBox"></div>
+      <div id="terminalNoteBox"></div>
+    </div>
+
+    <div class="panel no-print" style="border:none;background:transparent;">
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px;font-size:11.5px;color:var(--ink-dim);">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+          <input type="checkbox" id="includeLedger" checked style="width:auto;">
+          <span id="lblIncludeLedger">Include Calculation Ledger in report</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+          <input type="checkbox" id="includeSizesTable" checked style="width:auto;">
+          <span id="lblIncludeSizes">Include All Sizes Evaluated in report</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+          <input type="checkbox" id="includeLogo" checked style="width:auto;">
+          <span id="lblIncludeLogo">Include OhmZone brand mark in report</span>
+        </label>
+      </div>
+      <div class="btn-row" style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button id="printBtn" style="padding:9px 16px;border-radius:8px;border:1px solid #2f5678;background:#0f2036;color:#c8d8e8;cursor:pointer;font-family:inherit;">🖨 Print / Save as PDF</button>
+        <button id="exportWordBtn" style="padding:9px 16px;border-radius:8px;border:1px solid #2f5678;background:#0f2036;color:#c8d8e8;cursor:pointer;font-family:inherit;">📄 Export study (Word)</button>
+        <button id="exportExcelBtn" style="padding:9px 16px;border-radius:8px;border:1px solid #2f5678;background:#0f2036;color:#c8d8e8;cursor:pointer;font-family:inherit;">📊 Export study (Excel)</button>
+      </div>
+      <div style="border-top:1px dashed var(--line);margin-top:14px;padding-top:12px;">
+        <label class="field"><b id="lblUploadTemplate">Report template (.docx, optional)</b>
+          <input type="file" id="templateFile" accept=".docx">
+        </label>
+        <div id="templateStatus" style="font-size:11px;color:var(--trace);margin-top:4px;"></div>
+        <div class="hint" id="hintUploadTemplate" style="margin-top:6px;"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2 id="ledgerTitle">Calculation Ledger</h2><span class="tag" id="ledgerTag">clause-by-clause</span></div>
+      <div class="ledger" id="ledger"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2 id="sizesTitle">All Sizes Evaluated</h2></div>
+      <div style="overflow-x:auto;">
+        <table class="ref-table">
+          <thead><tr><th id="szThSize">Size</th><th id="szThAmpSet">Ampacity/set</th><th id="szThAmpTotal">Total ampacity</th><th id="szThOk">Meets required?</th></tr></thead>
+          <tbody id="sizesTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2 id="mfrTitle">Manufacturer Catalogues — MCC / Switchgear / Switchboard / Panel</h2></div>
+      <div style="overflow-x:auto;">
+        <table class="ref-table">
+          <thead><tr><th id="mfrThName">Manufacturer</th><th id="mfrThProd">Product lines</th><th id="mfrThLink">Catalogue</th></tr></thead>
+          <tbody id="mfrTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="note" id="footerNote"></footer>
+
+<script>
+const $ = id => document.getElementById(id);
+function fmt(n,d=2){ if(n===undefined||n===null||isNaN(n)) return "—"; return Number(n).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d}); }
+
+/* ===================== ampacity data ===================== */
+/* CSA C22.1 Table 2 (copper) / Table 4 (aluminum): ≤3 current-carrying insulated
+   conductors, rated 0–2000 V, in raceway or cable, 30°C ambient. These are the
+   commonly published values (confirmed to match NEC 310.16 "for the most common
+   sizes" per published technical guidance) — verify against the current CSA
+   C22.1 edition for the exact size before final design.
+   Table 1 (copper) / Table 3 (aluminum), single conductor in free air, are
+   derived here by applying a representative free-air uplift factor to the
+   Table 2/4 base values — this is an approximation, not an independently
+   sourced Table 1/3 value; verify directly against Table 1/3 for critical
+   free-air designs. */
+const SIZES = ["14","12","10","8","6","4","3","2","1","1/0","2/0","3/0","4/0","250","300","350","400","500","600","700","750"];
+
+const T2_CU = { // 60 / 75 / 90 columns
+  "14":{60:15,75:20,90:25}, "12":{60:20,75:25,90:30}, "10":{60:30,75:35,90:40},
+  "8":{60:40,75:50,90:55}, "6":{60:55,75:65,90:75}, "4":{60:70,75:85,90:95},
+  "3":{60:85,75:100,90:110}, "2":{60:95,75:115,90:130}, "1":{60:110,75:130,90:145},
+  "1/0":{60:125,75:150,90:170}, "2/0":{60:145,75:175,90:195}, "3/0":{60:165,75:200,90:225},
+  "4/0":{60:195,75:230,90:260}, "250":{60:215,75:255,90:290}, "300":{60:240,75:285,90:320},
+  "350":{60:260,75:310,90:350}, "400":{60:280,75:335,90:380}, "500":{60:320,75:380,90:430},
+  "600":{60:350,75:420,90:475}, "700":{60:385,75:460,90:520}, "750":{60:400,75:475,90:535}
+};
+const T4_AL = {
+  "12":{60:15,75:20,90:25}, "10":{60:25,75:30,90:35}, "8":{60:30,75:40,90:45},
+  "6":{60:40,75:50,90:55}, "4":{60:55,75:65,90:75}, "3":{60:65,75:75,90:85},
+  "2":{60:75,75:90,90:100}, "1":{60:85,75:100,90:115}, "1/0":{60:100,75:120,90:135},
+  "2/0":{60:115,75:135,90:150}, "3/0":{60:130,75:155,90:175}, "4/0":{60:150,75:180,90:205},
+  "250":{60:170,75:205,90:230}, "300":{60:195,75:230,90:260}, "350":{60:210,75:250,90:280},
+  "400":{60:225,75:270,90:305}, "500":{60:260,75:310,90:350}, "600":{60:285,75:340,90:385},
+  "700":{60:315,75:375,90:425}, "750":{60:320,75:385,90:435}
+};
+const FREEAIR_FACTOR = (size)=>{
+  const kcmilSizes = ["250","300","350","400","500","600","700","750"];
+  if(kcmilSizes.includes(size)) return size==="250"||size==="300" ? 1.20 : (size==="600"||size==="700"||size==="750" ? 1.15 : 1.18);
+  const smallSizes = ["14","12","10","8","6","4"];
+  return smallSizes.includes(size) ? 1.30 : 1.25;
+};
+function ampacityLookup(mat, install, size, col){
+  const base = (mat==="cu" ? T2_CU : T4_AL)[size];
+  if(!base) return null;
+  const v = base[col];
+  if(v===undefined) return null;
+  return install==="freeair" ? Math.round(v*FREEAIR_FACTOR(size)) : v;
+}
+const STD_BREAKER = [15,20,25,30,35,40,45,50,60,70,80,90,100,110,125,150,175,200,225,250,300,350,400,450,500,600,700,800,1000,1200,1600,2000,2500,3000,4000,5000,6000];
+function nextStdBreaker(a){ return STD_BREAKER.find(s=>s>=a) || STD_BREAKER[STD_BREAKER.length-1]; }
+
+const MANUFACTURERS = [
+  {name:"Eaton", prod:"Freedom &amp; AMPGARD MCC, Magnum LV switchgear, Pow-R-Line switchboards, Pow-R-Line panelboards", url:"https://www.eaton.com/us/en-us/products/low-voltage-power-distribution-control-systems.html"},
+  {name:"Schneider Electric / Square D", prod:"Model 6 MCC, Masterpact/SeT Series switchgear, QED switchboards, NQ/NF panelboards", url:"https://www.se.com/us/en/product-subcategory/4010-switchboards-and-switchgear/"},
+  {name:"ABB", prod:"MNS/MNS iS MCC, low-voltage switchgear, ReliaGear switchboards", url:"https://new.abb.com/low-voltage/products/switchgear"},
+  {name:"Siemens", prod:"SIVACON S8 switchgear/MCC, low-voltage switchboards, panelboards", url:"https://www.siemens.com/us/en/products/energy/low-voltage/panelboards-switchboards-switchgear.html"},
+  {name:"Rockwell Automation", prod:"CENTERLINE 2100/2500 motor control centers", url:"https://www.rockwellautomation.com/en-us/products/hardware/allen-bradley/motor-control/mcc.html"},
+  {name:"GE Vernova / ABB (legacy GE)", prod:"Spectra Series switchboards, AV-Line/AKD switchgear", url:"https://www.gevernova.com/"}
+];
+
+let currentLang = 'en';
+let state = { continuous:"yes", insulTemp:75, termTemp:75, mat:"cu", install:"raceway", breakerType:"80" };
+
+document.querySelectorAll(".step-head").forEach(h=>{
+  h.addEventListener("click", ()=>{ $(h.dataset.toggle).classList.toggle("closed"); });
+});
+
+function wireSeg(segId, stateKey, isNumber){
+  $(segId).addEventListener("click", e=>{
+    const b = e.target.closest("button"); if(!b) return;
+    document.querySelectorAll("#"+segId+" button").forEach(x=>x.classList.remove("active"));
+    b.classList.add("active");
+    state[stateKey] = isNumber ? Number(b.dataset.v) : b.dataset.v;
+    recalc();
+  });
+}
+wireSeg("continuousSeg","continuous"); wireSeg("insulTempSeg","insulTemp",true); wireSeg("termTempSeg","termTemp",true);
+wireSeg("matSeg","mat"); wireSeg("installSeg","install"); wireSeg("breakerSeg","breakerType");
+
+["loadA","eqTag"].forEach(id=>{ $(id).addEventListener("input", recalc); });
+
+$("loadExample").addEventListener("click", ()=>{
+  $("eqTag").value = "MCC-1"; $("loadA").value = 420;
+  document.querySelectorAll("#continuousSeg button").forEach(x=>x.classList.toggle("active", x.dataset.v==="yes")); state.continuous="yes";
+  document.querySelectorAll("#insulTempSeg button").forEach(x=>x.classList.toggle("active", x.dataset.v==="90")); state.insulTemp=90;
+  document.querySelectorAll("#termTempSeg button").forEach(x=>x.classList.toggle("active", x.dataset.v==="75")); state.termTemp=75;
+  document.querySelectorAll("#matSeg button").forEach(x=>x.classList.toggle("active", x.dataset.v==="cu")); state.mat="cu";
+  document.querySelectorAll("#installSeg button").forEach(x=>x.classList.toggle("active", x.dataset.v==="raceway")); state.install="raceway";
+  document.querySelectorAll("#breakerSeg button").forEach(x=>x.classList.toggle("active", x.dataset.v==="80")); state.breakerType="80";
+  recalc();
+});
+
+/* ===== core calc ===== */
+function calcAll(){
+  const L = UI[currentLang];
+  const loadA = parseFloat($("loadA").value)||0;
+  const tag = $("eqTag").value.trim();
+  const continuous = state.continuous==="yes";
+  const factor = (continuous || state.breakerType==="80") ? 1.25 : 1.0;
+  const reqAmp = loadA * factor;
+
+  const usedColumn = Math.min(state.insulTemp, state.termTemp);
+  const tableName = state.mat==="cu" ? (state.install==="raceway" ? "Table 2" : "Table 1") : (state.install==="raceway" ? "Table 4" : "Table 3");
+
+  const rows = SIZES.map(sz=>{
+    const perSet = ampacityLookup(state.mat, state.install, sz, usedColumn);
+    return {size:sz, perSet};
+  }).filter(r=>r.perSet!==null);
+
+  // single-set solution first
+  let chosen = null, sets = 1;
+  for(const r of rows){
+    if(r.perSet >= reqAmp){ chosen = r; sets = 1; break; }
+  }
+  if(!chosen){
+    const capAt750 = rows.find(r=>r.size==="750");
+    const capVal = capAt750 ? capAt750.perSet : rows[rows.length-1].perSet;
+    sets = Math.ceil(reqAmp / capVal);
+    for(const r of rows){
+      if(r.perSet*sets >= reqAmp){ chosen = r; break; }
+    }
+    if(!chosen){ chosen = rows[rows.length-1]; sets = Math.ceil(reqAmp/chosen.perSet); }
+  }
+
+  const totalAmp = chosen ? chosen.perSet*sets : null;
+  const breaker = nextStdBreaker(reqAmp);
+
+  return {tag, loadA, continuous, factor, reqAmp, usedColumn, tableName, rows, chosen, sets, totalAmp, breaker,
+    mat:state.mat, install:state.install, insulTemp:state.insulTemp, termTemp:state.termTemp, breakerType:state.breakerType};
+}
+
+function recalc(){
+  const L = UI[currentLang];
+  const d = calcAll();
+
+  $("gaugeNum").textContent = d.chosen ? (d.sets>1 ? d.sets+"× "+d.chosen.size : d.chosen.size) : "—";
+  $("statReqAmp").textContent = fmt(d.reqAmp,1)+" A";
+  $("statColumn").textContent = d.usedColumn+"°C";
+  $("statSets").textContent = d.sets;
+  $("statAmpacity").textContent = d.chosen ? fmt(d.chosen.perSet,0)+" A / "+fmt(d.totalAmp,0)+" A" : "—";
+  $("statBreaker").textContent = d.breaker+" A";
+  $("statTable").textContent = d.tableName;
+  $("revTag").textContent = new Date().toISOString().slice(0,10);
+
+  const verdictBox = $("verdictBox");
+  if(d.chosen){
+    verdictBox.innerHTML = `<div class="risk-box risk-ok"><b>${L.passTitle}</b> ${L.passBody
+      .replace('{sets}', d.sets).replace('{size}', d.chosen.size)
+      .replace('{total}', fmt(d.totalAmp,0)).replace('{req}', fmt(d.reqAmp,1))}</div>`;
+  } else {
+    verdictBox.innerHTML = `<div class="risk-box risk-alarm"><b>${L.failTitle}</b> ${L.failBody}</div>`;
+  }
+
+  const breakerBox = $("breakerNoteBox");
+  breakerBox.innerHTML = state.breakerType==="80"
+    ? `<div class="risk-box risk-warn"><b>${L.b80Title}</b> ${L.b80Body}</div>`
+    : `<div class="risk-box risk-ok"><b>${L.b100Title}</b> ${L.b100Body}</div>`;
+
+  const termBox = $("terminalNoteBox");
+  if(d.insulTemp !== d.termTemp){
+    termBox.innerHTML = `<div class="risk-box risk-warn"><b>${L.termCapTitle}</b> ${L.termCapBody
+      .replace('{insul}', d.insulTemp).replace('{term}', d.termTemp).replace('{used}', d.usedColumn)}</div>`;
+  } else {
+    termBox.innerHTML = "";
+  }
+
+  $("sizesTableBody").innerHTML = d.rows.map(r=>{
+    const total = r.perSet * d.sets;
+    const ok = total >= d.reqAmp;
+    return `<tr class="${d.chosen && r.size===d.chosen.size ? 'hl':''}">
+      <td>${r.size}</td><td>${fmt(r.perSet,0)} A</td><td>${fmt(total,0)} A</td>
+      <td>${ok ? '✓ '+L.yes : '✗ '+L.no}</td></tr>`;
+  }).join("");
+
+  renderLedger(d);
+  window._lastResults = d;
+}
+
+/* ===== ledger ===== */
+function buildLedgerSteps(d){
+  const L = UI[currentLang];
+  const steps = [];
+
+  steps.push({num:1, title:L.ls1Title, clause:"CSA C22.1 Rule 8-104(6)", note:L.ls1Note, formula:
+`${L.loadLbl} = ${fmt(d.loadA,1)} A  (${d.continuous ? L.continuousYes : L.continuousNo})
+${L.factorLbl} = ${d.factor===1.25 ? "1.25 ("+L.the125+")" : "1.00 ("+L.the100+")"}
+
+${L.reqAmpLbl} = ${fmt(d.loadA,1)} × ${fmt(d.factor,2)} = ${fmt(d.reqAmp,1)} A`});
+
+  steps.push({num:2, title:L.ls2Title, clause:"CSA C22.1 Rule 4-006", note:L.ls2Note, formula:
+`${L.insulLbl} = ${d.insulTemp}°C
+${L.termLbl} = ${d.termTemp}°C
+${L.usedColLbl} = min(${d.insulTemp}°C, ${d.termTemp}°C) = ${d.usedColumn}°C`});
+
+  steps.push({num:3, title:L.ls3Title, clause: d.mat==="cu" ? (d.install==="raceway"?"CSA C22.1 Table 2":"CSA C22.1 Table 1") : (d.install==="raceway"?"CSA C22.1 Table 4":"CSA C22.1 Table 3"), note:L.ls3Note, formula:
+`${L.matLbl} = ${d.mat==="cu" ? L.copper : L.aluminum}
+${L.installLbl} = ${d.install==="raceway" ? L.installRaceway : L.installFreeair}
+${L.tableLbl} = ${d.tableName} (${L.atColLbl} ${d.usedColumn}°C)`});
+
+  steps.push({num:4, title:L.ls4Title, clause:"CSA C22.1 Rule 12-108", note: d.sets>1 ? L.ls4NoteParallel : L.ls4NoteSingle, formula:
+d.sets>1
+? `750 kcmil ${L.isLimitLbl}
+${L.setsReqLbl} = ceil(${fmt(d.reqAmp,1)} / ${fmt(d.rows.find(r=>r.size==="750")?d.rows.find(r=>r.size==="750").perSet:0,0)}) = ${d.sets}
+${L.chosenSizeLbl} = ${d.sets} × ${d.chosen?d.chosen.size:"—"} = ${d.chosen?fmt(d.chosen.perSet,0):"—"} A × ${d.sets} = ${fmt(d.totalAmp,0)} A`
+: `${L.chosenSizeLbl} = ${d.chosen?d.chosen.size:"—"} → ${d.chosen?fmt(d.chosen.perSet,0):"—"} A ≥ ${fmt(d.reqAmp,1)} A ${L.required}`});
+
+  steps.push({num:5, title:L.ls5Title, clause:"CSA C22.1 Rule 14-104 / Table 13", note:L.ls5Note, formula:
+`${L.reqAmpLbl} = ${fmt(d.reqAmp,1)} A
+${L.nextStdLbl} = ${d.breaker} A`});
+
+  return steps;
+}
+function renderLedger(d){
+  const steps = buildLedgerSteps(d);
+  $("ledger").innerHTML = steps.map(s=>`<div class="lstep"><div class="ln">${String(s.num).padStart(2,'0')}</div><div>
+    <h3><span class="clause">${s.clause}</span>${s.title}</h3><div class="formula">${s.formula}</div><div class="cite">${s.note}</div></div></div>`).join("");
+}
+
+function renderMfrTable(){
+  $("mfrTableBody").innerHTML = MANUFACTURERS.map(m=>
+    `<tr><td>${m.name}</td><td>${m.prod}</td><td><a href="${m.url}" target="_blank" rel="noopener">${m.url.replace('https://','').replace(/\/$/,'')}</a></td></tr>`
+  ).join("");
+}
+
+/* ===== report (built-in layout, mirrors on-screen steps) ===== */
+function buildReportPageHTML(d, includeLedger, includeSizes, includeLogo){
+  const L = UI[currentLang];
+  const today = new Date().toLocaleDateString(currentLang==='fr'?'fr-CA':'en-CA');
+  const cell = (k,v)=>`<td style="padding:2.5pt 6pt 2.5pt 0;color:#333;font-size:9.5pt;white-space:nowrap;">${k}</td><td style="padding:2.5pt 14pt 2.5pt 0;font-weight:600;font-size:9.5pt;border-bottom:0.5pt solid #ddd;">${v}</td>`;
+  const gridRows = (pairs)=>{
+    let html = "";
+    for(let i=0;i<pairs.length;i+=2){
+      const a = pairs[i], b = pairs[i+1];
+      html += `<tr>${cell(a[0],a[1])}${b?cell(b[0],b[1]):'<td></td><td></td>'}</tr>`;
+    }
+    return html;
+  };
+  const sectionHead = (t)=>`<div style="font-size:9.5pt;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;border-bottom:1pt solid #1a1a1a;padding-bottom:2pt;margin:12pt 0 5pt;">${t}</div>`;
+
+  const inputPairs = [
+    [L.lblLoadA, fmt(d.loadA,1)+" A"], [L.lblContinuous, d.continuous?L.continuousYes:L.continuousNo],
+    [L.lblInsulTemp, d.insulTemp+"°C"], [L.lblTermTemp, d.termTemp+"°C"],
+    [L.lblMat, d.mat==="cu"?L.copper:L.aluminum], [L.lblInstall, d.install==="raceway"?L.installRaceway:L.installFreeair],
+    [L.lblBreakerType, d.breakerType==="80"?L.b80Short:L.b100Short], ["",""]
+  ];
+  const resultPairs = d.chosen ? [
+    [L.gaugeLbl, (d.sets>1?d.sets+"× ":"")+d.chosen.size], [L.lblStatReqAmp, fmt(d.reqAmp,1)+" A"],
+    [L.lblStatColumn, d.usedColumn+"°C"], [L.lblStatSets, d.sets],
+    [L.lblStatAmpacity, fmt(d.chosen.perSet,0)+" A / "+fmt(d.totalAmp,0)+" A"], [L.lblStatBreaker, d.breaker+" A"],
+    [L.lblStatTable, d.tableName]
+  ] : [[L.gaugeLbl, "—"]];
+
+  let ledgerHtml = "";
+  if(includeLedger){
+    const steps = buildLedgerSteps(d);
+    ledgerHtml = sectionHead(L.ledgerTitle) + `<table style="width:100%;border-collapse:collapse;">` +
+      steps.map(s=>`<tr>
+        <td style="padding:5pt 8pt 5pt 0;border-bottom:0.5pt solid #e5e5e5;font-size:8.5pt;font-weight:700;vertical-align:top;">${String(s.num).padStart(2,'0')}</td>
+        <td style="padding:5pt 8pt;border-bottom:0.5pt solid #e5e5e5;vertical-align:top;">
+          <div style="font-size:8.5pt;font-weight:700;margin-bottom:2pt;"><span style="color:#b8860b;font-family:'Courier New',monospace;font-size:7.5pt;margin-right:5pt;">${s.clause}</span>${s.title}</div>
+          <div style="font-family:'Courier New',monospace;font-size:8pt;color:#333;line-height:1.5;">${s.formula.split("\n").map(l=>l===""?"&nbsp;":l).join("<br>")}</div>
+          <div style="font-size:7.5pt;color:#888;margin-top:3pt;">${s.note}</div>
+        </td></tr>`).join("") + `</table>`;
+  }
+
+  let sizesHtml = "";
+  if(includeSizes){
+    const rows = d.rows.map(r=>{
+      const total = r.perSet*d.sets;
+      const ok = total >= d.reqAmp;
+      return `<tr style="${d.chosen && r.size===d.chosen.size?'background:#f2f8f6;':''}">
+        <td style="padding:3pt 8pt;border-bottom:0.5pt solid #e5e5e5;font-size:8.5pt;${d.chosen && r.size===d.chosen.size?'font-weight:700;':''}">${r.size}</td>
+        <td style="padding:3pt 8pt;border-bottom:0.5pt solid #e5e5e5;font-size:8.5pt;">${fmt(r.perSet,0)} A</td>
+        <td style="padding:3pt 8pt;border-bottom:0.5pt solid #e5e5e5;font-size:8.5pt;">${fmt(total,0)} A</td>
+        <td style="padding:3pt 8pt;border-bottom:0.5pt solid #e5e5e5;font-size:8.5pt;">${ok?'✓':'✗'}</td></tr>`;
+    }).join("");
+    sizesHtml = sectionHead(L.sizesTitle) + `<table style="width:100%;border-collapse:collapse;">
+      <tr>
+        <td style="padding:4pt 8pt;font-size:7.5pt;font-weight:700;text-transform:uppercase;color:#666;border-bottom:1pt solid #999;">${L.szThSize}</td>
+        <td style="padding:4pt 8pt;font-size:7.5pt;font-weight:700;text-transform:uppercase;color:#666;border-bottom:1pt solid #999;">${L.szThAmpSet}</td>
+        <td style="padding:4pt 8pt;font-size:7.5pt;font-weight:700;text-transform:uppercase;color:#666;border-bottom:1pt solid #999;">${L.szThAmpTotal}</td>
+        <td style="padding:4pt 8pt;font-size:7.5pt;font-weight:700;text-transform:uppercase;color:#666;border-bottom:1pt solid #999;">${L.szThOk}</td>
+      </tr>${rows}</table>`;
+  }
+
+  return `
+  <div style="font-family:Arial,Helvetica,sans-serif;color:#1a1a1a;background:#fff;padding:4pt 2pt;font-size:9.5pt;line-height:1.4;">
+    <table style="width:100%;border-collapse:collapse;border-bottom:1.5pt solid #1a1a1a;padding-bottom:6pt;margin-bottom:4pt;">
+      <tr><td style="font-size:13pt;font-weight:700;padding-bottom:6pt;">${L.titleH1}</td>
+      <td style="text-align:right;font-size:8.5pt;color:#555;padding-bottom:6pt;">${includeLogo?'Ω OHMZONE':''}</td></tr>
+      <tr><td style="font-size:9pt;color:#333;"><b>${L.lblTag}:</b> ${d.tag || L.untitledTag} &nbsp;&nbsp; <b>${L.lblMethod}:</b> CSA C22.1</td>
+      <td style="text-align:right;font-size:8.5pt;color:#555;">${today}</td></tr>
+    </table>
+    ${sectionHead(L.repInputData)}
+    <table style="width:100%;border-collapse:collapse;">${gridRows(inputPairs)}</table>
+    ${sectionHead(L.repResults)}
+    <table style="width:100%;border-collapse:collapse;">${gridRows(resultPairs)}</table>
+    ${sizesHtml}
+    ${ledgerHtml}
+    <p style="font-size:7.5pt;color:#888;margin-top:14pt;border-top:0.5pt solid #ddd;padding-top:6pt;">${L.disclaimerBody}</p>
+  </div>`;
+}
+
+function downloadBlob(content, mime, filename){
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 2000);
+}
+
+$("printBtn").addEventListener("click", ()=>{
+  const d = window._lastResults;
+  if(!d || !d.chosen) return;
+  const html = buildReportPageHTML(d, $("includeLedger").checked, $("includeSizesTable").checked, $("includeLogo").checked);
+  const w = window.open("", "_blank");
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${$('titleH1').textContent}</title>
+  <style>body{margin:0;padding:18px;} @media print{body{padding:0;}}</style></head>
+  <body>${html}<script>window.onload=()=>window.print();<\/script></body></html>`);
+  w.document.close();
+});
+
+/* ===== report template upload ===== */
+let uploadedTemplateBuffer = null, uploadedTemplateName = "";
+$("templateFile").addEventListener("change", (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev)=>{ uploadedTemplateBuffer = ev.target.result; uploadedTemplateName = file.name; inspectTemplate(file.name); };
+  reader.readAsArrayBuffer(file);
+});
+function templateTagValues(d){
+  const L = UI[currentLang];
+  const today = new Date().toLocaleDateString(currentLang==='fr'?'fr-CA':'en-CA');
+  return {
+    tag: d.tag || L.untitledTag, standard: "CSA C22.1", date: today,
+    loadA: fmt(d.loadA,1)+" A", continuous: d.continuous?L.continuousYes:L.continuousNo,
+    insulTemp: d.insulTemp+"°C", termTemp: d.termTemp+"°C", usedColumn: d.usedColumn+"°C",
+    material: d.mat==="cu"?L.copper:L.aluminum, installation: d.install==="raceway"?L.installRaceway:L.installFreeair,
+    breakerDuty: d.breakerType==="80"?L.b80Short:L.b100Short,
+    reqAmp: fmt(d.reqAmp,1)+" A", chosenSize: d.chosen?((d.sets>1?d.sets+"× ":"")+d.chosen.size):"—",
+    ampPerSet: d.chosen?fmt(d.chosen.perSet,0)+" A":"—", totalAmp: d.chosen?fmt(d.totalAmp,0)+" A":"—",
+    sets: String(d.sets), breaker: d.breaker+" A", tableUsed: d.tableName
+  };
+}
+function showTemplateStatus(msg, color){ const el=$("templateStatus"); if(el){ el.textContent=msg; el.style.color=color||"var(--trace)"; } }
+function inspectTemplate(fileName){
+  const L = UI[currentLang];
+  const known = Object.keys(templateTagValues(window._lastResults || calcAll()));
+  try{
+    const zip = new PizZip(uploadedTemplateBuffer);
+    let xml = "";
+    Object.keys(zip.files).forEach(name=>{
+      if(/^word\/(document|header\d*|footer\d*)\.xml$/.test(name)) xml += zip.files[name].asText();
+    });
+    const plain = xml.replace(/<[^>]+>/g, "");
+    const found = known.filter(k => plain.includes("{"+k+"}"));
+    const missing = known.filter(k => !found.includes(k));
+    const allTags = [...plain.matchAll(/\{([a-zA-Z0-9_]+)\}/g)].map(m=>m[1]);
+    const unknown = [...new Set(allTags.filter(t => !known.includes(t)))];
+    let msg = L.templateLoadedMsg.replace("{name}", fileName) + " — ";
+    let color = "var(--trace)";
+    if(found.length === 0){ msg += L.templateNoTagsFound; color = "var(--alarm)"; }
+    else {
+      msg += L.templateTagsFound.replace("{n}", found.length).replace("{total}", known.length);
+      if(missing.length) msg += " " + L.templateTagsMissing.replace("{list}", missing.join(", "));
+      if(unknown.length){ msg += " " + L.templateTagsUnknown.replace("{list}", unknown.join(", ")); color = "var(--warn)"; }
+      if(missing.length && !unknown.length) color = "var(--warn)";
+    }
+    showTemplateStatus(msg, color);
+  } catch(err){
+    console.error(err);
+    showTemplateStatus(L.templateErrorMsg + " " + (err.message||""), "var(--alarm)");
+  }
+}
+function exportWithTemplate(d){
+  const L = UI[currentLang];
+  try{
+    const zip = new PizZip(uploadedTemplateBuffer);
+    const docx = new window.docxtemplater(zip, { paragraphLoop:true, linebreaks:true, nullGetter:p=>"«"+(p.value||"?")+"»" });
+    docx.render(templateTagValues(d));
+    const out = docx.getZip().generate({ type:"blob", mimeType:"application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+    const url = URL.createObjectURL(out);
+    const a = document.createElement("a"); a.href=url; a.download="lv_cable_selection.docx";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url), 2000);
+    showTemplateStatus(L.templateExportOk, "var(--trace)");
+  } catch(err){
+    console.error(err);
+    let detail = err.message || String(err);
+    if(err.properties && err.properties.errors && err.properties.errors.length){
+      detail = err.properties.errors.map(e=>(e.properties&&e.properties.explanation?e.properties.explanation:e.message)).join(" · ");
+    }
+    showTemplateStatus(L.templateErrorMsg+" "+detail, "var(--alarm)");
+    alert(L.templateErrorMsg+"\n\n"+detail);
+    exportWithBuiltInLayout(d);
+  }
+}
+function exportWithBuiltInLayout(d){
+  const html = buildReportPageHTML(d, $("includeLedger").checked, $("includeSizesTable").checked, $("includeLogo").checked);
+  const doc = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+  <head><meta charset="utf-8"><title>LV Equipment Cable Selection</title>
+  <!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View></w:WordDocument></xml><![endif]--></head><body>${html}</body></html>`;
+  downloadBlob(doc, "application/msword", "lv_cable_selection.doc");
+}
+$("exportWordBtn").addEventListener("click", ()=>{
+  const d = window._lastResults;
+  if(!d || !d.chosen) return;
+  if(uploadedTemplateBuffer) exportWithTemplate(d); else exportWithBuiltInLayout(d);
+});
+
+$("exportExcelBtn").addEventListener("click", ()=>{
+  const d = window._lastResults;
+  if(!d || !d.chosen) return;
+  const L = UI[currentLang];
+  const wb = XLSX.utils.book_new();
+  const main = [
+    [L.repInputData,""],
+    [L.lblTag, d.tag || L.untitledTag],
+    [L.lblLoadA, fmt(d.loadA,1)], [L.lblContinuous, d.continuous?L.continuousYes:L.continuousNo],
+    [L.lblInsulTemp, d.insulTemp], [L.lblTermTemp, d.termTemp],
+    [L.lblMat, d.mat==="cu"?L.copper:L.aluminum], [L.lblInstall, d.install==="raceway"?L.installRaceway:L.installFreeair],
+    [L.lblBreakerType, d.breakerType==="80"?L.b80Short:L.b100Short],
+    ["",""], [L.repResults,""],
+    [L.gaugeLbl, (d.sets>1?d.sets+"x ":"")+d.chosen.size],
+    [L.lblStatReqAmp, fmt(d.reqAmp,1)], [L.lblStatColumn, d.usedColumn],
+    [L.lblStatSets, d.sets], [L.lblStatAmpacity, fmt(d.chosen.perSet,0)+" / "+fmt(d.totalAmp,0)],
+    [L.lblStatBreaker, d.breaker], [L.lblStatTable, d.tableName],
+    ["",""], [L.disclaimerLbl, L.disclaimerBody]
+  ];
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(main), "LV Cable Selection");
+
+  const sizes = [[L.szThSize, L.szThAmpSet, L.szThAmpTotal, L.szThOk]];
+  d.rows.forEach(r=>{ const total=r.perSet*d.sets; sizes.push([r.size, fmt(r.perSet,0), fmt(total,0), (total>=d.reqAmp)?L.yes:L.no]); });
+  if($("includeSizesTable").checked) XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sizes), "Sizes Evaluated");
+
+  if($("includeLedger").checked){
+    const led = [["Clause","Formula","Note"]];
+    buildLedgerSteps(d).forEach(s=>{
+      led.push([s.clause+" — "+s.title,"",""]);
+      s.formula.split("\n").forEach(l=>{ if(l.trim()!=="") led.push(["", l, ""]); });
+      led.push(["","",s.note]); led.push(["","",""]);
+    });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(led), "Calculation Ledger");
+  }
+  const mfr = [[L.mfrThName, L.mfrThProd, L.mfrThLink]];
+  MANUFACTURERS.forEach(m=>mfr.push([m.name, m.prod.replace(/&amp;/g,"&"), m.url]));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(mfr), "Manufacturers");
+
+  XLSX.writeFile(wb, "lv_cable_selection.xlsx");
+});
+
+/* ===================== i18n ===================== */
+const UI = {
+  en: {
+    titleH1:"LV Equipment Cable Selection", titleSub:"Feeder cable sizing to MCC / switchgear / switchboard / panel — CSA C22.1 Tables 1–4",
+    lblDwg:"Dwg No.", lblScale:"Scale", lblMethod:"Method", lblRev:"Rev",
+    topDiscB:"Reference tool only.",
+    topDiscTxt:"Ampacity values are the commonly published CSA C22.1 Table 2/4 figures for ≤3 current-carrying conductors at 30°C ambient — verify against the current edition for the exact size, and against Table 1/3 directly for single-conductor free-air installations, where this tool uses a derived approximation. Final selection must be reviewed by a qualified electrical professional.",
+    loadExampleTxt:"Load example",
+    step1Title:"Load", step1Small:"Tag, current, continuous duty",
+    lblTag:"Equipment tag", lblLoadA:"Load current (A)", lblContinuous:"Is this a continuous load (operates ≥3 h)?",
+    hintStep1:"A continuous load, or a load protected by an 80%-rated breaker, must be sized at 125% of the actual current per CSA C22.1 Rule 8-104(6) — this is the same principle whether or not the load technically runs 3 hours or more.",
+    step2Title:"Temperature Ratings", step2Small:"Conductor insulation vs. equipment terminals",
+    lblInsulTemp:"Conductor insulation rating", lblTermTemp:"Equipment terminal rating",
+    hintStep2:"Per CSA C22.1 Rule 4-006, if the conductor's insulation is rated higher than the equipment terminals it lands on, the LOWER of the two temperatures governs the ampacity column used — a 90°C-insulated conductor terminating on 75°C-rated equipment must be sized from the 75°C column.",
+    step3Title:"Material &amp; Installation", step3Small:"Copper/aluminum, raceway or free air",
+    lblMat:"Conductor material", lblInstall:"Installation method",
+    hintStep3:"Table 2 (copper) / Table 4 (aluminum) apply to 3 or fewer current-carrying conductors in a raceway or cable — the most common equipment feeder case. Table 1 / Table 3 apply to a single conductor in free air and generally allow a higher ampacity for the same size.",
+    step4Title:"Overcurrent Device", step4Small:"80%-rated vs. 100%-rated breaker",
+    lblBreakerType:"Breaker duty rating",
+    hintStep4:"Standard (80%-rated) breakers are the default in most panels — they're only listed for continuous loading up to 80% of their rating, which is why the 125% conductor/breaker sizing factor exists. 100%-rated breakers (a specially listed, more expensive breaker/enclosure combination, common only at larger frame sizes) may be loaded to their full nameplate rating continuously, removing the need for the 125% margin.",
+    resultTitle:"Result — Recommended Cable", gaugeLbl:"Recommended size",
+    lblStatReqAmp:"Required ampacity", lblStatColumn:"Ampacity column used", lblStatSets:"Parallel sets per phase",
+    lblStatAmpacity:"Ampacity (per set / total)", lblStatBreaker:"Standard breaker size", lblStatTable:"Table used",
+    passTitle:"Recommended configuration found.", passBody:"{sets}× {size} provides {total} A, meeting the {req} A requirement.",
+    failTitle:"No configuration found.", failBody:"Enter a load current to size the cable.",
+    b80Title:"80%-rated breaker in use.", b80Body:"This is the standard breaker type found in most panels and switchboards. It is only listed for continuous operation up to 80% of its rating, so per CSA C22.1 Rule 8-104(6) both the breaker and the conductor must be sized at not less than 125% of the continuous load current.",
+    b100Title:"100%-rated breaker in use.", b100Body:"A 100%-rated breaker (and its matching enclosure/ventilation) is specifically listed to carry its full nameplate rating continuously. Where such a listed assembly is used, the conductor and breaker can be sized directly to the actual load current without the 125% continuous-load margin — though the breaker itself must still be at least equal to the load current.",
+    b80Short:"80% rated", b100Short:"100% rated",
+    termCapTitle:"Terminal temperature governs.", termCapBody:"Conductor insulation is rated {insul}°C but equipment terminals are only rated {term}°C — per Rule 4-006, ampacity is taken from the {used}°C column, not the conductor's own insulation rating.",
+    lblIncludeLedger:"Include Calculation Ledger in report", lblIncludeSizes:"Include All Sizes Evaluated in report", lblIncludeLogo:"Include OhmZone brand mark in report",
+    printBtnLabel:"🖨 Print / Save as PDF", exportWordLabel:"📄 Export study (Word)", exportBtnLabel:"📊 Export study (Excel)",
+    lblUploadTemplate:"Report template (.docx, optional)",
+    hintUploadTemplate:"Upload your firm's Word template to brand exports with it. The template must contain plain-text placeholders exactly as shown, wherever you want each value inserted: {tag} {standard} {date} {loadA} {continuous} {insulTemp} {termTemp} {usedColumn} {material} {installation} {breakerDuty} {reqAmp} {chosenSize} {ampPerSet} {totalAmp} {sets} {breaker} {tableUsed}. Type each tag in one uninterrupted go — Word's autocorrect/spellcheck can split a tag across internal runs, which stops it from being recognised.",
+    templateLoadedMsg:"Template loaded: {name}", templateErrorMsg:"Could not read this file as a Word template — using the built-in layout instead.",
+    templateNoTagsFound:"no OhmZone placeholders found in this document. Add tags such as {tag}, {reqAmp}, {chosenSize} to the template.",
+    templateTagsFound:"{n} of {total} placeholders found.", templateTagsMissing:"Not present (will be left out): {list}.",
+    templateTagsUnknown:"Unrecognised tags that will render as «name»: {list}.", templateExportOk:"Template export completed.",
+    ledgerTitle:"Calculation Ledger", ledgerTag:"clause-by-clause",
+    ls1Title:"Required ampacity from load current", ls1Note:"Continuous loads, and loads protected by a standard 80%-rated breaker, require conductors and overcurrent devices sized at not less than 125% of the actual current.",
+    loadLbl:"Load current", factorLbl:"Sizing factor", reqAmpLbl:"Required ampacity",
+    continuousYes:"continuous", continuousNo:"non-continuous", the125:"125% continuous-load factor applies", the100:"100%-rated breaker — no continuous-load margin needed",
+    ls2Title:"Governing temperature column", ls2Note:"The ampacity table column used is the lower of the conductor's insulation rating and the equipment terminal rating — using the higher insulation rating when terminals are rated lower would overstate the safe ampacity.",
+    insulLbl:"Conductor insulation", termLbl:"Equipment terminals", usedColLbl:"Column used",
+    ls3Title:"Ampacity table selection", ls3Note:"Table selection depends on conductor material and installation method — raceway/cable (≤3 CCC) uses Table 2 (Cu) / Table 4 (Al); single conductor in free air uses Table 1 (Cu) / Table 3 (Al), typically at a higher ampacity for the same size.",
+    matLbl:"Material", installLbl:"Installation", tableLbl:"Table selected", atColLbl:"at",
+    installRaceway:"≤3 conductors in raceway/cable", installFreeair:"single conductor, free air",
+    ls4Title:"Conductor size &amp; parallel sets", ls4NoteSingle:"The smallest listed size whose ampacity meets or exceeds the required ampacity is selected.", ls4NoteParallel:"750 kcmil is treated as the largest practical single conductor; beyond that, additional parallel sets per phase are used instead of a larger single conductor, per common practice under CSA C22.1 Rule 12-108 (conductors in parallel must be the same length, material, size and terminated together).",
+    isLimitLbl:"is the largest single conductor size considered.", setsReqLbl:"Sets required", chosenSizeLbl:"Selected", required:"required",
+    ls5Title:"Standard overcurrent device size", ls5Note:"The required ampacity is rounded up to the next standard breaker/fuse rating per CSA C22.1 Table 13 / Rule 14-104.",
+    nextStdLbl:"Next standard rating",
+    sizesTitle:"All Sizes Evaluated", szThSize:"Size", szThAmpSet:"Ampacity/set", szThAmpTotal:"Total ampacity", szThOk:"Meets required?",
+    mfrTitle:"Manufacturer Catalogues — MCC / Switchgear / Switchboard / Panel", mfrThName:"Manufacturer", mfrThProd:"Product lines", mfrThLink:"Catalogue",
+    repInputData:"Input Data", repResults:"Results", untitledTag:"(untitled)", copper:"Copper", aluminum:"Aluminum",
+    yes:"Yes", no:"No",
+    disclaimerLbl:"Disclaimer",
+    disclaimerBody:"Reference tool only. Ampacity values used are the commonly published CSA C22.1 Table 2/4 figures for ≤3 current-carrying conductors at 30°C ambient; Table 1/3 (free-air) values are a derived approximation, not independently sourced. Always verify against the current edition of CSA C22.1 and the equipment manufacturer's data before final design. This tool does not evaluate ambient temperature correction beyond the 30°C base, conductor bundling/grouping derating, voltage drop, or short-circuit withstand — these must be checked separately.",
+    footerHtml:`<b>Method &amp; data notes.</b> Required ampacity follows <b>CSA C22.1 Rule 8-104(6)</b>: continuous loads, and loads on standard 80%-rated breakers, are sized at not less than 125% of actual current; 100%-rated breaker assemblies may be sized at 100% of actual current. The governing ampacity temperature column follows <b>Rule 4-006</b> — the lower of the conductor insulation rating and the equipment terminal rating governs, regardless of which conductor insulation was actually installed. Ampacity values are the commonly published <b>CSA C22.1 Table 2 (copper) / Table 4 (aluminum)</b> figures for 3 or fewer current-carrying conductors in raceway or cable at 30°C ambient — published technical guidance confirms these match NEC Table 310.16 for the most common sizes, and they are used here on that basis; always verify the exact CSA C22.1 edition value before final design. <b>Table 1 (copper) / Table 3 (aluminum)</b> single-conductor free-air values are <b>derived</b> by applying a representative uplift factor to the Table 2/4 base values — this is an approximation for planning purposes only and must be verified directly against Table 1/3 for a free-air design. Where required ampacity exceeds the ampacity of a single 750 kcmil conductor, this tool moves to parallel sets per phase rather than a larger single conductor, consistent with common CSA C22.1 Rule 12-108 practice (parallel conductors must be identical in length, material, size, and terminated together) — verify the exact rule and any additional derating for grouped parallel conductors. Standard breaker/fuse sizing rounds up to the next rating per <b>Table 13 / Rule 14-104</b>. This tool does not evaluate ambient temperature correction beyond the 30°C base, conductor bundling/grouping derating factors, voltage drop, short-circuit withstand, or arc-flash — these must be checked separately. Preliminary planning aid only; final design must be verified by a qualified electrical professional against the current CSA C22.1 edition and the authority having jurisdiction.`
+  },
+  fr: {
+    titleH1:"Sélection de câble pour équipement BT", titleSub:"Dimensionnement du câble d'alimentation vers MCC / appareillage / tableau / panneau — CSA C22.1 tableaux 1–4",
+    lblDwg:"N° dessin", lblScale:"Échelle", lblMethod:"Méthode", lblRev:"Rév.",
+    topDiscB:"Outil de référence seulement.",
+    topDiscTxt:"Les valeurs d'ampacité sont les chiffres couramment publiés des tableaux 2/4 de la CSA C22.1 pour ≤3 conducteurs actifs à 30°C ambiante — vérifiez auprès de l'édition en vigueur pour la section exacte, et directement auprès des tableaux 1/3 pour les installations à conducteur unique en air libre, où cet outil utilise une approximation dérivée. La sélection finale doit être revue par un professionnel électricien qualifié.",
+    loadExampleTxt:"Charger l'exemple",
+    step1Title:"Charge", step1Small:"Repère, courant, service continu",
+    lblTag:"Repère de l'équipement", lblLoadA:"Courant de charge (A)", lblContinuous:"S'agit-il d'une charge continue (fonctionne ≥3 h)?",
+    hintStep1:"Une charge continue, ou une charge protégée par un disjoncteur à 80 %, doit être dimensionnée à 125 % du courant réel selon la règle 8-104(6) de la CSA C22.1 — même principe, que la charge fonctionne techniquement 3 heures ou plus ou non.",
+    step2Title:"Températures nominales", step2Small:"Isolation du conducteur vs bornes de l'équipement",
+    lblInsulTemp:"Température nominale de l'isolation", lblTermTemp:"Température nominale des bornes de l'équipement",
+    hintStep2:"Selon la règle 4-006 de la CSA C22.1, si l'isolation du conducteur est nominale plus élevée que les bornes de l'équipement sur lesquelles il se termine, la PLUS BASSE des deux températures détermine la colonne d'ampacité utilisée — un conducteur isolé à 90°C se terminant sur un équipement à 75°C doit être dimensionné selon la colonne 75°C.",
+    step3Title:"Matériau et installation", step3Small:"Cuivre/aluminium, canalisation ou air libre",
+    lblMat:"Matériau du conducteur", lblInstall:"Méthode d'installation",
+    hintStep3:"Le tableau 2 (cuivre) / tableau 4 (aluminium) s'appliquent à 3 conducteurs actifs ou moins dans une canalisation ou un câble — le cas le plus courant pour un départ d'équipement. Le tableau 1 / tableau 3 s'appliquent à un conducteur unique en air libre et permettent généralement une ampacité plus élevée pour la même section.",
+    step4Title:"Dispositif de surintensité", step4Small:"Disjoncteur à 80 % vs 100 %",
+    lblBreakerType:"Cote de service du disjoncteur",
+    hintStep4:"Les disjoncteurs standard (à 80 %) sont le type par défaut dans la plupart des panneaux — ils ne sont homologués que pour un fonctionnement continu jusqu'à 80 % de leur calibre, d'où l'existence du facteur de dimensionnement de 125 %. Les disjoncteurs à 100 % (ensemble disjoncteur/armoire spécialement homologué, plus coûteux, courant seulement dans les grands calibres) peuvent être chargés à leur calibre nominal complet en continu, éliminant le besoin de la marge de 125 %.",
+    resultTitle:"Résultat — Câble recommandé", gaugeLbl:"Section recommandée",
+    lblStatReqAmp:"Ampacité requise", lblStatColumn:"Colonne d'ampacité utilisée", lblStatSets:"Ensembles en parallèle par phase",
+    lblStatAmpacity:"Ampacité (par ensemble / total)", lblStatBreaker:"Calibre de disjoncteur normalisé", lblStatTable:"Tableau utilisé",
+    passTitle:"Configuration recommandée trouvée.", passBody:"{sets}× {size} fournit {total} A, répondant à l'exigence de {req} A.",
+    failTitle:"Aucune configuration trouvée.", failBody:"Entrez un courant de charge pour dimensionner le câble.",
+    b80Title:"Disjoncteur à 80 % utilisé.", b80Body:"Il s'agit du type de disjoncteur standard présent dans la plupart des panneaux et tableaux. Il n'est homologué que pour un fonctionnement continu jusqu'à 80 % de son calibre, donc selon la règle 8-104(6) de la CSA C22.1, le disjoncteur et le conducteur doivent tous deux être dimensionnés à au moins 125 % du courant de charge continue.",
+    b100Title:"Disjoncteur à 100 % utilisé.", b100Body:"Un disjoncteur à 100 % (avec son armoire/ventilation assortie) est spécifiquement homologué pour porter son calibre nominal complet en continu. Lorsqu'un tel ensemble homologué est utilisé, le conducteur et le disjoncteur peuvent être dimensionnés directement selon le courant de charge réel sans la marge de charge continue de 125 % — bien que le disjoncteur lui-même doive encore être au moins égal au courant de charge.",
+    b80Short:"80 %", b100Short:"100 %",
+    termCapTitle:"La température des bornes prévaut.", termCapBody:"L'isolation du conducteur est nominale {insul}°C mais les bornes de l'équipement ne sont nominales qu'à {term}°C — selon la règle 4-006, l'ampacité est tirée de la colonne {used}°C, non de la nominale propre du conducteur.",
+    lblIncludeLedger:"Inclure le registre de calcul dans le rapport", lblIncludeSizes:"Inclure toutes les sections évaluées dans le rapport", lblIncludeLogo:"Inclure la marque OhmZone dans le rapport",
+    printBtnLabel:"🖨 Imprimer / Enregistrer en PDF", exportWordLabel:"📄 Exporter l'étude (Word)", exportBtnLabel:"📊 Exporter l'étude (Excel)",
+    lblUploadTemplate:"Modèle de rapport (.docx, facultatif)",
+    hintUploadTemplate:"Téléversez le modèle Word de votre entreprise pour habiller les exports. Le modèle doit contenir des espaces réservés en texte brut exactement comme indiqué, là où vous voulez insérer chaque valeur : {tag} {standard} {date} {loadA} {continuous} {insulTemp} {termTemp} {usedColumn} {material} {installation} {breakerDuty} {reqAmp} {chosenSize} {ampPerSet} {totalAmp} {sets} {breaker} {tableUsed}. Saisissez chaque balise d'un seul coup — le correcteur/la vérification orthographique de Word peut diviser une balise, l'empêchant d'être reconnue.",
+    templateLoadedMsg:"Modèle chargé : {name}", templateErrorMsg:"Impossible de lire ce fichier comme modèle Word — utilisation de la mise en page intégrée à la place.",
+    templateNoTagsFound:"aucun espace réservé OhmZone trouvé dans ce document. Ajoutez des balises telles que {tag}, {reqAmp}, {chosenSize} au modèle.",
+    templateTagsFound:"{n} espaces réservés sur {total} trouvés.", templateTagsMissing:"Absents (seront omis) : {list}.",
+    templateTagsUnknown:"Balises non reconnues qui s'afficheront comme «nom» : {list}.", templateExportOk:"Export du modèle terminé.",
+    ledgerTitle:"Registre de calcul", ledgerTag:"article par article",
+    ls1Title:"Ampacité requise selon le courant de charge", ls1Note:"Les charges continues, et les charges protégées par un disjoncteur standard à 80 %, exigent des conducteurs et dispositifs de surintensité dimensionnés à au moins 125 % du courant réel.",
+    loadLbl:"Courant de charge", factorLbl:"Facteur de dimensionnement", reqAmpLbl:"Ampacité requise",
+    continuousYes:"continue", continuousNo:"non continue", the125:"facteur de charge continue de 125 % s'applique", the100:"disjoncteur à 100 % — aucune marge de charge continue requise",
+    ls2Title:"Colonne de température applicable", ls2Note:"La colonne du tableau d'ampacité utilisée est la plus basse entre la nominale d'isolation du conducteur et la nominale des bornes de l'équipement — utiliser la nominale d'isolation supérieure alors que les bornes sont nominales plus basses surestimerait l'ampacité sécuritaire.",
+    insulLbl:"Isolation du conducteur", termLbl:"Bornes de l'équipement", usedColLbl:"Colonne utilisée",
+    ls3Title:"Sélection du tableau d'ampacité", ls3Note:"Le choix du tableau dépend du matériau du conducteur et de la méthode d'installation — canalisation/câble (≤3 conducteurs actifs) utilise le tableau 2 (Cu) / tableau 4 (Al); conducteur unique en air libre utilise le tableau 1 (Cu) / tableau 3 (Al), généralement à une ampacité plus élevée pour la même section.",
+    matLbl:"Matériau", installLbl:"Installation", tableLbl:"Tableau sélectionné", atColLbl:"à",
+    installRaceway:"≤3 conducteurs en canalisation/câble", installFreeair:"conducteur unique, air libre",
+    ls4Title:"Section du conducteur et ensembles parallèles", ls4NoteSingle:"La plus petite section listée dont l'ampacité atteint ou dépasse l'ampacité requise est sélectionnée.", ls4NoteParallel:"Le 750 kcmil est traité comme la plus grande section de conducteur unique pratique; au-delà, des ensembles supplémentaires en parallèle par phase sont utilisés plutôt qu'un conducteur unique plus grand, conformément à la pratique courante selon la règle 12-108 de la CSA C22.1 (les conducteurs en parallèle doivent être de même longueur, matériau, section, et terminés ensemble).",
+    isLimitLbl:"est la plus grande section de conducteur unique considérée.", setsReqLbl:"Ensembles requis", chosenSizeLbl:"Sélectionné", required:"requis",
+    ls5Title:"Calibre normalisé du dispositif de surintensité", ls5Note:"L'ampacité requise est arrondie au calibre de disjoncteur/fusible normalisé supérieur selon le tableau 13 / règle 14-104 de la CSA C22.1.",
+    nextStdLbl:"Prochain calibre normalisé",
+    sizesTitle:"Toutes les sections évaluées", szThSize:"Section", szThAmpSet:"Ampacité/ensemble", szThAmpTotal:"Ampacité totale", szThOk:"Conforme?",
+    mfrTitle:"Catalogues des fabricants — MCC / Appareillage / Tableau / Panneau", mfrThName:"Fabricant", mfrThProd:"Gammes de produits", mfrThLink:"Catalogue",
+    repInputData:"Données d'entrée", repResults:"Résultats", untitledTag:"(sans titre)", copper:"Cuivre", aluminum:"Aluminium",
+    yes:"Oui", no:"Non",
+    disclaimerLbl:"Avis",
+    disclaimerBody:"Outil de référence seulement. Les valeurs d'ampacité utilisées sont les chiffres couramment publiés des tableaux 2/4 de la CSA C22.1 pour ≤3 conducteurs actifs à 30°C ambiante; les valeurs du tableau 1/3 (air libre) sont une approximation dérivée, non tirée indépendamment. Vérifiez toujours auprès de l'édition en vigueur de la CSA C22.1 et des données du fabricant de l'équipement avant la conception finale. Cet outil n'évalue pas la correction de température ambiante au-delà de la base de 30°C, le déclassement pour groupement de conducteurs, la chute de tension, ni la tenue au court-circuit — ceux-ci doivent être vérifiés séparément.",
+    footerHtml:`<b>Notes sur la méthode et les données.</b> L'ampacité requise suit la <b>règle 8-104(6) de la CSA C22.1</b> : les charges continues, et les charges sur disjoncteurs standard à 80 %, sont dimensionnées à au moins 125 % du courant réel; les ensembles de disjoncteurs à 100 % peuvent être dimensionnés à 100 % du courant réel. La colonne de température d'ampacité applicable suit la <b>règle 4-006</b> — la plus basse entre la nominale d'isolation du conducteur et la nominale des bornes de l'équipement prévaut, peu importe l'isolation du conducteur réellement installée. Les valeurs d'ampacité sont les chiffres couramment publiés des <b>tableaux 2 (cuivre) / 4 (aluminium) de la CSA C22.1</b> pour 3 conducteurs actifs ou moins en canalisation ou câble à 30°C ambiante — des références techniques publiées confirment que ceux-ci correspondent au tableau 310.16 du NEC pour les sections les plus courantes, et sont utilisés ici sur cette base; vérifiez toujours la valeur exacte de l'édition en vigueur de la CSA C22.1 avant la conception finale. Les valeurs de <b>tableau 1 (cuivre) / tableau 3 (aluminium)</b> à conducteur unique en air libre sont <b>dérivées</b> en appliquant un facteur de majoration représentatif aux valeurs de base des tableaux 2/4 — il s'agit d'une approximation à des fins de planification seulement et doit être vérifiée directement auprès du tableau 1/3 pour une conception en air libre. Lorsque l'ampacité requise dépasse celle d'un seul conducteur de 750 kcmil, cet outil passe à des ensembles en parallèle par phase plutôt qu'à un conducteur unique plus grand, conformément à la pratique courante de la règle 12-108 de la CSA C22.1 (les conducteurs en parallèle doivent être identiques en longueur, matériau, section, et terminés ensemble) — vérifiez la règle exacte et tout déclassement additionnel pour conducteurs parallèles groupés. Le dimensionnement normalisé du disjoncteur/fusible arrondit au calibre supérieur selon le <b>tableau 13 / règle 14-104</b>. Cet outil n'évalue pas la correction de température ambiante au-delà de la base de 30°C, les facteurs de déclassement pour groupement de conducteurs, la chute de tension, la tenue au court-circuit, ni l'arc électrique — ceux-ci doivent être vérifiés séparément. Aide à la planification préliminaire seulement; la conception finale doit être vérifiée par un professionnel électricien qualifié selon l'édition en vigueur de la CSA C22.1 et l'autorité compétente.`
+  }
+};
+
+function applyStaticI18n(){
+  const L = UI[currentLang];
+  $('titleH1').textContent=L.titleH1; $('titleSub').textContent=L.titleSub;
+  $('lblDwg').textContent=L.lblDwg; $('lblScale').textContent=L.lblScale; $('lblMethod').textContent=L.lblMethod; $('lblRev').textContent=L.lblRev;
+  $('topDiscB').textContent=L.topDiscB; $('topDiscTxt').textContent=L.topDiscTxt;
+  $('loadExampleTxt').textContent=L.loadExampleTxt;
+  $('step1Title').childNodes[0].textContent=L.step1Title+' '; $('step1Small').textContent=L.step1Small;
+  $('lblTag').textContent=L.lblTag; $('lblLoadA').textContent=L.lblLoadA; $('lblContinuous').textContent=L.lblContinuous;
+  $('hintStep1').innerHTML=L.hintStep1;
+  $('step2Title').childNodes[0].textContent=L.step2Title+' '; $('step2Small').textContent=L.step2Small;
+  $('lblInsulTemp').textContent=L.lblInsulTemp; $('lblTermTemp').textContent=L.lblTermTemp; $('hintStep2').innerHTML=L.hintStep2;
+  $('step3Title').childNodes[0].innerHTML=L.step3Title+' '; $('step3Small').textContent=L.step3Small;
+  $('lblMat').textContent=L.lblMat; $('lblInstall').textContent=L.lblInstall; $('hintStep3').textContent=L.hintStep3;
+  $('step4Title').childNodes[0].textContent=L.step4Title+' '; $('step4Small').textContent=L.step4Small;
+  $('lblBreakerType').textContent=L.lblBreakerType; $('hintStep4').textContent=L.hintStep4;
+  $('resultTitle').textContent=L.resultTitle; $('gaugeLbl').textContent=L.gaugeLbl;
+  $('lblStatReqAmp').textContent=L.lblStatReqAmp; $('lblStatColumn').textContent=L.lblStatColumn; $('lblStatSets').textContent=L.lblStatSets;
+  $('lblStatAmpacity').textContent=L.lblStatAmpacity; $('lblStatBreaker').textContent=L.lblStatBreaker; $('lblStatTable').textContent=L.lblStatTable;
+  $('lblIncludeLedger').textContent=L.lblIncludeLedger; $('lblIncludeSizes').textContent=L.lblIncludeSizes; $('lblIncludeLogo').textContent=L.lblIncludeLogo;
+  $('printBtn').textContent=L.printBtnLabel; $('exportWordBtn').textContent=L.exportWordLabel; $('exportExcelBtn').textContent=L.exportBtnLabel;
+  $('lblUploadTemplate').textContent=L.lblUploadTemplate; $('hintUploadTemplate').textContent=L.hintUploadTemplate;
+  $('ledgerTitle').textContent=L.ledgerTitle; $('ledgerTag').textContent=L.ledgerTag;
+  $('sizesTitle').textContent=L.sizesTitle; $('szThSize').textContent=L.szThSize; $('szThAmpSet').textContent=L.szThAmpSet;
+  $('szThAmpTotal').textContent=L.szThAmpTotal; $('szThOk').textContent=L.szThOk;
+  $('mfrTitle').textContent=L.mfrTitle; $('mfrThName').textContent=L.mfrThName; $('mfrThProd').textContent=L.mfrThProd; $('mfrThLink').textContent=L.mfrThLink;
+  $('footerNote').innerHTML=L.footerHtml;
+  renderMfrTable();
+}
+
+function setLang(lang){
+  currentLang = lang;
+  $('btn-en').classList.toggle('active', lang==='en');
+  $('btn-fr').classList.toggle('active', lang==='fr');
+  document.documentElement.lang = lang;
+  try { localStorage.setItem('ohmzone-lang', lang); } catch(e) {}
+  applyStaticI18n();
+  recalc();
+}
+(function(){
+  let saved='en';
+  try{ saved=localStorage.getItem('ohmzone-lang')||'en'; }catch(e){}
+  setLang(saved);
+})();
+</script>
+<div style="position:fixed;bottom:6px;right:12px;z-index:9999;font-family:monospace;font-size:10px;color:#5c7592;opacity:0.75;">© 2026 OhmZone. All rights reserved.</div>
+</body>
+</html>

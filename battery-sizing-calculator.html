@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Battery Bank Sizing — IEEE 485</title>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3887318872951674" crossorigin="anonymous"></script>
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icon-16.png">
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="OhmZone">
+<meta name="theme-color" content="#0a1728">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<style>
+@media print{ .no-print{display:none !important;} body{background:#fff !important;} }
+:root{
+  --bg:#080c14; --bg2:#0d1420; --panel:#111a2a; --panel-soft:#0c1220;
+  --line:#233350; --line-soft:#182238; --grid-line: rgba(96,140,196,0.09);
+  --ink:#e7edf7; --ink-dim:#8497b8; --ink-faint:#516085;
+  --trace:#3b9eff; --trace-soft:#1a3a5c; --gold:#e8b545;
+  --alarm:#ff5d77; --warn:#e3a83b; --radius:2px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',sans-serif;}
+body{background-image:linear-gradient(var(--grid-line) 1px,transparent 1px),linear-gradient(90deg,var(--grid-line) 1px,transparent 1px);background-size:28px 28px;min-height:100vh;}
+::selection{background:var(--trace);color:#04120f;}
+a{color:var(--trace);}
+input:focus-visible, select:focus-visible, button:focus-visible{outline:2px solid var(--trace);outline-offset:2px;}
+.lang-switch{display:flex;align-items:center;background:#0f2036;border:1px solid #2f5678;border-radius:16px;padding:3px;gap:2px;font-family:monospace;font-size:11px;position:fixed;top:10px;right:12px;z-index:9999;}
+.lang-switch button{border:none;background:transparent;color:#8fa8c2;padding:5px 12px;border-radius:13px;cursor:pointer;font-family:inherit;font-size:inherit;}
+.lang-switch button.active{background:var(--trace);color:#04120f;font-weight:700;}
+
+.titleblock{border-bottom:1px solid var(--line);background:linear-gradient(180deg,rgba(17,26,42,.9),rgba(13,20,32,.7));padding:18px 22px;display:flex;flex-wrap:wrap;gap:14px 28px;align-items:flex-end;justify-content:space-between;}
+.titleblock .brand{display:flex;align-items:baseline;gap:12px;}
+.titleblock .brand .mark{width:34px;height:34px;border:1.5px solid var(--trace);border-radius:3px;display:flex;align-items:center;justify-content:center;color:var(--trace);font-family:'IBM Plex Mono';font-weight:700;font-size:12px;flex:none;box-shadow:0 0 14px rgba(59, 158, 255,.18) inset;}
+.titleblock h1{font-family:'IBM Plex Sans Condensed';font-weight:700;letter-spacing:.3px;font-size:20px;margin:0;text-transform:uppercase;}
+.titleblock .sub{color:var(--ink-dim);font-size:12.5px;margin-top:2px;}
+.stamp{display:grid;grid-template-columns:repeat(4,auto);gap:0 22px;font-family:'IBM Plex Mono';font-size:10.5px;color:var(--ink-dim);}
+.stamp div b{display:block;color:var(--ink-faint);font-weight:500;font-size:9px;letter-spacing:.06em;text-transform:uppercase;}
+.stamp div span{color:var(--trace);font-weight:600;font-size:12px;}
+
+.top-disclaimer{max-width:1480px;margin:14px auto 0;padding:10px 16px;border:1px solid var(--warn);background:rgba(227,168,59,.07);border-radius:var(--radius);font-size:11.5px;color:var(--ink-dim);line-height:1.6;}
+.top-disclaimer b{color:var(--warn);}
+
+.app{display:grid;grid-template-columns:400px 1fr;gap:1px;background:var(--line);max-width:1480px;margin:0 auto;}
+@media (max-width:980px){ .app{grid-template-columns:1fr;} }
+.steps{background:var(--bg2);padding:18px 16px 40px;display:flex;flex-direction:column;gap:14px;}
+.canvas-col{background:var(--line);display:flex;flex-direction:column;gap:1px;}
+.canvas-col > *{background:var(--bg2);}
+
+.step{border:1px solid var(--line-soft);border-radius:var(--radius);background:var(--panel-soft);overflow:hidden;}
+.step-head{display:flex;align-items:center;gap:10px;padding:11px 13px;background:var(--panel);cursor:pointer;user-select:none;border-bottom:1px solid var(--line-soft);}
+.step-num{font-family:'IBM Plex Mono';font-size:11px;font-weight:600;color:var(--bg);background:var(--trace);width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none;}
+.step.optional .step-num{background:var(--ink-faint);color:var(--bg2);}
+.step.optional.on .step-num{background:var(--gold);}
+.step-title{font-size:13px;font-weight:600;letter-spacing:.2px;flex:1;}
+.step-title small{display:block;font-weight:400;color:var(--ink-dim);font-size:10.5px;margin-top:1px;}
+.chev{color:var(--ink-faint);font-size:11px;transition:transform .15s;}
+.step.closed .chev{transform:rotate(-90deg);}
+.step-body{padding:13px;display:flex;flex-direction:column;gap:11px;}
+.step.closed .step-body{display:none;}
+
+label.field{display:flex;flex-direction:column;gap:5px;font-size:11.5px;color:var(--ink-dim);}
+label.field b{color:var(--ink);font-weight:500;font-size:12px;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;}
+input[type=number],input[type=text],select{background:var(--bg2);border:1px solid var(--line);color:var(--ink);font-family:'IBM Plex Mono';font-size:13px;padding:8px 9px;border-radius:var(--radius);width:100%;}
+select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238497b8'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:26px;}
+input:focus,select:focus{border-color:var(--trace);}
+
+.seg{display:flex;border:1px solid var(--line);border-radius:20px;overflow:hidden;width:max-content;flex-wrap:wrap;}
+.seg button{background:transparent;border:none;color:var(--ink-dim);font-family:'IBM Plex Mono';font-size:10.5px;padding:5px 12px;cursor:pointer;}
+.seg button.active{background:var(--trace);color:#04120f;font-weight:600;}
+
+.switch{position:relative;width:34px;height:19px;flex:none;}
+.switch input{opacity:0;width:0;height:0;position:absolute;}
+.switch .track{position:absolute;inset:0;background:var(--line);border-radius:20px;transition:.15s;}
+.switch .track:before{content:'';position:absolute;width:13px;height:13px;left:3px;top:3px;background:var(--ink-dim);border-radius:50%;transition:.15s;}
+.switch input:checked + .track{background:var(--trace-soft);border:1px solid var(--trace);}
+.switch input:checked + .track:before{transform:translateX(15px);background:var(--trace);}
+
+.hint{font-size:10.5px;color:var(--ink-faint);line-height:1.5;}
+.hint em{color:var(--ink-dim);font-style:normal;}
+.example-btn{align-self:flex-start;font-family:'IBM Plex Mono';font-size:11px;font-weight:600;color:#0a1220;background:var(--trace);border:1px solid var(--trace);padding:9px 16px;border-radius:20px;cursor:pointer;box-shadow:0 4px 12px -4px var(--trace-soft);}
+.example-btn:hover{filter:brightness(1.08);}
+.add-btn{font-family:'IBM Plex Mono';font-size:11.5px;font-weight:600;color:#0a1220;background:var(--gold);border:1px solid var(--gold);padding:8px 14px;border-radius:6px;cursor:pointer;align-self:flex-start;}
+.add-btn:hover{filter:brightness(1.06);}
+.item-row{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--panel);border:1px solid var(--line-soft);border-radius:var(--radius);font-size:11.5px;}
+.item-row .lbl{flex:1;color:var(--ink);}
+.item-row .lbl small{display:block;color:var(--ink-faint);font-size:9.5px;}
+.item-row button{background:transparent;border:none;color:var(--alarm);cursor:pointer;font-size:14px;padding:2px 6px;}
+.empty-note{font-size:11px;color:var(--ink-faint);font-style:italic;padding:8px 2px;}
+
+.panel{padding:16px;}
+.panel-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px;gap:10px;flex-wrap:wrap;}
+.panel-head h2{font-family:'IBM Plex Sans Condensed';font-size:13px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-dim);margin:0;font-weight:600;}
+.panel-head .tag{font-family:'IBM Plex Mono';font-size:10px;color:var(--ink-faint);}
+
+.result-grid{display:grid;grid-template-columns:220px 1fr;gap:16px;align-items:center;}
+@media (max-width:640px){ .result-grid{grid-template-columns:1fr;} }
+.gauge-box{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.gauge-num{font-family:'IBM Plex Mono';font-weight:700;font-size:30px;color:var(--gold);text-align:center;}
+.gauge-lbl{font-size:10px;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.1em;text-align:center;}
+.stat-list{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+@media (max-width:480px){ .stat-list{grid-template-columns:1fr;} }
+.stat{border:1px solid var(--line-soft);border-radius:var(--radius);padding:9px 11px;background:var(--panel-soft);}
+.stat .k{font-size:10px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.06em;}
+.stat .v{font-family:'IBM Plex Mono';font-size:15px;font-weight:600;margin-top:3px;}
+.stat.hot{border-color:var(--gold);background:linear-gradient(180deg,rgba(232,181,69,.08),transparent);}
+.stat.hot .v{color:var(--gold);}
+
+.risk-box{border-radius:var(--radius);padding:11px 13px;margin-top:12px;font-size:12px;line-height:1.6;border:1px solid;}
+.risk-ok{border-color:var(--trace);background:rgba(59, 158, 255,.06);color:var(--ink-dim);}
+.risk-warn{border-color:var(--warn);background:rgba(227,168,59,.08);color:var(--ink-dim);}
+.risk-alarm{border-color:var(--alarm);background:rgba(255,93,119,.08);color:var(--ink-dim);}
+.risk-box b{color:var(--ink);}
+
+.ref-table{width:100%;border-collapse:collapse;font-size:11px;}
+.ref-table th,.ref-table td{padding:6px 8px;border-bottom:1px solid var(--line-soft);text-align:left;}
+.ref-table th{color:var(--ink-faint);font-weight:500;text-transform:uppercase;font-size:9px;letter-spacing:.06em;}
+.ref-table td{color:var(--ink-dim);font-family:'IBM Plex Mono';}
+
+.ledger{display:flex;flex-direction:column;}
+.lstep{padding:13px 16px;border-bottom:1px solid var(--line-soft);display:grid;grid-template-columns:26px 1fr;gap:12px;}
+.lstep:last-child{border-bottom:none;}
+.lstep .ln{font-family:'IBM Plex Mono';color:var(--ink-faint);font-size:11px;padding-top:2px;}
+.lstep h3{margin:0 0 5px;font-size:12.5px;font-weight:600;color:var(--ink);}
+.lstep .formula{font-family:'IBM Plex Mono';font-size:12px;color:var(--trace);background:rgba(59, 158, 255,.06);padding:8px 10px;border-radius:var(--radius);border:1px solid var(--trace-soft);margin:6px 0;overflow-x:auto;white-space:pre;}
+.cite{font-size:9.5px;color:var(--ink-faint);margin-top:6px;line-height:1.5;border-left:2px solid var(--line);padding-left:8px;}
+.cite b{color:var(--ink-dim);font-weight:500;}
+
+.sld-wrap{border:1px solid var(--line-soft);border-radius:var(--radius);overflow:hidden;background:var(--panel-soft);}
+#bankDiagram{display:block;width:100%;height:auto;max-height:340px;}
+
+footer.note{max-width:1480px;margin:22px auto 60px;padding:0 16px;font-size:10.5px;color:var(--ink-faint);line-height:1.7;}
+footer.note b{color:var(--ink-dim);}
+</style>
+</head>
+<body>
+<a href="index.html" class="no-print" style="position:fixed;top:10px;left:12px;z-index:9999;font-family:monospace;font-size:11px;color:#8fa8c2;background:rgba(10,23,40,0.85);border:1px solid #234261;border-radius:14px;padding:5px 12px;text-decoration:none;">← OhmZone</a>
+<div class="lang-switch no-print">
+  <button type="button" id="btn-en" class="active" onclick="setLang('en')">EN</button>
+  <button type="button" id="btn-fr" onclick="setLang('fr')">FR</button>
+</div>
+
+<div class="titleblock">
+  <div class="brand">
+    <div class="mark">BAT</div>
+    <div>
+      <h1 id="titleH1">Battery Bank Sizing</h1>
+      <div class="sub" id="titleSub">Stationary battery capacity sizing per IEEE Std 485 methodology — lead-acid, Li-ion and LFP</div>
+    </div>
+  </div>
+  <div class="stamp">
+    <div><b id="lblDwg">Dwg No.</b><span>BAT-001</span></div>
+    <div><b id="lblScale">Scale</b><span>NTS</span></div>
+    <div><b id="lblMethod">Method</b><span>IEEE 485</span></div>
+    <div><b id="lblRev">Rev</b><span id="revTag">—</span></div>
+  </div>
+</div>
+
+<div class="top-disclaimer no-print">
+  <b id="topDiscB">Preliminary sizing only.</b> <span id="topDiscTxt">This tool applies the IEEE Std 485 correction-factor approach (temperature × aging × design margin) to produce an initial capacity estimate. It does <b>not</b> replace the manufacturer's published discharge-rate tables, which are what actually determine whether a specific cell meets a specific duty cycle at a specific end-of-discharge voltage. Final selection must be verified against the battery manufacturer's data and reviewed by a qualified engineer.</span>
+</div>
+
+<div class="app">
+  <div class="steps">
+
+    <button class="example-btn" id="loadExample">▸ <span id="loadExampleTxt">Load example</span></button>
+
+    <!-- STEP 1: SYSTEM -->
+    <div class="step" id="step1">
+      <div class="step-head" data-toggle="step1">
+        <div class="step-num">1</div>
+        <div class="step-title" id="step1Title">System<small id="step1Small">Tag, DC bus voltage, chemistry</small></div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="step-body">
+        <label class="field"><b id="lblTag">Equipment tag</b>
+          <input type="text" id="eqTag" placeholder="e.g. BAT-101">
+        </label>
+        <div class="row2">
+          <label class="field"><b id="lblSysV">Nominal DC bus voltage (V)</b>
+            <input type="number" id="sysV" value="125" min="1" step="0.1">
+          </label>
+          <label class="field"><b id="lblChem">Chemistry</b>
+            <select id="chem">
+              <option value="vla" id="optVla">Lead-acid, flooded (VLA)</option>
+              <option value="vrla" id="optVrla" selected>Lead-acid, VRLA (AGM/gel)</option>
+              <option value="nicd" id="optNicd">Nickel-cadmium (Ni-Cd)</option>
+              <option value="liion" id="optLiion">Li-ion (NMC)</option>
+              <option value="lfp" id="optLfp">Li-ion LFP (LiFePO₄)</option>
+            </select>
+          </label>
+        </div>
+        <div class="row2">
+          <label class="field"><b id="lblCellV">Cell nominal voltage (V)</b>
+            <input type="number" id="cellV" value="2" min="0.1" step="0.01">
+          </label>
+          <label class="field"><b id="lblCellAh">Cell / module rated capacity (Ah)</b>
+            <input type="number" id="cellAh" value="100" min="1" step="1">
+          </label>
+        </div>
+        <div class="hint" id="hintStep1">Cell voltage auto-fills from the chemistry (2 V lead-acid, 1.2 V Ni-Cd, 3.7 V NMC, 3.2 V LFP) but can be overridden — enter the actual cell/module you intend to use from the manufacturer's catalogue.</div>
+      </div>
+    </div>
+
+    <!-- STEP 2: LOAD PROFILE -->
+    <div class="step" id="step2">
+      <div class="step-head" data-toggle="step2">
+        <div class="step-num">2</div>
+        <div class="step-title" id="step2Title">Load Profile<small id="step2Small">Single load, or a multi-period duty cycle</small></div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="step-body">
+        <label class="field"><b id="lblLoadUnit">Load entered as</b>
+          <div class="seg" id="loadUnitSeg">
+            <button data-u="A" class="active">A</button>
+            <button data-u="W">W</button>
+            <button data-u="kW">kW</button>
+          </div>
+        </label>
+        <div class="row3">
+          <label class="field"><b id="lblLoadVal">Load</b>
+            <input type="number" id="loadVal" value="50" min="0" step="0.1">
+          </label>
+          <label class="field"><b id="lblDurVal">Duration (min)</b>
+            <input type="number" id="durVal" value="480" min="0.1" step="1">
+          </label>
+          <label class="field"><b>&nbsp;</b>
+            <button class="add-btn" id="addPeriodBtn" style="width:100%;">+ <span id="addPeriodTxt">Add</span></button>
+          </label>
+        </div>
+        <div id="periodList" style="display:flex;flex-direction:column;gap:6px;"></div>
+        <div class="hint" id="hintStep2">Add one period for a simple constant load, or several to build a duty cycle (e.g. a large inrush for the first minute, then a lower continuous load). Watt-based loads are converted to amps at the nominal bus voltage — a conservative simplification, since real constant-power loads draw more current as the battery voltage falls.</div>
+      </div>
+    </div>
+
+    <!-- STEP 3: CORRECTION FACTORS -->
+    <div class="step" id="step3">
+      <div class="step-head" data-toggle="step3">
+        <div class="step-num">3</div>
+        <div class="step-title" id="step3Title">Correction Factors<small id="step3Small">IEEE 485: temperature × aging × design margin</small></div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="step-body">
+        <label class="field"><b id="lblTemp">Lowest expected electrolyte temperature (°C)</b>
+          <input type="number" id="tempC" value="25" min="-40" max="60" step="1">
+        </label>
+        <div class="hint" id="tempFactorNote"></div>
+        <div class="row2">
+          <label class="field"><b id="lblAging">Aging factor</b>
+            <input type="number" id="agingF" value="1.25" min="1" max="2" step="0.01">
+          </label>
+          <label class="field"><b id="lblMargin">Design margin</b>
+            <input type="number" id="marginF" value="1.10" min="1" max="2" step="0.01">
+          </label>
+        </div>
+        <div class="row2">
+          <label class="field"><b id="lblDoD">Max depth of discharge (DoD)</b>
+            <input type="number" id="dod" value="0.80" min="0.1" max="1" step="0.01">
+          </label>
+          <label class="field"><b id="lblEff">System / inverter efficiency</b>
+            <input type="number" id="eff" value="1.00" min="0.5" max="1" step="0.01">
+          </label>
+        </div>
+        <div class="hint" id="hintStep3">IEEE 485 uses an aging factor of 1.25 (sizing so the bank still meets load at 80% end-of-life capacity) and a design margin of typically 1.10–1.15 for future load growth. Set efficiency below 1.00 only if the load figure entered is on the AC side of an inverter.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="canvas-col">
+    <div class="panel">
+      <div class="panel-head"><h2 id="resultTitle">Result — Required Bank</h2></div>
+      <div class="result-grid">
+        <div class="gauge-box">
+          <div class="gauge-num" id="gaugeNum">—</div>
+          <div class="gauge-lbl" id="gaugeLbl">Required capacity (Ah)</div>
+        </div>
+        <div class="stat-list">
+          <div class="stat hot"><div class="k" id="lblStatUncorrected">Uncorrected demand</div><div class="v" id="statUncorrected">—</div></div>
+          <div class="stat"><div class="k" id="lblStatCorrection">Cumulative correction</div><div class="v" id="statCorrection">—</div></div>
+          <div class="stat"><div class="k" id="lblStatSeries">Cells in series</div><div class="v" id="statSeries">—</div></div>
+          <div class="stat"><div class="k" id="lblStatParallel">Strings in parallel</div><div class="v" id="statParallel">—</div></div>
+          <div class="stat"><div class="k" id="lblStatTotal">Total cells / modules</div><div class="v" id="statTotal">—</div></div>
+          <div class="stat"><div class="k" id="lblStatEnergy">Installed energy</div><div class="v" id="statEnergy">—</div></div>
+        </div>
+      </div>
+      <div id="crateBox"></div>
+      <div id="verdictBox"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2 id="diagramTitle">Bank Configuration</h2><span class="tag" id="diagramTag">series × parallel arrangement</span></div>
+      <div class="sld-wrap"><svg id="bankDiagram" viewBox="0 0 640 240" xmlns="http://www.w3.org/2000/svg"></svg></div>
+    </div>
+
+    <div class="panel no-print" style="border:none;background:transparent;">
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px;font-size:11.5px;color:var(--ink-dim);">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+          <input type="checkbox" id="includeLedger" checked style="width:auto;">
+          <span id="lblIncludeLedger">Include Calculation Ledger in report</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+          <input type="checkbox" id="includeLogo" checked style="width:auto;">
+          <span id="lblIncludeLogo">Include OhmZone brand mark in report</span>
+        </label>
+      </div>
+      <div class="btn-row" style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button id="printBtn" style="padding:9px 16px;border-radius:8px;border:1px solid #2f5678;background:#0f2036;color:#c8d8e8;cursor:pointer;font-family:inherit;">🖨 Print / Save as PDF</button>
+        <button id="exportWordBtn" style="padding:9px 16px;border-radius:8px;border:1px solid #2f5678;background:#0f2036;color:#c8d8e8;cursor:pointer;font-family:inherit;">📄 Export study (Word)</button>
+        <button id="exportExcelBtn" style="padding:9px 16px;border-radius:8px;border:1px solid #2f5678;background:#0f2036;color:#c8d8e8;cursor:pointer;font-family:inherit;">📊 Export study (Excel)</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2 id="ledgerTitle">Calculation Ledger</h2><span class="tag" id="ledgerTag">IEEE 485 correction-factor method</span></div>
+      <div class="ledger" id="ledger"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2 id="mfrTitle">Manufacturer Catalogues</h2><span class="tag" id="mfrTag">verify final selection against published discharge tables</span></div>
+      <div style="overflow-x:auto;">
+        <table class="ref-table">
+          <thead><tr><th id="mfrThName">Manufacturer</th><th id="mfrThProd">Typical stationary product lines</th><th id="mfrThLink">Catalogue</th></tr></thead>
+          <tbody id="mfrTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="note" id="footerNote"></footer>
+
+<script>
+const $ = id => document.getElementById(id);
+function fmt(n,d=2){ if(n===undefined||n===null||isNaN(n)) return "—"; return Number(n).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d}); }
+
+/* IEEE 485 Table 1-style temperature correction factors for lead-acid cells.
+   Capacity falls as temperature drops, so the factor (a multiplier on required
+   capacity) rises below the 25°C reference. Values are the commonly published
+   set; verify against the standard and the manufacturer for final design. */
+const TEMP_FACTORS = [
+  {c:-20, f:1.59}, {c:-15, f:1.52}, {c:-10, f:1.45}, {c:-5, f:1.38},
+  {c:0,   f:1.30}, {c:5,   f:1.25}, {c:10,  f:1.19}, {c:15, f:1.15},
+  {c:20,  f:1.08}, {c:25,  f:1.00}, {c:30,  f:0.97}, {c:35, f:0.95},
+  {c:40,  f:0.93}, {c:45,  f:0.92}, {c:50,  f:0.91}
+];
+function tempFactor(c){
+  if(c <= TEMP_FACTORS[0].c) return TEMP_FACTORS[0].f;
+  if(c >= TEMP_FACTORS[TEMP_FACTORS.length-1].c) return TEMP_FACTORS[TEMP_FACTORS.length-1].f;
+  for(let i=0;i<TEMP_FACTORS.length-1;i++){
+    const a = TEMP_FACTORS[i], b = TEMP_FACTORS[i+1];
+    if(c >= a.c && c <= b.c){
+      const t = (c-a.c)/(b.c-a.c);
+      return a.f + t*(b.f-a.f);
+    }
+  }
+  return 1.0;
+}
+
+const CHEM_DEFAULTS = {
+  vla:   {cellV:2.0,  dod:0.80, aging:1.25},
+  vrla:  {cellV:2.0,  dod:0.80, aging:1.25},
+  nicd:  {cellV:1.2,  dod:0.80, aging:1.25},
+  liion: {cellV:3.7,  dod:0.90, aging:1.15},
+  lfp:   {cellV:3.2,  dod:0.90, aging:1.15}
+};
+
+const MANUFACTURERS = [
+  {name:"EnerSys", prod:"PowerSafe, DataSafe (VRLA/VLA); Alpha, Odyssey", url:"https://www.enersys.com/en/"},
+  {name:"C&D Technologies (Stryten)", prod:"Liberty AES, msEndur, VLA flooded (DCU/KCR/LCR)", url:"https://www.cdtechno.com/"},
+  {name:"East Penn / Deka", prod:"Unigy, Deka Unigy VRLA & flooded stationary", url:"https://www.eastpennmanufacturing.com/"},
+  {name:"NorthStar (Stryten)", prod:"NSB Blue+, Red series high-rate AGM", url:"https://www.strytenenergy.com/"},
+  {name:"GS Yuasa", prod:"SWL, UXL, DataSafe stationary VRLA", url:"https://www.gs-yuasa.com/en/"},
+  {name:"BAE Batterien", prod:"OPzV, OPzS, Secura flooded & gel", url:"https://www.bae-berlin.de/en/"},
+  {name:"Saft", prod:"Ni-Cd (SBH/SBM/SBL), Li-ion stationary", url:"https://www.saft.com/"},
+  {name:"Trojan Battery (Stryten)", prod:"Industrial deep-cycle flooded & AGM", url:"https://www.trojanbattery.com/"}
+];
+
+let currentLang = 'en';
+let state = { loadUnit:"A", periods:[] };
+let periodSeq = 1;
+
+document.querySelectorAll(".step-head").forEach(h=>{
+  h.addEventListener("click", ()=>{ $(h.dataset.toggle).classList.toggle("closed"); });
+});
+
+$("loadUnitSeg").addEventListener("click", e=>{
+  const b = e.target.closest("button"); if(!b) return;
+  document.querySelectorAll("#loadUnitSeg button").forEach(x=>x.classList.remove("active"));
+  b.classList.add("active");
+  state.loadUnit = b.dataset.u;
+});
+
+$("chem").addEventListener("change", ()=>{
+  const d = CHEM_DEFAULTS[$("chem").value];
+  if(d){ $("cellV").value = d.cellV; $("dod").value = d.dod; $("agingF").value = d.aging; }
+  recalc();
+});
+
+$("addPeriodBtn").addEventListener("click", ()=>{
+  const val = parseFloat($("loadVal").value);
+  const dur = parseFloat($("durVal").value);
+  if(!(val>0) || !(dur>0)) return;
+  state.periods.push({ id:"p"+(periodSeq++), unit:state.loadUnit, val, dur });
+  renderPeriods();
+  recalc();
+});
+
+function removePeriod(id){
+  state.periods = state.periods.filter(p=>p.id!==id);
+  renderPeriods();
+  recalc();
+}
+
+function renderPeriods(){
+  const L = UI[currentLang];
+  const list = $("periodList");
+  if(state.periods.length===0){
+    list.innerHTML = `<div class="empty-note">${L.noPeriods}</div>`;
+    return;
+  }
+  list.innerHTML = state.periods.map((p,i)=>{
+    const amps = periodAmps(p);
+    return `<div class="item-row">
+      <span class="lbl">${L.periodLbl} ${i+1}: ${fmt(p.val,1)} ${p.unit} × ${fmt(p.dur,0)} min
+      <small>= ${fmt(amps,1)} A · ${fmt(amps*p.dur/60,1)} Ah</small></span>
+      <button onclick="removePeriod('${p.id}')">✕</button>
+    </div>`;
+  }).join("");
+}
+
+function periodAmps(p){
+  const sysV = parseFloat($("sysV").value)||1;
+  if(p.unit==="A") return p.val;
+  if(p.unit==="W") return p.val / sysV;
+  return (p.val*1000) / sysV; // kW
+}
+
+["sysV","cellV","cellAh","tempC","agingF","marginF","dod","eff","eqTag"].forEach(id=>{
+  $(id).addEventListener("input", recalc);
+  $(id).addEventListener("change", recalc);
+});
+
+$("loadExample").addEventListener("click", ()=>{
+  $("eqTag").value = "BAT-101";
+  $("sysV").value = 125; $("chem").value = "vrla";
+  $("cellV").value = 2; $("cellAh").value = 200;
+  $("tempC").value = 10; $("agingF").value = 1.25; $("marginF").value = 1.10;
+  $("dod").value = 0.80; $("eff").value = 1.00;
+  state.periods = [];
+  periodSeq = 1;
+  state.periods.push({id:"p"+(periodSeq++), unit:"A", val:120, dur:1});
+  state.periods.push({id:"p"+(periodSeq++), unit:"A", val:45,  dur:479});
+  renderPeriods();
+  recalc();
+});
+
+/* ===== core calculation ===== */
+function calcAll(){
+  const sysV = parseFloat($("sysV").value)||1;
+  const cellV = parseFloat($("cellV").value)||2;
+  const cellAh = parseFloat($("cellAh").value)||1;
+  const tempC = parseFloat($("tempC").value);
+  const agingF = parseFloat($("agingF").value)||1;
+  const marginF = parseFloat($("marginF").value)||1;
+  const dod = parseFloat($("dod").value)||1;
+  const eff = parseFloat($("eff").value)||1;
+  const tf = tempFactor(isNaN(tempC)?25:tempC);
+
+  // Uncorrected ampere-hour demand = Σ (I × t)
+  let ahRaw = 0, peakA = 0, totalMin = 0;
+  state.periods.forEach(p=>{
+    const a = periodAmps(p);
+    ahRaw += a * (p.dur/60);
+    if(a > peakA) peakA = a;
+    totalMin += p.dur;
+  });
+
+  const correction = tf * agingF * marginF;
+  // Required *installed* capacity also accounts for usable fraction (DoD) and efficiency
+  const ahRequired = (ahRaw * correction) / (dod * eff);
+
+  const seriesCells = Math.ceil(sysV / cellV);
+  const parallelStrings = cellAh>0 ? Math.max(1, Math.ceil(ahRequired / cellAh)) : 1;
+  const totalCells = seriesCells * parallelStrings;
+  const installedAh = parallelStrings * cellAh;
+  const installedKwh = installedAh * (seriesCells*cellV) / 1000;
+
+  // C-rate at the highest-current period, referenced to installed capacity
+  const cRate = installedAh>0 ? peakA / installedAh : 0;
+
+  return {sysV, cellV, cellAh, tempC, tf, agingF, marginF, dod, eff, correction,
+    ahRaw, ahRequired, peakA, totalMin, seriesCells, parallelStrings, totalCells,
+    installedAh, installedKwh, cRate, chem:$("chem").value, tag:$("eqTag").value.trim()};
+}
+
+function recalc(){
+  const L = UI[currentLang];
+  const d = calcAll();
+
+  $("tempFactorNote").textContent = L.tempFactorNote.replace('{f}', fmt(d.tf,3));
+  $("gaugeNum").textContent = state.periods.length ? fmt(d.ahRequired,1) : "—";
+  $("statUncorrected").textContent = state.periods.length ? fmt(d.ahRaw,1)+" Ah" : "—";
+  $("statCorrection").textContent = "× "+fmt(d.correction,3);
+  $("statSeries").textContent = d.seriesCells;
+  $("statParallel").textContent = state.periods.length ? d.parallelStrings : "—";
+  $("statTotal").textContent = state.periods.length ? d.totalCells : "—";
+  $("statEnergy").textContent = state.periods.length ? fmt(d.installedKwh,2)+" kWh" : "—";
+  $("revTag").textContent = new Date().toISOString().slice(0,10);
+
+  const crateBox = $("crateBox");
+  if(state.periods.length){
+    let cls = "risk-ok", msg = L.crateOk;
+    if(d.cRate > 2){ cls="risk-alarm"; msg = L.crateHigh; }
+    else if(d.cRate > 1){ cls="risk-warn"; msg = L.crateModerate; }
+    crateBox.innerHTML = `<div class="risk-box ${cls}"><b>${L.crateTitle} ${fmt(d.cRate,2)}C</b> — ${msg}</div>`;
+  } else { crateBox.innerHTML = ""; }
+
+  const verdictBox = $("verdictBox");
+  if(state.periods.length===0){
+    verdictBox.innerHTML = `<div class="risk-box risk-warn"><b>${L.noLoadTitle}</b> ${L.noLoadBody}</div>`;
+  } else {
+    verdictBox.innerHTML = `<div class="risk-box risk-ok"><b>${L.summaryTitle}</b> ${L.summaryBody
+      .replace('{series}', d.seriesCells).replace('{parallel}', d.parallelStrings)
+      .replace('{cellAh}', fmt(d.cellAh,0)).replace('{installed}', fmt(d.installedAh,0))
+      .replace('{required}', fmt(d.ahRequired,1))}</div>`;
+  }
+
+  renderDiagram(d);
+  renderLedger(d);
+  window._lastResults = d;
+}
+
+/* ===== bank diagram ===== */
+function renderDiagram(d){
+  const L = UI[currentLang];
+  const svg = $("bankDiagram");
+  if(state.periods.length===0){
+    svg.innerHTML = `<text x="320" y="120" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#516085">${L.diagramEmpty}</text>`;
+    return;
+  }
+  const maxShowSeries = Math.min(d.seriesCells, 8);
+  const maxShowPar = Math.min(d.parallelStrings, 4);
+  const cw = 42, ch = 26, gapX = 10, gapY = 20;
+  const startX = 60, startY = 40;
+  let s = "";
+
+  for(let p=0;p<maxShowPar;p++){
+    const y = startY + p*(ch+gapY);
+    s += `<text x="${startX-12}" y="${y+ch/2+4}" text-anchor="end" font-family="IBM Plex Mono" font-size="9" fill="#516085">S${p+1}</text>`;
+    for(let i=0;i<maxShowSeries;i++){
+      const x = startX + i*(cw+gapX);
+      s += `<rect x="${x}" y="${y}" width="${cw}" height="${ch}" rx="2" fill="#0f2036" stroke="#3b9eff" stroke-width="1"/>`;
+      s += `<line x1="${x+8}" y1="${y+6}" x2="${x+8}" y2="${y+ch-6}" stroke="#3b9eff" stroke-width="2"/>`;
+      s += `<line x1="${x+14}" y1="${y+9}" x2="${x+14}" y2="${y+ch-9}" stroke="#8497b8" stroke-width="1.5"/>`;
+      s += `<text x="${x+28}" y="${y+ch/2+3.5}" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#8497b8">${fmt(d.cellV,1)}V</text>`;
+      if(i < maxShowSeries-1) s += `<line x1="${x+cw}" y1="${y+ch/2}" x2="${x+cw+gapX}" y2="${y+ch/2}" stroke="#3b9eff" stroke-width="1.2"/>`;
+    }
+    if(d.seriesCells > maxShowSeries){
+      const x = startX + maxShowSeries*(cw+gapX);
+      s += `<text x="${x+10}" y="${y+ch/2+4}" font-family="IBM Plex Mono" font-size="10" fill="#e8b545">… ×${d.seriesCells}</text>`;
+    }
+  }
+  if(d.parallelStrings > maxShowPar){
+    s += `<text x="${startX}" y="${startY + maxShowPar*(ch+gapY) + 14}" font-family="IBM Plex Mono" font-size="10" fill="#e8b545">… ${d.parallelStrings} ${L.stringsTotal}</text>`;
+  }
+  const capY = startY + Math.min(maxShowPar,4)*(ch+gapY) + 34;
+  s += `<text x="320" y="${capY}" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#8497b8">${d.seriesCells} ${L.inSeries} × ${d.parallelStrings} ${L.inParallel} = ${d.totalCells} ${L.cellsTotal} · ${fmt(d.installedAh,0)} Ah @ ${fmt(d.seriesCells*d.cellV,1)} V</text>`;
+  svg.setAttribute("viewBox", `0 0 640 ${capY+20}`);
+  svg.innerHTML = s;
+}
+
+/* ===== ledger ===== */
+function buildLedgerSteps(d){
+  const L = UI[currentLang];
+  const steps = [];
+  const periodLines = state.periods.map((p,i)=>{
+    const a = periodAmps(p);
+    return `${L.periodLbl} ${i+1}: ${fmt(p.val,1)} ${p.unit} → ${fmt(a,2)} A × ${fmt(p.dur,0)} min = ${fmt(a*p.dur/60,2)} Ah`;
+  }).join("\n") || L.noPeriodsShort;
+
+  steps.push({num:1, title:L.ls1Title, note:L.ls1Note, formula:
+`${periodLines}
+
+${L.totalRawLbl} = ${fmt(d.ahRaw,2)} Ah`});
+
+  steps.push({num:2, title:L.ls2Title, note:L.ls2Note, formula:
+`${L.tempLbl} = ${fmt(d.tempC,0)}°C → TF = ${fmt(d.tf,3)}
+${L.agingLbl} (AF) = ${fmt(d.agingF,2)}
+${L.marginLbl} (DM) = ${fmt(d.marginF,2)}
+
+${L.cumulativeLbl} = TF × AF × DM = ${fmt(d.tf,3)} × ${fmt(d.agingF,2)} × ${fmt(d.marginF,2)} = ${fmt(d.correction,3)}`});
+
+  steps.push({num:3, title:L.ls3Title, note:L.ls3Note, formula:
+`${L.reqCapLbl} = (${fmt(d.ahRaw,2)} × ${fmt(d.correction,3)}) / (DoD ${fmt(d.dod,2)} × η ${fmt(d.eff,2)})
+        = ${fmt(d.ahRequired,2)} Ah`});
+
+  steps.push({num:4, title:L.ls4Title, note:L.ls4Note, formula:
+`${L.seriesLbl} = ceil(${fmt(d.sysV,1)} V / ${fmt(d.cellV,2)} V) = ${d.seriesCells}
+${L.parallelLbl} = ceil(${fmt(d.ahRequired,1)} Ah / ${fmt(d.cellAh,0)} Ah) = ${d.parallelStrings}
+${L.totalLbl} = ${d.seriesCells} × ${d.parallelStrings} = ${d.totalCells}
+${L.installedLbl} = ${fmt(d.installedAh,0)} Ah @ ${fmt(d.seriesCells*d.cellV,1)} V = ${fmt(d.installedKwh,2)} kWh`});
+
+  steps.push({num:5, title:L.ls5Title, note:L.ls5Note, formula:
+`${L.peakLbl} = ${fmt(d.peakA,1)} A
+C-rate = ${fmt(d.peakA,1)} A / ${fmt(d.installedAh,0)} Ah = ${fmt(d.cRate,2)}C`});
+
+  return steps;
+}
+
+function renderLedger(d){
+  const steps = buildLedgerSteps(d);
+  $("ledger").innerHTML = steps.map(s=>`<div class="lstep"><div class="ln">${String(s.num).padStart(2,'0')}</div><div>
+    <h3>${s.title}</h3><div class="formula">${s.formula}</div><div class="cite">${s.note}</div></div></div>`).join("");
+}
+
+function renderMfrTable(){
+  $("mfrTableBody").innerHTML = MANUFACTURERS.map(m=>
+    `<tr><td>${m.name}</td><td>${m.prod}</td><td><a href="${m.url}" target="_blank" rel="noopener">${m.url.replace('https://','').replace(/\/$/,'')}</a></td></tr>`
+  ).join("");
+}
+
+/* ===== report ===== */
+function buildReportPageHTML(d, includeLedger, includeLogo){
+  const L = UI[currentLang];
+  const today = new Date().toLocaleDateString(currentLang==='fr'?'fr-CA':'en-CA');
+  const cell = (k,v)=>`<td style="padding:2.5pt 6pt 2.5pt 0;color:#333;font-size:9.5pt;white-space:nowrap;">${k}</td><td style="padding:2.5pt 14pt 2.5pt 0;font-weight:600;font-size:9.5pt;border-bottom:0.5pt solid #ddd;">${v}</td>`;
+  const gridRows = (pairs)=>{
+    let html = "";
+    for(let i=0;i<pairs.length;i+=2){
+      const a = pairs[i], b = pairs[i+1];
+      html += `<tr>${cell(a[0],a[1])}${b?cell(b[0],b[1]):'<td></td><td></td>'}</tr>`;
+    }
+    return html;
+  };
+  const sectionHead = (t)=>`<div style="font-size:9.5pt;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;border-bottom:1pt solid #1a1a1a;padding-bottom:2pt;margin:12pt 0 5pt;">${t}</div>`;
+
+  const dutyRows = state.periods.map((p,i)=>{
+    const a = periodAmps(p);
+    return `<tr>
+      <td style="padding:3pt 8pt;border-bottom:0.5pt solid #e5e5e5;font-size:8.5pt;">${i+1}</td>
+      <td style="padding:3pt 8pt;border-bottom:0.5pt solid #e5e5e5;font-size:8.5pt;">${fmt(p.val,1)} ${p.unit}</td>
+      <td style="padding:3pt 8pt;border-bottom:0.5pt solid #e5e5e5;font-size:8.5pt;">${fmt(a,2)} A</td>
+      <td style="padding:3pt 8pt;border-bottom:0.5pt solid #e5e5e5;font-size:8.5pt;">${fmt(p.dur,0)} min</td>
+      <td style="padding:3pt 8pt;border-bottom:0.5pt solid #e5e5e5;font-size:8.5pt;">${fmt(a*p.dur/60,2)} Ah</td>
+    </tr>`;
+  }).join("");
+
+  const inputPairs = [
+    [L.lblSysV, fmt(d.sysV,1)+" V"], [L.lblChem, L["chemName_"+d.chem]],
+    [L.lblCellV, fmt(d.cellV,2)+" V"], [L.lblCellAh, fmt(d.cellAh,0)+" Ah"],
+    [L.lblTemp, fmt(d.tempC,0)+"°C (TF "+fmt(d.tf,3)+")"], [L.lblAging, fmt(d.agingF,2)],
+    [L.lblMargin, fmt(d.marginF,2)], [L.lblDoD, fmt(d.dod,2)],
+    [L.lblEff, fmt(d.eff,2)], ["", ""]
+  ];
+  const resultPairs = [
+    [L.gaugeLbl, fmt(d.ahRequired,1)+" Ah"], [L.lblStatUncorrected, fmt(d.ahRaw,1)+" Ah"],
+    [L.lblStatCorrection, "× "+fmt(d.correction,3)], [L.lblStatSeries, d.seriesCells],
+    [L.lblStatParallel, d.parallelStrings], [L.lblStatTotal, d.totalCells],
+    [L.lblStatEnergy, fmt(d.installedKwh,2)+" kWh"], ["C-rate", fmt(d.cRate,2)+"C"]
+  ];
+
+  let ledgerHtml = "";
+  if(includeLedger){
+    const steps = buildLedgerSteps(d);
+    ledgerHtml = sectionHead(L.ledgerTitle) + `<table style="width:100%;border-collapse:collapse;">` +
+      steps.map(s=>`<tr>
+        <td style="padding:5pt 8pt 5pt 0;border-bottom:0.5pt solid #e5e5e5;font-size:8.5pt;font-weight:700;vertical-align:top;">${String(s.num).padStart(2,'0')}</td>
+        <td style="padding:5pt 8pt;border-bottom:0.5pt solid #e5e5e5;vertical-align:top;">
+          <div style="font-size:8.5pt;font-weight:700;margin-bottom:2pt;">${s.title}</div>
+          <div style="font-family:'Courier New',monospace;font-size:8pt;color:#333;line-height:1.5;">${s.formula.split("\n").map(l=>l===""?"&nbsp;":l).join("<br>")}</div>
+          <div style="font-size:7.5pt;color:#888;margin-top:3pt;">${s.note}</div>
+        </td></tr>`).join("") + `</table>`;
+  }
+
+  return `
+  <div style="font-family:Arial,Helvetica,sans-serif;color:#1a1a1a;background:#fff;padding:4pt 2pt;font-size:9.5pt;line-height:1.4;">
+    <table style="width:100%;border-collapse:collapse;border-bottom:1.5pt solid #1a1a1a;padding-bottom:6pt;margin-bottom:4pt;">
+      <tr><td style="font-size:13pt;font-weight:700;padding-bottom:6pt;">${L.titleH1}</td>
+      <td style="text-align:right;font-size:8.5pt;color:#555;padding-bottom:6pt;">${includeLogo?'Ω OHMZONE':''}</td></tr>
+      <tr><td style="font-size:9pt;color:#333;"><b>${L.lblTag}:</b> ${d.tag || L.untitledTag} &nbsp;&nbsp; <b>${L.lblMethod}:</b> IEEE Std 485</td>
+      <td style="text-align:right;font-size:8.5pt;color:#555;">${today}</td></tr>
+    </table>
+
+    ${sectionHead(L.repDutyCycle)}
+    <table style="width:100%;border-collapse:collapse;">
+      <tr>
+        <td style="padding:4pt 8pt;font-size:7.5pt;font-weight:700;text-transform:uppercase;color:#666;border-bottom:1pt solid #999;">#</td>
+        <td style="padding:4pt 8pt;font-size:7.5pt;font-weight:700;text-transform:uppercase;color:#666;border-bottom:1pt solid #999;">${L.repLoad}</td>
+        <td style="padding:4pt 8pt;font-size:7.5pt;font-weight:700;text-transform:uppercase;color:#666;border-bottom:1pt solid #999;">${L.repAmps}</td>
+        <td style="padding:4pt 8pt;font-size:7.5pt;font-weight:700;text-transform:uppercase;color:#666;border-bottom:1pt solid #999;">${L.repDuration}</td>
+        <td style="padding:4pt 8pt;font-size:7.5pt;font-weight:700;text-transform:uppercase;color:#666;border-bottom:1pt solid #999;">${L.repAh}</td>
+      </tr>${dutyRows}
+    </table>
+
+    ${sectionHead(L.repInputData)}
+    <table style="width:100%;border-collapse:collapse;">${gridRows(inputPairs)}</table>
+
+    ${sectionHead(L.repResults)}
+    <table style="width:100%;border-collapse:collapse;">${gridRows(resultPairs)}</table>
+
+    ${ledgerHtml}
+
+    <p style="font-size:7.5pt;color:#888;margin-top:14pt;border-top:0.5pt solid #ddd;padding-top:6pt;">${L.disclaimerBody}</p>
+  </div>`;
+}
+
+function downloadBlob(content, mime, filename){
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 2000);
+}
+
+$("printBtn").addEventListener("click", ()=>{
+  const d = window._lastResults;
+  if(!d || state.periods.length===0){ window.print(); return; }
+  const html = buildReportPageHTML(d, $("includeLedger").checked, $("includeLogo").checked);
+  const w = window.open("", "_blank");
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${$('titleH1').textContent}</title>
+  <style>body{margin:0;padding:18px;} @media print{body{padding:0;}}</style></head>
+  <body>${html}<script>window.onload=()=>window.print();<\/script></body></html>`);
+  w.document.close();
+});
+
+$("exportWordBtn").addEventListener("click", ()=>{
+  const d = window._lastResults;
+  if(!d || state.periods.length===0) return;
+  const html = buildReportPageHTML(d, $("includeLedger").checked, $("includeLogo").checked);
+  const doc = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+  <head><meta charset="utf-8"><title>Battery Bank Sizing</title>
+  <!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View></w:WordDocument></xml><![endif]-->
+  </head><body>${html}</body></html>`;
+  downloadBlob(doc, "application/msword", "battery_bank_sizing.doc");
+});
+
+$("exportExcelBtn").addEventListener("click", ()=>{
+  const d = window._lastResults;
+  if(!d || state.periods.length===0) return;
+  const L = UI[currentLang];
+  const wb = XLSX.utils.book_new();
+
+  const main = [
+    [L.repInputData,""],
+    [L.lblTag, d.tag || L.untitledTag],
+    [L.lblSysV, fmt(d.sysV,1)+" V"],
+    [L.lblChem, L["chemName_"+d.chem]],
+    [L.lblCellV, fmt(d.cellV,2)+" V"],
+    [L.lblCellAh, fmt(d.cellAh,0)+" Ah"],
+    [L.lblTemp, fmt(d.tempC,0)+"°C"],
+    ["TF", fmt(d.tf,3)], ["AF", fmt(d.agingF,2)], ["DM", fmt(d.marginF,2)],
+    [L.lblDoD, fmt(d.dod,2)], [L.lblEff, fmt(d.eff,2)],
+    ["",""],
+    [L.repResults,""],
+    [L.lblStatUncorrected, fmt(d.ahRaw,2)],
+    [L.lblStatCorrection, fmt(d.correction,3)],
+    [L.gaugeLbl, fmt(d.ahRequired,2)],
+    [L.lblStatSeries, d.seriesCells],
+    [L.lblStatParallel, d.parallelStrings],
+    [L.lblStatTotal, d.totalCells],
+    [L.lblStatEnergy, fmt(d.installedKwh,2)],
+    ["C-rate", fmt(d.cRate,2)],
+    ["",""],
+    [L.disclaimerLbl, L.disclaimerBody]
+  ];
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(main), "Battery Sizing");
+
+  const duty = [["#", L.repLoad, L.repAmps, L.repDuration, L.repAh]];
+  state.periods.forEach((p,i)=>{
+    const a = periodAmps(p);
+    duty.push([i+1, fmt(p.val,1)+" "+p.unit, fmt(a,2), fmt(p.dur,0), fmt(a*p.dur/60,2)]);
+  });
+  duty.push(["","","","",""]);
+  duty.push(["", "", "", L.totalRawLbl, fmt(d.ahRaw,2)]);
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(duty), "Duty Cycle");
+
+  if($("includeLedger").checked){
+    const led = [["#","Formula","Note"]];
+    buildLedgerSteps(d).forEach(s=>{
+      led.push([String(s.num).padStart(2,'0')+" — "+s.title,"",""]);
+      s.formula.split("\n").forEach(l=>{ if(l.trim()!=="") led.push(["", l, ""]); });
+      led.push(["","",s.note]);
+      led.push(["","",""]);
+    });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(led), "Calculation Ledger");
+  }
+
+  const mfr = [[L.mfrThName, L.mfrThProd, L.mfrThLink]];
+  MANUFACTURERS.forEach(m=>mfr.push([m.name, m.prod, m.url]));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(mfr), "Manufacturers");
+
+  XLSX.writeFile(wb, "battery_bank_sizing.xlsx");
+});
+
+/* ===================== i18n ===================== */
+const UI = {
+  en: {
+    titleH1: "Battery Bank Sizing",
+    titleSub: "Stationary battery capacity sizing per IEEE Std 485 methodology — lead-acid, Li-ion and LFP",
+    lblDwg:"Dwg No.", lblScale:"Scale", lblMethod:"Method", lblRev:"Rev",
+    topDiscB: "Preliminary sizing only.",
+    topDiscTxt: "This tool applies the IEEE Std 485 correction-factor approach (temperature × aging × design margin) to produce an initial capacity estimate. It does not replace the manufacturer's published discharge-rate tables, which are what actually determine whether a specific cell meets a specific duty cycle at a specific end-of-discharge voltage. Final selection must be verified against the battery manufacturer's data and reviewed by a qualified engineer.",
+    loadExampleTxt: "Load example",
+    step1Title:"System", step1Small:"Tag, DC bus voltage, chemistry",
+    lblTag:"Equipment tag", lblSysV:"Nominal DC bus voltage (V)", lblChem:"Chemistry",
+    optVla:"Lead-acid, flooded (VLA)", optVrla:"Lead-acid, VRLA (AGM/gel)", optNicd:"Nickel-cadmium (Ni-Cd)",
+    optLiion:"Li-ion (NMC)", optLfp:"Li-ion LFP (LiFePO₄)",
+    chemName_vla:"Lead-acid, flooded (VLA)", chemName_vrla:"Lead-acid, VRLA (AGM/gel)", chemName_nicd:"Nickel-cadmium (Ni-Cd)",
+    chemName_liion:"Li-ion (NMC)", chemName_lfp:"Li-ion LFP (LiFePO₄)",
+    lblCellV:"Cell nominal voltage (V)", lblCellAh:"Cell / module rated capacity (Ah)",
+    hintStep1:"Cell voltage auto-fills from the chemistry (2 V lead-acid, 1.2 V Ni-Cd, 3.7 V NMC, 3.2 V LFP) but can be overridden — enter the actual cell/module you intend to use from the manufacturer's catalogue.",
+    step2Title:"Load Profile", step2Small:"Single load, or a multi-period duty cycle",
+    lblLoadUnit:"Load entered as", lblLoadVal:"Load", lblDurVal:"Duration (min)", addPeriodTxt:"Add",
+    hintStep2:"Add one period for a simple constant load, or several to build a duty cycle (e.g. a large inrush for the first minute, then a lower continuous load). Watt-based loads are converted to amps at the nominal bus voltage — a conservative simplification, since real constant-power loads draw more current as the battery voltage falls.",
+    noPeriods:"No load periods added yet — enter a load and duration above, then click Add.",
+    noPeriodsShort:"(no load periods entered)", periodLbl:"Period",
+    step3Title:"Correction Factors", step3Small:"IEEE 485: temperature × aging × design margin",
+    lblTemp:"Lowest expected electrolyte temperature (°C)",
+    tempFactorNote:"Temperature correction factor at this temperature: TF = {f}",
+    lblAging:"Aging factor", lblMargin:"Design margin", lblDoD:"Max depth of discharge (DoD)", lblEff:"System / inverter efficiency",
+    hintStep3:"IEEE 485 uses an aging factor of 1.25 (sizing so the bank still meets load at 80% end-of-life capacity) and a design margin of typically 1.10–1.15 for future load growth. Set efficiency below 1.00 only if the load figure entered is on the AC side of an inverter.",
+    resultTitle:"Result — Required Bank", gaugeLbl:"Required capacity (Ah)",
+    lblStatUncorrected:"Uncorrected demand", lblStatCorrection:"Cumulative correction",
+    lblStatSeries:"Cells in series", lblStatParallel:"Strings in parallel",
+    lblStatTotal:"Total cells / modules", lblStatEnergy:"Installed energy",
+    crateTitle:"Peak discharge rate:", crateOk:"within the typical continuous-discharge comfort zone for stationary cells; still confirm against the manufacturer's discharge tables at your end-of-discharge voltage.",
+    crateModerate:"a moderately high rate — confirm the selected cell is rated for it, as high-rate discharge substantially reduces the effective Ah available.",
+    crateHigh:"a very high discharge rate. Standard stationary cells will deliver far less than their nameplate Ah at this rate — you likely need a high-rate cell type, or more parallel strings. Verify against the manufacturer's high-rate discharge data.",
+    noLoadTitle:"No load defined.", noLoadBody:"Add at least one load period in Step 2 to size the bank.",
+    summaryTitle:"Recommended configuration.", summaryBody:"{series} cells in series × {parallel} string(s) in parallel of {cellAh} Ah cells → {installed} Ah installed, against {required} Ah required.",
+    diagramTitle:"Bank Configuration", diagramTag:"series × parallel arrangement",
+    diagramEmpty:"Add a load period to see the bank configuration.",
+    inSeries:"in series", inParallel:"parallel string(s)", cellsTotal:"cells", stringsTotal:"strings total",
+    lblIncludeLedger:"Include Calculation Ledger in report", lblIncludeLogo:"Include OhmZone brand mark in report",
+    printBtnLabel:"🖨 Print / Save as PDF", exportWordLabel:"📄 Export study (Word)", exportBtnLabel:"📊 Export study (Excel)",
+    ledgerTitle:"Calculation Ledger", ledgerTag:"IEEE 485 correction-factor method",
+    ls1Title:"Duty-cycle ampere-hour demand", ls1Note:"Each period's current is multiplied by its duration and summed. This is the raw, uncorrected energy the battery must deliver — per IEEE 485 Section 6, before any correction factors are applied.",
+    totalRawLbl:"Total uncorrected demand",
+    ls2Title:"IEEE 485 correction factors", ls2Note:"IEEE Std 485 applies three multipliers: a temperature factor (capacity falls as electrolyte temperature drops below the 25°C reference), an aging factor of 1.25 (so the bank still meets load at its 80%-capacity end-of-life point), and a design margin (typically 1.10–1.15) for unforeseen load growth.",
+    tempLbl:"Temperature", agingLbl:"Aging factor", marginLbl:"Design margin", cumulativeLbl:"Cumulative correction factor",
+    ls3Title:"Required installed capacity", ls3Note:"The corrected demand is further divided by the usable fraction of the battery (depth of discharge) and by system efficiency, giving the total installed nameplate capacity required. Note that DoD and efficiency are engineering additions to the base IEEE 485 method, which sizes to the cell's rated capacity at a stated end-of-discharge voltage.",
+    reqCapLbl:"Required capacity",
+    ls4Title:"Bank configuration", ls4Note:"Series count sets the bus voltage; parallel strings provide the capacity. Both are rounded up to whole cells/strings, so installed capacity typically exceeds the calculated requirement.",
+    seriesLbl:"Cells in series", parallelLbl:"Strings in parallel", totalLbl:"Total cells", installedLbl:"Installed",
+    ls5Title:"Peak discharge rate (C-rate)", ls5Note:"C-rate is the peak discharge current divided by installed capacity. This is a screening check only — the published Ah rating of a stationary cell applies at a specific (usually 8- or 20-hour) rate, and available capacity falls sharply at higher rates. Always verify against the manufacturer's rate-specific discharge tables.",
+    peakLbl:"Peak current",
+    mfrTitle:"Manufacturer Catalogues", mfrTag:"verify final selection against published discharge tables",
+    mfrThName:"Manufacturer", mfrThProd:"Typical stationary product lines", mfrThLink:"Catalogue",
+    repDutyCycle:"Duty Cycle", repLoad:"Load", repAmps:"Current", repDuration:"Duration", repAh:"Ah",
+    repInputData:"Input Data", repResults:"Results", untitledTag:"(untitled)",
+    disclaimerLbl:"Disclaimer",
+    disclaimerBody:"Preliminary sizing only. Applies the IEEE Std 485 correction-factor method to produce an initial capacity estimate; it does not replace the manufacturer's rate-specific discharge tables, which determine whether a given cell actually meets the duty cycle at the required end-of-discharge voltage. Temperature correction factors are the commonly published lead-acid values and are approximate for other chemistries. Final battery selection, charger sizing, ventilation, seismic/racking and short-circuit considerations must be reviewed by a qualified engineer against the applicable codes and the manufacturer's data.",
+    footerHtml: `<b>Method &amp; data notes.</b> Sizing follows the correction-factor structure of <b>IEEE Std 485</b> (Recommended Practice for Sizing Lead-Acid Batteries for Stationary Applications): the duty-cycle ampere-hour demand is multiplied by a cumulative correction factor of temperature × aging × design margin. The <b>aging factor of 1.25</b> reflects the standard's practice of sizing so the bank still meets its duty at the 80%-of-rated-capacity end-of-life threshold; the <b>design margin of 1.10–1.15</b> is common industry practice for unforeseen load growth. <b>Temperature correction factors</b> are the commonly published lead-acid values (capacity falls below the 25 °C reference); they are applied here to all chemistries as an approximation — lithium chemistries have materially different low-temperature behaviour and, more importantly, charge-acceptance limits below 0 °C that this tool does not model. <b>Depth of discharge and efficiency</b> are engineering additions to the base IEEE 485 method (which sizes directly to a cell's rated capacity at a stated end-of-discharge voltage) and are included here to make the tool useful for lithium and renewable/off-grid style sizing. <b>The most important limitation:</b> a stationary cell's published Ah rating applies at a specific discharge rate, and available capacity drops sharply at higher rates — this tool's C-rate output is a screening flag, not a substitute for reading the manufacturer's rate-specific discharge tables (the "constant-current" or "constant-power" tables in the catalogues linked above), which is the step that actually confirms a chosen cell meets the duty cycle. This tool also does not size the charger, evaluate ripple, ventilation/hydrogen evolution, thermal runaway risk, racking/seismic requirements, or DC short-circuit contribution. Preliminary planning aid only — final design must be verified by a qualified engineer against the current standard, the applicable electrical code, and the manufacturer's published data.`
+  },
+  fr: {
+    titleH1: "Dimensionnement de batterie d'accumulateurs",
+    titleSub: "Dimensionnement de capacité de batterie stationnaire selon la méthodologie IEEE Std 485 — plomb-acide, Li-ion et LFP",
+    lblDwg:"N° dessin", lblScale:"Échelle", lblMethod:"Méthode", lblRev:"Rév.",
+    topDiscB: "Dimensionnement préliminaire seulement.",
+    topDiscTxt: "Cet outil applique l'approche des facteurs de correction de la norme IEEE Std 485 (température × vieillissement × marge de conception) pour produire une estimation initiale de capacité. Il ne remplace pas les tableaux de décharge publiés par le fabricant, qui déterminent réellement si une cellule donnée satisfait un cycle de service donné à une tension de fin de décharge donnée. La sélection finale doit être vérifiée auprès des données du fabricant et revue par un ingénieur qualifié.",
+    loadExampleTxt: "Charger l'exemple",
+    step1Title:"Système", step1Small:"Repère, tension du bus CC, chimie",
+    lblTag:"Repère de l'équipement", lblSysV:"Tension nominale du bus CC (V)", lblChem:"Chimie",
+    optVla:"Plomb-acide, ouvert (VLA)", optVrla:"Plomb-acide, VRLA (AGM/gel)", optNicd:"Nickel-cadmium (Ni-Cd)",
+    optLiion:"Li-ion (NMC)", optLfp:"Li-ion LFP (LiFePO₄)",
+    chemName_vla:"Plomb-acide, ouvert (VLA)", chemName_vrla:"Plomb-acide, VRLA (AGM/gel)", chemName_nicd:"Nickel-cadmium (Ni-Cd)",
+    chemName_liion:"Li-ion (NMC)", chemName_lfp:"Li-ion LFP (LiFePO₄)",
+    lblCellV:"Tension nominale de cellule (V)", lblCellAh:"Capacité nominale de cellule / module (Ah)",
+    hintStep1:"La tension de cellule se remplit automatiquement selon la chimie (2 V plomb-acide, 1,2 V Ni-Cd, 3,7 V NMC, 3,2 V LFP) mais peut être remplacée — entrez la cellule/le module réel que vous comptez utiliser selon le catalogue du fabricant.",
+    step2Title:"Profil de charge", step2Small:"Charge unique, ou cycle de service multi-périodes",
+    lblLoadUnit:"Charge saisie en", lblLoadVal:"Charge", lblDurVal:"Durée (min)", addPeriodTxt:"Ajouter",
+    hintStep2:"Ajoutez une période pour une charge constante simple, ou plusieurs pour construire un cycle de service (p. ex. un fort appel de courant la première minute, puis une charge continue plus faible). Les charges en watts sont converties en ampères à la tension nominale du bus — une simplification prudente, puisque les charges réelles à puissance constante appellent plus de courant lorsque la tension de la batterie chute.",
+    noPeriods:"Aucune période de charge ajoutée — entrez une charge et une durée ci-dessus, puis cliquez sur Ajouter.",
+    noPeriodsShort:"(aucune période de charge saisie)", periodLbl:"Période",
+    step3Title:"Facteurs de correction", step3Small:"IEEE 485 : température × vieillissement × marge de conception",
+    lblTemp:"Température d'électrolyte minimale prévue (°C)",
+    tempFactorNote:"Facteur de correction de température à cette température : TF = {f}",
+    lblAging:"Facteur de vieillissement", lblMargin:"Marge de conception", lblDoD:"Profondeur de décharge max. (DoD)", lblEff:"Rendement système / onduleur",
+    hintStep3:"La norme IEEE 485 utilise un facteur de vieillissement de 1,25 (dimensionnement pour que la batterie satisfasse encore la charge à 80 % de capacité en fin de vie) et une marge de conception typiquement de 1,10–1,15 pour la croissance future de la charge. Réglez le rendement sous 1,00 seulement si la charge saisie est du côté CA d'un onduleur.",
+    resultTitle:"Résultat — Batterie requise", gaugeLbl:"Capacité requise (Ah)",
+    lblStatUncorrected:"Demande non corrigée", lblStatCorrection:"Correction cumulative",
+    lblStatSeries:"Cellules en série", lblStatParallel:"Chaînes en parallèle",
+    lblStatTotal:"Total cellules / modules", lblStatEnergy:"Énergie installée",
+    crateTitle:"Taux de décharge de pointe :", crateOk:"dans la zone de confort typique de décharge continue pour cellules stationnaires; confirmez tout de même auprès des tableaux de décharge du fabricant à votre tension de fin de décharge.",
+    crateModerate:"un taux modérément élevé — confirmez que la cellule sélectionnée est prévue pour cela, car une décharge à taux élevé réduit considérablement les Ah effectivement disponibles.",
+    crateHigh:"un taux de décharge très élevé. Les cellules stationnaires standard fourniront bien moins que leurs Ah nominaux à ce taux — vous avez probablement besoin d'un type de cellule à taux élevé, ou de plus de chaînes en parallèle. Vérifiez auprès des données de décharge à taux élevé du fabricant.",
+    noLoadTitle:"Aucune charge définie.", noLoadBody:"Ajoutez au moins une période de charge à l'étape 2 pour dimensionner la batterie.",
+    summaryTitle:"Configuration recommandée.", summaryBody:"{series} cellules en série × {parallel} chaîne(s) en parallèle de cellules de {cellAh} Ah → {installed} Ah installés, contre {required} Ah requis.",
+    diagramTitle:"Configuration de la batterie", diagramTag:"arrangement série × parallèle",
+    diagramEmpty:"Ajoutez une période de charge pour voir la configuration.",
+    inSeries:"en série", inParallel:"chaîne(s) parallèle(s)", cellsTotal:"cellules", stringsTotal:"chaînes au total",
+    lblIncludeLedger:"Inclure le registre de calcul dans le rapport", lblIncludeLogo:"Inclure la marque OhmZone dans le rapport",
+    printBtnLabel:"🖨 Imprimer / Enregistrer en PDF", exportWordLabel:"📄 Exporter l'étude (Word)", exportBtnLabel:"📊 Exporter l'étude (Excel)",
+    ledgerTitle:"Registre de calcul", ledgerTag:"méthode des facteurs de correction IEEE 485",
+    ls1Title:"Demande en ampères-heures du cycle de service", ls1Note:"Le courant de chaque période est multiplié par sa durée puis additionné. Il s'agit de l'énergie brute, non corrigée, que la batterie doit fournir — selon la section 6 de l'IEEE 485, avant l'application de tout facteur de correction.",
+    totalRawLbl:"Demande totale non corrigée",
+    ls2Title:"Facteurs de correction IEEE 485", ls2Note:"La norme IEEE Std 485 applique trois multiplicateurs : un facteur de température (la capacité chute lorsque la température d'électrolyte descend sous la référence de 25 °C), un facteur de vieillissement de 1,25 (pour que la batterie satisfasse encore la charge à son seuil de fin de vie de 80 % de capacité), et une marge de conception (typiquement 1,10–1,15) pour la croissance imprévue de la charge.",
+    tempLbl:"Température", agingLbl:"Facteur de vieillissement", marginLbl:"Marge de conception", cumulativeLbl:"Facteur de correction cumulatif",
+    ls3Title:"Capacité installée requise", ls3Note:"La demande corrigée est ensuite divisée par la fraction utilisable de la batterie (profondeur de décharge) et par le rendement du système, donnant la capacité nominale totale installée requise. Notez que la DoD et le rendement sont des ajouts techniques à la méthode IEEE 485 de base, qui dimensionne selon la capacité nominale de la cellule à une tension de fin de décharge déclarée.",
+    reqCapLbl:"Capacité requise",
+    ls4Title:"Configuration de la batterie", ls4Note:"Le nombre en série détermine la tension du bus; les chaînes en parallèle fournissent la capacité. Les deux sont arrondis à des cellules/chaînes entières, donc la capacité installée dépasse généralement l'exigence calculée.",
+    seriesLbl:"Cellules en série", parallelLbl:"Chaînes en parallèle", totalLbl:"Total cellules", installedLbl:"Installé",
+    ls5Title:"Taux de décharge de pointe (taux C)", ls5Note:"Le taux C est le courant de décharge de pointe divisé par la capacité installée. Il s'agit d'une vérification préliminaire seulement — la capacité nominale en Ah d'une cellule stationnaire s'applique à un taux précis (généralement 8 ou 20 heures), et la capacité disponible chute fortement à des taux plus élevés. Vérifiez toujours auprès des tableaux de décharge du fabricant propres au taux.",
+    peakLbl:"Courant de pointe",
+    mfrTitle:"Catalogues des fabricants", mfrTag:"vérifiez la sélection finale auprès des tableaux de décharge publiés",
+    mfrThName:"Fabricant", mfrThProd:"Gammes stationnaires typiques", mfrThLink:"Catalogue",
+    repDutyCycle:"Cycle de service", repLoad:"Charge", repAmps:"Courant", repDuration:"Durée", repAh:"Ah",
+    repInputData:"Données d'entrée", repResults:"Résultats", untitledTag:"(sans titre)",
+    disclaimerLbl:"Avis",
+    disclaimerBody:"Dimensionnement préliminaire seulement. Applique la méthode des facteurs de correction de l'IEEE Std 485 pour produire une estimation initiale de capacité; ne remplace pas les tableaux de décharge du fabricant propres au taux, qui déterminent si une cellule donnée satisfait réellement le cycle de service à la tension de fin de décharge requise. Les facteurs de correction de température sont les valeurs plomb-acide couramment publiées et sont approximatifs pour les autres chimies. La sélection finale de la batterie, le dimensionnement du chargeur, la ventilation, les exigences sismiques/de support et les considérations de court-circuit doivent être revus par un ingénieur qualifié selon les codes applicables et les données du fabricant.",
+    footerHtml: `<b>Notes sur la méthode et les données.</b> Le dimensionnement suit la structure des facteurs de correction de la norme <b>IEEE Std 485</b> (pratique recommandée pour le dimensionnement des batteries plomb-acide pour applications stationnaires) : la demande en ampères-heures du cycle de service est multipliée par un facteur de correction cumulatif de température × vieillissement × marge de conception. Le <b>facteur de vieillissement de 1,25</b> reflète la pratique de la norme consistant à dimensionner pour que la batterie satisfasse encore son cycle au seuil de fin de vie de 80 % de la capacité nominale; la <b>marge de conception de 1,10–1,15</b> est une pratique courante de l'industrie pour la croissance imprévue de la charge. Les <b>facteurs de correction de température</b> sont les valeurs plomb-acide couramment publiées (la capacité chute sous la référence de 25 °C); elles sont appliquées ici à toutes les chimies à titre d'approximation — les chimies au lithium ont un comportement à basse température sensiblement différent et, plus important encore, des limites d'acceptation de charge sous 0 °C que cet outil ne modélise pas. La <b>profondeur de décharge et le rendement</b> sont des ajouts techniques à la méthode IEEE 485 de base (qui dimensionne directement selon la capacité nominale d'une cellule à une tension de fin de décharge déclarée) et sont inclus ici pour rendre l'outil utile au dimensionnement au lithium et de type renouvelable/hors réseau. <b>La limitation la plus importante :</b> la capacité nominale publiée en Ah d'une cellule stationnaire s'applique à un taux de décharge précis, et la capacité disponible chute fortement à des taux plus élevés — la sortie de taux C de cet outil est un indicateur préliminaire, non un substitut à la lecture des tableaux de décharge du fabricant propres au taux (les tableaux « courant constant » ou « puissance constante » des catalogues liés ci-dessus), étape qui confirme réellement qu'une cellule choisie satisfait le cycle de service. Cet outil ne dimensionne pas non plus le chargeur, n'évalue pas l'ondulation, la ventilation/le dégagement d'hydrogène, le risque d'emballement thermique, les exigences de support/sismiques, ni la contribution au court-circuit CC. Aide à la planification préliminaire seulement — la conception finale doit être vérifiée par un ingénieur qualifié selon la norme en vigueur, le code électrique applicable et les données publiées du fabricant.`
+  }
+};
+
+function applyStaticI18n(){
+  const L = UI[currentLang];
+  $('titleH1').textContent = L.titleH1;
+  $('titleSub').textContent = L.titleSub;
+  $('lblDwg').textContent=L.lblDwg; $('lblScale').textContent=L.lblScale; $('lblMethod').textContent=L.lblMethod; $('lblRev').textContent=L.lblRev;
+  $('topDiscB').textContent=L.topDiscB; $('topDiscTxt').textContent=L.topDiscTxt;
+  $('loadExampleTxt').textContent=L.loadExampleTxt;
+  $('step1Title').childNodes[0].textContent=L.step1Title+' '; $('step1Small').textContent=L.step1Small;
+  $('lblTag').textContent=L.lblTag; $('lblSysV').textContent=L.lblSysV; $('lblChem').textContent=L.lblChem;
+  $('optVla').textContent=L.optVla; $('optVrla').textContent=L.optVrla; $('optNicd').textContent=L.optNicd;
+  $('optLiion').textContent=L.optLiion; $('optLfp').textContent=L.optLfp;
+  $('lblCellV').textContent=L.lblCellV; $('lblCellAh').textContent=L.lblCellAh; $('hintStep1').textContent=L.hintStep1;
+  $('step2Title').childNodes[0].textContent=L.step2Title+' '; $('step2Small').textContent=L.step2Small;
+  $('lblLoadUnit').textContent=L.lblLoadUnit; $('lblLoadVal').textContent=L.lblLoadVal; $('lblDurVal').textContent=L.lblDurVal;
+  $('addPeriodTxt').textContent=L.addPeriodTxt; $('hintStep2').textContent=L.hintStep2;
+  $('step3Title').childNodes[0].textContent=L.step3Title+' '; $('step3Small').textContent=L.step3Small;
+  $('lblTemp').textContent=L.lblTemp; $('lblAging').textContent=L.lblAging; $('lblMargin').textContent=L.lblMargin;
+  $('lblDoD').textContent=L.lblDoD; $('lblEff').textContent=L.lblEff; $('hintStep3').textContent=L.hintStep3;
+  $('resultTitle').textContent=L.resultTitle; $('gaugeLbl').textContent=L.gaugeLbl;
+  $('lblStatUncorrected').textContent=L.lblStatUncorrected; $('lblStatCorrection').textContent=L.lblStatCorrection;
+  $('lblStatSeries').textContent=L.lblStatSeries; $('lblStatParallel').textContent=L.lblStatParallel;
+  $('lblStatTotal').textContent=L.lblStatTotal; $('lblStatEnergy').textContent=L.lblStatEnergy;
+  $('diagramTitle').textContent=L.diagramTitle; $('diagramTag').textContent=L.diagramTag;
+  $('lblIncludeLedger').textContent=L.lblIncludeLedger; $('lblIncludeLogo').textContent=L.lblIncludeLogo;
+  $('printBtn').textContent=L.printBtnLabel; $('exportWordBtn').textContent=L.exportWordLabel; $('exportExcelBtn').textContent=L.exportBtnLabel;
+  $('ledgerTitle').textContent=L.ledgerTitle; $('ledgerTag').textContent=L.ledgerTag;
+  $('mfrTitle').textContent=L.mfrTitle; $('mfrTag').textContent=L.mfrTag;
+  $('mfrThName').textContent=L.mfrThName; $('mfrThProd').textContent=L.mfrThProd; $('mfrThLink').textContent=L.mfrThLink;
+  $('footerNote').innerHTML=L.footerHtml;
+  renderMfrTable();
+  renderPeriods();
+}
+
+function setLang(lang){
+  currentLang = lang;
+  $('btn-en').classList.toggle('active', lang==='en');
+  $('btn-fr').classList.toggle('active', lang==='fr');
+  document.documentElement.lang = lang;
+  try { localStorage.setItem('ohmzone-lang', lang); } catch(e) {}
+  applyStaticI18n();
+  recalc();
+}
+
+(function(){
+  let saved = 'en';
+  try { saved = localStorage.getItem('ohmzone-lang') || 'en'; } catch(e) {}
+  setLang(saved);
+})();
+</script>
+<div style="position:fixed;bottom:6px;right:12px;z-index:9999;font-family:monospace;font-size:10px;color:#5c7592;opacity:0.75;">© 2026 OhmZone. All rights reserved.</div>
+</body>
+</html>

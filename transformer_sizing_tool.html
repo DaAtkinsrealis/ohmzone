@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Small Transformer — Cable Sizing & Protection Setup</title>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3887318872951674" crossorigin="anonymous"></script>
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icon-16.png">
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="OhmZone">
+<meta name="theme-color" content="#0a1728">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<style>
+  @media print{
+    .no-print{display:none !important;}
+    body{background:#fff !important;}
+  }
+
+:root{
+  --bg-void:#0b0f14;
+  --bg-panel:#121821;
+  --bg-panel-raised:#1a2330;
+  --bg-input:#0e1319;
+  --line:#26323f;
+  --line-soft:#1c2733;
+  --copper:#c9884f;
+  --copper-bright:#e6a769;
+  --teal:#5fd4c4;
+  --amber:#3b9eff;
+  --red:#e0693f;
+  --text:#e7edf3;
+  --text-mid:#9fb0bf;
+  --text-dim:#5f7285;
+  --font-display:'Space Grotesk',sans-serif;
+  --font-body:'IBM Plex Sans',sans-serif;
+  --font-mono:'IBM Plex Mono',monospace;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:
+    linear-gradient(var(--line-soft) 1px, transparent 1px) 0 0/40px 40px,
+    linear-gradient(90deg, var(--line-soft) 1px, transparent 1px) 0 0/40px 40px,
+    var(--bg-void);
+  color:var(--text);
+  font-family:var(--font-body);
+  min-height:100vh;
+  padding:32px 20px 80px;
+}
+.wrap{max-width:1140px;margin:0 auto;}
+
+/* ---- Title block ---- */
+.titleblock{
+  border:1px solid var(--line);
+  background:var(--bg-panel);
+  display:grid;
+  grid-template-columns:1fr auto;
+  align-items:stretch;
+  margin-bottom:28px;
+}
+.tb-main{padding:22px 26px;border-right:1px solid var(--line);}
+.tb-eyebrow{
+  font-family:var(--font-mono);
+  font-size:11px;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  color:var(--copper);
+  margin-bottom:8px;
+}
+.tb-title{
+  font-family:var(--font-display);
+  font-weight:600;
+  font-size:clamp(26px,4vw,38px);
+  line-height:1.1;
+  margin:0 0 8px;
+  letter-spacing:-.01em;
+}
+.tb-sub{color:var(--text-mid);font-size:14px;max-width:60ch;line-height:1.5;}
+.tb-meta{
+  display:grid;
+  grid-template-rows:repeat(2,1fr);
+  font-family:var(--font-mono);
+  font-size:11px;
+  min-width:230px;
+}
+.tb-meta-row{
+  padding:9px 18px;
+  border-bottom:1px solid var(--line);
+  display:flex;flex-direction:column;justify-content:center;
+  gap:5px;
+}
+.tb-meta-row:last-child{border-bottom:none;}
+.tb-meta-row span{color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em;font-size:9px;}
+.tb-meta-row b{color:var(--text-mid);font-weight:500;}
+.scheme-select{
+  font-family:var(--font-mono);
+  font-size:12px;
+  padding:6px 10px;
+  background:var(--bg-input);
+  border:1px solid var(--line);
+  color:var(--copper-bright);
+  appearance:none;
+  background-image:linear-gradient(45deg,transparent 50%,var(--copper) 50%),linear-gradient(135deg,var(--copper) 50%,transparent 50%);
+  background-position:calc(100% - 16px) center, calc(100% - 11px) center;
+  background-size:4px 4px,4px 4px;
+  background-repeat:no-repeat;
+  cursor:pointer;
+  width:100%;
+}
+.scheme-select:focus{outline:2px solid var(--copper);outline-offset:1px;}
+
+/* ---- Controls ---- */
+.panel{
+  border:1px solid var(--line);
+  background:var(--bg-panel);
+  margin-bottom:20px;
+}
+.panel-head{
+  padding:12px 20px;
+  border-bottom:1px solid var(--line);
+  display:flex;align-items:center;justify-content:space-between;
+  gap:12px;flex-wrap:wrap;
+}
+.panel-head h2{
+  font-family:var(--font-mono);
+  font-size:12px;
+  text-transform:uppercase;
+  letter-spacing:.14em;
+  color:var(--text-mid);
+  margin:0;
+  display:flex;align-items:center;gap:10px;
+}
+.panel-head h2 .num{color:var(--copper);}
+.panel-body{padding:20px;}
+
+.field{margin-bottom:18px;}
+.field:last-child{margin-bottom:0;}
+.field-label{
+  font-family:var(--font-mono);
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  color:var(--text-dim);
+  margin-bottom:9px;
+  display:flex;align-items:center;gap:8px;
+}
+.btn-row{display:flex;flex-wrap:wrap;gap:8px;}
+.chip{
+  font-family:var(--font-mono);
+  font-size:13px;
+  padding:9px 15px;
+  background:var(--bg-input);
+  border:1px solid var(--line);
+  color:var(--text-mid);
+  cursor:pointer;
+  transition:all .12s ease;
+  user-select:none;
+}
+.chip:hover{border-color:var(--copper);color:var(--text);}
+.chip.active{
+  background:var(--copper);
+  border-color:var(--copper);
+  color:#1a0f06;
+  font-weight:600;
+}
+.chip.disabled{opacity:.3;cursor:not-allowed;pointer-events:none;}
+.chip small{display:block;font-size:9px;opacity:.75;margin-top:2px;font-weight:400;}
+
+select.pwr-select{
+  font-family:var(--font-mono);
+  font-size:14px;
+  padding:10px 14px;
+  background:var(--bg-input);
+  border:1px solid var(--line);
+  color:var(--text);
+  min-width:220px;
+  appearance:none;
+  background-image:linear-gradient(45deg,transparent 50%,var(--copper) 50%),linear-gradient(135deg,var(--copper) 50%,transparent 50%);
+  background-position:calc(100% - 18px) center, calc(100% - 13px) center;
+  background-size:5px 5px,5px 5px;
+  background-repeat:no-repeat;
+  cursor:pointer;
+}
+select.pwr-select:focus{outline:2px solid var(--copper);outline-offset:1px;}
+
+.imped-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+.imped-input-wrap{display:flex;align-items:center;background:var(--bg-input);border:1px solid var(--line);padding:0 4px 0 14px;}
+.imped-input-wrap:focus-within{border-color:var(--amber);}
+.imped-input-wrap input{
+  font-family:var(--font-mono);
+  font-size:20px;
+  background:transparent;
+  border:none;
+  color:var(--amber);
+  width:80px;
+  padding:9px 0;
+}
+.imped-input-wrap input:focus{outline:none;}
+.imped-input-wrap span{color:var(--text-dim);font-family:var(--font-mono);}
+.reset-btn{
+  font-family:var(--font-mono);
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+  color:var(--text-dim);
+  background:none;border:1px solid var(--line);
+  padding:9px 12px;cursor:pointer;
+}
+.reset-btn:hover{color:var(--copper);border-color:var(--copper);}
+.imped-note{font-size:12px;color:var(--text-dim);width:100%;margin-top:2px;}
+
+.material-toggle{display:inline-flex;border:1px solid var(--line);}
+.material-toggle button{
+  font-family:var(--font-mono);font-size:13px;padding:9px 18px;
+  background:var(--bg-input);border:none;color:var(--text-mid);cursor:pointer;
+}
+.material-toggle button.active{background:var(--copper);color:#1a0f06;font-weight:600;}
+.material-toggle button:first-child{border-right:1px solid var(--line);}
+
+/* ---- Schematic ---- */
+.diagram-wrap{padding:26px 20px 10px;overflow-x:auto;}
+.diagram-wrap svg{display:block;margin:0 auto;min-width:680px;width:100%;max-width:1040px;height:auto;}
+.diagram-caption{padding:0 20px 20px;font-size:12px;color:var(--text-dim);line-height:1.6;max-width:900px;margin:0 auto;}
+.diagram-caption b{color:var(--text-mid);}
+.sld-line{stroke:var(--line);stroke-width:2;}
+.sld-line-live{stroke:var(--copper);stroke-width:2;}
+.sld-node{fill:var(--bg-input);stroke:var(--line);stroke-width:1.5;}
+.sld-label{font-family:var(--font-mono);font-size:11px;fill:var(--text-dim);text-transform:uppercase;letter-spacing:.05em;}
+.sld-value{font-family:var(--font-mono);font-size:13px;fill:var(--copper-bright);font-weight:600;}
+.sld-value.teal{fill:var(--teal);}
+.sld-value.amber{fill:var(--amber);}
+.sld-tag{font-family:var(--font-display);font-size:12px;fill:var(--text);font-weight:600;}
+
+/* ---- Results ---- */
+.results-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+  gap:18px;
+}
+.card{
+  border:1px solid var(--line);
+  background:var(--bg-panel);
+  display:flex;flex-direction:column;
+}
+.card-head{
+  padding:12px 18px;
+  border-bottom:1px solid var(--line);
+  background:var(--bg-panel-raised);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.card-head h3{
+  font-family:var(--font-display);
+  font-size:15px;font-weight:600;margin:0;
+  display:flex;align-items:center;gap:9px;
+}
+.card-head h3 .dot{width:7px;height:7px;border-radius:50%;background:var(--copper);display:inline-block;}
+.badge{
+  font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:.08em;
+  padding:3px 8px;border:1px solid;
+}
+.badge.ok{color:var(--teal);border-color:var(--teal);}
+.badge.warn{color:var(--red);border-color:var(--red);}
+.optional-tag{font-family:var(--font-mono);font-size:9px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;border:1px solid var(--line-soft);padding:2px 6px;}
+
+.card-body{padding:16px 18px;}
+.row{
+  display:flex;justify-content:space-between;align-items:baseline;
+  padding:9px 0;border-bottom:1px solid var(--line-soft);
+  gap:14px;
+}
+.row:last-child{border-bottom:none;}
+.row .k{font-size:13px;color:var(--text-mid);}
+.row .v{font-family:var(--font-mono);font-size:14px;color:var(--text);text-align:right;font-weight:500;}
+.row .v.big{font-size:17px;color:var(--copper-bright);font-weight:600;}
+.row .v .unit{color:var(--text-dim);font-size:11px;margin-left:3px;font-weight:400;}
+.cable-spec{
+  font-family:var(--font-mono);font-size:13px;background:var(--bg-input);
+  padding:10px 12px;border-left:2px solid var(--copper);margin-top:4px;line-height:1.5;
+}
+
+.isc-highlight{
+  background:var(--bg-panel-raised);
+  border:1px solid var(--amber);
+  padding:16px 18px;
+  text-align:center;
+}
+.isc-highlight .num{font-family:var(--font-mono);font-size:32px;color:var(--amber);font-weight:600;line-height:1;}
+.isc-highlight .lbl{font-family:var(--font-mono);font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em;margin-top:8px;}
+
+footer{
+  max-width:1140px;margin:36px auto 0;
+  font-size:12px;color:var(--text-dim);line-height:1.7;
+  border-top:1px solid var(--line);padding-top:18px;
+}
+footer b{color:var(--text-mid);}
+
+@media(max-width:720px){
+  .titleblock{grid-template-columns:1fr;}
+  .tb-main{border-right:none;border-bottom:1px solid var(--line);}
+  .tb-meta{grid-template-columns:1fr;}
+}
+.lang-switch{display:flex;align-items:center;background:#0f2036;border:1px solid #2f5678;border-radius:16px;padding:3px;gap:2px;font-family:monospace;font-size:11px;position:fixed;top:10px;right:12px;z-index:9999;}
+.lang-switch button{border:none;background:transparent;color:#8fa8c2;padding:5px 12px;border-radius:13px;cursor:pointer;font-family:inherit;font-size:inherit;}
+.lang-switch button.active{background:#f2a93b;color:#1a1000;font-weight:700;}
+
+</style>
+</head>
+<body>
+<a href="index.html" class="no-print" style="position:fixed;top:10px;left:12px;z-index:9999;font-family:monospace;font-size:11px;color:#8fa8c2;background:rgba(10,23,40,0.85);border:1px solid #234261;border-radius:14px;padding:5px 12px;text-decoration:none;">← OhmZone</a>
+<div class="lang-switch no-print">
+  <button type="button" id="btn-en" class="active" onclick="setLang('en')">EN</button>
+  <button type="button" id="btn-fr" onclick="setLang('fr')">FR</button>
+</div>
+<div class="wrap">
+
+  <div class="titleblock">
+    <div class="tb-main">
+      <div class="tb-eyebrow" id="tbEyebrow">Dry-Type Isolation Transformer &mdash; Sizing Reference</div>
+      <h1 class="tb-title" id="tbTitle">Small Transformer — Cable Sizing & Protection Setup</h1>
+      <p class="tb-sub" id="tbSub">Select the primary voltage, secondary voltage and transformer rating to get recommended conductors, overcurrent protection, conduit and grounding &mdash; with a live short-circuit calculation as you adjust impedance.</p>
+    </div>
+    <div class="tb-meta">
+      <div class="tb-meta-row"><span id="lblAmbient">Ambient</span><b>30&deg;C, dry-type</b></div>
+      <div class="tb-meta-row">
+        <span id="lblScheme">Protection Scheme</span>
+        <select id="schemeSelect" class="scheme-select">
+          <option value="primary_only" id="optSchemePrimary">Primary protected only</option>
+          <option value="dual" id="optSchemeDual">Primary + secondary protected</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h2><span class="num">01</span> <span id="hdrConfig">Configuration</span></h2></div>
+    <div class="panel-body">
+      <div class="field">
+        <div class="field-label" id="lblPrimaryV">Primary Voltage</div>
+        <div class="btn-row" id="primaryVoltageRow"></div>
+      </div>
+      <div class="field">
+        <div class="field-label" id="lblSecondaryV">Secondary Voltage</div>
+        <div class="btn-row" id="secondaryVoltageRow"></div>
+      </div>
+      <div class="field">
+        <div class="field-label" id="lblRating">Transformer Rating (kVA)</div>
+        <select class="pwr-select" id="powerSelect"></select>
+      </div>
+      <div class="field">
+        <div class="field-label" id="lblMaterial">Conductor Material</div>
+        <div class="material-toggle">
+          <button id="matCu" class="active">Copper (Cu)</button>
+          <button id="matAl">Aluminum (Al)</button>
+        </div>
+      </div>
+      <div class="field">
+        <div class="field-label" id="lblImpedance">Transformer Impedance &mdash; editable, defaults to code-minimum for this rating</div>
+        <div class="imped-row">
+          <div class="imped-input-wrap">
+            <input type="number" id="impedInput" step="0.1" min="0.5" max="15">
+            <span>%</span>
+          </div>
+          <button class="reset-btn" id="impedReset">Reset to default</button>
+          <div class="imped-note" id="impedNote"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h2><span class="num">02</span> <span id="hdrSLD">Single-Line Overview</span></h2></div>
+    <div class="diagram-wrap" id="diagramWrap"></div>
+    <div class="diagram-caption" id="diagramCaption"></div>
+  </div>
+
+  <div class="panel" style="border:none;background:transparent;">
+    <div class="panel-head" style="border:none;padding-left:0;padding-right:0;"><h2><span class="num">03</span> <span id="hdrSizing">Recommended Sizing</span></h2></div>
+    <div class="results-grid" id="resultsGrid"></div>
+  </div>
+
+  <div class="panel no-print" style="border:none;background:transparent;">
+    <div class="btn-row" style="display:flex;gap:10px;">
+      <button id="printBtn" style="padding:9px 16px;border-radius:8px;border:1px solid #2f5678;background:#0f2036;color:#c8d8e8;cursor:pointer;font-family:inherit;">🖨 Print / Save as PDF</button>
+      <button id="exportWordBtn" style="padding:9px 16px;border-radius:8px;border:1px solid #2f5678;background:#0f2036;color:#c8d8e8;cursor:pointer;font-family:inherit;">📄 Export selection (Word)</button>
+      <button id="exportExcelBtn" style="padding:9px 16px;border-radius:8px;border:1px solid #2f5678;background:#0f2036;color:#c8d8e8;cursor:pointer;font-family:inherit;">📊 Export selection (Excel)</button>
+    </div>
+  </div>
+
+  <footer id="footerText">
+    <b>How to read this:</b> primary-side values (current, cable, conduit, fuse/breaker) are drawn directly from the referenced sizing table &mdash; Sizing_2022-05-28.xlsx, tab 2.1, dry-type isolation transformers, primary-side overcurrent protection only, 30&deg;C ambient, with a maximum of three current-carrying conductors per conduit (or equivalent 100% free-air spacing). Secondary-side fuse/breaker maximums are calculated in this tool (not looked up from the table) at &le;125% of rated secondary current per CEC Rule 26-254(2), rounded down to the nearest standard device rating &mdash; the table's own primary fuse/breaker columns already show that below 15A a breaker cannot go as low as a fuse can, since 15A is the smallest standard breaker rating. Conduit sizes are shown for both dry (RW90) and wet/underground (RWU90) locations as optional reference &mdash; confirm which applies to your installation. Adjusting the impedance field recalculates the secondary short-circuit current only; all other values (conductors, protection, conduit, grounding, panel) are fixed per the source table for the selected rating and do not change with impedance. Typical dry-type transformer %Z from major manufacturers generally falls in the 3.5&ndash;6% range for units up to a few hundred kVA (higher for larger/higher-voltage units) &mdash; always confirm against the actual nameplate once equipment is selected. <b>This tool is a preliminary sizing aid, not a substitute for a qualified electrical engineer's design or verification against the Canadian Electrical Code and the authority having jurisdiction.</b>
+  </footer>
+</div>
+
+<script id="transfo-data" type="application/json">{"A":{"meta":{"id":"A","primary":600,"secondary":"120/208","phase":3},"entries":[{"power":3,"i_primary":2.8867513459481287,"i_primary_125":3.608439182435161,"fuse_max":4,"breaker_max":15,"primary_cable":"3#12 CU + 1#12 V CU","primary_cable_amp":20,"primary_verif":"BON","primary_conduit_rw90":"3/4\" (21)","primary_conduit_rwu90":"3/4\" (21)","i_secondary":8.327167344081142,"i_secondary_125":10.408959180101427,"secondary_cable":"4#12 CU + 1#12 V CU","secondary_cable_amp":20,"secondary_verif":"BON","secondary_conduit_rw90":"3/4\" (21)","secondary_conduit_rwu90":"1\" (27)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":3.5,"isc_ka":0.2379190669737469,"panel_min":100,"panel_min_current":11.538461538461538,"panel_verif":"BON","al_cable":"3#12 AL + 1#12 V AL","al_cable_amp":15,"al_verif":"BON","al_conduit_rw90":"3/4\" (21)","al_conduit_rwu90":"3/4\" (21)","al_sec_cable":"4#12 AL + 1#12 V AL","al_sec_cable_amp":15,"al_sec_verif":"BON","al_sec_conduit_rw90":"3/4\" (21)","al_sec_conduit_rwu90":"1\" (27)"},{"power":6,"i_primary":5.773502691896257,"i_primary_125":7.216878364870322,"fuse_max":8,"breaker_max":15,"primary_cable":"3#12 CU + 1#12 V CU","primary_cable_amp":20,"primary_verif":"BON","primary_conduit_rw90":"3/4\" (21)","primary_conduit_rwu90":"3/4\" (21)","i_secondary":16.654334688162283,"i_secondary_125":20.817918360202853,"secondary_cable":"4#10 CU + 1#12 V CU","secondary_cable_amp":30,"secondary_verif":"BON","secondary_conduit_rw90":"3/4\" (21)","secondary_conduit_rwu90":"1\" (27)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":3.5,"isc_ka":0.4758381339474938,"panel_min":100,"panel_min_current":23.076923076923077,"panel_verif":"BON","al_cable":"3#12 AL + 1#12 V AL","al_cable_amp":15,"al_verif":"BON","al_conduit_rw90":"3/4\" (21)","al_conduit_rwu90":"3/4\" (21)","al_sec_cable":"4#10 AL + 1#10 V AL","al_sec_cable_amp":25,"al_sec_verif":"BON","al_sec_conduit_rw90":"1\" (27)","al_sec_conduit_rwu90":"1\" (27)"},{"power":9,"i_primary":8.660254037844386,"i_primary_125":10.825317547305481,"fuse_max":12,"breaker_max":15,"primary_cable":"3#12 CU + 1#12 V CU","primary_cable_amp":20,"primary_verif":"BON","primary_conduit_rw90":"3/4\" (21)","primary_conduit_rwu90":"3/4\" (21)","i_secondary":24.981502032243423,"i_secondary_125":31.22687754030428,"secondary_cable":"4#8 CU + 1#10 V CU","secondary_cable_amp":50,"secondary_verif":"BON","secondary_conduit_rw90":"1\" (27)","secondary_conduit_rwu90":"1\"-1/4 (35)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":3.5,"isc_ka":0.7137572009212407,"panel_min":100,"panel_min_current":34.61538461538461,"panel_verif":"BON","al_cable":"3#12 AL + 1#12 V AL","al_cable_amp":15,"al_verif":"BON","al_conduit_rw90":"3/4\" (21)","al_conduit_rwu90":"3/4\" (21)","al_sec_cable":"4#6 AL + 1#8 V AL","al_sec_cable_amp":50,"al_sec_verif":"BON","al_sec_conduit_rw90":"1\"-1/4 (35)","al_sec_conduit_rwu90":"1\"-1/4 (35)"},{"power":10,"i_primary":9.622504486493762,"i_primary_125":12.028130608117202,"fuse_max":12,"breaker_max":15,"primary_cable":"3#12 CU + 1#12 V CU","primary_cable_amp":20,"primary_verif":"BON","primary_conduit_rw90":"3/4\" (21)","primary_conduit_rwu90":"3/4\" (21)","i_secondary":27.757224480270473,"i_secondary_125":34.69653060033809,"secondary_cable":"4#8 CU + 1#10 V CU","secondary_cable_amp":50,"secondary_verif":"BON","secondary_conduit_rw90":"1\" (27)","secondary_conduit_rwu90":"1\"-1/4 (35)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":3.5,"isc_ka":0.7930635565791564,"panel_min":100,"panel_min_current":34.61538461538461,"panel_verif":"BON","al_cable":"3#12 AL + 1#12 V AL","al_cable_amp":15,"al_verif":"BON","al_conduit_rw90":"3/4\" (21)","al_conduit_rwu90":"3/4\" (21)","al_sec_cable":"4#6 AL + 1#8 V AL","al_sec_cable_amp":50,"al_sec_verif":"BON","al_sec_conduit_rw90":"1\"-1/4 (35)","al_sec_conduit_rwu90":"1\"-1/4 (35)"},{"power":15,"i_primary":14.433756729740644,"i_primary_125":18.042195912175806,"fuse_max":20,"breaker_max":20,"primary_cable":"3#12 CU + 1#12 V CU","primary_cable_amp":20,"primary_verif":"BON","primary_conduit_rw90":"3/4\" (21)","primary_conduit_rwu90":"3/4\" (21)","i_secondary":41.635836720405706,"i_secondary_125":52.04479590050713,"secondary_cable":"4#6 CU + 1#8 V CU","secondary_cable_amp":65,"secondary_verif":"BON","secondary_conduit_rw90":"1\"-1/4 (35)","secondary_conduit_rwu90":"1\"-1/4 (35)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":3.5,"isc_ka":1.1895953348687345,"panel_min":100,"panel_min_current":57.69230769230769,"panel_verif":"BON","al_cable":"3#10 AL + 1#10 V AL","al_cable_amp":25,"al_verif":"BON","al_conduit_rw90":"3/4\" (21)","al_conduit_rwu90":"1\" (27)","al_sec_cable":"4#4 AL + 1#6 V AL","al_sec_cable_amp":65,"al_sec_verif":"BON","al_sec_conduit_rw90":"1\"-1/2 (41)","al_sec_conduit_rwu90":"1\"-1/2 (41)"},{"power":30,"i_primary":28.867513459481287,"i_primary_125":36.08439182435161,"fuse_max":40,"breaker_max":40,"primary_cable":"3#8 CU + 1#10 V CU","primary_cable_amp":50,"primary_verif":"BON","primary_conduit_rw90":"1\" (27)","primary_conduit_rwu90":"1\" (27)","i_secondary":83.27167344081141,"i_secondary_125":104.08959180101427,"secondary_cable":"4#2 CU + 1#6 V CU","secondary_cable_amp":115,"secondary_verif":"BON","secondary_conduit_rw90":"2\" (53)","secondary_conduit_rwu90":"2\" (53)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":3.5,"isc_ka":2.379190669737469,"panel_min":225,"panel_min_current":115.38461538461539,"panel_verif":"BON","al_cable":"3#6 AL + 1#8 V AL","al_cable_amp":50,"al_verif":"BON","al_conduit_rw90":"1\"-1/4 (35)","al_conduit_rwu90":"1\"-1/4 (35)","al_sec_cable":"4#1/0 AL + 1#4 V AL","al_sec_cable_amp":120,"al_sec_verif":"BON","al_sec_conduit_rw90":"2\" (53)","al_sec_conduit_rwu90":"2\" (53)"},{"power":45,"i_primary":43.30127018922193,"i_primary_125":54.12658773652741,"fuse_max":60,"breaker_max":60,"primary_cable":"3#6 CU + 1#8 V CU","primary_cable_amp":65,"primary_verif":"BON","primary_conduit_rw90":"1\"-1/4 (35)","primary_conduit_rwu90":"1\"-1/4 (35)","i_secondary":124.90751016121712,"i_secondary_125":156.1343877015214,"secondary_cable":"4#2/0 CU + 1#6 V CU","secondary_cable_amp":175,"secondary_verif":"BON","secondary_conduit_rw90":"2\"-1/2 (63)","secondary_conduit_rwu90":"2\"-1/2 (63)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":3.5,"isc_ka":3.5687860046062037,"panel_min":225,"panel_min_current":173.07692307692307,"panel_verif":"BON","al_cable":"3#4 AL + 1#6 V AL","al_cable_amp":65,"al_verif":"BON","al_conduit_rw90":"1\"-1/4 (35)","al_conduit_rwu90":"1\"-1/4 (35)","al_sec_cable":"4#4/0 AL + 1#4 V AL","al_sec_cable_amp":180,"al_sec_verif":"BON","al_sec_conduit_rw90":"2\"-1/2 (63)","al_sec_conduit_rwu90":"2\"-1/2 (63)"},{"power":75,"i_primary":72.16878364870321,"i_primary_125":90.21097956087901,"fuse_max":90,"breaker_max":90,"primary_cable":"3#3 CU + 1#6 V CU","primary_cable_amp":100,"primary_verif":"BON","primary_conduit_rw90":"1\"-1/2 (41)","primary_conduit_rwu90":"1\"-1/2 (41)","i_secondary":208.17918360202853,"i_secondary_125":260.22397950253566,"secondary_cable":"4#350 CU + 1#3 V CU","secondary_cable_amp":310,"secondary_verif":"BON","secondary_conduit_rw90":"3\"-1/2 (91)","secondary_conduit_rwu90":"3\" (78)","ground_cu":"#3 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":3.5,"isc_ka":5.947976674343673,"panel_min":400,"panel_min_current":259.6153846153846,"panel_verif":"BON","al_cable":"3#2 AL + 1#6 V AL","al_cable_amp":90,"al_verif":"À VÉRIFIER","al_conduit_rw90":"1\"-1/2 (41)","al_conduit_rwu90":"1\"-1/2 (41)","al_sec_cable":"4#500 AL + 1#1 V AL","al_sec_cable_amp":310,"al_sec_verif":"BON","al_sec_conduit_rw90":"4\" (103)","al_sec_conduit_rwu90":"3\"-1/2 (91)"},{"power":112.5,"i_primary":108.25317547305482,"i_primary_125":135.31646934131854,"fuse_max":150,"breaker_max":150,"primary_cable":"3#1/0 CU + 1#6 V CU","primary_cable_amp":150,"primary_verif":"BON","primary_conduit_rw90":"2\" (53)","primary_conduit_rwu90":"2\" (53)","i_secondary":312.2687754030428,"i_secondary_125":390.3359692538035,"secondary_cable":"2x(4#3/0 CU + 1#4 V CU)","secondary_cable_amp":400,"secondary_verif":"BON","secondary_conduit_rw90":"2\"-1/2 (63)","secondary_conduit_rwu90":"2\"-1/2 (63)","ground_cu":"#3 CU","ground_conduit":"1/2\" (16)","mounting":"P","impedance_min":3.5,"isc_ka":8.921965011515509,"panel_min":600,"panel_min_current":432.6923076923077,"panel_verif":"BON","al_cable":"3#2/0 AL + 1#4 V AL","al_cable_amp":135,"al_verif":"À VÉRIFIER","al_conduit_rw90":"2\" (53)","al_conduit_rwu90":"2\" (53)","al_sec_cable":"2x(4#250 AL + 1#2 V AL)","al_sec_cable_amp":410,"al_sec_verif":"BON","al_sec_conduit_rw90":"3\" (78)","al_sec_conduit_rwu90":"3\" (78)"},{"power":150,"i_primary":144.33756729740642,"i_primary_125":180.42195912175802,"fuse_max":200,"breaker_max":200,"primary_cable":"3#3/0 CU + 1#4 V CU","primary_cable_amp":200,"primary_verif":"BON","primary_conduit_rw90":"2\" (53)","primary_conduit_rwu90":"2\" (53)","i_secondary":416.35836720405706,"i_secondary_125":520.4479590050713,"secondary_cable":"2x(4#350 CU + 1#3 V CU)","secondary_cable_amp":620,"secondary_verif":"BON","secondary_conduit_rw90":"3\"-1/2 (91)","secondary_conduit_rwu90":"3\" (78)","ground_cu":"#1/0 CU","ground_conduit":"3/4\" (21)","mounting":"P","impedance_min":3.5,"isc_ka":11.895953348687346,"panel_min":600,"panel_min_current":576.9230769230769,"panel_verif":"BON","al_cable":"3#4/0 AL + 1#4 V AL","al_cable_amp":180,"al_verif":"À VÉRIFIER","al_conduit_rw90":"2\"-1/2 (63)","al_conduit_rwu90":"2\"-1/2 (63)","al_sec_cable":"2x(4#500 AL + 1#1 V AL)","al_sec_cable_amp":620,"al_sec_verif":"BON","al_sec_conduit_rw90":"4\" (103)","al_sec_conduit_rwu90":"3\"-1/2 (91)"},{"power":225,"i_primary":216.50635094610965,"i_primary_125":270.6329386826371,"fuse_max":300,"breaker_max":300,"primary_cable":"3#350 CU + 1#3 V CU","primary_cable_amp":310,"primary_verif":"BON","primary_conduit_rw90":"3\" (78)","primary_conduit_rwu90":"3\" (78)","i_secondary":624.5375508060856,"i_secondary_125":780.671938507607,"secondary_cable":"3x(4#350 CU + 1#3 V CU)","secondary_cable_amp":930,"secondary_verif":"BON","secondary_conduit_rw90":"3\"-1/2 (91)","secondary_conduit_rwu90":"3\" (78)","ground_cu":"#1/0 CU","ground_conduit":"3/4\" (21)","mounting":"P","impedance_min":3.5,"isc_ka":17.843930023031017,"panel_min":1200,"panel_min_current":865.3846153846154,"panel_verif":"BON","al_cable":"3#500 AL + 1#1 V AL","al_cable_amp":310,"al_verif":"BON","al_conduit_rw90":"3\"-1/2 (91)","al_conduit_rwu90":"3\" (78)","al_sec_cable":"3x(4#500 AL + 1#1 V AL)","al_sec_cable_amp":930,"al_sec_verif":"BON","al_sec_conduit_rw90":"4\" (103)","al_sec_conduit_rwu90":"3\"-1/2 (91)"}]},"B":{"meta":{"id":"B","primary":600,"secondary":"277/480","phase":3},"entries":[{"power":3,"i_primary":2.8867513459481287,"i_primary_125":3.608439182435161,"fuse_max":4,"breaker_max":15,"primary_cable":"3#12 CU + 1#12 V CU","primary_cable_amp":20,"primary_verif":"BON","primary_conduit_rw90":"3/4\" (21)","primary_conduit_rwu90":"3/4\" (21)","i_secondary":3.6084391824351614,"i_secondary_125":4.510548978043952,"secondary_cable":"4#12 CU + 1#12 V CU","secondary_cable_amp":20,"secondary_verif":"BON","secondary_conduit_rw90":"3/4\" (21)","secondary_conduit_rwu90":"1\" (27)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":3.5,"isc_ka":0.10309826235529033,"panel_min":100,"panel_min_current":5,"panel_verif":"BON","al_cable":"3#12 AL + 1#12 V AL","al_cable_amp":15,"al_verif":"BON","al_conduit_rw90":"3/4\" (21)","al_conduit_rwu90":"3/4\" (21)","al_sec_cable":"4#12 AL + 1#12 V AL","al_sec_cable_amp":15,"al_sec_verif":"BON","al_sec_conduit_rw90":"3/4\" (21)","al_sec_conduit_rwu90":"1\" (27)"},{"power":6,"i_primary":5.773502691896257,"i_primary_125":7.216878364870322,"fuse_max":8,"breaker_max":15,"primary_cable":"3#12 CU + 1#12 V CU","primary_cable_amp":20,"primary_verif":"BON","primary_conduit_rw90":"3/4\" (21)","primary_conduit_rwu90":"3/4\" (21)","i_secondary":7.216878364870323,"i_secondary_125":9.021097956087903,"secondary_cable":"4#12 CU + 1#12 V CU","secondary_cable_amp":20,"secondary_verif":"BON","secondary_conduit_rw90":"3/4\" (21)","secondary_conduit_rwu90":"1\" (27)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":3.5,"isc_ka":0.20619652471058067,"panel_min":100,"panel_min_current":10,"panel_verif":"BON","al_cable":"3#12 AL + 1#12 V AL","al_cable_amp":15,"al_verif":"BON","al_conduit_rw90":"3/4\" (21)","al_conduit_rwu90":"3/4\" (21)","al_sec_cable":"4#12 AL + 1#12 V AL","al_sec_cable_amp":15,"al_sec_verif":"BON","al_sec_conduit_rw90":"3/4\" (21)","al_sec_conduit_rwu90":"1\" (27)"},{"power":9,"i_primary":8.660254037844386,"i_primary_125":10.825317547305481,"fuse_max":12,"breaker_max":15,"primary_cable":"3#12 CU + 1#12 V CU","primary_cable_amp":20,"primary_verif":"BON","primary_conduit_rw90":"3/4\" (21)","primary_conduit_rwu90":"3/4\" (21)","i_secondary":10.825317547305485,"i_secondary_125":13.531646934131857,"secondary_cable":"4#12 CU + 1#12 V CU","secondary_cable_amp":20,"secondary_verif":"BON","secondary_conduit_rw90":"3/4\" (21)","secondary_conduit_rwu90":"1\" (27)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":3.5,"isc_ka":0.309294787065871,"panel_min":100,"panel_min_current":15,"panel_verif":"BON","al_cable":"3#12 AL + 1#12 V AL","al_cable_amp":15,"al_verif":"BON","al_conduit_rw90":"3/4\" (21)","al_conduit_rwu90":"3/4\" (21)","al_sec_cable":"4#12 AL + 1#12 V AL","al_sec_cable_amp":15,"al_sec_verif":"BON","al_sec_conduit_rw90":"3/4\" (21)","al_sec_conduit_rwu90":"1\" (27)"},{"power":10,"i_primary":9.622504486493762,"i_primary_125":12.028130608117202,"fuse_max":12,"breaker_max":15,"primary_cable":"3#12 CU + 1#12 V CU","primary_cable_amp":20,"primary_verif":"BON","primary_conduit_rw90":"3/4\" (21)","primary_conduit_rwu90":"3/4\" (21)","i_secondary":12.028130608117205,"i_secondary_125":15.035163260146508,"secondary_cable":"4#12 CU + 1#12 V CU","secondary_cable_amp":20,"secondary_verif":"BON","secondary_conduit_rw90":"3/4\" (21)","secondary_conduit_rwu90":"1\" (27)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":3.5,"isc_ka":0.34366087451763444,"panel_min":100,"panel_min_current":15,"panel_verif":"BON","al_cable":"3#12 AL + 1#12 V AL","al_cable_amp":15,"al_verif":"BON","al_conduit_rw90":"3/4\" (21)","al_conduit_rwu90":"3/4\" (21)","al_sec_cable":"4#12 AL + 1#12 V AL","al_sec_cable_amp":15,"al_sec_verif":"À VÉRIFIER","al_sec_conduit_rw90":"3/4\" (21)","al_sec_conduit_rwu90":"1\" (27)"},{"power":15,"i_primary":14.433756729740644,"i_primary_125":18.042195912175806,"fuse_max":20,"breaker_max":20,"primary_cable":"3#12 CU + 1#12 V CU","primary_cable_amp":20,"primary_verif":"BON","primary_conduit_rw90":"3/4\" (21)","primary_conduit_rwu90":"3/4\" (21)","i_secondary":18.042195912175806,"i_secondary_125":22.552744890219756,"secondary_cable":"4#10 CU + 1#12 V CU","secondary_cable_amp":30,"secondary_verif":"BON","secondary_conduit_rw90":"3/4\" (21)","secondary_conduit_rwu90":"1\" (27)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":3.5,"isc_ka":0.5154913117764517,"panel_min":100,"panel_min_current":25,"panel_verif":"BON","al_cable":"3#10 AL + 1#10 V AL","al_cable_amp":25,"al_verif":"BON","al_conduit_rw90":"3/4\" (21)","al_conduit_rwu90":"1\" (27)","al_sec_cable":"4#10 AL + 1#10 V AL","al_sec_cable_amp":25,"al_sec_verif":"BON","al_sec_conduit_rw90":"1\" (27)","al_sec_conduit_rwu90":"1\" (27)"},{"power":30,"i_primary":28.867513459481287,"i_primary_125":36.08439182435161,"fuse_max":40,"breaker_max":40,"primary_cable":"3#8 CU + 1#10 V CU","primary_cable_amp":50,"primary_verif":"BON","primary_conduit_rw90":"1\" (27)","primary_conduit_rwu90":"1\" (27)","i_secondary":36.08439182435161,"i_secondary_125":45.10548978043951,"secondary_cable":"4#8 CU + 1#10 V CU","secondary_cable_amp":50,"secondary_verif":"BON","secondary_conduit_rw90":"1\" (27)","secondary_conduit_rwu90":"1\"-1/4 (35)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":3.5,"isc_ka":1.0309826235529034,"panel_min":100,"panel_min_current":50,"panel_verif":"BON","al_cable":"3#6 AL + 1#8 V AL","al_cable_amp":50,"al_verif":"BON","al_conduit_rw90":"1\"-1/4 (35)","al_conduit_rwu90":"1\"-1/4 (35)","al_sec_cable":"4#6 AL + 1#8 V AL","al_sec_cable_amp":50,"al_sec_verif":"BON","al_sec_conduit_rw90":"1\"-1/4 (35)","al_sec_conduit_rwu90":"1\"-1/4 (35)"},{"power":45,"i_primary":43.30127018922193,"i_primary_125":54.12658773652741,"fuse_max":60,"breaker_max":60,"primary_cable":"3#6 CU + 1#8 V CU","primary_cable_amp":65,"primary_verif":"BON","primary_conduit_rw90":"1\"-1/4 (35)","primary_conduit_rwu90":"1\"-1/4 (35)","i_secondary":54.12658773652742,"i_secondary_125":67.65823467065927,"secondary_cable":"4#4 CU + 1#8 V CU","secondary_cable_amp":85,"secondary_verif":"BON","secondary_conduit_rw90":"1\"-1/2 (41)","secondary_conduit_rwu90":"1\"-1/2 (41)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":3.5,"isc_ka":1.5464739353293548,"panel_min":100,"panel_min_current":75,"panel_verif":"BON","al_cable":"3#4 AL + 1#6 V AL","al_cable_amp":65,"al_verif":"BON","al_conduit_rw90":"1\"-1/4 (35)","al_conduit_rwu90":"1\"-1/4 (35)","al_sec_cable":"4#3 AL + 1#6 V AL","al_sec_cable_amp":75,"al_sec_verif":"BON","al_sec_conduit_rw90":"1\"-1/2 (41)","al_sec_conduit_rwu90":"1\"-1/2 (41)"},{"power":75,"i_primary":72.16878364870321,"i_primary_125":90.21097956087901,"fuse_max":90,"breaker_max":90,"primary_cable":"3#3 CU + 1#6 V CU","primary_cable_amp":100,"primary_verif":"BON","primary_conduit_rw90":"1\"-1/2 (41)","primary_conduit_rwu90":"1\"-1/2 (41)","i_secondary":90.21097956087904,"i_secondary_125":112.7637244510988,"secondary_cable":"4#2 CU + 1#6 V CU","secondary_cable_amp":115,"secondary_verif":"BON","secondary_conduit_rw90":"2\" (53)","secondary_conduit_rwu90":"2\" (53)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":3.5,"isc_ka":2.5774565588822584,"panel_min":225,"panel_min_current":112.5,"panel_verif":"BON","al_cable":"3#2 AL + 1#6 V AL","al_cable_amp":90,"al_verif":"À VÉRIFIER","al_conduit_rw90":"1\"-1/2 (41)","al_conduit_rwu90":"1\"-1/2 (41)","al_sec_cable":"4#1/0 AL + 1#4 V AL","al_sec_cable_amp":120,"al_sec_verif":"BON","al_sec_conduit_rw90":"2\" (53)","al_sec_conduit_rwu90":"2\" (53)"},{"power":112.5,"i_primary":108.25317547305482,"i_primary_125":135.31646934131854,"fuse_max":150,"breaker_max":150,"primary_cable":"3#1/0 CU + 1#6 V CU","primary_cable_amp":150,"primary_verif":"BON","primary_conduit_rw90":"2\" (53)","primary_conduit_rwu90":"2\" (53)","i_secondary":135.31646934131857,"i_secondary_125":169.1455866766482,"secondary_cable":"4#2/0 CU + 1#6 V CU","secondary_cable_amp":175,"secondary_verif":"BON","secondary_conduit_rw90":"2\"-1/2 (63)","secondary_conduit_rwu90":"2\"-1/2 (63)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P","impedance_min":3.5,"isc_ka":3.8661848383233877,"panel_min":225,"panel_min_current":187.5,"panel_verif":"BON","al_cable":"3#2/0 AL + 1#4 V AL","al_cable_amp":135,"al_verif":"À VÉRIFIER","al_conduit_rw90":"2\" (53)","al_conduit_rwu90":"2\" (53)","al_sec_cable":"4#4/0 AL + 1#4 V AL","al_sec_cable_amp":180,"al_sec_verif":"BON","al_sec_conduit_rw90":"2\"-1/2 (63)","al_sec_conduit_rwu90":"2\"-1/2 (63)"},{"power":150,"i_primary":144.33756729740642,"i_primary_125":180.42195912175802,"fuse_max":200,"breaker_max":200,"primary_cable":"3#3/0 CU + 1#4 V CU","primary_cable_amp":200,"primary_verif":"BON","primary_conduit_rw90":"2\" (53)","primary_conduit_rwu90":"2\" (53)","i_secondary":180.42195912175808,"i_secondary_125":225.5274489021976,"secondary_cable":"4#250 CU + 1#4 V CU","secondary_cable_amp":255,"secondary_verif":"BON","secondary_conduit_rw90":"3\" (78)","secondary_conduit_rwu90":"3\" (78)","ground_cu":"#3 CU","ground_conduit":"1/2\" (16)","mounting":"P","impedance_min":3.5,"isc_ka":5.154913117764517,"panel_min":400,"panel_min_current":250,"panel_verif":"BON","al_cable":"3#4/0 AL + 1#4 V AL","al_cable_amp":180,"al_verif":"À VÉRIFIER","al_conduit_rw90":"2\"-1/2 (63)","al_conduit_rwu90":"2\"-1/2 (63)","al_sec_cable":"4#350 AL + 1#2 V AL","al_sec_cable_amp":250,"al_sec_verif":"BON","al_sec_conduit_rw90":"3\"-1/2 (91)","al_sec_conduit_rwu90":"3\" (78)"},{"power":225,"i_primary":216.50635094610965,"i_primary_125":270.6329386826371,"fuse_max":300,"breaker_max":300,"primary_cable":"3#350 CU + 1#3 V CU","primary_cable_amp":310,"primary_verif":"BON","primary_conduit_rw90":"3\" (78)","primary_conduit_rwu90":"3\" (78)","i_secondary":270.63293868263713,"i_secondary_125":338.2911733532964,"secondary_cable":"4#500 CU + 1#3 V CU","secondary_cable_amp":380,"secondary_verif":"BON","secondary_conduit_rw90":"3\"-1/2 (91)","secondary_conduit_rwu90":"3\"-1/2 (91)","ground_cu":"#3 CU","ground_conduit":"1/2\" (16)","mounting":"P","impedance_min":3.5,"isc_ka":7.732369676646775,"panel_min":400,"panel_min_current":375,"panel_verif":"BON","al_cable":"3#500 AL + 1#1 V AL","al_cable_amp":310,"al_verif":"BON","al_conduit_rw90":"3\"-1/2 (91)","al_conduit_rwu90":"3\" (78)","al_sec_cable":"2x(4#4/0 AL + 1#4 V AL)","al_sec_cable_amp":360,"al_sec_verif":"BON","al_sec_conduit_rw90":"2\"-1/2 (63)","al_sec_conduit_rwu90":"2\"-1/2 (63)"},{"power":300,"i_primary":288.67513459481285,"i_primary_125":360.84391824351604,"fuse_max":400,"breaker_max":400,"primary_cable":"2x(3#3/0 CU + 1#4 V CU)","primary_cable_amp":400,"primary_verif":"BON","primary_conduit_rw90":"2\" (53)","primary_conduit_rwu90":"2\" (53)","i_secondary":360.84391824351616,"i_secondary_125":451.0548978043952,"secondary_cable":"2x(4#4/0 CU + 1#4 V CU)","secondary_cable_amp":460,"secondary_verif":"BON","secondary_conduit_rw90":"2\"-1/2 (63)","secondary_conduit_rwu90":"2\"-1/2 (63)","ground_cu":"#3 CU","ground_conduit":"1/2\" (16)","mounting":"P","impedance_min":4,"isc_ka":9.021097956087903,"panel_min":600,"panel_min_current":500,"panel_verif":"BON","al_cable":"2x(3#4/0 AL + 1#4 V AL)","al_cable_amp":360,"al_verif":"À VÉRIFIER","al_conduit_rw90":"2\"-1/2 (63)","al_conduit_rwu90":"2\"-1/2 (63)","al_sec_cable":"2x(4#350 AL + 1#2 V AL)","al_sec_cable_amp":500,"al_sec_verif":"BON","al_sec_conduit_rw90":"3\"-1/2 (91)","al_sec_conduit_rwu90":"3\" (78)"},{"power":450,"i_primary":433.0127018922193,"i_primary_125":541.2658773652742,"fuse_max":600,"breaker_max":600,"primary_cable":"2x(3#350 CU + 1#3 V CU)","primary_cable_amp":620,"primary_verif":"BON","primary_conduit_rw90":"3\" (78)","primary_conduit_rwu90":"3\" (78)","i_secondary":541.2658773652743,"i_secondary_125":676.5823467065928,"secondary_cable":"3x(4#4/0 CU + 1#4 V CU)","secondary_cable_amp":690,"secondary_verif":"BON","secondary_conduit_rw90":"2\"-1/2 (63)","secondary_conduit_rwu90":"2\"-1/2 (63)","ground_cu":"#1/0 CU","ground_conduit":"3/4\" (21)","mounting":"P","impedance_min":4,"isc_ka":13.531646934131857,"panel_min":800,"panel_min_current":750,"panel_verif":"BON","al_cable":"2x(3#500 AL + 1#1 V AL)","al_cable_amp":620,"al_verif":"BON","al_conduit_rw90":"3\"-1/2 (91)","al_conduit_rwu90":"3\" (78)","al_sec_cable":"3x(4#350 AL + 1#2 V AL)","al_sec_cable_amp":750,"al_sec_verif":"BON","al_sec_conduit_rw90":"3\"-1/2 (91)","al_sec_conduit_rwu90":"3\" (78)"},{"power":500,"i_primary":481.12522432468813,"i_primary_125":601.4065304058602,"fuse_max":600,"breaker_max":600,"primary_cable":"2x(3#350 CU + 1#3 V CU)","primary_cable_amp":620,"primary_verif":"BON","primary_conduit_rw90":"3\" (78)","primary_conduit_rwu90":"3\" (78)","i_secondary":601.4065304058603,"i_secondary_125":751.7581630073254,"secondary_cable":"3x(4#250 CU + 1#4 V CU)","secondary_cable_amp":765,"secondary_verif":"BON","secondary_conduit_rw90":"3\" (78)","secondary_conduit_rwu90":"3\" (78)","ground_cu":"#1/0 CU","ground_conduit":"3/4\" (21)","mounting":"P","impedance_min":4,"isc_ka":15.035163260146506,"panel_min":800,"panel_min_current":750,"panel_verif":"BON","al_cable":"2x(3#500 AL + 1#1 V AL)","al_cable_amp":620,"al_verif":"BON","al_conduit_rw90":"3\"-1/2 (91)","al_conduit_rwu90":"3\" (78)","al_sec_cable":"3x(4#350 AL + 1#2 V AL)","al_sec_cable_amp":750,"al_sec_verif":"À VÉRIFIER","al_sec_conduit_rw90":"3\"-1/2 (91)","al_sec_conduit_rwu90":"3\" (78)"}]},"C":{"meta":{"id":"C","primary":480,"secondary":"120/208","phase":3},"entries":[{"power":3,"i_primary":3.6084391824351614,"i_primary_125":4.510548978043952,"fuse_max":4.5,"breaker_max":15,"primary_cable":"3#12 CU + 1#12 V CU","primary_cable_amp":20,"primary_verif":"BON","primary_conduit_rw90":"3/4\" (21)","primary_conduit_rwu90":"3/4\" (21)","i_secondary":8.327167344081142,"i_secondary_125":10.408959180101427,"secondary_cable":"4#12 CU + 1#12 V CU","secondary_cable_amp":20,"secondary_verif":"BON","secondary_conduit_rw90":"3/4\" (21)","secondary_conduit_rwu90":"1\" (27)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":3.5,"isc_ka":0.2379190669737469,"panel_min":100,"panel_min_current":10.384615384615383,"panel_verif":"BON","al_cable":"3#12 AL + 1#12 V AL","al_cable_amp":15,"al_verif":"BON","al_conduit_rw90":"3/4\" (21)","al_conduit_rwu90":"3/4\" (21)","al_sec_cable":"4#12 AL + 1#12 V AL","al_sec_cable_amp":15,"al_sec_verif":"BON","al_sec_conduit_rw90":"3/4\" (21)","al_sec_conduit_rwu90":"1\" (27)"},{"power":6,"i_primary":7.216878364870323,"i_primary_125":9.021097956087903,"fuse_max":9,"breaker_max":15,"primary_cable":"3#12 CU + 1#12 V CU","primary_cable_amp":20,"primary_verif":"BON","primary_conduit_rw90":"3/4\" (21)","primary_conduit_rwu90":"3/4\" (21)","i_secondary":16.654334688162283,"i_secondary_125":20.817918360202853,"secondary_cable":"4#10 CU + 1#12 V CU","secondary_cable_amp":30,"secondary_verif":"BON","secondary_conduit_rw90":"3/4\" (21)","secondary_conduit_rwu90":"1\" (27)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":3.5,"isc_ka":0.4758381339474938,"panel_min":100,"panel_min_current":20.769230769230766,"panel_verif":"BON","al_cable":"3#12 AL + 1#12 V AL","al_cable_amp":15,"al_verif":"BON","al_conduit_rw90":"3/4\" (21)","al_conduit_rwu90":"3/4\" (21)","al_sec_cable":"4#10 AL + 1#10 V AL","al_sec_cable_amp":25,"al_sec_verif":"BON","al_sec_conduit_rw90":"1\" (27)","al_sec_conduit_rwu90":"1\" (27)"},{"power":9,"i_primary":10.825317547305485,"i_primary_125":13.531646934131857,"fuse_max":15,"breaker_max":15,"primary_cable":"3#12 CU + 1#12 V CU","primary_cable_amp":20,"primary_verif":"BON","primary_conduit_rw90":"3/4\" (21)","primary_conduit_rwu90":"3/4\" (21)","i_secondary":24.981502032243423,"i_secondary_125":31.22687754030428,"secondary_cable":"4#8 CU + 1#10 V CU","secondary_cable_amp":50,"secondary_verif":"BON","secondary_conduit_rw90":"1\" (27)","secondary_conduit_rwu90":"1\"-1/4 (35)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":3.5,"isc_ka":0.7137572009212407,"panel_min":100,"panel_min_current":34.61538461538461,"panel_verif":"BON","al_cable":"3#12 AL + 1#12 V AL","al_cable_amp":15,"al_verif":"BON","al_conduit_rw90":"3/4\" (21)","al_conduit_rwu90":"3/4\" (21)","al_sec_cable":"4#6 AL + 1#8 V AL","al_sec_cable_amp":50,"al_sec_verif":"BON","al_sec_conduit_rw90":"1\"-1/4 (35)","al_sec_conduit_rwu90":"1\"-1/4 (35)"},{"power":10,"i_primary":12.028130608117205,"i_primary_125":15.035163260146508,"fuse_max":15,"breaker_max":15,"primary_cable":"3#12 CU + 1#12 V CU","primary_cable_amp":20,"primary_verif":"BON","primary_conduit_rw90":"3/4\" (21)","primary_conduit_rwu90":"3/4\" (21)","i_secondary":27.757224480270473,"i_secondary_125":34.69653060033809,"secondary_cable":"4#8 CU + 1#10 V CU","secondary_cable_amp":50,"secondary_verif":"BON","secondary_conduit_rw90":"1\" (27)","secondary_conduit_rwu90":"1\"-1/4 (35)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":3.5,"isc_ka":0.7930635565791564,"panel_min":100,"panel_min_current":34.61538461538461,"panel_verif":"BON","al_cable":"3#12 AL + 1#12 V AL","al_cable_amp":15,"al_verif":"À VÉRIFIER","al_conduit_rw90":"3/4\" (21)","al_conduit_rwu90":"3/4\" (21)","al_sec_cable":"4#6 AL + 1#8 V AL","al_sec_cable_amp":50,"al_sec_verif":"BON","al_sec_conduit_rw90":"1\"-1/4 (35)","al_sec_conduit_rwu90":"1\"-1/4 (35)"},{"power":15,"i_primary":18.042195912175806,"i_primary_125":22.552744890219756,"fuse_max":25,"breaker_max":25,"primary_cable":"3#10 CU + 1#12 V CU","primary_cable_amp":30,"primary_verif":"BON","primary_conduit_rw90":"3/4\" (21)","primary_conduit_rwu90":"1\" (27)","i_secondary":41.635836720405706,"i_secondary_125":52.04479590050713,"secondary_cable":"4#6 CU + 1#8 V CU","secondary_cable_amp":65,"secondary_verif":"BON","secondary_conduit_rw90":"1\"-1/4 (35)","secondary_conduit_rwu90":"1\"-1/4 (35)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":3.5,"isc_ka":1.1895953348687345,"panel_min":100,"panel_min_current":57.692307692307686,"panel_verif":"BON","al_cable":"3#10 AL + 1#10 V AL","al_cable_amp":25,"al_verif":"BON","al_conduit_rw90":"3/4\" (21)","al_conduit_rwu90":"1\" (27)","al_sec_cable":"4#4 AL + 1#6 V AL","al_sec_cable_amp":65,"al_sec_verif":"BON","al_sec_conduit_rw90":"1\"-1/2 (41)","al_sec_conduit_rwu90":"1\"-1/2 (41)"},{"power":30,"i_primary":36.08439182435161,"i_primary_125":45.10548978043951,"fuse_max":50,"breaker_max":50,"primary_cable":"3#8 CU + 1#10 V CU","primary_cable_amp":50,"primary_verif":"BON","primary_conduit_rw90":"1\" (27)","primary_conduit_rwu90":"1\" (27)","i_secondary":83.27167344081141,"i_secondary_125":104.08959180101427,"secondary_cable":"4#2 CU + 1#6 V CU","secondary_cable_amp":115,"secondary_verif":"BON","secondary_conduit_rw90":"2\" (53)","secondary_conduit_rwu90":"2\" (53)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":3.5,"isc_ka":2.379190669737469,"panel_min":225,"panel_min_current":115.38461538461537,"panel_verif":"BON","al_cable":"3#6 AL + 1#8 V AL","al_cable_amp":50,"al_verif":"BON","al_conduit_rw90":"1\"-1/4 (35)","al_conduit_rwu90":"1\"-1/4 (35)","al_sec_cable":"4#1/0 AL + 1#4 V AL","al_sec_cable_amp":120,"al_sec_verif":"BON","al_sec_conduit_rw90":"2\" (53)","al_sec_conduit_rwu90":"2\" (53)"},{"power":45,"i_primary":54.12658773652742,"i_primary_125":67.65823467065927,"fuse_max":70,"breaker_max":70,"primary_cable":"3#4 CU + 1#8 V CU","primary_cable_amp":85,"primary_verif":"BON","primary_conduit_rw90":"1\"-1/4 (35)","primary_conduit_rwu90":"1\"-1/4 (35)","i_secondary":124.90751016121712,"i_secondary_125":156.1343877015214,"secondary_cable":"4#2/0 CU + 1#6 V CU","secondary_cable_amp":175,"secondary_verif":"BON","secondary_conduit_rw90":"2\"-1/2 (63)","secondary_conduit_rwu90":"2\"-1/2 (63)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":3.5,"isc_ka":3.5687860046062037,"panel_min":225,"panel_min_current":161.53846153846152,"panel_verif":"BON","al_cable":"3#3 AL + 1#6 V AL","al_cable_amp":75,"al_verif":"BON","al_conduit_rw90":"1\"-1/2 (41)","al_conduit_rwu90":"1\"-1/2 (41)","al_sec_cable":"4#4/0 AL + 1#4 V AL","al_sec_cable_amp":180,"al_sec_verif":"BON","al_sec_conduit_rw90":"2\"-1/2 (63)","al_sec_conduit_rwu90":"2\"-1/2 (63)"},{"power":75,"i_primary":90.21097956087904,"i_primary_125":112.7637244510988,"fuse_max":125,"breaker_max":125,"primary_cable":"3#2 CU + 1#6 V CU","primary_cable_amp":115,"primary_verif":"BON","primary_conduit_rw90":"1\"-1/2 (41)","primary_conduit_rwu90":"1\"-1/2 (41)","i_secondary":208.17918360202853,"i_secondary_125":260.22397950253566,"secondary_cable":"4#350 CU + 1#3 V CU","secondary_cable_amp":310,"secondary_verif":"BON","secondary_conduit_rw90":"3\"-1/2 (91)","secondary_conduit_rwu90":"3\" (78)","ground_cu":"#3 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":3.5,"isc_ka":5.947976674343673,"panel_min":400,"panel_min_current":288.46153846153845,"panel_verif":"BON","al_cable":"3#1/0 AL + 1#4 V AL","al_cable_amp":120,"al_verif":"BON","al_conduit_rw90":"2\" (53)","al_conduit_rwu90":"2\" (53)","al_sec_cable":"4#500 AL + 1#1 V AL","al_sec_cable_amp":310,"al_sec_verif":"BON","al_sec_conduit_rw90":"4\" (103)","al_sec_conduit_rwu90":"3\"-1/2 (91)"},{"power":112.5,"i_primary":135.31646934131857,"i_primary_125":169.1455866766482,"fuse_max":175,"breaker_max":175,"primary_cable":"3#2/0 CU + 1#6 V CU","primary_cable_amp":175,"primary_verif":"BON","primary_conduit_rw90":"2\" (53)","primary_conduit_rwu90":"2\" (53)","i_secondary":312.2687754030428,"i_secondary_125":390.3359692538035,"secondary_cable":"2x(4#3/0 CU + 1#4 V CU)","secondary_cable_amp":400,"secondary_verif":"BON","secondary_conduit_rw90":"2\"-1/2 (63)","secondary_conduit_rwu90":"2\"-1/2 (63)","ground_cu":"#3 CU","ground_conduit":"1/2\" (16)","mounting":"P","impedance_min":3.5,"isc_ka":8.921965011515509,"panel_min":600,"panel_min_current":403.8461538461538,"panel_verif":"BON","al_cable":"3#4/0 AL + 1#4 V AL","al_cable_amp":180,"al_verif":"BON","al_conduit_rw90":"2\"-1/2 (63)","al_conduit_rwu90":"2\"-1/2 (63)","al_sec_cable":"2x(4#250 AL + 1#2 V AL)","al_sec_cable_amp":410,"al_sec_verif":"BON","al_sec_conduit_rw90":"3\" (78)","al_sec_conduit_rwu90":"3\" (78)"},{"power":150,"i_primary":180.42195912175808,"i_primary_125":225.5274489021976,"fuse_max":225,"breaker_max":225,"primary_cable":"3#4/0 CU + 1#4 V CU","primary_cable_amp":230,"primary_verif":"BON","primary_conduit_rw90":"2\"-1/2 (63)","primary_conduit_rwu90":"2\"-1/2 (63)","i_secondary":416.35836720405706,"i_secondary_125":520.4479590050713,"secondary_cable":"2x(4#350 CU + 1#3 V CU)","secondary_cable_amp":620,"secondary_verif":"BON","secondary_conduit_rw90":"3\"-1/2 (91)","secondary_conduit_rwu90":"3\" (78)","ground_cu":"#1/0 CU","ground_conduit":"3/4\" (21)","mounting":"P","impedance_min":3.5,"isc_ka":11.895953348687346,"panel_min":600,"panel_min_current":519.2307692307692,"panel_verif":"BON","al_cable":"3#250 CU + 1#4 V CU","al_cable_amp":255,"al_verif":"BON","al_conduit_rw90":"2\"-1/2 (63)","al_conduit_rwu90":"2\"-1/2 (63)","al_sec_cable":"2x(4#500 AL + 1#1 V AL)","al_sec_cable_amp":620,"al_sec_verif":"BON","al_sec_conduit_rw90":"4\" (103)","al_sec_conduit_rwu90":"3\"-1/2 (91)"},{"power":225,"i_primary":270.63293868263713,"i_primary_125":338.2911733532964,"fuse_max":350,"breaker_max":350,"primary_cable":"3#500 CU + 1#3 V CU","primary_cable_amp":380,"primary_verif":"BON","primary_conduit_rw90":"3\"-1/2 (91)","primary_conduit_rwu90":"3\" (78)","i_secondary":624.5375508060856,"i_secondary_125":780.671938507607,"secondary_cable":"3x(4#350 CU + 1#3 V CU)","secondary_cable_amp":930,"secondary_verif":"BON","secondary_conduit_rw90":"3\"-1/2 (91)","secondary_conduit_rwu90":"3\" (78)","ground_cu":"#1/0 CU","ground_conduit":"3/4\" (21)","mounting":"P","impedance_min":3.5,"isc_ka":17.843930023031017,"panel_min":1200,"panel_min_current":807.6923076923076,"panel_verif":"BON","al_cable":"3#750 AL + 1#1/0 V AL","al_cable_amp":385,"al_verif":"BON","al_conduit_rw90":"4\" (103)","al_conduit_rwu90":"4\" (103)","al_sec_cable":"3x(4#500 AL + 1#1 V AL)","al_sec_cable_amp":930,"al_sec_verif":"BON","al_sec_conduit_rw90":"4\" (103)","al_sec_conduit_rwu90":"3\"-1/2 (91)"}]},"D":{"meta":{"id":"D","primary":600,"secondary":"120/240","phase":1},"entries":[{"power":5,"i_primary":8.333333333333334,"i_primary_125":10.416666666666668,"fuse_max":12,"breaker_max":15,"primary_cable":"2#12 CU + 1#12 V CU","primary_cable_amp":20,"primary_verif":"BON","primary_conduit_rw90":"3/4\" (21)","primary_conduit_rwu90":"3/4\" (21)","i_secondary":20.833333333333332,"i_secondary_125":26.041666666666664,"secondary_cable":"3#10 CU + 1#12 V CU","secondary_cable_amp":30,"secondary_verif":"BON","secondary_conduit_rw90":"3/4\" (21)","secondary_conduit_rwu90":"1\" (27)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":5.5,"isc_ka":0.3787878787878788,"panel_min":100,"panel_min_current":30,"panel_verif":"BON","al_cable":"2#12 AL + 1#12 V AL","al_cable_amp":15,"al_verif":"BON","al_conduit_rw90":"3/4\" (21)","al_conduit_rwu90":"3/4\" (21)","al_sec_cable":"3#8 AL + 1#10 V AL","al_sec_cable_amp":30,"al_sec_verif":"BON","al_sec_conduit_rw90":"1\" (27)","al_sec_conduit_rwu90":"1\" (27)"},{"power":7.5,"i_primary":12.5,"i_primary_125":15.625,"fuse_max":15,"breaker_max":15,"primary_cable":"2#12 CU + 1#12 V CU","primary_cable_amp":20,"primary_verif":"BON","primary_conduit_rw90":"3/4\" (21)","primary_conduit_rwu90":"3/4\" (21)","i_secondary":31.25,"i_secondary_125":39.0625,"secondary_cable":"3#8 CU + 1#10 V CU","secondary_cable_amp":50,"secondary_verif":"BON","secondary_conduit_rw90":"1\" (27)","secondary_conduit_rwu90":"1\" (27)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":5.5,"isc_ka":0.5681818181818182,"panel_min":100,"panel_min_current":37.5,"panel_verif":"BON","al_cable":"2#10 AL + 1#10 V AL","al_cable_amp":25,"al_verif":"BON","al_conduit_rw90":"3/4\" (21)","al_conduit_rwu90":"3/4\" (21)","al_sec_cable":"3#6 AL + 1#8 V AL","al_sec_cable_amp":50,"al_sec_verif":"BON","al_sec_conduit_rw90":"1\"-1/4 (35)","al_sec_conduit_rwu90":"1\"-1/4 (35)"},{"power":10,"i_primary":16.666666666666668,"i_primary_125":20.833333333333336,"fuse_max":20,"breaker_max":20,"primary_cable":"2#10 CU + 1#12 V CU","primary_cable_amp":30,"primary_verif":"BON","primary_conduit_rw90":"3/4\" (21)","primary_conduit_rwu90":"3/4\" (21)","i_secondary":41.666666666666664,"i_secondary_125":52.08333333333333,"secondary_cable":"3#6 CU + 1#8 V CU","secondary_cable_amp":65,"secondary_verif":"BON","secondary_conduit_rw90":"1\"-1/4 (35)","secondary_conduit_rwu90":"1\"-1/4 (35)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":5,"isc_ka":0.8333333333333333,"panel_min":100,"panel_min_current":50,"panel_verif":"BON","al_cable":"2#10 AL + 1#10 V AL","al_cable_amp":25,"al_verif":"BON","al_conduit_rw90":"3/4\" (21)","al_conduit_rwu90":"3/4\" (21)","al_sec_cable":"3#4 AL + 1#6 V AL","al_sec_cable_amp":65,"al_sec_verif":"BON","al_sec_conduit_rw90":"1\"-1/4 (35)","al_sec_conduit_rwu90":"1\"-1/4 (35)"},{"power":15,"i_primary":25,"i_primary_125":31.25,"fuse_max":35,"breaker_max":35,"primary_cable":"2#8 CU + 1#10 V CU","primary_cable_amp":50,"primary_verif":"BON","primary_conduit_rw90":"3/4\" (21)","primary_conduit_rwu90":"1\" (27)","i_secondary":62.5,"i_secondary_125":78.125,"secondary_cable":"3#4 CU + 1#8 V CU","secondary_cable_amp":85,"secondary_verif":"BON","secondary_conduit_rw90":"1\"-1/4 (35)","secondary_conduit_rwu90":"1\"-1/4 (35)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":3.5,"isc_ka":1.7857142857142858,"panel_min":100,"panel_min_current":87.5,"panel_verif":"BON","al_cable":"2#6 AL + 1#8 V AL","al_cable_amp":50,"al_verif":"BON","al_conduit_rw90":"1\" (27)","al_conduit_rwu90":"1\" (27)","al_sec_cable":"3#2 AL + 1#6 V AL","al_sec_cable_amp":90,"al_sec_verif":"BON","al_sec_conduit_rw90":"1\"-1/2 (41)","al_sec_conduit_rwu90":"1\"-1/2 (41)"},{"power":25,"i_primary":41.666666666666664,"i_primary_125":52.08333333333333,"fuse_max":60,"breaker_max":60,"primary_cable":"2#6 CU + 1#8 V CU","primary_cable_amp":65,"primary_verif":"BON","primary_conduit_rw90":"1\" (27)","primary_conduit_rwu90":"1\" (27)","i_secondary":104.16666666666667,"i_secondary_125":130.20833333333334,"secondary_cable":"3#1/0 CU + 1#6 V CU","secondary_cable_amp":150,"secondary_verif":"BON","secondary_conduit_rw90":"2\" (53)","secondary_conduit_rwu90":"2\" (53)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":3.5,"isc_ka":2.9761904761904767,"panel_min":225,"panel_min_current":150,"panel_verif":"BON","al_cable":"2#4 AL + 1#6 V AL","al_cable_amp":65,"al_verif":"BON","al_conduit_rw90":"1\"-1/4 (35)","al_conduit_rwu90":"1\"-1/4 (35)","al_sec_cable":"3#3/0 AL + 1#4 V AL","al_sec_cable_amp":155,"al_sec_verif":"BON","al_sec_conduit_rw90":"2\" (53)","al_sec_conduit_rwu90":"2\" (53)"},{"power":37.5,"i_primary":62.5,"i_primary_125":78.125,"fuse_max":80,"breaker_max":80,"primary_cable":"2#4 CU + 1#8 V CU","primary_cable_amp":85,"primary_verif":"BON","primary_conduit_rw90":"1\" (27)","primary_conduit_rwu90":"1\"-1/4 (35)","i_secondary":156.25,"i_secondary_125":195.3125,"secondary_cable":"3#3/0 CU + 1#4 V CU","secondary_cable_amp":200,"secondary_verif":"BON","secondary_conduit_rw90":"2\" (53)","secondary_conduit_rwu90":"2\" (53)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":3.5,"isc_ka":4.464285714285714,"panel_min":225,"panel_min_current":200,"panel_verif":"BON","al_cable":"2#2 AL + 1#6 V AL","al_cable_amp":90,"al_verif":"BON","al_conduit_rw90":"1\"-1/4 (35)","al_conduit_rwu90":"1\"-1/4 (35)","al_sec_cable":"3#250 AL + 1#2 V AL","al_sec_cable_amp":205,"al_sec_verif":"BON","al_sec_conduit_rw90":"2\"-1/2 (63)","al_sec_conduit_rwu90":"2\"-1/2 (63)"},{"power":50,"i_primary":83.33333333333333,"i_primary_125":104.16666666666666,"fuse_max":110,"breaker_max":110,"primary_cable":"2#2 CU + 1#6 V CU","primary_cable_amp":115,"primary_verif":"BON","primary_conduit_rw90":"1\"-1/4 (35)","primary_conduit_rwu90":"1\"-1/4 (35)","i_secondary":208.33333333333334,"i_secondary_125":260.4166666666667,"secondary_cable":"3#350 CU + 1#3 V CU","secondary_cable_amp":310,"secondary_verif":"BON","secondary_conduit_rw90":"3\" (78)","secondary_conduit_rwu90":"3\" (78)","ground_cu":"#3 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":3.5,"isc_ka":5.952380952380953,"panel_min":400,"panel_min_current":275,"panel_verif":"BON","al_cable":"2#1/0 AL + 1#4 V AL","al_cable_amp":120,"al_verif":"BON","al_conduit_rw90":"1\"-1/2 (41)","al_conduit_rwu90":"1\"-1/2 (41)","al_sec_cable":"3#500 AL + 1#1 V AL","al_sec_cable_amp":310,"al_sec_verif":"BON","al_sec_conduit_rw90":"3\"-1/2 (91)","al_sec_conduit_rwu90":"3\" (78)"},{"power":75,"i_primary":125,"i_primary_125":156.25,"fuse_max":175,"breaker_max":175,"primary_cable":"2#2/0 CU + 1#6 V CU","primary_cable_amp":175,"primary_verif":"BON","primary_conduit_rw90":"2\" (53)","primary_conduit_rwu90":"1\"-1/2 (41)","i_secondary":312.5,"i_secondary_125":390.625,"secondary_cable":"2x(3#3/0 CU + 1#4 V CU)","secondary_cable_amp":400,"secondary_verif":"BON","secondary_conduit_rw90":"2\" (53)","secondary_conduit_rwu90":"2\" (53)","ground_cu":"#3 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":3.5,"isc_ka":8.928571428571429,"panel_min":600,"panel_min_current":437.5,"panel_verif":"BON","al_cable":"2#4/0 AL + 1#4 V AL","al_cable_amp":180,"al_verif":"BON","al_conduit_rw90":"2\" (53)","al_conduit_rwu90":"2\" (53)","al_sec_cable":"2x(3#250 AL + 1#2 V AL)","al_sec_cable_amp":410,"al_sec_verif":"BON","al_sec_conduit_rw90":"2\"-1/2 (63)","al_sec_conduit_rwu90":"2\"-1/2 (63)"},{"power":100,"i_primary":166.66666666666666,"i_primary_125":208.33333333333331,"fuse_max":225,"breaker_max":225,"primary_cable":"2#4/0 CU + 1#4 V CU","primary_cable_amp":230,"primary_verif":"BON","primary_conduit_rw90":"2\" (53)","primary_conduit_rwu90":"2\" (53)","i_secondary":416.6666666666667,"i_secondary_125":520.8333333333334,"secondary_cable":"2x(3#350 CU + 1#3 V CU)","secondary_cable_amp":620,"secondary_verif":"BON","secondary_conduit_rw90":"3\" (78)","secondary_conduit_rwu90":"3\" (78)","ground_cu":"#1/0 CU","ground_conduit":"3/4\" (21)","mounting":"P","impedance_min":3.5,"isc_ka":11.904761904761907,"panel_min":600,"panel_min_current":562.5,"panel_verif":"BON","al_cable":"2#350 AL + 1#2 V AL","al_cable_amp":250,"al_verif":"BON","al_conduit_rw90":"2\"-1/2 (63)","al_conduit_rwu90":"2\"-1/2 (63)","al_sec_cable":"2x(3#500 AL + 1#1 V AL)","al_sec_cable_amp":620,"al_sec_verif":"BON","al_sec_conduit_rw90":"3\"-1/2 (91)","al_sec_conduit_rwu90":"3\" (78)"},{"power":150,"i_primary":250,"i_primary_125":312.5,"fuse_max":300,"breaker_max":300,"primary_cable":"2#500 CU + 1#3 V CU","primary_cable_amp":380,"primary_verif":"BON","primary_conduit_rw90":"3\" (78)","primary_conduit_rwu90":"2\"-1/2 (63)","i_secondary":625,"i_secondary_125":781.25,"secondary_cable":"3x(3#350 CU + 1#3 V CU)","secondary_cable_amp":930,"secondary_verif":"BON","secondary_conduit_rw90":"3\" (78)","secondary_conduit_rwu90":"3\" (78)","ground_cu":"#1/0 CU","ground_conduit":"3/4\" (21)","mounting":"P","impedance_min":3.5,"isc_ka":17.857142857142858,"panel_min":800,"panel_min_current":750,"panel_verif":"BON","al_cable":"2#750 AL + 1#1/0 V AL","al_cable_amp":385,"al_verif":"BON","al_conduit_rw90":"3\"-1/2 (91)","al_conduit_rwu90":"3\" (78)","al_sec_cable":"3x(3#500 AL + 1#1 V AL)","al_sec_cable_amp":930,"al_sec_verif":"BON","al_sec_conduit_rw90":"3\"-1/2 (91)","al_sec_conduit_rwu90":"3\" (78)"}]},"E":{"meta":{"id":"E","primary":480,"secondary":"120/240","phase":1},"entries":[{"power":5,"i_primary":10.416666666666666,"i_primary_125":13.020833333333332,"fuse_max":8,"breaker_max":15,"primary_cable":"2#12 CU + 1#12 V CU","primary_cable_amp":20,"primary_verif":"BON","primary_conduit_rw90":"3/4\" (21)","primary_conduit_rwu90":"3/4\" (21)","i_secondary":20.833333333333332,"i_secondary_125":26.041666666666664,"secondary_cable":"3#10 CU + 1#12 V CU","secondary_cable_amp":30,"secondary_verif":"BON","secondary_conduit_rw90":"3/4\" (21)","secondary_conduit_rwu90":"1\" (27)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":3.5,"isc_ka":0.5952380952380952,"panel_min":100,"panel_min_current":16,"panel_verif":"BON","al_cable":"2#12 AL + 1#12 V AL","al_cable_amp":15,"al_verif":"BON","al_conduit_rw90":"3/4\" (21)","al_conduit_rwu90":"3/4\" (21)","al_sec_cable":"3#8 AL + 1#10 V AL","al_sec_cable_amp":30,"al_sec_verif":"BON","al_sec_conduit_rw90":"1\" (27)","al_sec_conduit_rwu90":"1\" (27)"},{"power":7.5,"i_primary":15.625,"i_primary_125":19.53125,"fuse_max":20,"breaker_max":20,"primary_cable":"2#10 CU + 1#12 V CU","primary_cable_amp":30,"primary_verif":"BON","primary_conduit_rw90":"3/4\" (21)","primary_conduit_rwu90":"3/4\" (21)","i_secondary":31.25,"i_secondary_125":39.0625,"secondary_cable":"3#8 CU + 1#10 V CU","secondary_cable_amp":50,"secondary_verif":"BON","secondary_conduit_rw90":"1\" (27)","secondary_conduit_rwu90":"1\" (27)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":3.5,"isc_ka":0.8928571428571429,"panel_min":100,"panel_min_current":40,"panel_verif":"BON","al_cable":"2#10 AL + 1#10 V AL","al_cable_amp":25,"al_verif":"BON","al_conduit_rw90":"3/4\" (21)","al_conduit_rwu90":"3/4\" (21)","al_sec_cable":"3#6 AL + 1#8 V AL","al_sec_cable_amp":50,"al_sec_verif":"BON","al_sec_conduit_rw90":"1\"-1/4 (35)","al_sec_conduit_rwu90":"1\"-1/4 (35)"},{"power":10,"i_primary":20.833333333333332,"i_primary_125":26.041666666666664,"fuse_max":25,"breaker_max":25,"primary_cable":"2#10 CU + 1#12 V CU","primary_cable_amp":30,"primary_verif":"BON","primary_conduit_rw90":"3/4\" (21)","primary_conduit_rwu90":"3/4\" (21)","i_secondary":41.666666666666664,"i_secondary_125":52.08333333333333,"secondary_cable":"3#6 CU + 1#8 V CU","secondary_cable_amp":65,"secondary_verif":"BON","secondary_conduit_rw90":"1\"-1/4 (35)","secondary_conduit_rwu90":"1\"-1/4 (35)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":3.5,"isc_ka":1.1904761904761905,"panel_min":100,"panel_min_current":50,"panel_verif":"BON","al_cable":"2#8 AL + 1#10 V AL","al_cable_amp":30,"al_verif":"BON","al_conduit_rw90":"3/4\" (21)","al_conduit_rwu90":"1\" (27)","al_sec_cable":"3#4 AL + 1#6 V AL","al_sec_cable_amp":65,"al_sec_verif":"BON","al_sec_conduit_rw90":"1\"-1/4 (35)","al_sec_conduit_rwu90":"1\"-1/4 (35)"},{"power":15,"i_primary":31.25,"i_primary_125":39.0625,"fuse_max":40,"breaker_max":40,"primary_cable":"2#8 CU + 1#10 V CU","primary_cable_amp":50,"primary_verif":"BON","primary_conduit_rw90":"3/4\" (21)","primary_conduit_rwu90":"1\" (27)","i_secondary":62.5,"i_secondary_125":78.125,"secondary_cable":"3#4 CU + 1#8 V CU","secondary_cable_amp":85,"secondary_verif":"BON","secondary_conduit_rw90":"1\"-1/4 (35)","secondary_conduit_rwu90":"1\"-1/4 (35)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":3.5,"isc_ka":1.7857142857142858,"panel_min":100,"panel_min_current":80,"panel_verif":"BON","al_cable":"2#6 AL + 1#8 V AL","al_cable_amp":50,"al_verif":"BON","al_conduit_rw90":"1\" (27)","al_conduit_rwu90":"1\" (27)","al_sec_cable":"3#2 AL + 1#6 V AL","al_sec_cable_amp":90,"al_sec_verif":"BON","al_sec_conduit_rw90":"1\"-1/2 (41)","al_sec_conduit_rwu90":"1\"-1/2 (41)"},{"power":25,"i_primary":52.083333333333336,"i_primary_125":65.10416666666667,"fuse_max":70,"breaker_max":70,"primary_cable":"2#4 CU + 1#8 V CU","primary_cable_amp":85,"primary_verif":"BON","primary_conduit_rw90":"1\" (27)","primary_conduit_rwu90":"1\"-1/4 (35)","i_secondary":104.16666666666667,"i_secondary_125":130.20833333333334,"secondary_cable":"3#1 CU + 1#6 V CU","secondary_cable_amp":130,"secondary_verif":"À VÉRIFIER","secondary_conduit_rw90":"2\" (53)","secondary_conduit_rwu90":"2\" (53)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":3.5,"isc_ka":2.9761904761904767,"panel_min":225,"panel_min_current":140,"panel_verif":"BON","al_cable":"2#3 AL + 1#8 V CU","al_cable_amp":75,"al_verif":"BON","al_conduit_rw90":"1\"-1/4 (35)","al_conduit_rwu90":"1\"-1/4 (35)","al_sec_cable":"3#2/0 AL + 1#4 V AL","al_sec_cable_amp":135,"al_sec_verif":"BON","al_sec_conduit_rw90":"2\" (53)","al_sec_conduit_rwu90":"2\" (53)"},{"power":37.5,"i_primary":78.125,"i_primary_125":97.65625,"fuse_max":100,"breaker_max":100,"primary_cable":"2#2 CU + 1#6 V CU","primary_cable_amp":115,"primary_verif":"BON","primary_conduit_rw90":"1\"-1/4 (35)","primary_conduit_rwu90":"1\"-1/4 (35)","i_secondary":156.25,"i_secondary_125":195.3125,"secondary_cable":"3#3/0 CU + 1#4 V CU","secondary_cable_amp":200,"secondary_verif":"BON","secondary_conduit_rw90":"2\" (53)","secondary_conduit_rwu90":"2\" (53)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":3.5,"isc_ka":4.464285714285714,"panel_min":225,"panel_min_current":200,"panel_verif":"BON","al_cable":"2#1/0 AL + 1#4 V AL","al_cable_amp":120,"al_verif":"BON","al_conduit_rw90":"1\"-1/2 (41)","al_conduit_rwu90":"1\"-1/2 (41)","al_sec_cable":"3#250 AL + 1#2 V AL","al_sec_cable_amp":205,"al_sec_verif":"BON","al_sec_conduit_rw90":"2\"-1/2 (63)","al_sec_conduit_rwu90":"2\"-1/2 (63)"},{"power":50,"i_primary":104.16666666666667,"i_primary_125":130.20833333333334,"fuse_max":125,"breaker_max":125,"primary_cable":"2#1/0 CU + 1#6 V CU","primary_cable_amp":150,"primary_verif":"BON","primary_conduit_rw90":"1\"-1/2 (41)","primary_conduit_rwu90":"1\"-1/2 (41)","i_secondary":208.33333333333334,"i_secondary_125":260.4166666666667,"secondary_cable":"3#350 CU + 1#3 V CU","secondary_cable_amp":310,"secondary_verif":"BON","secondary_conduit_rw90":"3\" (78)","secondary_conduit_rwu90":"3\" (78)","ground_cu":"#3 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":3.5,"isc_ka":5.952380952380953,"panel_min":400,"panel_min_current":250,"panel_verif":"BON","al_cable":"2#3/0 AL + 1#4 V AL","al_cable_amp":155,"al_verif":"BON","al_conduit_rw90":"2\" (53)","al_conduit_rwu90":"2\" (53)","al_sec_cable":"3#500 AL + 1#1 V AL","al_sec_cable_amp":310,"al_sec_verif":"BON","al_sec_conduit_rw90":"3\"-1/2 (91)","al_sec_conduit_rwu90":"3\" (78)"},{"power":75,"i_primary":156.25,"i_primary_125":195.3125,"fuse_max":200,"breaker_max":200,"primary_cable":"2#4/0 CU + 1#4 V CU","primary_cable_amp":230,"primary_verif":"BON","primary_conduit_rw90":"2\" (53)","primary_conduit_rwu90":"2\" (53)","i_secondary":312.5,"i_secondary_125":390.625,"secondary_cable":"2x(3#3/0 CU + 1#4 V CU)","secondary_cable_amp":400,"secondary_verif":"BON","secondary_conduit_rw90":"2\" (53)","secondary_conduit_rwu90":"2\" (53)","ground_cu":"#3 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":3.5,"isc_ka":8.928571428571429,"panel_min":400,"panel_min_current":400,"panel_verif":"À VÉRIFIER","al_cable":"2#300 AL + 1#2 V AL","al_cable_amp":230,"al_verif":"BON","al_conduit_rw90":"2\"-1/2 (63)","al_conduit_rwu90":"2\"-1/2 (63)","al_sec_cable":"2x(3#250 AL + 1#2 V AL)","al_sec_cable_amp":410,"al_sec_verif":"BON","al_sec_conduit_rw90":"2\"-1/2 (63)","al_sec_conduit_rwu90":"2\"-1/2 (63)"},{"power":100,"i_primary":208.33333333333334,"i_primary_125":260.4166666666667,"fuse_max":250,"breaker_max":250,"primary_cable":"2#300 CU + 1#4 V CU","primary_cable_amp":285,"primary_verif":"BON","primary_conduit_rw90":"2\"-1/2 (63)","primary_conduit_rwu90":"2\"-1/2 (63)","i_secondary":416.6666666666667,"i_secondary_125":520.8333333333334,"secondary_cable":"2x(3#350 CU + 1#3 V CU)","secondary_cable_amp":620,"secondary_verif":"BON","secondary_conduit_rw90":"3\" (78)","secondary_conduit_rwu90":"3\" (78)","ground_cu":"#1/0 CU","ground_conduit":"3/4\" (21)","mounting":"P","impedance_min":3.5,"isc_ka":11.904761904761907,"panel_min":600,"panel_min_current":500,"panel_verif":"BON","al_cable":"2#500 AL + 1#1 V AL","al_cable_amp":310,"al_verif":"BON","al_conduit_rw90":"3\" (78)","al_conduit_rwu90":"3\" (78)","al_sec_cable":"2x(3#500 AL + 1#1 V AL)","al_sec_cable_amp":620,"al_sec_verif":"BON","al_sec_conduit_rw90":"3\"-1/2 (91)","al_sec_conduit_rwu90":"3\" (78)"},{"power":150,"i_primary":312.5,"i_primary_125":390.625,"fuse_max":400,"breaker_max":400,"primary_cable":"2x(2#4/0 CU + 1#4 V CU)","primary_cable_amp":460,"primary_verif":"BON","primary_conduit_rw90":"2\" (53)","primary_conduit_rwu90":"2\" (53)","i_secondary":625,"i_secondary_125":781.25,"secondary_cable":"3x(3#350 CU + 1#3 V CU)","secondary_cable_amp":930,"secondary_verif":"BON","secondary_conduit_rw90":"3\" (78)","secondary_conduit_rwu90":"3\" (78)","ground_cu":"#1/0 CU","ground_conduit":"3/4\" (21)","mounting":"P","impedance_min":4,"isc_ka":15.625,"panel_min":800,"panel_min_current":800,"panel_verif":"À VÉRIFIER","al_cable":"2x(2#300 AL + 1#2 V AL)","al_cable_amp":460,"al_verif":"BON","al_conduit_rw90":"2\"-1/2 (63)","al_conduit_rwu90":"2\"-1/2 (63)","al_sec_cable":"3x(3#500 AL + 1#1 V AL)","al_sec_cable_amp":930,"al_sec_verif":"BON","al_sec_conduit_rw90":"3\"-1/2 (91)","al_sec_conduit_rwu90":"3\" (78)"}]},"F":{"meta":{"id":"F","primary":575,"secondary":"266/460","phase":3,"vfd":true},"entries":[{"power":9,"i_primary":9.03678682209849,"i_primary_125":11.295983527623113,"fuse_max":12,"breaker_max":15,"primary_cable":"3#12 CU + 1#12 V CU","primary_cable_amp":20,"primary_verif":"BON","primary_conduit_rw90":"3/4\" (21)","primary_conduit_rwu90":"3/4\" (21)","i_secondary":11.295983527623113,"i_secondary_125":14.119979409528892,"secondary_cable":"4#12 CU + 1#12 V CU","secondary_cable_amp":20,"secondary_verif":"BON","secondary_conduit_rw90":"3/4\" (21)","secondary_conduit_rwu90":"1\" (27)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":5,"isc_ka":0.22591967055246226,"panel_min":5,"panel_min_current":null,"panel_verif":null,"al_cable":"3#12 AL + 1#12 V AL","al_cable_amp":15,"al_verif":"BON","al_conduit_rw90":"3/4\" (21)","al_conduit_rwu90":"3/4\" (21)","al_sec_cable":"4#12 AL + 1#12 V AL","al_sec_cable_amp":15,"al_sec_verif":"BON","al_sec_conduit_rw90":"3/4\" (21)","al_sec_conduit_rwu90":"1\" (27)"},{"power":11,"i_primary":11.044961671453711,"i_primary_125":13.80620208931714,"fuse_max":15,"breaker_max":15,"primary_cable":"3#12 CU + 1#12 V CU","primary_cable_amp":20,"primary_verif":"BON","primary_conduit_rw90":"3/4\" (21)","primary_conduit_rwu90":"3/4\" (21)","i_secondary":13.806202089317138,"i_secondary_125":17.25775261164642,"secondary_cable":"4#12 CU + 1#12 V CU","secondary_cable_amp":20,"secondary_verif":"BON","secondary_conduit_rw90":"3/4\" (21)","secondary_conduit_rwu90":"1\" (27)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":5,"isc_ka":0.27612404178634276,"panel_min":8,"panel_min_current":null,"panel_verif":null,"al_cable":"3#12 AL + 1#12 V AL","al_cable_amp":15,"al_verif":"BON","al_conduit_rw90":"3/4\" (21)","al_conduit_rwu90":"3/4\" (21)","al_sec_cable":"4#10 AL + 1#10 V AL","al_sec_cable_amp":25,"al_sec_verif":"BON","al_sec_conduit_rw90":"1\" (27)","al_sec_conduit_rwu90":"1\" (27)"},{"power":14,"i_primary":14.057223945486541,"i_primary_125":17.571529931858176,"fuse_max":17.5,"breaker_max":20,"primary_cable":"3#12 CU + 1#12 V CU","primary_cable_amp":20,"primary_verif":"BON","primary_conduit_rw90":"3/4\" (21)","primary_conduit_rwu90":"3/4\" (21)","i_secondary":17.571529931858176,"i_secondary_125":21.96441241482272,"secondary_cable":"4#10 CU + 1#12 V CU","secondary_cable_amp":30,"secondary_verif":"BON","secondary_conduit_rw90":"3/4\" (21)","secondary_conduit_rwu90":"1\" (27)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":5,"isc_ka":0.3514305986371635,"panel_min":10,"panel_min_current":null,"panel_verif":null,"al_cable":"3#10 AL + 1#10 V AL","al_cable_amp":25,"al_verif":"BON","al_conduit_rw90":"3/4\" (21)","al_conduit_rwu90":"1\" (27)","al_sec_cable":"4#10 AL + 1#10 V AL","al_sec_cable_amp":25,"al_sec_verif":"BON","al_sec_conduit_rw90":"1\" (27)","al_sec_conduit_rwu90":"1\" (27)"},{"power":20,"i_primary":20.0817484935522,"i_primary_125":25.10218561694025,"fuse_max":25,"breaker_max":25,"primary_cable":"3#10 CU + 1#12 V CU","primary_cable_amp":30,"primary_verif":"BON","primary_conduit_rw90":"3/4\" (21)","primary_conduit_rwu90":"1\" (27)","i_secondary":25.10218561694025,"i_secondary_125":31.377732021175312,"secondary_cable":"4#10 CU + 1#12 V CU","secondary_cable_amp":30,"secondary_verif":"À VÉRIFIER","secondary_conduit_rw90":"3/4\" (21)","secondary_conduit_rwu90":"1\" (27)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":3.5,"isc_ka":0.7172053033411501,"panel_min":15,"panel_min_current":null,"panel_verif":null,"al_cable":"3#10 AL + 1#10 V AL","al_cable_amp":25,"al_verif":"À VÉRIFIER","al_conduit_rw90":"3/4\" (21)","al_conduit_rwu90":"1\" (27)","al_sec_cable":"4#8 AL + 1#10 V AL","al_sec_cable_amp":30,"al_sec_verif":"À VÉRIFIER","al_sec_conduit_rw90":"1\" (27)","al_sec_conduit_rwu90":"1\"-1/4 (35)"},{"power":27,"i_primary":27.11036046629547,"i_primary_125":33.88795058286934,"fuse_max":35,"breaker_max":35,"primary_cable":"3#8 CU + 1#10 V CU","primary_cable_amp":50,"primary_verif":"BON","primary_conduit_rw90":"1\" (27)","primary_conduit_rwu90":"1\" (27)","i_secondary":33.88795058286934,"i_secondary_125":42.35993822858667,"secondary_cable":"4#8 CU + 1#10 V CU","secondary_cable_amp":50,"secondary_verif":"BON","secondary_conduit_rw90":"1\" (27)","secondary_conduit_rwu90":"1\"-1/4 (35)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":3.5,"isc_ka":0.9682271595105525,"panel_min":20,"panel_min_current":null,"panel_verif":null,"al_cable":"3#6 AL + 1#8 V AL","al_cable_amp":50,"al_verif":"BON","al_conduit_rw90":"1\"-1/4 (35)","al_conduit_rwu90":"1\"-1/4 (35)","al_sec_cable":"4#6 AL + 1#8 V AL","al_sec_cable_amp":50,"al_sec_verif":"BON","al_sec_conduit_rw90":"1\"-1/4 (35)","al_sec_conduit_rwu90":"1\"-1/4 (35)"},{"power":34,"i_primary":34.138972439038746,"i_primary_125":42.673715548798434,"fuse_max":40,"breaker_max":40,"primary_cable":"3#8 CU + 1#10 V CU","primary_cable_amp":50,"primary_verif":"BON","primary_conduit_rw90":"1\" (27)","primary_conduit_rwu90":"1\" (27)","i_secondary":42.67371554879843,"i_secondary_125":53.34214443599804,"secondary_cable":"4#6 CU + 1#8 V CU","secondary_cable_amp":65,"secondary_verif":"BON","secondary_conduit_rw90":"1\"-1/4 (35)","secondary_conduit_rwu90":"1\"-1/4 (35)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":3.5,"isc_ka":1.2192490156799551,"panel_min":25,"panel_min_current":null,"panel_verif":null,"al_cable":"3#6 AL + 1#8 V AL","al_cable_amp":50,"al_verif":"BON","al_conduit_rw90":"1\"-1/4 (35)","al_conduit_rwu90":"1\"-1/4 (35)","al_sec_cable":"4#4 AL + 1#6 V AL","al_sec_cable_amp":65,"al_sec_verif":"BON","al_sec_conduit_rw90":"1\"-1/2 (41)","al_sec_conduit_rwu90":"1\"-1/2 (41)"},{"power":40,"i_primary":40.1634969871044,"i_primary_125":50.2043712338805,"fuse_max":50,"breaker_max":50,"primary_cable":"3#8 CU + 1#10 V CU","primary_cable_amp":50,"primary_verif":"À VÉRIFIER","primary_conduit_rw90":"1\" (27)","primary_conduit_rwu90":"1\" (27)","i_secondary":50.2043712338805,"i_secondary_125":62.755464042350624,"secondary_cable":"4#6 CU + 1#8 V CU","secondary_cable_amp":65,"secondary_verif":"BON","secondary_conduit_rw90":"1\"-1/4 (35)","secondary_conduit_rwu90":"1\"-1/4 (35)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":3.5,"isc_ka":1.4344106066823001,"panel_min":30,"panel_min_current":null,"panel_verif":null,"al_cable":"3#6 AL + 1#8 V AL","al_cable_amp":50,"al_verif":"À VÉRIFIER","al_conduit_rw90":"1\"-1/4 (35)","al_conduit_rwu90":"1\"-1/4 (35)","al_sec_cable":"4#4 AL + 1#6 V AL","al_sec_cable_amp":65,"al_sec_verif":"BON","al_sec_conduit_rw90":"1\"-1/2 (41)","al_sec_conduit_rwu90":"1\"-1/2 (41)"},{"power":51,"i_primary":51.208458658558115,"i_primary_125":64.01057332319765,"fuse_max":60,"breaker_max":60,"primary_cable":"3#6 CU + 1#8 V CU","primary_cable_amp":65,"primary_verif":"BON","primary_conduit_rw90":"1\"-1/4 (35)","primary_conduit_rwu90":"1\"-1/4 (35)","i_secondary":64.01057332319765,"i_secondary_125":80.01321665399706,"secondary_cable":"4#4 CU + 1#8 V CU","secondary_cable_amp":85,"secondary_verif":"BON","secondary_conduit_rw90":"1\"-1/2 (41)","secondary_conduit_rwu90":"1\"-1/2 (41)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":3.5,"isc_ka":1.828873523519933,"panel_min":40,"panel_min_current":null,"panel_verif":null,"al_cable":"3#4 AL + 1#6 V AL","al_cable_amp":65,"al_verif":"BON","al_conduit_rw90":"1\"-1/4 (35)","al_conduit_rwu90":"1\"-1/4 (35)","al_sec_cable":"4#2 AL + 1#6 V AL","al_sec_cable_amp":90,"al_sec_verif":"BON","al_sec_conduit_rw90":"2\" (53)","al_sec_conduit_rwu90":"2\" (53)"},{"power":63,"i_primary":63.257507754689435,"i_primary_125":79.0718846933618,"fuse_max":80,"breaker_max":80,"primary_cable":"3#4 CU + 1#8 V CU","primary_cable_amp":85,"primary_verif":"BON","primary_conduit_rw90":"1\"-1/4 (35)","primary_conduit_rwu90":"1\"-1/4 (35)","i_secondary":79.0718846933618,"i_secondary_125":98.83985586670224,"secondary_cable":"4#3 CU + 1#6 V CU","secondary_cable_amp":100,"secondary_verif":"BON","secondary_conduit_rw90":"1\"-1/2 (41)","secondary_conduit_rwu90":"1\"-1/2 (41)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":3.5,"isc_ka":2.259196705524623,"panel_min":50,"panel_min_current":null,"panel_verif":null,"al_cable":"3#3 AL + 1#6 V AL","al_cable_amp":75,"al_verif":"À VÉRIFIER","al_conduit_rw90":"1\"-1/2 (41)","al_conduit_rwu90":"1\"-1/2 (41)","al_sec_cable":"4#1 AL + 1#4 V AL","al_sec_cable_amp":100,"al_sec_verif":"BON","al_sec_conduit_rw90":"2\" (53)","al_sec_conduit_rwu90":"2\" (53)"},{"power":75,"i_primary":75.30655685082075,"i_primary_125":94.13319606352594,"fuse_max":90,"breaker_max":90,"primary_cable":"3#3 CU + 1#6 V CU","primary_cable_amp":100,"primary_verif":"BON","primary_conduit_rw90":"1\"-1/2 (41)","primary_conduit_rwu90":"1\"-1/2 (41)","i_secondary":94.13319606352594,"i_secondary_125":117.66649507940743,"secondary_cable":"4#2 CU + 1#6 V CU","secondary_cable_amp":115,"secondary_verif":"À VÉRIFIER","secondary_conduit_rw90":"2\" (53)","secondary_conduit_rwu90":"2\" (53)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":3.5,"isc_ka":2.6895198875293125,"panel_min":60,"panel_min_current":null,"panel_verif":null,"al_cable":"3#2 AL + 1#6 V AL","al_cable_amp":90,"al_verif":"À VÉRIFIER","al_conduit_rw90":"1\"-1/2 (41)","al_conduit_rwu90":"1\"-1/2 (41)","al_sec_cable":"4#1/0 AL + 1#4 V AL","al_sec_cable_amp":120,"al_sec_verif":"BON","al_sec_conduit_rw90":"2\" (53)","al_sec_conduit_rwu90":"2\" (53)"},{"power":93,"i_primary":93.38013049501774,"i_primary_125":116.72516311877217,"fuse_max":110,"breaker_max":110,"primary_cable":"3#2 CU + 1#6 V CU","primary_cable_amp":115,"primary_verif":"À VÉRIFIER","primary_conduit_rw90":"1\"-1/2 (41)","primary_conduit_rwu90":"1\"-1/2 (41)","i_secondary":116.72516311877217,"i_secondary_125":145.9064538984652,"secondary_cable":"4#1/0 CU + 1#6 V CU","secondary_cable_amp":150,"secondary_verif":"BON","secondary_conduit_rw90":"2\" (53)","secondary_conduit_rwu90":"2\" (53)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P","impedance_min":3.5,"isc_ka":3.3350046605363484,"panel_min":75,"panel_min_current":null,"panel_verif":null,"al_cable":"3#1/0 AL + 1#4 V AL","al_cable_amp":120,"al_verif":"BON","al_conduit_rw90":"2\" (53)","al_conduit_rwu90":"2\" (53)","al_sec_cable":"4#3/0 AL + 1#4 V AL","al_sec_cable_amp":155,"al_sec_verif":"BON","al_sec_conduit_rw90":"2\"-1/2 (63)","al_sec_conduit_rwu90":"2\"-1/2 (63)"},{"power":118,"i_primary":118.48231611195799,"i_primary_125":148.1028951399475,"fuse_max":150,"breaker_max":150,"primary_cable":"3#1/0 CU + 1#6 V CU","primary_cable_amp":150,"primary_verif":"BON","primary_conduit_rw90":"2\" (53)","primary_conduit_rwu90":"2\" (53)","i_secondary":148.1028951399475,"i_secondary_125":185.12861892493436,"secondary_cable":"4#3/0 CU + 1#4 V CU","secondary_cable_amp":200,"secondary_verif":"BON","secondary_conduit_rw90":"2\"-1/2 (63)","secondary_conduit_rwu90":"2\"-1/2 (63)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P","impedance_min":3.5,"isc_ka":4.231511289712786,"panel_min":100,"panel_min_current":null,"panel_verif":null,"al_cable":"3#3/0 AL + 1#4 V AL","al_cable_amp":155,"al_verif":"BON","al_conduit_rw90":"2\" (53)","al_conduit_rwu90":"2\" (53)","al_sec_cable":"4#4/0 AL + 1#4 V AL","al_sec_cable_amp":180,"al_sec_verif":"À VÉRIFIER","al_sec_conduit_rw90":"2\"-1/2 (63)","al_sec_conduit_rwu90":"2\"-1/2 (63)"},{"power":145,"i_primary":145.59267657825347,"i_primary_125":181.99084572281686,"fuse_max":175,"breaker_max":175,"primary_cable":"3#2/0 CU + 1#6 V CU","primary_cable_amp":175,"primary_verif":"À VÉRIFIER","primary_conduit_rw90":"2\" (53)","primary_conduit_rwu90":"2\" (53)","i_secondary":181.99084572281683,"i_secondary_125":227.48855715352104,"secondary_cable":"4#4/0 CU + 1#4 V CU","secondary_cable_amp":230,"secondary_verif":"BON","secondary_conduit_rw90":"2\"-1/2 (63)","secondary_conduit_rwu90":"2\"-1/2 (63)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P","impedance_min":3.5,"isc_ka":5.1997384492233385,"panel_min":125,"panel_min_current":null,"panel_verif":null,"al_cable":"3#4/0 AL + 1#4 V AL","al_cable_amp":180,"al_verif":"À VÉRIFIER","al_conduit_rw90":"2\"-1/2 (63)","al_conduit_rwu90":"2\"-1/2 (63)","al_sec_cable":"4#350 AL + 1#2 V AL","al_sec_cable_amp":250,"al_sec_verif":"BON","al_sec_conduit_rw90":"3\"-1/2 (91)","al_sec_conduit_rwu90":"3\" (78)"},{"power":175,"i_primary":175.71529931858177,"i_primary_125":219.6441241482272,"fuse_max":225,"breaker_max":225,"primary_cable":"3#4/0 CU + 1#4 V CU","primary_cable_amp":230,"primary_verif":"BON","primary_conduit_rw90":"2\"-1/2 (63)","primary_conduit_rwu90":"2\"-1/2 (63)","i_secondary":219.6441241482272,"i_secondary_125":274.555155185284,"secondary_cable":"4#350 CU + 1#3 V CU","secondary_cable_amp":310,"secondary_verif":"BON","secondary_conduit_rw90":"3\"-1/2 (91)","secondary_conduit_rwu90":"3\" (78)","ground_cu":"#3 CU","ground_conduit":"1/2\" (16)","mounting":"P","impedance_min":3.5,"isc_ka":6.2755464042350635,"panel_min":150,"panel_min_current":null,"panel_verif":null,"al_cable":"3#350 AL + 1#2 V AL","al_cable_amp":250,"al_verif":"BON","al_conduit_rw90":"3\" (78)","al_conduit_rwu90":"3\" (78)","al_sec_cable":"4#500 AL + 1#1 V AL","al_sec_cable_amp":310,"al_sec_verif":"BON","al_sec_conduit_rw90":"4\" (103)","al_sec_conduit_rwu90":"3\"-1/2 (91)"},{"power":220,"i_primary":220.89923342907423,"i_primary_125":276.1240417863428,"fuse_max":300,"breaker_max":300,"primary_cable":"3#350 CU + 1#3 V CU","primary_cable_amp":310,"primary_verif":"BON","primary_conduit_rw90":"3\" (78)","primary_conduit_rwu90":"3\" (78)","i_secondary":276.1240417863428,"i_secondary_125":345.1550522329285,"secondary_cable":"4#500 CU + 1#3 V CU","secondary_cable_amp":380,"secondary_verif":"BON","secondary_conduit_rw90":"3\"-1/2 (91)","secondary_conduit_rwu90":"3\"-1/2 (91)","ground_cu":"#3 CU","ground_conduit":"1/2\" (16)","mounting":"P","impedance_min":3.5,"isc_ka":7.889258336752651,"panel_min":200,"panel_min_current":null,"panel_verif":null,"al_cable":"3#500 AL + 1#1 V AL","al_cable_amp":310,"al_verif":"BON","al_conduit_rw90":"3\"-1/2 (91)","al_conduit_rwu90":"3\" (78)","al_sec_cable":"4#750 AL + 1#1/0 V AL","al_sec_cable_amp":385,"al_sec_verif":"BON","al_sec_conduit_rw90":"5\" (129)","al_sec_conduit_rwu90":"5\" (129)"},{"power":275,"i_primary":276.1240417863428,"i_primary_125":345.1550522329285,"fuse_max":350,"breaker_max":350,"primary_cable":"2x(3#2/0 CU + 1#6 V CU)","primary_cable_amp":350,"primary_verif":"BON","primary_conduit_rw90":"2\" (53)","primary_conduit_rwu90":"2\" (53)","i_secondary":345.1550522329284,"i_secondary_125":431.44381529116055,"secondary_cable":"2x(4#4/0 CU + 1#4 V CU)","secondary_cable_amp":460,"secondary_verif":"BON","secondary_conduit_rw90":"2\"-1/2 (63)","secondary_conduit_rwu90":"2\"-1/2 (63)","ground_cu":"#3 CU","ground_conduit":"1/2\" (16)","mounting":"P","impedance_min":4,"isc_ka":8.62887630582321,"panel_min":250,"panel_min_current":null,"panel_verif":null,"al_cable":"2x(3#4/0 AL + 1#4 V AL)","al_cable_amp":360,"al_verif":"BON","al_conduit_rw90":"2\"-1/2 (63)","al_conduit_rwu90":"2\"-1/2 (63)","al_sec_cable":"2x(4#350 AL + 1#2 V AL)","al_sec_cable_amp":500,"al_sec_verif":"BON","al_sec_conduit_rw90":"3\"-1/2 (91)","al_sec_conduit_rwu90":"3\" (78)"},{"power":330,"i_primary":331.34885014361134,"i_primary_125":414.1860626795142,"fuse_max":400,"breaker_max":400,"primary_cable":"2x(3#3/0 CU + 1#4 V CU)","primary_cable_amp":400,"primary_verif":"À VÉRIFIER","primary_conduit_rw90":"2\" (53)","primary_conduit_rwu90":"2\" (53)","i_secondary":414.1860626795141,"i_secondary_125":517.7325783493926,"secondary_cable":"2x(4#250 CU + 1#4 V CU)","secondary_cable_amp":510,"secondary_verif":"À VÉRIFIER","secondary_conduit_rw90":"3\" (78)","secondary_conduit_rwu90":"3\" (78)","ground_cu":"#1/0 CU","ground_conduit":"3/4\" (21)","mounting":"P","impedance_min":4,"isc_ka":10.354651566987853,"panel_min":300,"panel_min_current":null,"panel_verif":null,"al_cable":"2x(3#250 AL + 1#2 V AL)","al_cable_amp":410,"al_verif":"À VÉRIFIER","al_conduit_rw90":"2\"-1/2 (63)","al_conduit_rwu90":"2\"-1/2 (63)","al_sec_cable":"2x(4#350 AL + 1#2 V AL)","al_sec_cable_amp":500,"al_sec_verif":"À VÉRIFIER","al_sec_conduit_rw90":"3\"-1/2 (91)","al_sec_conduit_rwu90":"3\" (78)"},{"power":440,"i_primary":441.79846685814846,"i_primary_125":552.2480835726856,"fuse_max":600,"breaker_max":600,"primary_cable":"2x(3#350 CU + 1#3 V CU)","primary_cable_amp":620,"primary_verif":"BON","primary_conduit_rw90":"3\" (78)","primary_conduit_rwu90":"3\" (78)","i_secondary":552.2480835726856,"i_secondary_125":690.310104465857,"secondary_cable":"2x(4#500 CU + 1#3 V CU)","secondary_cable_amp":760,"secondary_verif":"BON","secondary_conduit_rw90":"3\"-1/2 (91)","secondary_conduit_rwu90":"3\"-1/2 (91)","ground_cu":"#1/0 CU","ground_conduit":"3/4\" (21)","mounting":"P","impedance_min":4,"isc_ka":13.80620208931714,"panel_min":400,"panel_min_current":null,"panel_verif":null,"al_cable":"2x(3#500 AL + 1#1 V AL)","al_cable_amp":620,"al_verif":"BON","al_conduit_rw90":"3\"-1/2 (91)","al_conduit_rwu90":"3\" (78)","al_sec_cable":"2x(4#750 AL + 1#1/0 V AL)","al_sec_cable_amp":770,"al_sec_verif":"BON","al_sec_conduit_rw90":"5\" (129)","al_sec_conduit_rwu90":"5\" (129)"},{"power":550,"i_primary":552.2480835726856,"i_primary_125":690.310104465857,"fuse_max":700,"breaker_max":700,"primary_cable":"2x(3#500 CU + 1#3 V CU)","primary_cable_amp":760,"primary_verif":"BON","primary_conduit_rw90":"3\"-1/2 (91)","primary_conduit_rwu90":"3\" (78)","i_secondary":690.3101044658569,"i_secondary_125":862.8876305823211,"secondary_cable":"3x(4#350 CU + 1#3 V CU)","secondary_cable_amp":930,"secondary_verif":"BON","secondary_conduit_rw90":"3\"-1/2 (91)","secondary_conduit_rwu90":"3\" (78)","ground_cu":"#1/0 CU","ground_conduit":"3/4\" (21)","mounting":"P","impedance_min":4,"isc_ka":17.25775261164642,"panel_min":500,"panel_min_current":null,"panel_verif":null,"al_cable":"2x(3#750 AL + 1#1/0 V AL)","al_cable_amp":770,"al_verif":"BON","al_conduit_rw90":"4\" (103)","al_conduit_rwu90":"4\" (103)","al_sec_cable":"3x(4#500 AL + 1#1 V AL)","al_sec_cable_amp":930,"al_sec_verif":"BON","al_sec_conduit_rw90":"4\" (103)","al_sec_conduit_rwu90":"3\"-1/2 (91)"}]},"G":{"meta":{"id":"G","primary":460,"secondary":"266/460","phase":3,"vfd":true},"entries":[{"power":9,"i_primary":11.295983527623113,"i_primary_125":14.119979409528892,"fuse_max":15,"breaker_max":15,"primary_cable":"3#12 CU + 1#12 V CU","primary_cable_amp":20,"primary_verif":"BON","primary_conduit_rw90":"3/4\" (21)","primary_conduit_rwu90":"3/4\" (21)","i_secondary":11.295983527623113,"i_secondary_125":14.119979409528892,"secondary_cable":"4#12 CU + 1#12 V CU","secondary_cable_amp":20,"secondary_verif":"BON","secondary_conduit_rw90":"3/4\" (21)","secondary_conduit_rwu90":"1\" (27)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":5,"isc_ka":0.22591967055246226,"panel_min":5,"panel_min_current":null,"panel_verif":null,"al_cable":"3#12 AL + 1#12 V AL","al_cable_amp":15,"al_verif":"BON","al_conduit_rw90":"3/4\" (21)","al_conduit_rwu90":"3/4\" (21)","al_sec_cable":"4#12 AL + 1#12 V AL","al_sec_cable_amp":15,"al_sec_verif":"BON","al_sec_conduit_rw90":"3/4\" (21)","al_sec_conduit_rwu90":"1\" (27)"},{"power":11,"i_primary":13.806202089317138,"i_primary_125":17.25775261164642,"fuse_max":17.5,"breaker_max":20,"primary_cable":"3#12 CU + 1#12 V CU","primary_cable_amp":20,"primary_verif":"BON","primary_conduit_rw90":"3/4\" (21)","primary_conduit_rwu90":"3/4\" (21)","i_secondary":13.806202089317138,"i_secondary_125":17.25775261164642,"secondary_cable":"4#12 CU + 1#12 V CU","secondary_cable_amp":20,"secondary_verif":"BON","secondary_conduit_rw90":"3/4\" (21)","secondary_conduit_rwu90":"1\" (27)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":5,"isc_ka":0.27612404178634276,"panel_min":8,"panel_min_current":null,"panel_verif":null,"al_cable":"3#10 AL + 1#10 V AL","al_cable_amp":25,"al_verif":"BON","al_conduit_rw90":"3/4\" (21)","al_conduit_rwu90":"1\" (27)","al_sec_cable":"4#10 AL + 1#10 V AL","al_sec_cable_amp":25,"al_sec_verif":"BON","al_sec_conduit_rw90":"1\" (27)","al_sec_conduit_rwu90":"1\" (27)"},{"power":14,"i_primary":17.571529931858176,"i_primary_125":21.96441241482272,"fuse_max":25,"breaker_max":25,"primary_cable":"3#10 CU + 1#12 V CU","primary_cable_amp":30,"primary_verif":"BON","primary_conduit_rw90":"3/4\" (21)","primary_conduit_rwu90":"1\" (27)","i_secondary":17.571529931858176,"i_secondary_125":21.96441241482272,"secondary_cable":"4#10 CU + 1#12 V CU","secondary_cable_amp":30,"secondary_verif":"BON","secondary_conduit_rw90":"3/4\" (21)","secondary_conduit_rwu90":"1\" (27)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":5,"isc_ka":0.3514305986371635,"panel_min":10,"panel_min_current":null,"panel_verif":null,"al_cable":"3#10 AL + 1#10 V AL","al_cable_amp":25,"al_verif":"BON","al_conduit_rw90":"3/4\" (21)","al_conduit_rwu90":"1\" (27)","al_sec_cable":"4#10 AL + 1#10 V AL","al_sec_cable_amp":25,"al_sec_verif":"BON","al_sec_conduit_rw90":"1\" (27)","al_sec_conduit_rwu90":"1\" (27)"},{"power":20,"i_primary":25.10218561694025,"i_primary_125":31.377732021175312,"fuse_max":30,"breaker_max":30,"primary_cable":"3#10 CU + 1#12 V CU","primary_cable_amp":30,"primary_verif":"À VÉRIFIER","primary_conduit_rw90":"3/4\" (21)","primary_conduit_rwu90":"1\" (27)","i_secondary":25.10218561694025,"i_secondary_125":31.377732021175312,"secondary_cable":"4#10 CU + 1#12 V CU","secondary_cable_amp":30,"secondary_verif":"À VÉRIFIER","secondary_conduit_rw90":"3/4\" (21)","secondary_conduit_rwu90":"1\" (27)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":3.5,"isc_ka":0.7172053033411501,"panel_min":15,"panel_min_current":null,"panel_verif":null,"al_cable":"3#6 AL + 1#8 V AL","al_cable_amp":50,"al_verif":"BON","al_conduit_rw90":"1\"-1/4 (35)","al_conduit_rwu90":"1\"-1/4 (35)","al_sec_cable":"4#8 AL + 1#10 V AL","al_sec_cable_amp":30,"al_sec_verif":"À VÉRIFIER","al_sec_conduit_rw90":"1\" (27)","al_sec_conduit_rwu90":"1\"-1/4 (35)"},{"power":27,"i_primary":33.88795058286934,"i_primary_125":42.35993822858667,"fuse_max":40,"breaker_max":40,"primary_cable":"3#8 CU + 1#10 V CU","primary_cable_amp":50,"primary_verif":"BON","primary_conduit_rw90":"1\" (27)","primary_conduit_rwu90":"1\" (27)","i_secondary":33.88795058286934,"i_secondary_125":42.35993822858667,"secondary_cable":"4#8 CU + 1#10 V CU","secondary_cable_amp":50,"secondary_verif":"BON","secondary_conduit_rw90":"1\" (27)","secondary_conduit_rwu90":"1\"-1/4 (35)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":3.5,"isc_ka":0.9682271595105525,"panel_min":20,"panel_min_current":null,"panel_verif":null,"al_cable":"3#6 AL + 1#8 V AL","al_cable_amp":50,"al_verif":"BON","al_conduit_rw90":"1\"-1/4 (35)","al_conduit_rwu90":"1\"-1/4 (35)","al_sec_cable":"4#6 AL + 1#8 V AL","al_sec_cable_amp":50,"al_sec_verif":"BON","al_sec_conduit_rw90":"1\"-1/4 (35)","al_sec_conduit_rwu90":"1\"-1/4 (35)"},{"power":34,"i_primary":42.67371554879843,"i_primary_125":53.34214443599804,"fuse_max":50,"breaker_max":50,"primary_cable":"3#6 CU + 1#8 V CU","primary_cable_amp":65,"primary_verif":"BON","primary_conduit_rw90":"1\"-1/4 (35)","primary_conduit_rwu90":"1\"-1/4 (35)","i_secondary":42.67371554879843,"i_secondary_125":53.34214443599804,"secondary_cable":"4#6 CU + 1#8 V CU","secondary_cable_amp":65,"secondary_verif":"BON","secondary_conduit_rw90":"1\"-1/4 (35)","secondary_conduit_rwu90":"1\"-1/4 (35)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":3.5,"isc_ka":1.2192490156799551,"panel_min":25,"panel_min_current":null,"panel_verif":null,"al_cable":"3#4 AL + 1#6 V AL","al_cable_amp":65,"al_verif":"BON","al_conduit_rw90":"1\"-1/4 (35)","al_conduit_rwu90":"1\"-1/4 (35)","al_sec_cable":"4#4 AL + 1#6 V AL","al_sec_cable_amp":65,"al_sec_verif":"BON","al_sec_conduit_rw90":"1\"-1/2 (41)","al_sec_conduit_rwu90":"1\"-1/2 (41)"},{"power":40,"i_primary":50.2043712338805,"i_primary_125":62.755464042350624,"fuse_max":60,"breaker_max":60,"primary_cable":"3#6 CU + 1#8 V CU","primary_cable_amp":65,"primary_verif":"BON","primary_conduit_rw90":"1\"-1/4 (35)","primary_conduit_rwu90":"1\"-1/4 (35)","i_secondary":50.2043712338805,"i_secondary_125":62.755464042350624,"secondary_cable":"4#6 CU + 1#8 V CU","secondary_cable_amp":65,"secondary_verif":"BON","secondary_conduit_rw90":"1\"-1/4 (35)","secondary_conduit_rwu90":"1\"-1/4 (35)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":3.5,"isc_ka":1.4344106066823001,"panel_min":30,"panel_min_current":null,"panel_verif":null,"al_cable":"3#4 AL + 1#6 V AL","al_cable_amp":65,"al_verif":"BON","al_conduit_rw90":"1\"-1/4 (35)","al_conduit_rwu90":"1\"-1/4 (35)","al_sec_cable":"4#4 AL + 1#6 V AL","al_sec_cable_amp":65,"al_sec_verif":"BON","al_sec_conduit_rw90":"1\"-1/2 (41)","al_sec_conduit_rwu90":"1\"-1/2 (41)"},{"power":51,"i_primary":64.01057332319765,"i_primary_125":80.01321665399706,"fuse_max":80,"breaker_max":80,"primary_cable":"3#4 CU + 1#8 V CU","primary_cable_amp":85,"primary_verif":"BON","primary_conduit_rw90":"1\"-1/4 (35)","primary_conduit_rwu90":"1\"-1/4 (35)","i_secondary":64.01057332319765,"i_secondary_125":80.01321665399706,"secondary_cable":"4#4 CU + 1#8 V CU","secondary_cable_amp":85,"secondary_verif":"BON","secondary_conduit_rw90":"1\"-1/2 (41)","secondary_conduit_rwu90":"1\"-1/2 (41)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":3.5,"isc_ka":1.828873523519933,"panel_min":40,"panel_min_current":null,"panel_verif":null,"al_cable":"3#2 AL + 1#6 V AL","al_cable_amp":90,"al_verif":"BON","al_conduit_rw90":"1\"-1/2 (41)","al_conduit_rwu90":"1\"-1/2 (41)","al_sec_cable":"4#2 AL + 1#6 V AL","al_sec_cable_amp":90,"al_sec_verif":"BON","al_sec_conduit_rw90":"2\" (53)","al_sec_conduit_rwu90":"2\" (53)"},{"power":63,"i_primary":79.0718846933618,"i_primary_125":98.83985586670224,"fuse_max":100,"breaker_max":100,"primary_cable":"3#3 CU + 1#6 V CU","primary_cable_amp":100,"primary_verif":"BON","primary_conduit_rw90":"1\"-1/2 (41)","primary_conduit_rwu90":"1\"-1/2 (41)","i_secondary":79.0718846933618,"i_secondary_125":98.83985586670224,"secondary_cable":"4#3 CU + 1#6 V CU","secondary_cable_amp":100,"secondary_verif":"BON","secondary_conduit_rw90":"1\"-1/2 (41)","secondary_conduit_rwu90":"1\"-1/2 (41)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":3.5,"isc_ka":2.259196705524623,"panel_min":50,"panel_min_current":null,"panel_verif":null,"al_cable":"3#1 AL + 1#4 V AL","al_cable_amp":100,"al_verif":"BON","al_conduit_rw90":"2\" (53)","al_conduit_rwu90":"2\" (53)","al_sec_cable":"4#1 AL + 1#4 V AL","al_sec_cable_amp":100,"al_sec_verif":"BON","al_sec_conduit_rw90":"2\" (53)","al_sec_conduit_rwu90":"2\" (53)"},{"power":75,"i_primary":94.13319606352594,"i_primary_125":117.66649507940743,"fuse_max":110,"breaker_max":110,"primary_cable":"3#2 CU + 1#6 V CU","primary_cable_amp":115,"primary_verif":"À VÉRIFIER","primary_conduit_rw90":"1\"-1/2 (41)","primary_conduit_rwu90":"1\"-1/2 (41)","i_secondary":94.13319606352594,"i_secondary_125":117.66649507940743,"secondary_cable":"4#2 CU + 1#6 V CU","secondary_cable_amp":115,"secondary_verif":"À VÉRIFIER","secondary_conduit_rw90":"2\" (53)","secondary_conduit_rwu90":"2\" (53)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P/M","impedance_min":3.5,"isc_ka":2.6895198875293125,"panel_min":60,"panel_min_current":null,"panel_verif":null,"al_cable":"3#1/0 AL + 1#4 V AL","al_cable_amp":120,"al_verif":"BON","al_conduit_rw90":"2\" (53)","al_conduit_rwu90":"2\" (53)","al_sec_cable":"4#1/0 AL + 1#4 V AL","al_sec_cable_amp":120,"al_sec_verif":"BON","al_sec_conduit_rw90":"2\" (53)","al_sec_conduit_rwu90":"2\" (53)"},{"power":93,"i_primary":116.72516311877217,"i_primary_125":145.9064538984652,"fuse_max":150,"breaker_max":150,"primary_cable":"3#1/0 CU + 1#6 V CU","primary_cable_amp":150,"primary_verif":"BON","primary_conduit_rw90":"2\" (53)","primary_conduit_rwu90":"2\" (53)","i_secondary":116.72516311877217,"i_secondary_125":145.9064538984652,"secondary_cable":"4#1/0 CU + 1#6 V CU","secondary_cable_amp":150,"secondary_verif":"BON","secondary_conduit_rw90":"2\" (53)","secondary_conduit_rwu90":"2\" (53)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P","impedance_min":3.5,"isc_ka":3.3350046605363484,"panel_min":75,"panel_min_current":null,"panel_verif":null,"al_cable":"3#3/0 AL + 1#4 V AL","al_cable_amp":155,"al_verif":"BON","al_conduit_rw90":"2\" (53)","al_conduit_rwu90":"2\" (53)","al_sec_cable":"4#3/0 AL + 1#4 V AL","al_sec_cable_amp":155,"al_sec_verif":"BON","al_sec_conduit_rw90":"2\"-1/2 (63)","al_sec_conduit_rwu90":"2\"-1/2 (63)"},{"power":118,"i_primary":148.1028951399475,"i_primary_125":185.12861892493436,"fuse_max":175,"breaker_max":175,"primary_cable":"3#3/0 CU + 1#4 V CU","primary_cable_amp":200,"primary_verif":"BON","primary_conduit_rw90":"2\" (53)","primary_conduit_rwu90":"2\" (53)","i_secondary":148.1028951399475,"i_secondary_125":185.12861892493436,"secondary_cable":"4#3/0 CU + 1#4 V CU","secondary_cable_amp":200,"secondary_verif":"BON","secondary_conduit_rw90":"2\"-1/2 (63)","secondary_conduit_rwu90":"2\"-1/2 (63)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P","impedance_min":3.5,"isc_ka":4.231511289712786,"panel_min":100,"panel_min_current":null,"panel_verif":null,"al_cable":"3#4/0 AL + 1#4 V AL","al_cable_amp":180,"al_verif":"À VÉRIFIER","al_conduit_rw90":"2\"-1/2 (63)","al_conduit_rwu90":"2\"-1/2 (63)","al_sec_cable":"4#4/0 AL + 1#4 V AL","al_sec_cable_amp":180,"al_sec_verif":"À VÉRIFIER","al_sec_conduit_rw90":"2\"-1/2 (63)","al_sec_conduit_rwu90":"2\"-1/2 (63)"},{"power":145,"i_primary":181.99084572281683,"i_primary_125":227.48855715352104,"fuse_max":225,"breaker_max":225,"primary_cable":"3#4/0 CU + 1#4 V CU","primary_cable_amp":230,"primary_verif":"BON","primary_conduit_rw90":"2\"-1/2 (63)","primary_conduit_rwu90":"2\"-1/2 (63)","i_secondary":181.99084572281683,"i_secondary_125":227.48855715352104,"secondary_cable":"4#4/0 CU + 1#4 V CU","secondary_cable_amp":230,"secondary_verif":"BON","secondary_conduit_rw90":"2\"-1/2 (63)","secondary_conduit_rwu90":"2\"-1/2 (63)","ground_cu":"#6 CU","ground_conduit":"1/2\" (16)","mounting":"P","impedance_min":3.5,"isc_ka":5.1997384492233385,"panel_min":125,"panel_min_current":null,"panel_verif":null,"al_cable":"3#350 AL + 1#2 V AL","al_cable_amp":250,"al_verif":"BON","al_conduit_rw90":"3\" (78)","al_conduit_rwu90":"3\" (78)","al_sec_cable":"4#350 AL + 1#2 V AL","al_sec_cable_amp":250,"al_sec_verif":"BON","al_sec_conduit_rw90":"3\"-1/2 (91)","al_sec_conduit_rwu90":"3\" (78)"},{"power":175,"i_primary":219.6441241482272,"i_primary_125":274.555155185284,"fuse_max":300,"breaker_max":300,"primary_cable":"3#350 CU + 1#3 V CU","primary_cable_amp":310,"primary_verif":"BON","primary_conduit_rw90":"3\" (78)","primary_conduit_rwu90":"3\" (78)","i_secondary":219.6441241482272,"i_secondary_125":274.555155185284,"secondary_cable":"4#350 CU + 1#3 V CU","secondary_cable_amp":310,"secondary_verif":"BON","secondary_conduit_rw90":"3\"-1/2 (91)","secondary_conduit_rwu90":"3\" (78)","ground_cu":"#3 CU","ground_conduit":"1/2\" (16)","mounting":"P","impedance_min":3.5,"isc_ka":6.2755464042350635,"panel_min":150,"panel_min_current":null,"panel_verif":null,"al_cable":"3#500 AL + 1#1 V AL","al_cable_amp":310,"al_verif":"BON","al_conduit_rw90":"3\"-1/2 (91)","al_conduit_rwu90":"3\" (78)","al_sec_cable":"4#500 AL + 1#1 V AL","al_sec_cable_amp":310,"al_sec_verif":"BON","al_sec_conduit_rw90":"4\" (103)","al_sec_conduit_rwu90":"3\"-1/2 (91)"},{"power":220,"i_primary":276.1240417863428,"i_primary_125":345.1550522329285,"fuse_max":350,"breaker_max":350,"primary_cable":"3#500 CU + 1#3 V CU","primary_cable_amp":380,"primary_verif":"BON","primary_conduit_rw90":"3\"-1/2 (91)","primary_conduit_rwu90":"3\" (78)","i_secondary":276.1240417863428,"i_secondary_125":345.1550522329285,"secondary_cable":"4#500 CU + 1#3 V CU","secondary_cable_amp":380,"secondary_verif":"BON","secondary_conduit_rw90":"3\"-1/2 (91)","secondary_conduit_rwu90":"3\"-1/2 (91)","ground_cu":"#3 CU","ground_conduit":"1/2\" (16)","mounting":"P","impedance_min":3.5,"isc_ka":7.889258336752651,"panel_min":200,"panel_min_current":null,"panel_verif":null,"al_cable":"3#750 AL + 1#1/0 V AL","al_cable_amp":385,"al_verif":"BON","al_conduit_rw90":"4\" (103)","al_conduit_rwu90":"4\" (103)","al_sec_cable":"4#750 AL + 1#1/0 V AL","al_sec_cable_amp":385,"al_sec_verif":"BON","al_sec_conduit_rw90":"5\" (129)","al_sec_conduit_rwu90":"5\" (129)"},{"power":275,"i_primary":345.1550522329284,"i_primary_125":431.44381529116055,"fuse_max":450,"breaker_max":450,"primary_cable":"2x(3#4/0 CU + 1#4 V CU)","primary_cable_amp":460,"primary_verif":"BON","primary_conduit_rw90":"2\"-1/2 (63)","primary_conduit_rwu90":"2\"-1/2 (63)","i_secondary":345.1550522329284,"i_secondary_125":431.44381529116055,"secondary_cable":"2x(4#4/0 CU + 1#4 V CU)","secondary_cable_amp":460,"secondary_verif":"BON","secondary_conduit_rw90":"2\"-1/2 (63)","secondary_conduit_rwu90":"2\"-1/2 (63)","ground_cu":"#3 CU","ground_conduit":"1/2\" (16)","mounting":"P","impedance_min":4,"isc_ka":8.62887630582321,"panel_min":250,"panel_min_current":null,"panel_verif":null,"al_cable":"2x(3#350 AL + 1#2 V AL)","al_cable_amp":500,"al_verif":"BON","al_conduit_rw90":"3\" (78)","al_conduit_rwu90":"3\" (78)","al_sec_cable":"2x(4#350 AL + 1#2 V AL)","al_sec_cable_amp":500,"al_sec_verif":"BON","al_sec_conduit_rw90":"3\"-1/2 (91)","al_sec_conduit_rwu90":"3\" (78)"},{"power":330,"i_primary":414.1860626795141,"i_primary_125":517.7325783493926,"fuse_max":500,"breaker_max":500,"primary_cable":"2x(3#250 CU + 1#4 V CU)","primary_cable_amp":510,"primary_verif":"À VÉRIFIER","primary_conduit_rw90":"2\"-1/2 (63)","primary_conduit_rwu90":"2\"-1/2 (63)","i_secondary":414.1860626795141,"i_secondary_125":517.7325783493926,"secondary_cable":"2x(4#250 CU + 1#4 V CU)","secondary_cable_amp":510,"secondary_verif":"À VÉRIFIER","secondary_conduit_rw90":"3\" (78)","secondary_conduit_rwu90":"3\" (78)","ground_cu":"#1/0 CU","ground_conduit":"3/4\" (21)","mounting":"P","impedance_min":4,"isc_ka":10.354651566987853,"panel_min":300,"panel_min_current":null,"panel_verif":null,"al_cable":"2x(3#350 AL + 1#2 V AL)","al_cable_amp":500,"al_verif":"À VÉRIFIER","al_conduit_rw90":"3\" (78)","al_conduit_rwu90":"3\" (78)","al_sec_cable":"2x(4#350 AL + 1#2 V AL)","al_sec_cable_amp":500,"al_sec_verif":"À VÉRIFIER","al_sec_conduit_rw90":"3\"-1/2 (91)","al_sec_conduit_rwu90":"3\" (78)"},{"power":440,"i_primary":552.2480835726856,"i_primary_125":690.310104465857,"fuse_max":700,"breaker_max":700,"primary_cable":"2x(3#500 CU + 1#3 V CU)","primary_cable_amp":760,"primary_verif":"BON","primary_conduit_rw90":"3\"-1/2 (91)","primary_conduit_rwu90":"3\" (78)","i_secondary":552.2480835726856,"i_secondary_125":690.310104465857,"secondary_cable":"2x(4#500 CU + 1#3 V CU)","secondary_cable_amp":760,"secondary_verif":"BON","secondary_conduit_rw90":"3\"-1/2 (91)","secondary_conduit_rwu90":"3\"-1/2 (91)","ground_cu":"#1/0 CU","ground_conduit":"3/4\" (21)","mounting":"P","impedance_min":4,"isc_ka":13.80620208931714,"panel_min":400,"panel_min_current":null,"panel_verif":null,"al_cable":"2x(3#750 AL + 1#1/0 V AL)","al_cable_amp":770,"al_verif":"BON","al_conduit_rw90":"4\" (103)","al_conduit_rwu90":"4\" (103)","al_sec_cable":"2x(4#750 AL + 1#1/0 V AL)","al_sec_cable_amp":770,"al_sec_verif":"BON","al_sec_conduit_rw90":"5\" (129)","al_sec_conduit_rwu90":"5\" (129)"},{"power":550,"i_primary":690.3101044658569,"i_primary_125":862.8876305823211,"fuse_max":900,"breaker_max":900,"primary_cable":"3x(3#350 CU + 1#3 V CU)","primary_cable_amp":930,"primary_verif":"BON","primary_conduit_rw90":"3\" (78)","primary_conduit_rwu90":"3\" (78)","i_secondary":690.3101044658569,"i_secondary_125":862.8876305823211,"secondary_cable":"3x(4#350 CU + 1#3 V CU)","secondary_cable_amp":930,"secondary_verif":"BON","secondary_conduit_rw90":"3\"-1/2 (91)","secondary_conduit_rwu90":"3\" (78)","ground_cu":"#1/0 CU","ground_conduit":"3/4\" (21)","mounting":"P","impedance_min":4,"isc_ka":17.25775261164642,"panel_min":500,"panel_min_current":null,"panel_verif":null,"al_cable":"3x(3#500 AL + 1#1 V AL)","al_cable_amp":930,"al_verif":"BON","al_conduit_rw90":"3\"-1/2 (91)","al_conduit_rwu90":"3\" (78)","al_sec_cable":"3x(4#500 AL + 1#1 V AL)","al_sec_cable_amp":930,"al_sec_verif":"BON","al_sec_conduit_rw90":"4\" (103)","al_sec_conduit_rwu90":"3\"-1/2 (91)"}]}}</script>
+<script>
+const DATA = JSON.parse(document.getElementById('transfo-data').textContent);
+
+// Build combo list from DATA
+const combos = Object.values(DATA).map(b => b.meta);
+// e.g. {id:'A', primary:600, secondary:'120/208', phase:3, vfd:true/undef}
+
+const state = {
+  primary: null,
+  secondary: null,
+  blockId: null,
+  power: null,
+  material: 'cu',
+  impedance: null,
+  impedanceIsDefault: true,
+  scheme: 'primary_only'
+};
+
+const primaryVoltageRow = document.getElementById('primaryVoltageRow');
+const secondaryVoltageRow = document.getElementById('secondaryVoltageRow');
+const powerSelect = document.getElementById('powerSelect');
+const matCuBtn = document.getElementById('matCu');
+const matAlBtn = document.getElementById('matAl');
+const impedInput = document.getElementById('impedInput');
+const impedReset = document.getElementById('impedReset');
+const impedNote = document.getElementById('impedNote');
+const schemeSelect = document.getElementById('schemeSelect');
+const diagramWrap = document.getElementById('diagramWrap');
+const diagramCaption = document.getElementById('diagramCaption');
+const resultsGrid = document.getElementById('resultsGrid');
+
+schemeSelect.addEventListener('change', () => {
+  state.scheme = schemeSelect.value;
+  render();
+});
+
+function uniquePrimaries(){
+  return [...new Set(combos.map(c => c.primary))].sort((a,b) => b-a);
+}
+function secondariesFor(primary){
+  return combos.filter(c => c.primary === primary);
+}
+function findBlock(primary, secondary){
+  return combos.find(c => c.primary === primary && c.secondary === secondary);
+}
+function fmtVolt(v){
+  return v + 'V';
+}
+function phaseLabel(c){
+  return c.phase === 1 ? '1\u03A6' : '3\u03A6';
+}
+
+function renderPrimaryButtons(){
+  primaryVoltageRow.innerHTML = '';
+  uniquePrimaries().forEach(v => {
+    const chip = document.createElement('div');
+    chip.className = 'chip' + (state.primary === v ? ' active' : '');
+    chip.textContent = fmtVolt(v);
+    chip.onclick = () => { selectPrimary(v); };
+    primaryVoltageRow.appendChild(chip);
+  });
+}
+
+function selectPrimary(v, keepSecondary){
+  state.primary = v;
+  const opts = secondariesFor(v);
+  if(!keepSecondary || !opts.find(o => o.secondary === state.secondary)){
+    state.secondary = opts[0].secondary;
+  }
+  renderPrimaryButtons();
+  renderSecondaryButtons();
+  onComboChange();
+}
+
+function renderSecondaryButtons(){
+  secondaryVoltageRow.innerHTML = '';
+  const opts = secondariesFor(state.primary);
+  opts.forEach(c => {
+    const chip = document.createElement('div');
+    chip.className = 'chip' + (state.secondary === c.secondary ? ' active' : '');
+    chip.innerHTML = c.secondary + 'V<small>' + phaseLabel(c) + (c.vfd ? ' \u00b7 VFD-rated' : '') + '</small>';
+    chip.onclick = () => { state.secondary = c.secondary; renderSecondaryButtons(); onComboChange(); };
+    secondaryVoltageRow.appendChild(chip);
+  });
+}
+
+function onComboChange(){
+  const block = findBlock(state.primary, state.secondary);
+  state.blockId = block.id;
+  renderPowerSelect();
+}
+
+function renderPowerSelect(){
+  const entries = DATA[state.blockId].entries;
+  const prevPower = state.power;
+  powerSelect.innerHTML = '';
+  entries.forEach(e => {
+    const opt = document.createElement('option');
+    opt.value = e.power;
+    opt.textContent = e.power + ' kVA';
+    powerSelect.appendChild(opt);
+  });
+  const stillValid = entries.find(e => e.power === prevPower);
+  state.power = stillValid ? prevPower : entries[0].power;
+  powerSelect.value = state.power;
+  onPowerChange(true);
+}
+
+powerSelect.addEventListener('change', () => {
+  state.power = parseFloat(powerSelect.value);
+  onPowerChange(true);
+});
+
+matCuBtn.addEventListener('click', () => { state.material = 'cu'; matCuBtn.classList.add('active'); matAlBtn.classList.remove('active'); render(); });
+matAlBtn.addEventListener('click', () => { state.material = 'al'; matAlBtn.classList.add('active'); matCuBtn.classList.remove('active'); render(); });
+
+function currentEntry(){
+  return DATA[state.blockId].entries.find(e => e.power === state.power);
+}
+
+function onPowerChange(resetImpedance){
+  const entry = currentEntry();
+  if(resetImpedance){
+    state.impedance = entry.impedance_min;
+    state.impedanceIsDefault = true;
+  }
+  render();
+}
+
+impedInput.addEventListener('input', () => {
+  const v = parseFloat(impedInput.value);
+  const entry = currentEntry();
+  state.impedance = (isNaN(v) || v <= 0) ? entry.impedance_min : v;
+  state.impedanceIsDefault = Math.abs(state.impedance - entry.impedance_min) < 1e-9;
+  renderDiagramAndResults();
+});
+impedReset.addEventListener('click', () => {
+  const entry = currentEntry();
+  state.impedance = entry.impedance_min;
+  state.impedanceIsDefault = true;
+  impedInput.value = state.impedance;
+  renderDiagramAndResults();
+});
+
+// Standard overcurrent device ampere ratings (CEC/CSA), as used elsewhere in the reference table.
+const STD_BREAKER = [15,20,25,30,35,40,45,50,60,70,80,90,100,110,125,150,175,200,225,250,300,350,400,450,500,600,700,800,900,1000,1200];
+const STD_FUSE = [1,2,3,4,4.5,6,8,9,10,12,15,17.5,20,25,30,35,40,45,50,60,70,80,90,100,110,125,150,175,200,225,250,300,350,400,450,500,600,700,800,900,1000,1200];
+
+// Largest standard rating not exceeding target (CEC Rule 26-254(2): secondary device shall not
+// exceed 125% of rated secondary current -- rounding up to the next standard rating is NOT
+// permitted on the secondary, unlike the primary-only case).
+function pickStandardMax(list, target){
+  const under = list.filter(v => v <= target);
+  if(under.length) return {value: Math.max(...under), exceeds:false};
+  return {value: Math.min(...list), exceeds:true};
+}
+
+function primaryProtection(entry){
+  if(state.scheme === 'dual'){
+    const target = entry.i_primary * 3.0; // CEC Rule 26-254(2): primary feeder device up to 300% of rated primary current
+    const fuse = pickStandardMax(STD_FUSE, target);
+    const brk = pickStandardMax(STD_BREAKER, target);
+    return {fuse: fuse.value, brk: brk.value, fuseExceeds: fuse.exceeds, brkExceeds: brk.exceeds};
+  }
+  return {fuse: entry.fuse_max, brk: entry.breaker_max, fuseExceeds:false, brkExceeds:false};
+}
+
+function secondaryProtection(entry){
+  const target = entry.i_secondary_125; // 125% of rated secondary current
+  const fuse = pickStandardMax(STD_FUSE, target);
+  const brk = pickStandardMax(STD_BREAKER, target);
+  return {fuse, brk, target};
+}
+
+function round(v, d){
+  const f = Math.pow(10,d);
+  return Math.round(v*f)/f;
+}
+
+function calcIsc(entry){
+  // Isc(kA) = I_secondary_rated(A) * 0.1 / Z(%)
+  return entry.i_secondary * 0.1 / state.impedance;
+}
+
+function verifBadge(v){
+  const L = UI[currentLang];
+  if(v === 'BON') return `<span class="badge ok">${L.badgeVerified}</span>`;
+  return `<span class="badge warn">${L.badgeCheck}</span>`;
+}
+
+function cableFor(entry, side){
+  // side: 'primary' or 'secondary'
+  if(state.material === 'cu'){
+    if(side === 'primary') return {spec: entry.primary_cable, amp: entry.primary_cable_amp, verif: entry.primary_verif, rw90: entry.primary_conduit_rw90, rwu90: entry.primary_conduit_rwu90};
+    return {spec: entry.secondary_cable, amp: entry.secondary_cable_amp, verif: entry.secondary_verif, rw90: entry.secondary_conduit_rw90, rwu90: entry.secondary_conduit_rwu90};
+  } else {
+    if(side === 'primary') return {spec: entry.al_cable, amp: entry.al_cable_amp, verif: entry.al_verif, rw90: entry.al_conduit_rw90, rwu90: entry.al_conduit_rwu90};
+    return {spec: entry.al_sec_cable, amp: entry.al_sec_cable_amp, verif: entry.al_sec_verif, rw90: entry.al_sec_conduit_rw90, rwu90: entry.al_sec_conduit_rwu90};
+  }
+}
+
+function mountingLabel(m){
+  const L = UI[currentLang];
+  if(m === 'P/M') return L.mountFloorWall;
+  if(m === 'P') return L.mountFloor;
+  if(m === 'M') return L.mountWall;
+  return m || '\u2014';
+}
+
+function render(){
+  const L = UI[currentLang];
+  impedInput.value = round(state.impedance, 2);
+  impedNote.textContent = state.impedanceIsDefault ? L.impedNoteDefault : L.impedNoteCustom;
+  renderDiagramAndResults();
+}
+
+function renderDiagramAndResults(){
+  const entry = currentEntry();
+  const block = DATA[state.blockId].meta;
+  const isc = calcIsc(entry);
+  const primaryCable = cableFor(entry, 'primary');
+  const secondaryCable = cableFor(entry, 'secondary');
+
+  diagramWrap.innerHTML = buildDiagram(entry, block, isc);
+  diagramCaption.innerHTML = buildCaption(entry, block);
+  resultsGrid.innerHTML = [
+    buildPrimaryCard(entry, primaryCable),
+    buildSecondaryCard(entry, secondaryCable),
+    buildGroundCard(entry),
+    buildImpedanceCard(entry, isc),
+    buildPanelCard(entry)
+  ].join('');
+}
+
+function windingSymbols(block){
+  // Purely graphical winding-connection symbols (no in-SVG text) placed inside the transformer box.
+  // Labels explaining them live in the caption below the diagram, to avoid any text/graphic overlap.
+  if(block.phase === 3){
+    const px=305, py=100, pr=15;
+    const primary = `<path d="M ${px} ${py-pr} L ${px-pr*0.87} ${py+pr*0.5} L ${px+pr*0.87} ${py+pr*0.5} Z" fill="none" style="stroke:var(--copper)" stroke-width="2"/>`;
+    const sx=430, sy=94, sr=15;
+    const secondary = `
+      <line x1="${sx}" y1="${sy}" x2="${sx-sr*0.87}" y2="${sy-sr*0.5}" style="stroke:var(--copper-bright)" stroke-width="2"/>
+      <line x1="${sx}" y1="${sy}" x2="${sx+sr*0.87}" y2="${sy-sr*0.5}" style="stroke:var(--copper-bright)" stroke-width="2"/>
+      <line x1="${sx}" y1="${sy}" x2="${sx}" y2="${sy+sr}" style="stroke:var(--copper-bright)" stroke-width="2"/>
+      <circle cx="${sx}" cy="${sy}" r="2.5" fill="var(--copper-bright)"/>
+      <line x1="${sx}" y1="${sy+sr}" x2="${sx}" y2="225" class="sld-line" stroke-dasharray="3,3"/>`;
+    return {primary, secondary, groundX: sx};
+  } else {
+    const px=305, py=100;
+    const primary = `
+      <line x1="${px-16}" y1="${py-8}" x2="${px+16}" y2="${py-8}" style="stroke:var(--copper)" stroke-width="2"/>
+      <line x1="${px-16}" y1="${py+8}" x2="${px+16}" y2="${py+8}" style="stroke:var(--copper)" stroke-width="2"/>`;
+    const sx=430, sy=100;
+    const secondary = `
+      <line x1="${sx-16}" y1="${sy-8}" x2="${sx+16}" y2="${sy-8}" style="stroke:var(--copper-bright)" stroke-width="2"/>
+      <line x1="${sx-16}" y1="${sy+8}" x2="${sx+16}" y2="${sy+8}" style="stroke:var(--copper-bright)" stroke-width="2"/>
+      <circle cx="${sx}" cy="${sy}" r="2.5" fill="var(--copper-bright)"/>
+      <line x1="${sx}" y1="${sy}" x2="${sx}" y2="225" class="sld-line" stroke-dasharray="3,3"/>`;
+    return {primary, secondary, groundX: sx};
+  }
+}
+
+function buildDiagram(entry, block, isc){
+  const sym = windingSymbols(block);
+  const sec = secondaryProtection(entry);
+  const pri = primaryProtection(entry);
+  const dual = state.scheme === 'dual';
+  const priPct = dual ? 300 : 125;
+
+  const priHeader = `PRIMARY O/C \u2264${priPct}%`;
+
+  if(dual){
+    // Source -> Primary O/C -> Transformer -> Secondary O/C -> Panel -> Load
+    return `
+    <svg viewBox="0 0 1040 300" xmlns="http://www.w3.org/2000/svg">
+      <text x="20" y="80" class="sld-label">SOURCE</text>
+      <text x="20" y="125" class="sld-value">${block.primary}V \u00b7 ${phaseLabel(block)}</text>
+      <line x1="20" y1="100" x2="100" y2="100" class="sld-line-live"/>
+
+      <text x="157" y="45" class="sld-label" text-anchor="middle" font-size="9.5">${priHeader}</text>
+      <rect x="100" y="55" width="115" height="90" class="sld-node"/>
+      <text x="157" y="94" class="sld-tag" text-anchor="middle" font-size="12">Fuse \u2264 ${pri.fuse}A</text>
+      <text x="157" y="116" class="sld-tag" text-anchor="middle" font-size="12">CB \u2264 ${pri.brk}A</text>
+
+      <line x1="215" y1="100" x2="265" y2="100" class="sld-line-live"/>
+
+      <text x="362" y="45" class="sld-label" text-anchor="middle">TRANSFORMER \u2014 ${entry.power} kVA</text>
+      <rect x="265" y="55" width="195" height="90" class="sld-node"/>
+      ${sym.primary}
+      ${sym.secondary}
+
+      <line x1="460" y1="100" x2="510" y2="100" class="sld-line-live"/>
+
+      <text x="567" y="45" class="sld-label" text-anchor="middle" font-size="9.5">SECONDARY O/C \u2264125%</text>
+      <rect x="510" y="55" width="115" height="90" class="sld-node"/>
+      <text x="567" y="94" class="sld-tag" text-anchor="middle" font-size="12">Fuse \u2264 ${sec.fuse.value}A</text>
+      <text x="567" y="116" class="sld-tag" text-anchor="middle" font-size="12">CB \u2264 ${sec.brk.value}A</text>
+
+      <line x1="625" y1="100" x2="675" y2="100" class="sld-line-live"/>
+
+      <text x="737" y="45" class="sld-label" text-anchor="middle">PANEL (MLO)</text>
+      <rect x="675" y="55" width="125" height="90" class="sld-node"/>
+      <text x="737" y="104" class="sld-tag" text-anchor="middle">${entry.panel_min}A bus</text>
+
+      <line x1="800" y1="100" x2="870" y2="100" class="sld-line-live"/>
+      <text x="878" y="80" class="sld-label">LOAD</text>
+
+      <line x1="${sym.groundX-14}" y1="225" x2="${sym.groundX+14}" y2="225" class="sld-line"/>
+      <line x1="${sym.groundX-9}" y1="231" x2="${sym.groundX+9}" y2="231" class="sld-line"/>
+      <line x1="${sym.groundX-4}" y1="237" x2="${sym.groundX+4}" y2="237" class="sld-line"/>
+      <text x="${sym.groundX}" y="258" class="sld-label" text-anchor="middle">GND ${entry.ground_cu}</text>
+
+      <line x1="567" y1="145" x2="567" y2="180" class="sld-line" stroke-dasharray="3,3"/>
+      <text x="567" y="200" class="sld-value amber" text-anchor="middle" font-size="13">Isc ${round(isc,2)} kA</text>
+      <text x="567" y="217" class="sld-label" text-anchor="middle">@ Z=${round(state.impedance,2)}%</text>
+    </svg>`;
+  }
+
+  // Primary protected only -> no Secondary O/C box; Isc annotated near the transformer's
+  // secondary side, ahead of the panel.
+  return `
+  <svg viewBox="0 0 1040 300" xmlns="http://www.w3.org/2000/svg">
+    <text x="20" y="80" class="sld-label">SOURCE</text>
+    <text x="20" y="125" class="sld-value">${block.primary}V \u00b7 ${phaseLabel(block)}</text>
+    <line x1="20" y1="100" x2="100" y2="100" class="sld-line-live"/>
+
+    <text x="157" y="45" class="sld-label" text-anchor="middle" font-size="9.5">${priHeader}</text>
+    <rect x="100" y="55" width="115" height="90" class="sld-node"/>
+    <text x="157" y="94" class="sld-tag" text-anchor="middle" font-size="12">Fuse \u2264 ${pri.fuse}A</text>
+    <text x="157" y="116" class="sld-tag" text-anchor="middle" font-size="12">CB \u2264 ${pri.brk}A</text>
+
+    <line x1="215" y1="100" x2="265" y2="100" class="sld-line-live"/>
+
+    <text x="362" y="45" class="sld-label" text-anchor="middle">TRANSFORMER \u2014 ${entry.power} kVA</text>
+    <rect x="265" y="55" width="195" height="90" class="sld-node"/>
+    ${sym.primary}
+    ${sym.secondary}
+
+    <line x1="460" y1="100" x2="640" y2="100" class="sld-line-live"/>
+
+    <text x="737" y="45" class="sld-label" text-anchor="middle">PANEL (MLO)</text>
+    <rect x="675" y="55" width="125" height="90" class="sld-node"/>
+    <text x="737" y="104" class="sld-tag" text-anchor="middle">${entry.panel_min}A bus</text>
+
+    <line x1="800" y1="100" x2="870" y2="100" class="sld-line-live"/>
+    <text x="878" y="80" class="sld-label">LOAD</text>
+
+    <line x1="${sym.groundX-14}" y1="225" x2="${sym.groundX+14}" y2="225" class="sld-line"/>
+    <line x1="${sym.groundX-9}" y1="231" x2="${sym.groundX+9}" y2="231" class="sld-line"/>
+    <line x1="${sym.groundX-4}" y1="237" x2="${sym.groundX+4}" y2="237" class="sld-line"/>
+    <text x="${sym.groundX}" y="258" class="sld-label" text-anchor="middle">GND ${entry.ground_cu}</text>
+
+    <line x1="565" y1="100" x2="565" y2="135" class="sld-line" stroke-dasharray="3,3"/>
+    <text x="565" y="155" class="sld-value amber" text-anchor="middle" font-size="13">Isc ${round(isc,2)} kA</text>
+    <text x="565" y="172" class="sld-label" text-anchor="middle">@ Z=${round(state.impedance,2)}%</text>
+  </svg>`;
+}
+
+function buildCaption(entry, block){
+  const L = UI[currentLang];
+  const windingDesc = block.phase === 3 ? L.windingDesc3P : L.windingDesc1P;
+  const schemeDesc = state.scheme === 'dual' ? L.schemeDescDual : L.schemeDescPrimaryOnly;
+  return `${windingDesc} ${schemeDesc}`;
+}
+
+function buildPrimaryCard(entry, cable){
+  const L = UI[currentLang];
+  const prot = primaryProtection(entry);
+  const basisNote = state.scheme === 'dual' ? L.primaryBasisDual : L.primaryBasisSingle;
+  return `
+  <div class="card">
+    <div class="card-head"><h3><span class="dot"></span>${L.primarySide}</h3>${verifBadge(cable.verif)}</div>
+    <div class="card-body">
+      <div class="row"><span class="k">${L.ratedCurrent}</span><span class="v big">${round(entry.i_primary,2)}<span class="unit">A</span></span></div>
+      <div class="row"><span class="k">${L.currentX125}</span><span class="v">${round(entry.i_primary_125,2)}<span class="unit">A</span></span></div>
+      <div class="row"><span class="k">${L.maxFuse}</span><span class="v">${prot.fuse}<span class="unit">A</span></span></div>
+      <div class="row"><span class="k">${L.maxBreaker}</span><span class="v">${prot.brk}<span class="unit">A</span></span></div>
+      <div class="cable-spec">${cable.spec}<br><span style="color:var(--text-dim)">${L.ampacityLbl}: ${cable.amp}A (75\u00b0C)</span></div>
+      <div class="row"><span class="k">${L.conduitDry} <span class="optional-tag">${L.optionalTag}</span></span><span class="v">${cable.rw90}</span></div>
+      <div class="row"><span class="k">${L.conduitWet} <span class="optional-tag">${L.optionalTag}</span></span><span class="v">${cable.rwu90}</span></div>
+      <div class="imped-note" style="margin-top:6px;">${basisNote}</div>
+    </div>
+  </div>`;
+}
+
+function buildSecondaryCard(entry, cable){
+  const L = UI[currentLang];
+  const prot = secondaryProtection(entry);
+  const fuseFlag = prot.fuse.exceeds ? ` <span class="optional-tag" style="border-color:var(--red);color:var(--red);">${L.smallestStdRating}</span>` : '';
+  const brkFlag = prot.brk.exceeds ? ` <span class="optional-tag" style="border-color:var(--red);color:var(--red);">${L.smallestStdRating}</span>` : '';
+  const basisNote = state.scheme === 'dual' ? L.secondaryBasisDual : L.secondaryBasisSingle;
+  return `
+  <div class="card">
+    <div class="card-head"><h3><span class="dot"></span>${L.secondarySide}</h3>${verifBadge(cable.verif)}</div>
+    <div class="card-body">
+      <div class="row"><span class="k">${L.ratedCurrent}</span><span class="v big">${round(entry.i_secondary,2)}<span class="unit">A</span></span></div>
+      <div class="row"><span class="k">${L.currentX125}</span><span class="v">${round(entry.i_secondary_125,2)}<span class="unit">A</span></span></div>
+      <div class="cable-spec">${cable.spec}<br><span style="color:var(--text-dim)">${L.ampacityLbl}: ${cable.amp}A (75\u00b0C)</span></div>
+      <div class="row"><span class="k">${L.conduitDry} <span class="optional-tag">${L.optionalTag}</span></span><span class="v">${cable.rw90}</span></div>
+      <div class="row"><span class="k">${L.conduitWet} <span class="optional-tag">${L.optionalTag}</span></span><span class="v">${cable.rwu90}</span></div>
+      <div class="row"><span class="k">${L.maxFuseShort}${fuseFlag}</span><span class="v">${prot.fuse.value}<span class="unit">A</span></span></div>
+      <div class="row"><span class="k">${L.maxBreakerShort}${brkFlag}</span><span class="v">${prot.brk.value}<span class="unit">A</span></span></div>
+      <div class="imped-note" style="margin-top:6px;">${basisNote}</div>
+    </div>
+  </div>`;
+}
+
+function buildGroundCard(entry){
+  const L = UI[currentLang];
+  return `
+  <div class="card">
+    <div class="card-head"><h3><span class="dot"></span>${L.groundingTitle}</h3></div>
+    <div class="card-body">
+      <div class="cable-spec">${entry.ground_cu}<br><span style="color:var(--text-dim)">${L.bareCopperBonding}</span></div>
+      <div class="row"><span class="k">${L.conduitMin} <span class="optional-tag">${L.optionalTag}</span></span><span class="v">${entry.ground_conduit}</span></div>
+    </div>
+  </div>`;
+}
+
+function buildImpedanceCard(entry, isc){
+  const L = UI[currentLang];
+  return `
+  <div class="card">
+    <div class="card-head"><h3><span class="dot"></span>${L.impedanceTitle}</h3>${state.impedanceIsDefault ? `<span class="badge ok">${L.badgeDefault}</span>` : `<span class="badge warn">${L.badgeCustom}</span>`}</div>
+    <div class="card-body">
+      <div class="row"><span class="k">${L.codeMinImped}</span><span class="v">${entry.impedance_min}<span class="unit">%</span></span></div>
+      <div class="row"><span class="k">${L.impedInUse}</span><span class="v big">${round(state.impedance,2)}<span class="unit">%</span></span></div>
+      <div class="isc-highlight">
+        <div class="num">${round(isc,3)} kA</div>
+        <div class="lbl">${L.availableFaultCurrent}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function buildPanelCard(entry){
+  const L = UI[currentLang];
+  return `
+  <div class="card">
+    <div class="card-head"><h3><span class="dot"></span>${L.panelTitle}</h3></div>
+    <div class="card-body">
+      <div class="row"><span class="k">${L.minPanelBus}</span><span class="v big">${entry.panel_min}<span class="unit">A</span></span></div>
+      <div class="row"><span class="k">${L.minPanelCurrent}</span><span class="v">${round(entry.panel_min_current,2)}<span class="unit">A</span></span></div>
+      <div class="row"><span class="k">${L.statusLbl}</span><span class="v">${verifBadge(entry.panel_verif)}</span></div>
+      <div class="row"><span class="k">${L.recMounting}</span><span class="v">${mountingLabel(entry.mounting)}</span></div>
+    </div>
+  </div>`;
+}
+
+/* ===================== i18n ===================== */
+let currentLang = 'en';
+const UI = {
+  en: {
+    tbEyebrow: "Dry-Type Isolation Transformer &mdash; Sizing Reference",
+    tbTitle: "Small Transformer — Cable Sizing & Protection Setup",
+    tbSub: "Select the primary voltage, secondary voltage and transformer rating to get recommended conductors, overcurrent protection, conduit and grounding &mdash; with a live short-circuit calculation as you adjust impedance.",
+    lblAmbient: "Ambient", lblScheme: "Protection Scheme",
+    optSchemePrimary: "Primary protected only", optSchemeDual: "Primary + secondary protected",
+    hdrConfig: "Configuration", lblPrimaryV: "Primary Voltage", lblSecondaryV: "Secondary Voltage",
+    lblRating: "Transformer Rating (kVA)", lblMaterial: "Conductor Material",
+    matCuLabel: "Copper (Cu)", matAlLabel: "Aluminum (Al)",
+    lblImpedance: "Transformer Impedance &mdash; editable, defaults to code-minimum for this rating",
+    impedResetLabel: "Reset to default",
+    hdrSLD: "Single-Line Overview", hdrSizing: "Recommended Sizing",
+    printBtnLabel: "🖨 Print / Save as PDF", exportWordLabel: "📄 Export selection (Word)", exportBtnLabel: "📊 Export selection (Excel)",
+    footerText: `<b>How to read this:</b> primary-side values (current, cable, conduit, fuse/breaker) are drawn directly from the referenced sizing table &mdash; Sizing_2022-05-28.xlsx, tab 2.1, dry-type isolation transformers, primary-side overcurrent protection only, 30&deg;C ambient, with a maximum of three current-carrying conductors per conduit (or equivalent 100% free-air spacing). Secondary-side fuse/breaker maximums are calculated in this tool (not looked up from the table) at &le;125% of rated secondary current per CEC Rule 26-254(2), rounded down to the nearest standard device rating &mdash; the table's own primary fuse/breaker columns already show that below 15A a breaker cannot go as low as a fuse can, since 15A is the smallest standard breaker rating. Conduit sizes are shown for both dry (RW90) and wet/underground (RWU90) locations as optional reference &mdash; confirm which applies to your installation. Adjusting the impedance field recalculates the secondary short-circuit current only; all other values (conductors, protection, conduit, grounding, panel) are fixed per the source table for the selected rating and do not change with impedance. Typical dry-type transformer %Z from major manufacturers generally falls in the 3.5&ndash;6% range for units up to a few hundred kVA (higher for larger/higher-voltage units) &mdash; always confirm against the actual nameplate once equipment is selected. <b>This tool is a preliminary sizing aid, not a substitute for a qualified electrical engineer's design or verification against the Canadian Electrical Code and the authority having jurisdiction.</b>`,
+    badgeVerified: "Verified", badgeCheck: "Check derating",
+    mountFloorWall: "Floor or wall mount", mountFloor: "Floor mount", mountWall: "Wall mount",
+    windingDesc3P: "Primary winding shown in \u0394 (delta, ungrounded); secondary winding shown in Y with the neutral point bonded to ground.",
+    windingDesc1P: "Primary shown as a single 2-wire winding; secondary shown center-tapped, with the center tap bonded to ground.",
+    schemeDescDual: "Scheme: <b>primary + secondary protected</b> \u2014 primary device sized up to 300% of rated primary current (CEC 26-254(2)), secondary device \u2264125% of rated secondary current.",
+    schemeDescPrimaryOnly: "Scheme: <b>primary protected only</b> \u2014 primary device \u2264125% of rated primary current (CEC 26-254(1)); secondary protection is optional.",
+    primarySide: "Primary Side", ratedCurrent: "Rated current", currentX125: "Current \u00d7 1.25 (continuous)",
+    maxFuse: "Max time-delay fuse", maxBreaker: "Max breaker", ampacityLbl: "Ampacity",
+    conduitDry: "Conduit min. (dry, RW90)", conduitWet: "Conduit min. (wet, RWU90)", optionalTag: "optional",
+    primaryBasisDual: "Calculated at \u2264300% of rated primary current per CEC Rule 26-254(2), since the secondary is separately protected at \u2264125%.",
+    primaryBasisSingle: "From the reference table, at \u2264125% of rated primary current per CEC Rule 26-254(1) (next standard rating up permitted).",
+    secondarySide: "Secondary Side", maxFuseShort: "Max. fuse", maxBreakerShort: "Max. breaker",
+    smallestStdRating: "smallest std. rating",
+    secondaryBasisDual: "Required under CEC Rule 26-254(2), \u2264125% of rated secondary current \u2014 this is what allows the primary device to go up to 300%.",
+    secondaryBasisSingle: "Not required under CEC Rule 26-254(1) since the primary device is already \u2264125%. Shown here as an optional second layer of protection.",
+    groundingTitle: "Secondary Grounding (MALT)", bareCopperBonding: "Bare copper bonding conductor", conduitMin: "Conduit min.",
+    impedanceTitle: "Impedance &amp; Fault Current", badgeDefault: "Default", badgeCustom: "Custom",
+    codeMinImped: "Code-minimum impedance (table)", impedInUse: "Impedance in use",
+    availableFaultCurrent: "Available fault current, secondary terminals",
+    panelTitle: "Recommended Secondary Panel", minPanelBus: "Minimum panel bus (MLO)", minPanelCurrent: "Minimum panel current rating",
+    statusLbl: "Status", recMounting: "Recommended mounting",
+    impedNoteDefault: "Showing code-minimum impedance for this rating from the reference table.",
+    impedNoteCustom: "Custom impedance \u2014 conductors, protection, conduit, grounding and panel size below are unaffected; only the fault current recalculates."
+  },
+  fr: {
+    tbEyebrow: "Transformateur d'isolement de type sec &mdash; Référence de dimensionnement",
+    tbTitle: "Petit transformateur — Câbles et protection",
+    tbSub: "Sélectionnez la tension primaire, la tension secondaire et la puissance du transformateur pour obtenir les conducteurs recommandés, la protection contre les surintensités, le conduit et la mise à la terre &mdash; avec un calcul de court-circuit en temps réel selon l'impédance ajustée.",
+    lblAmbient: "Ambiante", lblScheme: "Schéma de protection",
+    optSchemePrimary: "Primaire protégé seulement", optSchemeDual: "Primaire et secondaire protégés",
+    hdrConfig: "Configuration", lblPrimaryV: "Tension primaire", lblSecondaryV: "Tension secondaire",
+    lblRating: "Puissance du transformateur (kVA)", lblMaterial: "Matériau du conducteur",
+    matCuLabel: "Cuivre (Cu)", matAlLabel: "Aluminium (Al)",
+    lblImpedance: "Impédance du transformateur &mdash; modifiable, valeur par défaut = minimum du code pour cette puissance",
+    impedResetLabel: "Réinitialiser",
+    hdrSLD: "Schéma unifilaire", hdrSizing: "Dimensionnement recommandé",
+    printBtnLabel: "🖨 Imprimer / Enregistrer en PDF", exportWordLabel: "📄 Exporter la sélection (Word)", exportBtnLabel: "📊 Exporter la sélection (Excel)",
+    footerText: `<b>Comment lire ceci :</b> les valeurs côté primaire (courant, câble, conduit, fusible/disjoncteur) proviennent directement du tableau de référence &mdash; Sizing_2022-05-28.xlsx, onglet 2.1, transformateurs d'isolement de type sec, protection contre les surintensités côté primaire seulement, ambiante 30&deg;C, avec un maximum de trois conducteurs actifs par conduit (ou équivalent en espacement 100 % à l'air libre). Les valeurs maximales de fusible/disjoncteur côté secondaire sont calculées par cet outil (non tirées du tableau) à &le;125 % du courant secondaire nominal selon la règle 26-254(2) du CCE, arrondies à la calibre normalisé inférieur &mdash; les colonnes de fusible/disjoncteur primaire du tableau montrent déjà qu'en deçà de 15 A, un disjoncteur ne peut descendre aussi bas qu'un fusible, puisque 15 A est le plus petit calibre de disjoncteur normalisé. Les tailles de conduit sont indiquées pour les emplacements secs (RW90) et humides/souterrains (RWU90) à titre de référence facultative &mdash; confirmez celle qui s'applique à votre installation. Ajuster le champ d'impédance recalcule uniquement le courant de court-circuit secondaire; toutes les autres valeurs (conducteurs, protection, conduit, mise à la terre, panneau) sont fixes selon le tableau source pour la puissance sélectionnée et ne varient pas avec l'impédance. Le %Z typique des transformateurs secs des principaux fabricants se situe généralement entre 3,5 et 6 % pour les unités allant jusqu'à quelques centaines de kVA (plus élevé pour les unités plus grandes/à tension plus élevée) &mdash; confirmez toujours avec la plaque signalétique réelle une fois l'équipement sélectionné. <b>Cet outil est une aide au dimensionnement préliminaire, et ne remplace pas la conception ou la vérification par un ingénieur électricien qualifié selon le Code canadien de l'électricité et l'autorité compétente.</b>`,
+    badgeVerified: "Vérifié", badgeCheck: "Vérifier le déclassement",
+    mountFloorWall: "Montage au sol ou mural", mountFloor: "Montage au sol", mountWall: "Montage mural",
+    windingDesc3P: "Enroulement primaire illustré en \u0394 (triangle, non mis à la terre); enroulement secondaire illustré en Y avec le point neutre relié à la terre.",
+    windingDesc1P: "Primaire illustré comme un enroulement simple à 2 fils; secondaire illustré avec prise médiane, la prise médiane étant reliée à la terre.",
+    schemeDescDual: "Schéma : <b>primaire et secondaire protégés</b> \u2014 dispositif primaire dimensionné jusqu'à 300 % du courant primaire nominal (CCE 26-254(2)), dispositif secondaire \u2264125 % du courant secondaire nominal.",
+    schemeDescPrimaryOnly: "Schéma : <b>primaire protégé seulement</b> \u2014 dispositif primaire \u2264125 % du courant primaire nominal (CCE 26-254(1)); la protection secondaire est facultative.",
+    primarySide: "Côté primaire", ratedCurrent: "Courant nominal", currentX125: "Courant \u00d7 1,25 (continu)",
+    maxFuse: "Fusible temporisé max.", maxBreaker: "Disjoncteur max.", ampacityLbl: "Ampacité",
+    conduitDry: "Conduit min. (sec, RW90)", conduitWet: "Conduit min. (humide, RWU90)", optionalTag: "facultatif",
+    primaryBasisDual: "Calculé à \u2264300 % du courant primaire nominal selon la règle 26-254(2) du CCE, puisque le secondaire est protégé séparément à \u2264125 %.",
+    primaryBasisSingle: "Tiré du tableau de référence, à \u2264125 % du courant primaire nominal selon la règle 26-254(1) du CCE (calibre normalisé supérieur permis).",
+    secondarySide: "Côté secondaire", maxFuseShort: "Fusible max.", maxBreakerShort: "Disjoncteur max.",
+    smallestStdRating: "plus petit calibre normalisé",
+    secondaryBasisDual: "Requis selon la règle 26-254(2) du CCE, \u2264125 % du courant secondaire nominal \u2014 c'est ce qui permet au dispositif primaire d'atteindre 300 %.",
+    secondaryBasisSingle: "Non requis selon la règle 26-254(1) du CCE puisque le dispositif primaire est déjà \u2264125 %. Montré ici comme une couche de protection supplémentaire facultative.",
+    groundingTitle: "Mise à la terre secondaire (MALT)", bareCopperBonding: "Conducteur de liaison en cuivre nu", conduitMin: "Conduit min.",
+    impedanceTitle: "Impédance et courant de défaut", badgeDefault: "Par défaut", badgeCustom: "Personnalisé",
+    codeMinImped: "Impédance minimale du code (tableau)", impedInUse: "Impédance utilisée",
+    availableFaultCurrent: "Courant de défaut disponible, bornes secondaires",
+    panelTitle: "Panneau secondaire recommandé", minPanelBus: "Barre omnibus minimale du panneau (MLO)", minPanelCurrent: "Calibre de courant minimal du panneau",
+    statusLbl: "Statut", recMounting: "Montage recommandé",
+    impedNoteDefault: "Affiche l'impédance minimale du code pour cette puissance, tirée du tableau de référence.",
+    impedNoteCustom: "Impédance personnalisée \u2014 les conducteurs, la protection, le conduit, la mise à la terre et la taille du panneau ci-dessous ne sont pas affectés; seul le courant de défaut est recalculé."
+  }
+};
+
+function applyStaticI18n(){
+  const L = UI[currentLang];
+  document.getElementById('tbEyebrow').innerHTML = L.tbEyebrow;
+  document.getElementById('tbTitle').textContent = L.tbTitle;
+  document.getElementById('tbSub').innerHTML = L.tbSub;
+  document.getElementById('lblAmbient').textContent = L.lblAmbient;
+  document.getElementById('lblScheme').textContent = L.lblScheme;
+  document.getElementById('optSchemePrimary').textContent = L.optSchemePrimary;
+  document.getElementById('optSchemeDual').textContent = L.optSchemeDual;
+  document.getElementById('hdrConfig').textContent = L.hdrConfig;
+  document.getElementById('lblPrimaryV').textContent = L.lblPrimaryV;
+  document.getElementById('lblSecondaryV').textContent = L.lblSecondaryV;
+  document.getElementById('lblRating').textContent = L.lblRating;
+  document.getElementById('lblMaterial').textContent = L.lblMaterial;
+  matCuBtn.textContent = L.matCuLabel;
+  matAlBtn.textContent = L.matAlLabel;
+  document.getElementById('lblImpedance').innerHTML = L.lblImpedance;
+  impedReset.textContent = L.impedResetLabel;
+  document.getElementById('hdrSLD').textContent = L.hdrSLD;
+  document.getElementById('hdrSizing').textContent = L.hdrSizing;
+  document.getElementById('printBtn').textContent = L.printBtnLabel;
+  document.getElementById('exportWordBtn').textContent = L.exportWordLabel;
+  document.getElementById('exportExcelBtn').textContent = L.exportBtnLabel;
+  document.getElementById('footerText').innerHTML = L.footerText;
+}
+
+function setLang(lang){
+  currentLang = lang;
+  document.getElementById('btn-en').classList.toggle('active', lang==='en');
+  document.getElementById('btn-fr').classList.toggle('active', lang==='fr');
+  document.documentElement.lang = lang;
+  try { localStorage.setItem('ohmzone-lang', lang); } catch(e) {}
+  applyStaticI18n();
+  render();
+}
+
+// init
+selectPrimary(600);
+(function(){
+  let saved = 'en';
+  try { saved = localStorage.getItem('ohmzone-lang') || 'en'; } catch(e) {}
+  setLang(saved);
+})();
+
+document.getElementById('printBtn').addEventListener('click', () => window.print());
+
+function buildReportRows(){
+  const entry = currentEntry();
+  if(!entry) return null;
+  const prot = primaryProtection(entry);
+  const secProt = secondaryProtection(entry);
+  const cablePri = cableFor(entry, 'primary');
+  const cableSec = cableFor(entry, 'secondary');
+  const isc = calcIsc(entry);
+
+  return [
+    ["Parameter", "Value"],
+    ["Primary voltage (V)", state.primary],
+    ["Secondary voltage (V)", state.secondary],
+    ["Phase", state.primary === 600 || state.primary === 480 ? "3" : ""],
+    ["Transformer rating (kVA)", entry.power],
+    ["Conductor material", state.material === 'cu' ? "Copper (Cu)" : "Aluminum (Al)"],
+    ["Impedance %Z used", round(state.impedance, 2)],
+    ["Impedance is code-minimum default", state.impedanceIsDefault ? "Yes" : "No — user override"],
+    ["Protection scheme", state.scheme === 'dual' ? "Primary + secondary protected" : "Primary protected only"],
+    [""],
+    ["-- Primary side --", ""],
+    ["Primary current (A)", round(entry.i_primary, 2)],
+    ["Max time-delay fuse (A)", prot.fuse],
+    ["Max breaker (A)", prot.brk],
+    ["Cable", cablePri.spec],
+    ["Cable ampacity (A)", cablePri.amp],
+    ["Cable status", cablePri.verif],
+    ["Conduit (dry, RW90)", cablePri.rw90],
+    ["Conduit (wet, RWU90)", cablePri.rwu90],
+    [""],
+    ["-- Secondary side --", ""],
+    ["Secondary current (A)", round(entry.i_secondary, 2)],
+    ["Secondary max fuse (A, <=125% CEC 26-254(2))", secProt.fuse],
+    ["Secondary max breaker (A)", secProt.brk],
+    ["Cable", cableSec.spec],
+    ["Cable ampacity (A)", cableSec.amp],
+    ["Cable status", cableSec.verif],
+    ["Conduit (dry, RW90)", cableSec.rw90],
+    ["Conduit (wet, RWU90)", cableSec.rwu90],
+    [""],
+    ["-- Short-circuit / other --", ""],
+    ["Secondary Isc (kA symmetrical)", round(isc, 3)],
+    ["Ground conductor", entry.ground_cu],
+    ["Ground conduit", entry.ground_conduit],
+    ["Recommended mounting", mountingLabel(entry.mounting)],
+    ["Recommended panel bus (MLO, A)", entry.panel_min],
+    [""],
+    ["Disclaimer", "This tool is a preliminary sizing aid, not a substitute for a qualified electrical engineer's design or verification against the Canadian Electrical Code and the authority having jurisdiction."]
+  ];
+}
+
+function downloadBlob(content, mime, filename){
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 2000);
+}
+
+document.getElementById('exportWordBtn').addEventListener('click', () => {
+  const rows = buildReportRows();
+  if(!rows) return;
+  const entry = currentEntry();
+  const bodyRows = rows.map(r=>{
+    if(r.length===1 && r[0]==="") return `<tr><td colspan="2" style="border:none;padding:4px;"></td></tr>`;
+    if(r[0]==="Parameter") return `<tr><td style="padding:6px 10px;background:#1a2f4a;color:#fff;font-weight:600;border:1px solid #ccc;">${r[0]}</td><td style="padding:6px 10px;background:#1a2f4a;color:#fff;font-weight:600;border:1px solid #ccc;">${r[1]}</td></tr>`;
+    if(r[0] && r[0].startsWith("--")) return `<tr><td colspan="2" style="padding:8px 10px;font-weight:700;border:1px solid #ccc;background:#f0f0f0;">${r[0].replace(/--/g,'').trim()}</td></tr>`;
+    return `<tr><td style="padding:5px 10px;border:1px solid #ccc;">${r[0]}</td><td style="padding:5px 10px;border:1px solid #ccc;">${r[1]}</td></tr>`;
+  }).join("");
+  const doc = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+  <head><meta charset="utf-8"><title>Transformer Sizing Report</title>
+  <!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View></w:WordDocument></xml><![endif]-->
+  </head><body style="font-family:Calibri,Arial,sans-serif;color:#1a1a1a;background:#fff;">
+  <h2 style="font-family:Calibri,Arial,sans-serif;">${document.getElementById('tbTitle') ? document.getElementById('tbTitle').textContent : 'Transformer Sizing'}</h2>
+  <table style="border-collapse:collapse;width:100%;font-size:10.5pt;">${bodyRows}</table>
+  <p style="font-size:9pt;color:#777;margin-top:16px;">© 2026 OhmZone. All rights reserved.</p>
+  </body></html>`;
+  downloadBlob(doc, "application/msword", `transformer_${state.primary}V-${state.secondary}V_${entry.power}kVA.doc`);
+});
+
+document.getElementById('exportExcelBtn').addEventListener('click', () => {
+  const rows = buildReportRows();
+  if(!rows) return;
+  const entry = currentEntry();
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Transformer Sizing");
+  XLSX.writeFile(wb, `transformer_${state.primary}V-${state.secondary}V_${entry.power}kVA.xlsx`);
+});
+
+</script>
+<div style="position:fixed;bottom:6px;right:12px;z-index:9999;font-family:monospace;font-size:10px;color:#5c7592;opacity:0.75;">© 2026 OhmZone. All rights reserved.</div>
+</body>
+</html>

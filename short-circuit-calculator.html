@@ -1,0 +1,1633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Maximum Short-Circuit Current Study</title>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3887318872951674" crossorigin="anonymous"></script>
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icon-16.png">
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="OhmZone">
+<meta name="theme-color" content="#0a1728">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.6/dist/pizzip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/docxtemplater@3.47.2/js/docxtemplater.js"></script>
+<style>
+@media print{
+  .no-print{display:none !important;}
+  body{background:#fff !important;}
+}
+:root{
+  --bg:#080c14;
+  --bg2:#0d1420;
+  --panel:#111a2a;
+  --panel-soft:#0c1220;
+  --line:#233350;
+  --line-soft:#182238;
+  --grid-line: rgba(96,140,196,0.09);
+  --ink:#e7edf7;
+  --ink-dim:#8497b8;
+  --ink-faint:#516085;
+  --trace:#3b9eff;
+  --trace-soft:#1a3a5c;
+  --gold:#e8b545;
+  --alarm:#ff5d77;
+  --alarm-soft:#4a1f2b;
+  --radius:2px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',sans-serif;}
+body{
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size:28px 28px;
+  min-height:100vh;
+}
+::selection{background:var(--trace);color:#04120f;}
+a{color:var(--trace);}
+.mono{font-family:'IBM Plex Mono',monospace;}
+input:focus-visible, select:focus-visible, button:focus-visible{
+  outline:2px solid var(--trace); outline-offset:2px;
+}
+
+/* ===== Title block ===== */
+.titleblock{
+  border-bottom:1px solid var(--line);
+  background:linear-gradient(180deg, rgba(17,26,42,.9), rgba(13,20,32,.7));
+  padding:18px 22px;
+  display:flex; flex-wrap:wrap; gap:14px 28px; align-items:flex-end; justify-content:space-between;
+}
+.titleblock .brand{display:flex; align-items:baseline; gap:12px;}
+.titleblock .brand .mark{
+  width:34px;height:34px;border:1.5px solid var(--trace); border-radius:3px;
+  display:flex;align-items:center;justify-content:center;color:var(--trace);
+  font-family:'IBM Plex Mono';font-weight:700;font-size:15px;flex:none;
+  box-shadow:0 0 14px rgba(59, 158, 255,.18) inset;
+}
+.titleblock h1{
+  font-family:'IBM Plex Sans Condensed'; font-weight:700; letter-spacing:.3px;
+  font-size:20px; margin:0; text-transform:uppercase;
+}
+.titleblock .sub{color:var(--ink-dim); font-size:12.5px; margin-top:2px;}
+.stamp{
+  display:grid; grid-template-columns:repeat(4,auto); gap:0 22px;
+  font-family:'IBM Plex Mono'; font-size:10.5px; color:var(--ink-dim);
+}
+.stamp div b{display:block; color:var(--ink-faint); font-weight:500; font-size:9px; letter-spacing:.06em; text-transform:uppercase;}
+.stamp div span{color:var(--trace); font-weight:600; font-size:12px;}
+
+/* ===== layout ===== */
+.app{
+  display:grid; grid-template-columns:378px 1fr;
+  gap:1px; background:var(--line);
+  max-width:1480px; margin:0 auto;
+}
+@media (max-width:980px){ .app{grid-template-columns:1fr;} }
+
+.steps{background:var(--bg2); padding:18px 16px 40px; display:flex; flex-direction:column; gap:14px;}
+.canvas-col{background:var(--bg2); display:flex; flex-direction:column; gap:1px; background:var(--line);}
+.canvas-col > *{background:var(--bg2);}
+
+/* ===== step cards ===== */
+.step{
+  border:1px solid var(--line-soft); border-radius:var(--radius); background:var(--panel-soft);
+  overflow:hidden;
+}
+.step-head{
+  display:flex; align-items:center; gap:10px; padding:11px 13px;
+  background:var(--panel); cursor:pointer; user-select:none;
+  border-bottom:1px solid var(--line-soft);
+}
+.step-num{
+  font-family:'IBM Plex Mono'; font-size:11px; font-weight:600; color:var(--bg);
+  background:var(--trace); width:22px; height:22px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center; flex:none;
+}
+.step.optional .step-num{background:var(--ink-faint); color:var(--bg2);}
+.step.optional.on .step-num{background:var(--gold);}
+.step-title{font-size:13px; font-weight:600; letter-spacing:.2px; flex:1;}
+.step-title small{display:block; font-weight:400; color:var(--ink-dim); font-size:10.5px; margin-top:1px;}
+.step-toggle{
+  font-family:'IBM Plex Mono'; font-size:9.5px; color:var(--ink-dim);
+  border:1px solid var(--line); border-radius:20px; padding:3px 9px;
+  display:flex; align-items:center; gap:6px;
+}
+.chev{color:var(--ink-faint); font-size:11px; transition:transform .15s;}
+.step.closed .chev{transform:rotate(-90deg);}
+.step-body{padding:13px; display:flex; flex-direction:column; gap:11px;}
+.step.closed .step-body{display:none;}
+
+label.field{display:flex; flex-direction:column; gap:5px; font-size:11.5px; color:var(--ink-dim);}
+label.field b{color:var(--ink); font-weight:500; font-size:12px;}
+.row2{display:grid; grid-template-columns:1fr 1fr; gap:9px;}
+.row3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:9px;}
+
+input[type=number], select{
+  background:var(--bg2); border:1px solid var(--line); color:var(--ink);
+  font-family:'IBM Plex Mono'; font-size:13px; padding:8px 9px; border-radius:var(--radius);
+  width:100%;
+}
+select{appearance:none; -webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238497b8'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:right 10px center; padding-right:26px;
+}
+input[type=number]:focus, select:focus{border-color:var(--trace);}
+
+.chip-row{display:flex; flex-wrap:wrap; gap:6px;}
+.chip{
+  font-family:'IBM Plex Mono'; font-size:10.5px; color:var(--ink-dim);
+  border:1px solid var(--line); padding:4px 8px; border-radius:20px; cursor:pointer;
+  background:var(--bg2);
+}
+.chip:hover{border-color:var(--trace); color:var(--ink);}
+.chip.active{border-color:var(--trace); color:var(--trace); background:var(--trace-soft);}
+
+.seg{display:flex; border:1px solid var(--line); border-radius:20px; overflow:hidden; width:max-content;}
+.seg button{
+  background:transparent; border:none; color:var(--ink-dim); font-family:'IBM Plex Mono';
+  font-size:10.5px; padding:5px 12px; cursor:pointer;
+}
+.seg button.active{background:var(--trace); color:#04120f; font-weight:600;}
+
+.switch{position:relative; width:34px; height:19px; flex:none;}
+.switch input{opacity:0; width:0; height:0; position:absolute;}
+.switch .track{position:absolute; inset:0; background:var(--line); border-radius:20px; transition:.15s;}
+.switch .track:before{content:''; position:absolute; width:13px; height:13px; left:3px; top:3px; background:var(--ink-dim); border-radius:50%; transition:.15s;}
+.switch input:checked + .track{background:var(--trace-soft); border:1px solid var(--trace);}
+.switch input:checked + .track:before{transform:translateX(15px); background:var(--trace);}
+
+.hint{font-size:10.5px; color:var(--ink-faint); line-height:1.5;}
+.hint em{color:var(--ink-dim); font-style:normal;}
+.override-box{
+  border:1px dashed var(--line); border-radius:var(--radius); padding:9px 10px;
+  display:flex; flex-direction:column; gap:8px; background:rgba(255,255,255,.015);
+}
+.override-head{display:flex; align-items:center; gap:8px; font-size:11px; color:var(--ink-dim);}
+
+.example-btn{
+  align-self:flex-start; font-family:'IBM Plex Mono'; font-size:11px; font-weight:600; color:#0a1220;
+  background:var(--trace); border:1px solid var(--trace); padding:9px 16px; border-radius:20px; cursor:pointer;
+  box-shadow:0 0 0 1px rgba(0,0,0,0), 0 4px 12px -4px var(--trace-soft);
+}
+.example-btn:hover{filter:brightness(1.08);}
+
+/* ===== diagram panel ===== */
+.panel{padding:16px;}
+.panel-head{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:10px; gap:10px; flex-wrap:wrap;}
+.panel-head h2{font-family:'IBM Plex Sans Condensed'; font-size:13px; text-transform:uppercase; letter-spacing:.1em; color:var(--ink-dim); margin:0; font-weight:600;}
+.panel-head .tag{font-family:'IBM Plex Mono'; font-size:10px; color:var(--ink-faint);}
+
+.sld-wrap{border:1px solid var(--line-soft); border-radius:var(--radius); overflow:hidden; background:
+  repeating-linear-gradient(0deg, transparent, transparent 27px, var(--grid-line) 28px),
+  repeating-linear-gradient(90deg, transparent, transparent 27px, var(--grid-line) 28px), var(--panel-soft);
+}
+#sld{display:block; width:100%; height:auto;}
+.sld-cap{
+  display:flex; justify-content:space-between; padding:7px 12px; border-top:1px solid var(--line-soft);
+  font-family:'IBM Plex Mono'; font-size:9.5px; color:var(--ink-faint);
+}
+
+/* ===== gauge + summary ===== */
+.result-grid{display:grid; grid-template-columns:220px 1fr; gap:16px; align-items:center;}
+@media (max-width:640px){ .result-grid{grid-template-columns:1fr;} }
+.gauge-box{display:flex; flex-direction:column; align-items:center; gap:4px;}
+.gauge-num{font-family:'IBM Plex Mono'; font-weight:700; font-size:30px; color:var(--gold); text-shadow:0 0 22px rgba(232,181,69,.35);}
+.gauge-lbl{font-size:10px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:.1em;}
+
+.stat-list{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+@media (max-width:480px){ .stat-list{grid-template-columns:1fr;} }
+.stat{
+  border:1px solid var(--line-soft); border-radius:var(--radius); padding:9px 11px; background:var(--panel-soft);
+}
+.stat .k{font-size:10px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.06em;}
+.stat .v{font-family:'IBM Plex Mono'; font-size:16px; font-weight:600; margin-top:3px;}
+.stat.hot{border-color:var(--alarm); background:linear-gradient(180deg, rgba(255,93,119,.08), transparent);}
+.stat.hot .v{color:var(--alarm);}
+
+/* ===== ledger ===== */
+.ledger{display:flex; flex-direction:column;}
+.lstep{
+  padding:13px 16px; border-bottom:1px solid var(--line-soft); display:grid; grid-template-columns:26px 1fr; gap:12px;
+}
+.lstep:last-child{border-bottom:none;}
+.lstep .ln{font-family:'IBM Plex Mono'; color:var(--ink-faint); font-size:11px; padding-top:2px;}
+.lstep h3{margin:0 0 5px; font-size:12.5px; font-weight:600; color:var(--ink);}
+.lstep .formula{
+  font-family:'IBM Plex Mono'; font-size:12px; color:var(--trace); background:rgba(59, 158, 255,.06);
+  padding:8px 10px; border-radius:var(--radius); border:1px solid var(--trace-soft); margin:6px 0; overflow-x:auto; white-space:pre;
+}
+.lstep .sub{font-family:'IBM Plex Mono'; font-size:11.5px; color:var(--ink-dim); line-height:1.7;}
+.cite{font-size:9.5px; color:var(--ink-faint); margin-top:6px; line-height:1.5; border-left:2px solid var(--line); padding-left:8px;}
+.cite b{color:var(--ink-dim); font-weight:500;}
+
+footer.note{
+  max-width:1480px; margin:22px auto 60px; padding:0 16px; font-size:10.5px; color:var(--ink-faint); line-height:1.7;
+}
+footer.note b{color:var(--ink-dim);}
+.lang-switch{display:flex;align-items:center;background:#0f2036;border:1px solid #2f5678;border-radius:16px;padding:3px;gap:2px;font-family:monospace;font-size:11px;position:fixed;top:10px;right:12px;z-index:9999;}
+.lang-switch button{border:none;background:transparent;color:#8fa8c2;padding:5px 12px;border-radius:13px;cursor:pointer;font-family:inherit;font-size:inherit;}
+.lang-switch button.active{background:#f2a93b;color:#1a1000;font-weight:700;}
+</style>
+</head>
+<body>
+<a href="index.html" class="no-print" style="position:fixed;top:10px;left:12px;z-index:9999;font-family:monospace;font-size:11px;color:#8fa8c2;background:rgba(10,23,40,0.85);border:1px solid #234261;border-radius:14px;padding:5px 12px;text-decoration:none;">← OhmZone</a>
+<div class="lang-switch no-print">
+  <button type="button" id="btn-en" class="active" onclick="setLang('en')">EN</button>
+  <button type="button" id="btn-fr" onclick="setLang('fr')">FR</button>
+</div>
+
+<div class="titleblock">
+  <div class="brand">
+    <div class="mark">Isc</div>
+    <div>
+      <h1 id="titleH1">Maximum Short-Circuit Current Study</h1>
+      <div class="sub" id="titleSub">Point-of-interconnection → cable → transformer → cable, series R–X (ohmic) method</div>
+    </div>
+  </div>
+  <div class="stamp">
+    <div><b id="lblDwg">Dwg No.</b><span>SC-001</span></div>
+    <div><b id="lblScale">Scale</b><span>NTS</span></div>
+    <div><b id="lblMethod">Method</b><span>IEEE 551 / ANSI C37</span></div>
+    <div><b id="lblRev">Rev</b><span id="revTag">—</span></div>
+  </div>
+</div>
+
+<div class="app">
+  <div class="steps">
+
+    <button class="example-btn" id="loadExample">▸ <span id="loadExampleTxt">Load worked example</span></button>
+
+    <!-- STEP 1 -->
+    <div class="step" id="step1">
+      <div class="step-head" data-toggle="step1">
+        <div class="step-num">1</div>
+        <div class="step-title" id="step1Title">Source / Point of Interconnection<small id="step1Small">Utility or upstream system data</small></div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="step-body">
+        <label class="field"><b id="lblTag">Study / equipment tag</b>
+          <input type="text" id="eqTag" placeholder="e.g. SC-101, BUS-1">
+        </label>
+        <label class="field"><b id="lblSrcV">System voltage at POI (V, line-to-line)</b>
+          <input type="number" id="srcV" value="25000" min="1">
+        </label>
+        <div class="chip-row" data-chips-for="srcV">
+          <div class="chip" data-v="600">600 V</div>
+          <div class="chip" data-v="4160">4160 V</div>
+          <div class="chip" data-v="12470">12.47 kV</div>
+          <div class="chip" data-v="13800">13.8 kV</div>
+          <div class="chip" data-v="25000">25 kV</div>
+          <div class="chip" data-v="34500">34.5 kV</div>
+        </div>
+        <div class="row2">
+          <label class="field"><b id="lblSrcIsc">Max 3φ sym. Isc at POI</b>
+            <input type="number" id="srcIsc" value="8.5" step="0.1" min="0">
+          </label>
+          <label class="field"><b id="lblUnit1">Unit</b>
+            <select id="srcIscUnit"><option value="kA">kA</option><option value="A">A</option></select>
+          </label>
+        </div>
+        <label class="field"><b id="lblSrcXR">X/R ratio at POI</b>
+          <input type="number" id="srcXR" value="15" step="0.1" min="0.1">
+        </label>
+        <div class="hint" id="hintStep1">If the utility gives only Isc with no X/R, <em>IEEE Std 242</em> notes a common conservative assumption of 12–15 for transmission-fed sources.</div>
+      </div>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="step optional" id="step2">
+      <div class="step-head" data-toggle="step2">
+        <div class="step-num">2</div>
+        <div class="step-title" id="step2Title">Primary Cable <span style="color:var(--ink-faint)" id="optionalTag1">(optional)</span><small id="step2Small">Between POI and transformer primary</small></div>
+        <label class="switch" onclick="event.stopPropagation()">
+          <input type="checkbox" id="cable1On"><span class="track"></span>
+        </label>
+      </div>
+      <div class="step-body">
+        <div class="row2">
+          <label class="field"><b id="lblLength1">Length</b><input type="number" id="c1Len" value="150" min="0"></label>
+          <label class="field"><b id="lblUnit2">Unit</b>
+            <div class="seg" id="c1Unit"><button data-u="m" class="active">m</button><button data-u="ft">ft</button></div>
+          </label>
+        </div>
+        <div class="row2">
+          <label class="field"><b id="lblCond1">Conductor</b>
+            <select id="c1Mat"><option value="cu" id="optCu1">Copper</option><option value="al" id="optAl1">Aluminum</option></select>
+          </label>
+          <label class="field"><b id="lblRaceway1">Raceway</b>
+            <select id="c1Conduit"><option value="steel" id="optSteel1">Steel (magnetic)</option><option value="pvc" id="optPvc1">PVC (non-magnetic)</option></select>
+          </label>
+        </div>
+        <div class="row2">
+          <label class="field"><b id="lblSize1">Conductor size</b>
+            <select id="c1Size"></select>
+          </label>
+          <label class="field"><b id="lblSets1">Sets / phase (parallel)</b>
+            <input type="number" id="c1Par" value="1" min="1" step="1">
+          </label>
+        </div>
+        <div class="hint" id="hintStep2">Cable impedance <em>reduces</em> downstream Isc — every run added lengthens the total impedance path.</div>
+      </div>
+    </div>
+
+    <!-- STEP 3 -->
+    <div class="step" id="step3">
+      <div class="step-head" data-toggle="step3">
+        <div class="step-num">3</div>
+        <div class="step-title" id="step3Title">Transformer<small id="step3Small">Size, secondary voltage, %Z / X-R</small></div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="step-body">
+        <div class="row2">
+          <label class="field"><b id="lblRatingX">Rating</b>
+            <select id="xKVA"></select>
+          </label>
+          <label class="field"><b id="lblConstruction">Construction</b>
+            <select id="xType"><option value="liquid" id="optLiquid">Liquid-filled</option><option value="dry" id="optDry">Dry-type</option></select>
+          </label>
+        </div>
+        <div class="row2">
+          <label class="field"><b id="lblSecV">Secondary voltage (V, L-L)</b>
+            <input type="number" id="xV2" value="600" min="1">
+          </label>
+          <label class="field"><b id="lblVendor">Vendor family <span style="color:var(--ink-faint)" id="refOnlyTag">(reference only)</span></b>
+            <select id="xVendor">
+              <optgroup label="Large power (medium/high side)" id="optgLarge">
+                <option>Hitachi Energy</option>
+                <option>Siemens Energy</option>
+                <option>GE Vernova (Prolec GE)</option>
+              </optgroup>
+              <optgroup label="Distribution class" id="optgDist">
+                <option>Eaton</option>
+                <option>Howard Industries</option>
+                <option>ERMCO</option>
+                <option>Hammond Power Solutions (HPS)</option>
+                <option>Central Moloney</option>
+              </optgroup>
+            </select>
+          </label>
+        </div>
+        <div class="chip-row" data-chips-for="xV2">
+          <div class="chip" data-v="208">208 V</div>
+          <div class="chip" data-v="240">240 V</div>
+          <div class="chip" data-v="480">480 V</div>
+          <div class="chip" data-v="600">600 V</div>
+          <div class="chip" data-v="4160">4160 V</div>
+        </div>
+
+        <div class="override-box">
+          <div class="override-head">
+            <label class="switch"><input type="checkbox" id="xOverrideOn"><span class="track"></span></label>
+            <span id="overrideLabel">Use actual nameplate %Z / X-R instead of typical table</span>
+          </div>
+          <div class="row2" id="xOverrideFields" style="opacity:.4; pointer-events:none;">
+            <label class="field"><b id="lblZOverride">Nameplate %Z</b><input type="number" id="xZOverride" value="5.75" step="0.01" min="0.1"></label>
+            <label class="field"><b id="lblXROverride">Nameplate X/R</b><input type="number" id="xXROverride" value="6" step="0.1" min="0.1"></label>
+          </div>
+        </div>
+        <div class="hint" id="xTypical"></div>
+      </div>
+    </div>
+
+    <!-- STEP 4 -->
+    <div class="step optional" id="step4">
+      <div class="step-head" data-toggle="step4">
+        <div class="step-num">4</div>
+        <div class="step-title" id="step4Title">Secondary Cable <span style="color:var(--ink-faint)" id="optionalTag2">(optional)</span><small id="step4Small">Between transformer secondary and equipment</small></div>
+        <label class="switch" onclick="event.stopPropagation()">
+          <input type="checkbox" id="cable2On" checked><span class="track"></span>
+        </label>
+      </div>
+      <div class="step-body">
+        <div class="row2">
+          <label class="field"><b id="lblLength2">Length</b><input type="number" id="c2Len" value="30" min="0"></label>
+          <label class="field"><b id="lblUnit3">Unit</b>
+            <div class="seg" id="c2Unit"><button data-u="m" class="active">m</button><button data-u="ft">ft</button></div>
+          </label>
+        </div>
+        <div class="row2">
+          <label class="field"><b id="lblCond2">Conductor</b>
+            <select id="c2Mat"><option value="cu" id="optCu2">Copper</option><option value="al" id="optAl2">Aluminum</option></select>
+          </label>
+          <label class="field"><b id="lblRaceway2">Raceway</b>
+            <select id="c2Conduit"><option value="steel" id="optSteel2">Steel (magnetic)</option><option value="pvc" id="optPvc2">PVC (non-magnetic)</option></select>
+          </label>
+        </div>
+        <div class="row2">
+          <label class="field"><b id="lblSize2">Conductor size</b>
+            <select id="c2Size"></select>
+          </label>
+          <label class="field"><b id="lblSets2">Sets / phase (parallel)</b>
+            <input type="number" id="c2Par" value="2" min="1" step="1">
+          </label>
+        </div>
+        <div class="hint" id="hintStep4">This is the cable feeding the "secondary equipment" — the final result below is the Isc it must be rated to interrupt.</div>
+      </div>
+    </div>
+
+    <!-- STEP 5: SECONDARY GROUNDING -->
+    <div class="step optional" id="step5">
+      <div class="step-head" data-toggle="step5">
+        <div class="step-num">5</div>
+        <div class="step-title" id="step5Title">Secondary Grounding <span style="color:var(--ink-faint)" id="optionalTag3">(optional)</span><small id="step5Small">Solid, low-resistance, or high-resistance neutral grounding</small></div>
+        <label class="switch" onclick="event.stopPropagation()">
+          <input type="checkbox" id="groundOn"><span class="track"></span>
+        </label>
+      </div>
+      <div class="step-body">
+        <label class="field"><b id="lblGroundType">Grounding type</b>
+          <select id="groundType">
+            <option value="solid" id="optSolid">Solidly grounded</option>
+            <option value="lrg" id="optLrg">Low-resistance grounded (LRG)</option>
+            <option value="hrg" selected id="optHrg">High-resistance grounded (HRG)</option>
+          </select>
+        </label>
+        <div id="ngrFields">
+          <label class="field"><b id="lblNgrInputMode">Specify NGR by</b>
+            <div class="seg" id="ngrModeSeg">
+              <button data-u="resistance" class="active">Resistance (Ω)</button>
+              <button data-u="current">Target ground-fault current (A)</button>
+            </div>
+          </label>
+          <label class="field" id="ngrRWrap"><b id="lblNgrR">Neutral grounding resistor, R<sub>NGR</sub> (Ω)</b>
+            <input type="number" id="ngrR" value="70" min="0.1" step="0.1">
+          </label>
+          <label class="field" id="ngrIWrap" style="display:none;"><b id="lblNgrI">Target maximum ground-fault current (A)</b>
+            <input type="number" id="ngrI" value="5" min="0.1" step="0.1">
+          </label>
+          <label class="field"><b id="lblIc">System charging current, I<sub>C</sub> (A, optional)</b>
+            <input type="number" id="chargingIc" value="" min="0" step="0.1" placeholder="e.g. 3.5">
+          </label>
+          <label class="field"><b id="lblNgrDuty">Resistor duty rating</b>
+            <div class="seg" id="ngrDutySeg">
+              <button data-u="10s" class="active">10-second</button>
+              <button data-u="continuous">Continuous / extended time</button>
+            </div>
+          </label>
+        </div>
+        <div class="hint" id="hintStep5"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="canvas-col">
+    <div class="panel">
+      <div class="panel-head"><h2 id="sldTitle">Single-Line Diagram</h2><span class="tag" id="sldTag">updates live as components are added</span></div>
+      <div class="sld-wrap"><svg id="sld" viewBox="0 0 1000 300" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div class="sld-cap"><span id="sldCapTxt">ANSI/IEEE one-line symbols · schematic, not to scale</span><span id="sldVoltTag"></span></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2 id="resultTitle">Result — Secondary Equipment</h2></div>
+      <div class="result-grid">
+        <div class="gauge-box">
+          <svg id="gauge" width="200" height="130" viewBox="0 0 200 130"></svg>
+          <div class="gauge-num" id="gaugeNum">—</div>
+          <div class="gauge-lbl" id="gaugeLbl">kA symmetrical RMS</div>
+        </div>
+        <div class="stat-list">
+          <div class="stat hot"><div class="k" id="lblStatFinal">Max Isc, secondary equipment</div><div class="v" id="statFinal">—</div></div>
+          <div class="stat"><div class="k" id="lblStatXfmr">Isc at transformer secondary bus</div><div class="v" id="statXfmr">—</div></div>
+          <div class="stat"><div class="k" id="lblStatZ">Total Z to fault point</div><div class="v" id="statZ">—</div></div>
+          <div class="stat"><div class="k" id="lblStatXR">Resulting X/R</div><div class="v" id="statXR">—</div></div>
+          <div class="stat"><div class="k" id="lblStatPeak">Peak asym. (crest) current</div><div class="v" id="statPeak">—</div></div>
+          <div class="stat"><div class="k" id="lblStatKappa">κ (asymmetry factor)</div><div class="v" id="statKappa">—</div></div>
+        </div>
+      </div>
+      <div class="hint" id="ratingHint" style="margin-top:10px;"></div>
+      <div id="groundFaultBox"></div>
+    </div>
+
+    <div class="panel no-print" style="border:none;background:transparent;">
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px;font-size:11.5px;color:var(--ink-dim);">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+          <input type="checkbox" id="includeLedger" checked style="width:auto;">
+          <span id="lblIncludeLedger">Include Calculation Ledger in report</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+          <input type="checkbox" id="includeLogo" checked style="width:auto;">
+          <span id="lblIncludeLogo">Include OhmZone brand mark in report</span>
+        </label>
+      </div>
+      <div class="btn-row" style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button id="printBtn" style="padding:9px 16px;border-radius:8px;border:1px solid #2f5678;background:#0f2036;color:#c8d8e8;cursor:pointer;font-family:inherit;">🖨 Print / Save as PDF</button>
+        <button id="exportWordBtn" style="padding:9px 16px;border-radius:8px;border:1px solid #2f5678;background:#0f2036;color:#c8d8e8;cursor:pointer;font-family:inherit;">📄 Export study (Word)</button>
+        <button id="exportExcelBtn" style="padding:9px 16px;border-radius:8px;border:1px solid #2f5678;background:#0f2036;color:#c8d8e8;cursor:pointer;font-family:inherit;">📊 Export study (Excel)</button>
+      </div>
+      <div style="border-top:1px dashed var(--line);margin-top:14px;padding-top:12px;">
+        <label class="field"><b id="lblUploadTemplate">Report template (.docx, optional)</b>
+          <input type="file" id="templateFile" accept=".docx">
+        </label>
+        <div id="templateStatus" style="font-size:11px;color:var(--trace);margin-top:4px;"></div>
+        <div class="hint" id="hintUploadTemplate" style="margin-top:6px;"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2 id="ledgerTitle">Calculation Ledger</h2><span class="tag" id="ledgerTag">ohmic (Ω) method, all impedances referred to secondary voltage base</span></div>
+      <div class="ledger" id="ledger"></div>
+    </div>
+  </div>
+</div>
+
+<footer class="note" id="footerNote">
+  <b>Method notes.</b> This tool sums resistance and reactance vectorially (not just impedance magnitudes) per the guidance in IEEE Std 242 (Buff Book) / IEEE Std 551 (Violet Book) recommended practice for short-circuit calculations in industrial and commercial power systems, then refers upstream impedance to the secondary voltage base using Z₂ = Z₁·(V₂/V₁)². Transformer %Z / X-R defaults are typical values consistent with ANSI/IEEE C57.12.00 and C57.12.26 standard impedance levels and the IEEE 242 suggested X/R table — they are <b>not</b> a specific manufacturer's factory test result; always substitute the nameplate %Z and X/R once a unit is selected (tolerance per ANSI/IEEE C57.12.00 §9 is ±7.5% for two-winding units, ±10% for autotransformers/3-winding units). Cable resistance and reactance values are taken from NEC Chapter 9, Table 9 (600 V cables, 3-phase, 60 Hz, 75°C, three single conductors in conduit) — the CSA C22.1 (Canadian Electrical Code Part I) Appendix D tables follow the same underlying methodology for Canadian installations; consult the applicable table directly for conductor sizes or configurations beyond this reference set. The peak (crest) asymmetrical current factor κ uses the IEC 60909-0 approximation κ = 1.02 + 0.98·e^(−3R/X); ANSI/IEEE C37.010 multiplying-factor tables should be used instead when sizing ANSI-rated switchgear. This tool is for preliminary planning only — a stamped short-circuit / coordination study by a qualified engineer is required before equipment is specified or purchased.
+</footer>
+
+<script>
+/* ======================= reference data ======================= */
+
+// NEC Chapter 9, Table 9 — Ω per 1000 ft, 600V cables, 3φ, 60Hz, 75°C, 3 single conductors in conduit
+const CABLE_TABLE = [
+  {size:"10 AWG",  Rcu:{pvc:1.2,   steel:1.2  }, Ral:{pvc:2.0,   steel:2.0  }, X:{pvc:0.050, steel:0.063}},
+  {size:"8 AWG",   Rcu:{pvc:0.78,  steel:0.78 }, Ral:{pvc:1.3,   steel:1.3  }, X:{pvc:0.052, steel:0.065}},
+  {size:"6 AWG",   Rcu:{pvc:0.49,  steel:0.49 }, Ral:{pvc:0.81,  steel:0.81 }, X:{pvc:0.051, steel:0.064}},
+  {size:"4 AWG",   Rcu:{pvc:0.31,  steel:0.31 }, Ral:{pvc:0.51,  steel:0.51 }, X:{pvc:0.048, steel:0.060}},
+  {size:"2 AWG",   Rcu:{pvc:0.19,  steel:0.20 }, Ral:{pvc:0.32,  steel:0.32 }, X:{pvc:0.045, steel:0.057}},
+  {size:"1 AWG",   Rcu:{pvc:0.15,  steel:0.16 }, Ral:{pvc:0.25,  steel:0.25 }, X:{pvc:0.046, steel:0.057}},
+  {size:"1/0 AWG", Rcu:{pvc:0.12,  steel:0.12 }, Ral:{pvc:0.20,  steel:0.20 }, X:{pvc:0.044, steel:0.055}},
+  {size:"2/0 AWG", Rcu:{pvc:0.10,  steel:0.10 }, Ral:{pvc:0.16,  steel:0.16 }, X:{pvc:0.043, steel:0.054}},
+  {size:"3/0 AWG", Rcu:{pvc:0.077, steel:0.079}, Ral:{pvc:0.13,  steel:0.13 }, X:{pvc:0.042, steel:0.052}},
+  {size:"4/0 AWG", Rcu:{pvc:0.062, steel:0.063}, Ral:{pvc:0.10,  steel:0.10 }, X:{pvc:0.041, steel:0.051}},
+  {size:"250 kcmil",Rcu:{pvc:0.052,steel:0.054}, Ral:{pvc:0.085, steel:0.086}, X:{pvc:0.041, steel:0.052}},
+  {size:"300 kcmil",Rcu:{pvc:0.044,steel:0.045}, Ral:{pvc:0.071, steel:0.072}, X:{pvc:0.041, steel:0.051}},
+  {size:"350 kcmil",Rcu:{pvc:0.038,steel:0.039}, Ral:{pvc:0.061, steel:0.063}, X:{pvc:0.040, steel:0.050}},
+  {size:"400 kcmil",Rcu:{pvc:0.033,steel:0.035}, Ral:{pvc:0.054, steel:0.055}, X:{pvc:0.040, steel:0.049}},
+];
+
+// Typical transformer %Z / X-R by kVA (liquid-filled baseline), consistent with
+// ANSI/IEEE C57.12.00 / C57.12.26 standard impedance levels and IEEE 242 suggested X/R table.
+const XFMR_TABLE = [
+  {max:75,    Z:2.5,  XR:1.5},
+  {max:150,   Z:3.0,  XR:2.0},
+  {max:300,   Z:4.0,  XR:3.0},
+  {max:500,   Z:4.5,  XR:3.5},
+  {max:750,   Z:5.5,  XR:4.5},
+  {max:1000,  Z:5.75, XR:5.0},
+  {max:1500,  Z:5.75, XR:6.5},
+  {max:2500,  Z:5.75, XR:7.0},
+  {max:5000,  Z:6.5,  XR:8.0},
+  {max:7500,  Z:7.0,  XR:9.0},
+  {max:10000, Z:7.5,  XR:9.5},
+];
+const KVA_OPTIONS = [15,30,45,75,112.5,150,225,300,500,750,1000,1500,2000,2500,3000,3750,5000,7500,10000];
+
+function xfmrTypical(kva){
+  for(const row of XFMR_TABLE){ if(kva<=row.max) return row; }
+  return XFMR_TABLE[XFMR_TABLE.length-1];
+}
+
+/* ======================= dom helpers ======================= */
+const $ = id => document.getElementById(id);
+function fillSelect(sel, arr, fmt){ sel.innerHTML = arr.map((v,i)=>`<option value="${i}">${fmt(v)}</option>`).join(''); }
+
+fillSelect($('c1Size'), CABLE_TABLE, c=>c.size);
+fillSelect($('c2Size'), CABLE_TABLE, c=>c.size);
+$('c1Size').value = 6; $('c2Size').value = 10; // 250kcmil / 400kcmil defaults
+fillSelect($('xKVA'), KVA_OPTIONS, k=>`${k} kVA`);
+$('xKVA').value = 10; // 1000 kVA default
+
+/* step collapse */
+document.querySelectorAll('[data-toggle]').forEach(h=>{
+  h.addEventListener('click', ()=>{
+    const step = document.getElementById(h.dataset.toggle);
+    step.classList.toggle('closed');
+  });
+});
+// unit chips
+document.querySelectorAll('.chip-row').forEach(row=>{
+  const target = $(row.dataset.chipsFor);
+  row.querySelectorAll('.chip').forEach(ch=>{
+    ch.addEventListener('click', ()=>{ target.value = ch.dataset.v; recalc(); });
+  });
+});
+// segmented unit toggles
+function wireSeg(id, cb){
+  const seg = $(id);
+  seg.querySelectorAll('button').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      seg.querySelectorAll('button').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active'); cb(b.dataset.u); recalc();
+    });
+  });
+}
+let c1LenUnit='m', c2LenUnit='m';
+wireSeg('c1Unit', u=>c1LenUnit=u);
+wireSeg('c2Unit', u=>c2LenUnit=u);
+
+// enable/disable toggles auto-open their step
+function wireEnable(chkId, stepId){
+  $(chkId).addEventListener('change', ()=>{
+    const step = $(stepId);
+    step.classList.toggle('on', $(chkId).checked);
+    if($(chkId).checked) step.classList.remove('closed');
+    recalc();
+  });
+}
+wireEnable('cable1On','step1'); // no-op safe
+$('cable1On').addEventListener('change', ()=>{ $('step2').classList.toggle('on', $('cable1On').checked); });
+$('cable2On').addEventListener('change', ()=>{ $('step4').classList.toggle('on', $('cable2On').checked); });
+$('groundOn').addEventListener('change', ()=>{ $('step5').classList.toggle('on', $('groundOn').checked); recalc(); });
+$('groundType').addEventListener('change', ()=>{
+  const t = $('groundType').value;
+  $('ngrFields').style.display = (t==='hrg'||t==='lrg') ? 'flex' : 'none';
+  $('ngrFields').style.flexDirection = 'column';
+  $('ngrFields').style.gap = '11px';
+  recalc();
+});
+wireSeg('ngrModeSeg', v=>{
+  $('ngrRWrap').style.display = v==='resistance' ? 'flex' : 'none';
+  $('ngrIWrap').style.display = v==='current' ? 'flex' : 'none';
+});
+wireSeg('ngrDutySeg', ()=>{});
+
+$('xOverrideOn').addEventListener('change', ()=>{
+  const on = $('xOverrideOn').checked;
+  $('xOverrideFields').style.opacity = on ? 1 : .4;
+  $('xOverrideFields').style.pointerEvents = on ? 'auto' : 'none';
+  recalc();
+});
+
+document.querySelectorAll('input,select').forEach(el=>{
+  el.addEventListener('input', recalc);
+  el.addEventListener('change', recalc);
+});
+
+$('loadExample').addEventListener('click', ()=>{
+  $('srcV').value=25000; $('srcIsc').value=8.5; $('srcIscUnit').value='kA'; $('srcXR').value=15;
+  $('cable1On').checked=true; $('step2').classList.add('on');
+  $('c1Len').value=150; c1LenUnit='m'; $('c1Unit').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b.dataset.u==='m'));
+  $('c1Mat').value='al'; $('c1Conduit').value='steel'; $('c1Size').value=9; $('c1Par').value=1;
+  $('xKVA').value=10; $('xType').value='liquid'; $('xV2').value=600; $('xOverrideOn').checked=false;
+  $('xOverrideFields').style.opacity=.4; $('xOverrideFields').style.pointerEvents='none';
+  $('cable2On').checked=true; $('step4').classList.add('on');
+  $('c2Len').value=30; c2LenUnit='m'; $('c2Unit').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b.dataset.u==='m'));
+  $('c2Mat').value='cu'; $('c2Conduit').value='steel'; $('c2Size').value=10; $('c2Par').value=2;
+  recalc();
+});
+
+/* ======================= core calc ======================= */
+function fmt(n, d=3){ if(!isFinite(n)) return '—'; return n.toLocaleString(undefined,{maximumFractionDigits:d, minimumFractionDigits:0}); }
+function toFeet(len, unit){ return unit==='m' ? len*3.28084 : len; }
+
+function cableImpedance(rowIdx, mat, conduit, lengthUserUnit, unit, parallel){
+  const row = CABLE_TABLE[rowIdx];
+  const Rper = (mat==='cu'? row.Rcu : row.Ral)[conduit];
+  const Xper = row.X[conduit];
+  const ft = toFeet(lengthUserUnit, unit);
+  const n = Math.max(1, parallel||1);
+  return { R: (Rper*ft/1000)/n, X: (Xper*ft/1000)/n, row, ft, Rper, Xper };
+}
+
+function recalc(){
+  const srcV = parseFloat($('srcV').value)||1;
+  let srcIsc = parseFloat($('srcIsc').value)||0;
+  if($('srcIscUnit').value==='kA') srcIsc*=1000;
+  const srcXR = Math.max(0.01, parseFloat($('srcXR').value)||0.01);
+
+  // Step A: source impedance at V1
+  const Zsrc = srcV/(Math.sqrt(3)*Math.max(srcIsc,1e-6));
+  const th1 = Math.atan(srcXR);
+  const Rsrc = Zsrc*Math.cos(th1), Xsrc = Zsrc*Math.sin(th1);
+
+  // Step B: optional primary cable (at V1)
+  const c1on = $('cable1On').checked;
+  let c1 = {R:0,X:0};
+  if(c1on){
+    c1 = cableImpedance(parseInt($('c1Size').value), $('c1Mat').value, $('c1Conduit').value,
+      parseFloat($('c1Len').value)||0, c1LenUnit, parseFloat($('c1Par').value)||1);
+  }
+  const R1 = Rsrc + c1.R, X1 = Xsrc + c1.X;
+
+  // Step C: refer to secondary voltage base
+  const V2 = parseFloat($('xV2').value)||1;
+  const ratio = Math.pow(V2/srcV, 2);
+  const R1ref = R1*ratio, X1ref = X1*ratio;
+
+  // Step D: transformer impedance
+  const kva = KVA_OPTIONS[parseInt($('xKVA').value)];
+  const typ = xfmrTypical(kva);
+  const dry = $('xType').value==='dry';
+  let Zpct = typ.Z + (dry? 0.5:0);
+  let XR = typ.XR * (dry? 0.8:1);
+  const overridden = $('xOverrideOn').checked;
+  if(overridden){ Zpct = parseFloat($('xZOverride').value)||Zpct; XR = parseFloat($('xXROverride').value)||XR; }
+  const Zbase2 = (V2*V2)/(kva*1000);
+  const Zx = (Zpct/100)*Zbase2;
+  const th2 = Math.atan(XR);
+  const Rx = Zx*Math.cos(th2), Xx = Zx*Math.sin(th2);
+
+  const Rbus = R1ref + Rx, Xbus = X1ref + Xx;
+  const Zbus = Math.hypot(Rbus, Xbus);
+  const IscBus = V2/(Math.sqrt(3)*Zbus);
+
+  const L0 = UI[currentLang];
+  $('xTypical').innerHTML = overridden
+    ? `${L0.usingNameplate} <em>%Z = ${Zpct.toFixed(2)}%, X/R = ${XR.toFixed(2)}</em>`
+    : `${L0.typicalFor.replace('{kva}',kva).replace('{type}',dry?L0.dryType:L0.liquidFilled)} <em>%Z ≈ ${Zpct.toFixed(2)}%, X/R ≈ ${XR.toFixed(2)}</em> — ${L0.verifyMfr}`;
+
+  // Step E: optional secondary cable
+  const c2on = $('cable2On').checked;
+  let c2 = {R:0,X:0};
+  if(c2on){
+    c2 = cableImpedance(parseInt($('c2Size').value), $('c2Mat').value, $('c2Conduit').value,
+      parseFloat($('c2Len').value)||0, c2LenUnit, parseFloat($('c2Par').value)||1);
+  }
+  const Rf = Rbus + c2.R, Xf = Xbus + c2.X;
+  const Zf = Math.hypot(Rf, Xf);
+  const IscFinal = V2/(Math.sqrt(3)*Zf);
+  const XRfinal = Xf/Math.max(Rf,1e-9);
+  const kappa = 1.02 + 0.98*Math.exp(-3/XRfinal);
+  const peak = kappa*Math.SQRT2*IscFinal;
+
+  // Step F: optional secondary neutral grounding (ground-fault current)
+  const groundOn = $('groundOn').checked;
+  const groundType = $('groundType').value;
+  let ground = null;
+  if(groundOn){
+    const phaseV2 = V2/Math.sqrt(3);
+    if(groundType==='hrg' || groundType==='lrg'){
+      const ngrMode = document.querySelector('#ngrModeSeg button.active').dataset.u;
+      let R_ngr;
+      if(ngrMode==='resistance'){
+        R_ngr = Math.max(0.01, parseFloat($('ngrR').value)||0.01);
+      } else {
+        const targetI = Math.max(0.01, parseFloat($('ngrI').value)||0.01);
+        R_ngr = phaseV2/targetI;
+      }
+      // NGR dominates the ground-fault loop impedance; system R/X included for completeness
+      const Zground = Math.hypot(Rf + R_ngr, Xf);
+      const Ig = phaseV2 / Zground;
+      const IcVal = parseFloat($('chargingIc').value);
+      const hasIc = !isNaN(IcVal) && IcVal>0;
+      const duty = document.querySelector('#ngrDutySeg button.active').dataset.u;
+      ground = {type:groundType, R_ngr, Ig, phaseV2, ngrMode, Ic: hasIc?IcVal:null,
+        satisfiesIrIc: hasIc ? (Ig>=IcVal) : null, duty};
+    } else {
+      ground = {type:'solid', phaseV2};
+    }
+  }
+
+  renderResults({srcV,srcIsc,srcXR,Zsrc,Rsrc,Xsrc,c1on,c1,R1,X1,V2,ratio,R1ref,X1ref,
+    kva,typ,dry,Zpct,XR,overridden,Zbase2,Zx,Rx,Xx,Rbus,Xbus,Zbus,IscBus,
+    c2on,c2,Rf,Xf,Zf,IscFinal,XRfinal,kappa,peak,groundOn,ground});
+  renderDiagram({c1on,c2on,srcV,V2,kva,IscBus,IscFinal,c1,c2});
+  renderGauge(IscFinal/1000);
+}
+
+function buildLedgerSteps(d){
+  const L = UI[currentLang];
+  const V1lbl = fmt(d.srcV,0), V2lbl = fmt(d.V2,0);
+  const steps = [];
+
+  steps.push({num:1, title:L.step1Title, note:`<b>${L.methodLbl}</b> ${L.step1Note}`, formula:
+`Z_src = V1 / (√3 × Isc_POI)
+     = ${V1lbl} / (√3 × ${fmt(d.srcIsc,0)} A)  =  ${fmt(d.Zsrc,5)} Ω
+
+θ = atan(X/R) = atan(${fmt(d.srcXR,2)}) = ${fmt(Math.atan(d.srcXR)*180/Math.PI,1)}°
+R_src = Z·cos θ = ${fmt(d.Rsrc,5)} Ω     X_src = Z·sin θ = ${fmt(d.Xsrc,5)} Ω`});
+
+  if(d.c1on){
+    steps.push({num:2, title:L.step2LedgerTitle.replace('{size}',d.c1.row.size).replace('{mat}',$('c1Mat').value.toUpperCase()).replace('{conduit}',$('c1Conduit').options[$('c1Conduit').selectedIndex].text),
+      note:`<b>${L.referenceLbl}</b> ${L.cableRefNote}`, formula:
+`${L.lengthLbl} = ${fmt(d.c1.ft,0)} ft, ${$('c1Par').value}× ${L.parallelPhase}
+R_cable = (${fmt(d.c1.Rper,4)} Ω/kft × ${fmt(d.c1.ft,0)} ft / 1000) ÷ ${($('c1Par').value)} = ${fmt(d.c1.R,5)} Ω
+X_cable = (${fmt(d.c1.Xper,4)} Ω/kft × ${fmt(d.c1.ft,0)} ft / 1000) ÷ ${($('c1Par').value)} = ${fmt(d.c1.X,5)} Ω
+
+R1 = R_src + R_cable = ${fmt(d.R1,5)} Ω     X1 = X_src + X_cable = ${fmt(d.X1,5)} Ω`});
+  } else {
+    steps.push({num:2, title:L.step2TitleSkipped, note:L.step2SkippedNote, formula:'R1 = R_src = '+fmt(d.R1,5)+' Ω     X1 = X_src = '+fmt(d.X1,5)+' Ω'});
+  }
+
+  steps.push({num:3, title:L.step3Title, note:`<b>${L.basisLbl}</b> ${L.step3Note}`, formula:
+`Z2 = Z1 × (V2 / V1)²      ratio = (${V2lbl} / ${V1lbl})² = ${fmt(d.ratio,8)}
+
+R1_ref = R1 × ratio = ${fmt(d.R1ref,6)} Ω
+X1_ref = X1 × ratio = ${fmt(d.X1ref,6)} Ω`});
+
+  steps.push({num:4, title:L.step4Title.replace('{kva}',d.kva).replace('{type}',d.dry?L.dryType:L.liquidFilled).replace('{src}',d.overridden?L.nameplateValuesTag:L.typicalTableTag),
+    note:L.step4Note, formula:
+`%Z = ${fmt(d.Zpct,2)}%   X/R = ${fmt(d.XR,2)}
+Z_base(sec) = V2² / S = ${V2lbl}² / (${d.kva}×1000 VA) = ${fmt(d.Zbase2,5)} Ω
+Z_xfmr = (%Z/100) × Z_base = ${fmt(d.Zx,5)} Ω
+
+θ = atan(${fmt(d.XR,2)}) = ${fmt(Math.atan(d.XR)*180/Math.PI,1)}°
+R_xfmr = ${fmt(d.Rx,5)} Ω     X_xfmr = ${fmt(d.Xx,5)} Ω`});
+
+  steps.push({num:5, title:L.step5Title, note:L.step5Note, formula:
+`R_bus = R1_ref + R_xfmr = ${fmt(d.Rbus,5)} Ω
+X_bus = X1_ref + X_xfmr = ${fmt(d.Xbus,5)} Ω
+Z_bus = √(R² + X²) = ${fmt(d.Zbus,5)} Ω
+
+Isc_bus = V2 / (√3 × Z_bus) = ${V2lbl} / (√3 × ${fmt(d.Zbus,5)}) = ${fmt(d.IscBus,0)} A  =  ${fmt(d.IscBus/1000,2)} kA`});
+
+  if(d.c2on){
+    steps.push({num:6, title:L.step6Title.replace('{size}',d.c2.row.size).replace('{mat}',$('c2Mat').value.toUpperCase()).replace('{conduit}',$('c2Conduit').options[$('c2Conduit').selectedIndex].text),
+      note:`<b>${L.referenceLbl}</b> ${L.step6Note}`, formula:
+`${L.lengthLbl} = ${fmt(d.c2.ft,0)} ft, ${$('c2Par').value}× ${L.parallelPhase}
+R_cable = ${fmt(d.c2.R,5)} Ω     X_cable = ${fmt(d.c2.X,5)} Ω
+
+R_final = R_bus + R_cable = ${fmt(d.Rf,5)} Ω
+X_final = X_bus + X_cable = ${fmt(d.Xf,5)} Ω`});
+  } else {
+    steps.push({num:6, title:L.step6TitleSkipped, note:L.step6SkippedNote, formula:'R_final = R_bus     X_final = X_bus'});
+  }
+
+  steps.push({num:7, title:L.step7Title, note:L.step7Note, formula:
+`Z_final = √(R_final² + X_final²) = ${fmt(d.Zf,5)} Ω
+
+Isc_final = V2 / (√3 × Z_final)
+          = ${V2lbl} / (√3 × ${fmt(d.Zf,5)})
+          = ${fmt(d.IscFinal,0)} A  =  ${fmt(d.IscFinal/1000,2)} kA  (${L.symRms})`});
+
+  steps.push({num:8, title:L.step8Title, note:`<b>${L.formulaLbl}</b> ${L.step8Note}`, formula:
+`X/R_final = X_final / R_final = ${fmt(d.XRfinal,2)}
+κ = 1.02 + 0.98·e^(−3 / (X/R)) = ${fmt(d.kappa,3)}
+
+I_peak = κ × √2 × Isc_final = ${fmt(d.kappa,3)} × 1.414 × ${fmt(d.IscFinal/1000,2)} kA = ${fmt(d.peak/1000,2)} kA`});
+
+  if(d.groundOn && d.ground){
+    const g = d.ground;
+    if(g.type==='solid'){
+      steps.push({num:9, title:L.step9TitleSolid, note:`<b>${L.clauseSolid}</b> ${L.step9NoteSolid}`, formula:`${L.solidFormulaNote}`});
+    } else {
+      const modeLine = g.ngrMode==='resistance'
+        ? `R_NGR = ${fmt(g.R_ngr,2)} Ω (${L.userEntered})`
+        : `R_NGR = V_phase / I_target = ${fmt(g.phaseV2,1)} / ${fmt(parseFloat($('ngrI').value)||0,2)} = ${fmt(g.R_ngr,2)} Ω`;
+      let formula = `${modeLine}
+
+Ig = V_phase / |R_final + R_NGR + jX_final|
+   = ${fmt(g.phaseV2,1)} / |${fmt(d.Rf,4)} + ${fmt(g.R_ngr,2)} + j${fmt(d.Xf,4)}|
+   = ${fmt(g.Ig,3)} A`;
+      if(g.type==='hrg' && g.Ic!==null){
+        formula += `\n\nI_R (resistor current) ≈ Ig = ${fmt(g.Ig,3)} A
+I_C (system charging current) = ${fmt(g.Ic,3)} A
+${g.satisfiesIrIc ? 'I_R ≥ I_C  →  '+L.criterionMet : 'I_R < I_C  →  '+L.criterionNotMet}`;
+      }
+      steps.push({num:9, title: g.type==='hrg' ? L.step9TitleHrg : L.step9TitleLrg,
+        note:`<b>${g.type==='hrg' ? L.clauseHrg : L.clauseLrg}</b> ${g.type==='hrg' ? L.step9NoteHrg : L.step9NoteLrg}`,
+        formula});
+    }
+  }
+  return steps;
+}
+
+function renderLedger(d){
+  const steps = buildLedgerSteps(d);
+  $('ledger').innerHTML = steps.map(s=>lstep(s.num, s.title, s.formula, s.note)).join("");
+}
+
+/* ======================= render: stats + ledger ======================= */
+function renderResults(d){
+  window._lastResults = d;
+  const L = UI[currentLang];
+  $('statFinal').textContent = fmt(d.IscFinal/1000,2)+' kA';
+  $('statXfmr').textContent = fmt(d.IscBus/1000,2)+' kA';
+  $('statZ').textContent = fmt(d.Zf,5)+' Ω';
+  $('statXR').textContent = fmt(d.XRfinal,2);
+  $('statPeak').textContent = fmt(d.peak/1000,2)+' kA';
+  $('statKappa').textContent = fmt(d.kappa,3);
+  $('gaugeNum').textContent = fmt(d.IscFinal/1000,2);
+  $('revTag').textContent = new Date().toISOString().slice(0,10);
+
+  const STD_KAIC = [10,14,18,22,25,35,42,50,65,85,100,125,150,200];
+  const iscKa = d.IscFinal/1000;
+  const suggested = STD_KAIC.find(r => r >= iscKa) || STD_KAIC[STD_KAIC.length-1];
+  const ratingEl = $('ratingHint');
+  if(ratingEl){
+    ratingEl.innerHTML = `⚡ ${L.ratingHintTxt.replace('{kA}',suggested).replace('{isc}',fmt(iscKa,2))}`;
+  }
+
+  const gfBox = $('groundFaultBox');
+  if(d.groundOn && d.ground){
+    const g = d.ground;
+    if(g.type==='solid'){
+      gfBox.innerHTML = `<div class="risk-box risk-warn"><b>${L.solidTitle}</b> ${L.solidBody}</div>`;
+    } else {
+      const typeLabel = g.type==='hrg' ? L.hrgLabel : L.lrgLabel;
+      let html = `<div class="risk-box risk-ok"><b>${typeLabel}</b> ${L.ngrSummary
+        .replace('{r}', fmt(g.R_ngr,1)).replace('{ig}', fmt(g.Ig,2))}</div>`;
+      if(g.type==='hrg'){
+        if(g.Ic!==null){
+          html += g.satisfiesIrIc
+            ? `<div class="risk-box risk-ok"><b>${L.irIcOkTitle}</b> ${L.irIcOkBody.replace('{ig}',fmt(g.Ig,2)).replace('{ic}',fmt(g.Ic,2))}</div>`
+            : `<div class="risk-box risk-alarm"><b>${L.irIcFailTitle}</b> ${L.irIcFailBody.replace('{ig}',fmt(g.Ig,2)).replace('{ic}',fmt(g.Ic,2))}</div>`;
+        } else {
+          html += `<div class="risk-box risk-warn"><b>${L.irIcUnknownTitle}</b> ${L.irIcUnknownBody}</div>`;
+        }
+        if(g.Ig > 10){
+          html += `<div class="risk-box risk-warn"><b>${L.hrgHighTitle}</b> ${L.hrgHighBody.replace('{ig}',fmt(g.Ig,2))}</div>`;
+        }
+      }
+      gfBox.innerHTML = html;
+    }
+  } else {
+    gfBox.innerHTML = '';
+  }
+
+  renderLedger(d);
+}
+function lstep(n,title,formula,sub_or_cite,cite){
+  const hasCite = cite!==undefined;
+  return `<div class="lstep"><div class="ln">${String(n).padStart(2,'0')}</div><div>
+    <h3>${title}</h3>
+    <div class="formula">${formula}</div>
+    ${hasCite? `<div class="cite">${sub_or_cite}</div>` : `<div class="cite">${sub_or_cite}</div>`}
+  </div></div>`;
+}
+
+/* ======================= gauge ======================= */
+function renderGauge(kA){
+  const svg = $('gauge');
+  let max = 10;
+  const rounds = [5,10,15,20,25,30,40,50,65,85,100,150,200];
+  for(const r of rounds){ if(kA<=r*0.92){ max=r; break; } max=r; }
+  const cx=100, cy=110, r=86;
+  const a0=180, a1=0; // degrees, left to right over top half
+  const frac = Math.max(0,Math.min(1, kA/max));
+  const ang = (180 - frac*180) * Math.PI/180;
+  const needleX = cx + (r-14)*Math.cos(ang);
+  const needleY = cy - (r-14)*Math.sin(ang);
+
+  let ticks='';
+  for(let i=0;i<=10;i++){
+    const f=i/10; const a=(180-f*180)*Math.PI/180;
+    const x1=cx+(r+2)*Math.cos(a), y1=cy-(r+2)*Math.sin(a);
+    const x2=cx+(r-6)*Math.cos(a), y2=cy-(r-6)*Math.sin(a);
+    ticks+=`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#233350" stroke-width="2"/>`;
+  }
+  const arcPath = describeArc(cx,cy,r,180,180-frac*180);
+  svg.innerHTML = `
+    <path d="${describeArc(cx,cy,r,180,0)}" fill="none" stroke="#182238" stroke-width="10" stroke-linecap="round"/>
+    <path d="${arcPath}" fill="none" stroke="#e8b545" stroke-width="10" stroke-linecap="round"/>
+    ${ticks}
+    <line x1="${cx}" y1="${cy}" x2="${needleX}" y2="${needleY}" stroke="#ff5d77" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="${cx}" cy="${cy}" r="6" fill="#ff5d77"/>
+    <text x="${cx-r}" y="${cy+18}" fill="#516085" font-family="IBM Plex Mono" font-size="9">0</text>
+    <text x="${cx+r-16}" y="${cy+18}" fill="#516085" font-family="IBM Plex Mono" font-size="9">${max}kA</text>
+  `;
+}
+function polarToCartesian(cx,cy,r,angDeg){
+  const a=(angDeg)*Math.PI/180;
+  return {x: cx + r*Math.cos(a), y: cy - r*Math.sin(a)};
+}
+function describeArc(cx,cy,r,startAngle,endAngle){
+  const s = polarToCartesian(cx,cy,r,startAngle);
+  const e = polarToCartesian(cx,cy,r,endAngle);
+  const largeArc = Math.abs(startAngle-endAngle) <= 180 ? 0 : 1;
+  const sweep = endAngle<startAngle ? 1 : 0;
+  return `M ${s.x} ${s.y} A ${r} ${r} 0 ${largeArc} ${sweep} ${e.x} ${e.y}`;
+}
+
+/* ======================= single-line diagram ======================= */
+function renderDiagram(d){
+  const svg = $('sld');
+  const W=1000,H=300,midY=140;
+  let x=60;
+  const nodes=[];
+  const segs=[];
+
+  nodes.push({x, label:'POI', sub:fmt(d.srcV,0)+' V'});
+  segs.push({type:'source', x0:x, x1:x+70}); x+=70;
+  nodes.push({x});
+
+  if(d.c1on){
+    segs.push({type:'cable', x0:x, x1:x+150, size:d.c1.row.size}); x+=150;
+    nodes.push({x});
+  }
+
+  segs.push({type:'xfmr', x0:x, x1:x+110, kva:d.kva}); x+=110;
+  nodes.push({x, label:'XFMR SEC', sub:fmt(d.V2,0)+' V · '+fmt(d.IscBus/1000,2)+' kA'});
+
+  if(d.c2on){
+    segs.push({type:'cable', x0:x, x1:x+150, size:d.c2.row.size}); x+=150;
+    nodes.push({x});
+  }
+  segs.push({type:'fault', x0:x, x1:x+50}); x+=50;
+  const endX = x;
+
+  let s = `<defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#3b9eff"/>
+    </marker>
+  </defs>`;
+
+  // main bus line
+  s += `<line x1="60" y1="${midY}" x2="${endX-30}" y2="${midY}" stroke="#3b9eff" stroke-width="2.2"/>`;
+
+  segs.forEach(seg=>{
+    if(seg.type==='source'){
+      s += sourceSymbol(seg.x0+10, midY);
+    } else if(seg.type==='cable'){
+      s += cableSymbol(seg.x0, seg.x1, midY, seg.size);
+    } else if(seg.type==='xfmr'){
+      s += xfmrSymbol(seg.x0, seg.x1, midY, seg.kva);
+    } else if(seg.type==='fault'){
+      s += faultSymbol(seg.x1-6, midY);
+    }
+  });
+
+  // labels
+  s += textLbl(60, midY-58, 'POI', 12, '#e7edf7', 700);
+  s += textLbl(60, midY-42, fmt(d.srcV,0)+' V', 10.5, '#8497b8');
+
+  let xf_x = segs.find(sg=>sg.type==='xfmr').x1;
+  s += textLbl(xf_x, midY-58, 'SECONDARY BUS', 11, '#e7edf7', 700);
+  s += textLbl(xf_x, midY-42, fmt(d.V2,0)+' V  ·  '+fmt(d.IscBus/1000,2)+' kA', 10.5, '#e8b545');
+
+  s += textLbl(endX-45, midY+46, 'FAULT POINT', 11, '#ff5d77', 700);
+  s += textLbl(endX-45, midY+62, fmt(d.IscFinal/1000,2)+' kA sym.', 12, '#ff5d77', 700);
+
+  svg.setAttribute('viewBox', `0 0 ${Math.max(W,endX+40)} ${H}`);
+  svg.innerHTML = s;
+  $('sldVoltTag').textContent = fmt(d.srcV,0)+' V → '+fmt(d.V2,0)+' V';
+}
+function textLbl(x,y,t,size,color,weight){
+  return `<text x="${x}" y="${y}" font-family="IBM Plex Mono" font-size="${size}" fill="${color}" font-weight="${weight||500}">${t}</text>`;
+}
+function sourceSymbol(cx,cy){
+  return `<g>
+    <circle cx="${cx}" cy="${cy}" r="16" fill="none" stroke="#3b9eff" stroke-width="2"/>
+    <path d="M ${cx-9} ${cy+6} L ${cx} ${cy-9} L ${cx+9} ${cy+6} Z" fill="none" stroke="#3b9eff" stroke-width="1.6"/>
+    <line x1="${cx-9}" y1="${cy+6}" x2="${cx+9}" y2="${cy+6}" stroke="#3b9eff" stroke-width="1.6"/>
+  </g>`;
+}
+function cableSymbol(x0,x1,cy,label){
+  const n=6, w=(x1-x0)/n;
+  let path=`M ${x0} ${cy}`;
+  for(let i=0;i<n;i++){
+    const xm=x0+w*(i+0.5);
+    const yTop = cy-9, yBot=cy+9;
+    path += ` L ${xm} ${i%2===0?yTop:yBot}`;
+  }
+  path += ` L ${x1} ${cy}`;
+  return `<path d="${path}" fill="none" stroke="#3b9eff" stroke-width="1.6"/>
+    ${textLbl((x0+x1)/2-24, cy-18, label, 9.5, '#8497b8')}`;
+}
+function xfmrSymbol(x0,x1,cy,kva){
+  const cx=(x0+x1)/2, r=17;
+  return `
+    <circle cx="${cx-9}" cy="${cy}" r="${r}" fill="#0c1220" stroke="#3b9eff" stroke-width="2"/>
+    <circle cx="${cx+9}" cy="${cy}" r="${r}" fill="none" stroke="#3b9eff" stroke-width="2"/>
+    ${textLbl(cx-24, cy+38, kva+' kVA', 10.5, '#e7edf7', 600)}
+  `;
+}
+function faultSymbol(cx,cy){
+  return `<g>
+    <line x1="${cx-11}" y1="${cy-11}" x2="${cx+11}" y2="${cy+11}" stroke="#ff5d77" stroke-width="3"/>
+    <line x1="${cx-11}" y1="${cy+11}" x2="${cx+11}" y2="${cy-11}" stroke="#ff5d77" stroke-width="3"/>
+    <circle cx="${cx}" cy="${cy}" r="17" fill="none" stroke="#ff5d77" stroke-width="1.4" stroke-dasharray="3 3"/>
+  </g>`;
+}
+
+/* ======================= init ======================= */
+$('xVendor').addEventListener('change', ()=>{});
+
+function downloadBlob(content, mime, filename){
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 2000);
+}
+
+/* ===== report (compact grid style, matching MV Transformer Primary Cable Sizing) ===== */
+function buildReportPageHTML(d, includeLedger, includeLogo){
+  const L = UI[currentLang];
+  const today = new Date().toLocaleDateString(currentLang==='fr'?'fr-CA':'en-CA');
+  const cell = (k,v)=>`<td style="padding:2.5pt 6pt 2.5pt 0;color:#333;font-size:9.5pt;white-space:nowrap;">${k}</td><td style="padding:2.5pt 14pt 2.5pt 0;font-weight:600;font-size:9.5pt;border-bottom:0.5pt solid #ddd;">${v}</td>`;
+  const gridRows = (pairs)=>{
+    let html = "";
+    for(let i=0;i<pairs.length;i+=2){
+      const a = pairs[i], b = pairs[i+1];
+      html += `<tr>${cell(a[0],a[1])}${b?cell(b[0],b[1]):'<td></td><td></td>'}</tr>`;
+    }
+    return html;
+  };
+  const sectionHead = (t)=>`<div style="font-size:9.5pt;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;border-bottom:1pt solid #1a1a1a;padding-bottom:2pt;margin:12pt 0 5pt;">${t}</div>`;
+
+  const inputPairs = [
+    [L.xlsSrcV, fmt(d.srcV,0)+" V"], [L.xlsSrcIsc, fmt(d.srcIsc,0)+" A"],
+    [L.xlsSrcXR, fmt(d.srcXR,2)], [L.xlsPriCableIncl, d.c1on?L.yes:L.no],
+    [L.xlsXfmrRating, d.kva+" kVA"], [L.xlsXfmrType, d.dry?L.dryType:L.liquidFilled],
+    [L.xlsZUsed, fmt(d.Zpct,2)+"%"], [L.xlsXRUsed, fmt(d.XR,2)],
+    [L.xlsSecV, fmt(d.V2,0)+" V"], [L.xlsSecCableIncl, d.c2on?L.yes:L.no]
+  ];
+  const resultPairs = [
+    [L.xlsMaxIscKa, fmt(d.IscFinal/1000,2)+" kA"], [L.xlsIscBus, fmt(d.IscBus,0)+" A"],
+    [L.xlsTotalZ, fmt(d.Zf,5)+" Ω"], [L.xlsResultingXR, fmt(d.XRfinal,2)],
+    [L.xlsKappa, fmt(d.kappa,3)], [L.xlsPeak, fmt(d.peak/1000,2)+" kA"]
+  ];
+  if(d.groundOn && d.ground){
+    const g = d.ground;
+    if(g.type==='solid'){
+      resultPairs.push([L.lblGroundType, L.optSolid]); resultPairs.push(["",""]);
+    } else {
+      resultPairs.push([L.lblGroundType, g.type==='hrg'?L.optHrg:L.optLrg]);
+      resultPairs.push(["R_NGR (Ω)", fmt(g.R_ngr,2)]);
+      resultPairs.push(["I_g (A)", fmt(g.Ig,3)]);
+      if(g.type==='hrg' && g.Ic!==null) resultPairs.push(["I_R ≥ I_C", g.satisfiesIrIc?L.passWord:L.failWord]);
+    }
+  }
+
+  let ledgerHtml = "";
+  if(includeLedger){
+    const steps = buildLedgerSteps(d);
+    ledgerHtml = sectionHead(L.ledgerTitle) + `<table style="width:100%;border-collapse:collapse;">` +
+      steps.map(s=>`<tr>
+        <td style="padding:5pt 8pt 5pt 0;border-bottom:0.5pt solid #e5e5e5;font-size:8.5pt;font-weight:700;vertical-align:top;">${String(s.num).padStart(2,'0')}</td>
+        <td style="padding:5pt 8pt;border-bottom:0.5pt solid #e5e5e5;vertical-align:top;">
+          <div style="font-size:8.5pt;font-weight:700;margin-bottom:2pt;">${s.title}</div>
+          <div style="font-family:'Courier New',monospace;font-size:8pt;color:#333;line-height:1.5;">${s.formula.split("\n").map(l=>l===""?"&nbsp;":l).join("<br>")}</div>
+          <div style="font-size:7.5pt;color:#888;margin-top:3pt;">${s.note.replace(/<\/?b>/g,'')}</div>
+        </td></tr>`).join("") + `</table>`;
+  }
+
+  return `
+  <div style="font-family:Arial,Helvetica,sans-serif;color:#1a1a1a;background:#fff;padding:4pt 2pt;font-size:9.5pt;line-height:1.4;">
+    <table style="width:100%;border-collapse:collapse;border-bottom:1.5pt solid #1a1a1a;padding-bottom:6pt;margin-bottom:4pt;">
+      <tr><td style="font-size:13pt;font-weight:700;padding-bottom:6pt;">${$('titleH1').textContent}</td>
+      <td style="text-align:right;font-size:8.5pt;color:#555;padding-bottom:6pt;">${includeLogo?'Ω OHMZONE':''}</td></tr>
+      <tr><td style="font-size:9pt;color:#333;"><b>${L.lblTag}:</b> ${d.tag || L.untitledTag} &nbsp;&nbsp; <b>${L.lblMethod}:</b> IEEE 551 / ANSI C37</td>
+      <td style="text-align:right;font-size:8.5pt;color:#555;">${today}</td></tr>
+    </table>
+    ${sectionHead(L.repInputData)}
+    <table style="width:100%;border-collapse:collapse;">${gridRows(inputPairs)}</table>
+    ${sectionHead(L.repResults)}
+    <table style="width:100%;border-collapse:collapse;">${gridRows(resultPairs)}</table>
+    ${ledgerHtml}
+    <p style="font-size:7.5pt;color:#888;margin-top:14pt;border-top:0.5pt solid #ddd;padding-top:6pt;">${L.xlsDisclaimerBody}</p>
+  </div>`;
+}
+
+document.getElementById('printBtn').addEventListener('click', () => {
+  const d = window._lastResults;
+  if(!d) return;
+  d.tag = $('eqTag').value.trim();
+  const html = buildReportPageHTML(d, $('includeLedger').checked, $('includeLogo').checked);
+  const w = window.open("", "_blank");
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${$('titleH1').textContent}</title>
+  <style>body{margin:0;padding:18px;} @media print{body{padding:0;}}</style></head>
+  <body>${html}<script>window.onload=()=>window.print();<\/script></body></html>`);
+  w.document.close();
+});
+
+/* ===== report template upload ===== */
+let uploadedTemplateBuffer = null, uploadedTemplateName = "";
+document.getElementById("templateFile").addEventListener("change", (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev)=>{ uploadedTemplateBuffer = ev.target.result; uploadedTemplateName = file.name; inspectTemplate(file.name); };
+  reader.readAsArrayBuffer(file);
+});
+function templateTagValues(d){
+  const L = UI[currentLang];
+  const today = new Date().toLocaleDateString(currentLang==='fr'?'fr-CA':'en-CA');
+  const g = (d.groundOn && d.ground) ? d.ground : null;
+  return {
+    tag: d.tag || L.untitledTag, date: today,
+    srcV: fmt(d.srcV,0)+" V", srcIsc: fmt(d.srcIsc,0)+" A",
+    kva: String(d.kva), v2: fmt(d.V2,0)+" V",
+    iscFinal: fmt(d.IscFinal/1000,2)+" kA", xrFinal: fmt(d.XRfinal,2),
+    kappa: fmt(d.kappa,3), peak: fmt(d.peak/1000,2)+" kA",
+    groundType: g ? (g.type==='hrg'?L.optHrg:(g.type==='lrg'?L.optLrg:L.optSolid)) : "—",
+    ngrR: (g && g.type!=='solid') ? fmt(g.R_ngr,2)+" Ω" : "—",
+    groundFaultI: (g && g.type!=='solid') ? fmt(g.Ig,3)+" A" : "—"
+  };
+}
+function showTemplateStatus(msg, color){ const el=$("templateStatus"); if(el){ el.textContent=msg; el.style.color=color||"var(--trace)"; } }
+function inspectTemplate(fileName){
+  const L = UI[currentLang];
+  const known = Object.keys(templateTagValues(window._lastResults || {srcV:0,srcIsc:0,kva:0,V2:0,IscFinal:0,XRfinal:0,kappa:0,peak:0}));
+  try{
+    const zip = new PizZip(uploadedTemplateBuffer);
+    let xml = "";
+    Object.keys(zip.files).forEach(name=>{
+      if(/^word\/(document|header\d*|footer\d*)\.xml$/.test(name)) xml += zip.files[name].asText();
+    });
+    const plain = xml.replace(/<[^>]+>/g, "");
+    const found = known.filter(k => plain.includes("{"+k+"}"));
+    const missing = known.filter(k => !found.includes(k));
+    const allTags = [...plain.matchAll(/\{([a-zA-Z0-9_]+)\}/g)].map(m=>m[1]);
+    const unknown = [...new Set(allTags.filter(t => !known.includes(t)))];
+    let msg = L.templateLoadedMsg.replace("{name}", fileName) + " — ";
+    let color = "var(--trace)";
+    if(found.length === 0){ msg += L.templateNoTagsFound; color = "var(--alarm)"; }
+    else {
+      msg += L.templateTagsFound.replace("{n}", found.length).replace("{total}", known.length);
+      if(missing.length) msg += " " + L.templateTagsMissing.replace("{list}", missing.join(", "));
+      if(unknown.length){ msg += " " + L.templateTagsUnknown.replace("{list}", unknown.join(", ")); color = "var(--warn)"; }
+      if(missing.length && !unknown.length) color = "var(--warn)";
+    }
+    showTemplateStatus(msg, color);
+  } catch(err){
+    console.error(err);
+    showTemplateStatus(L.templateErrorMsg + " " + (err.message||""), "var(--alarm)");
+  }
+}
+function exportWithTemplate(d){
+  const L = UI[currentLang];
+  try{
+    const zip = new PizZip(uploadedTemplateBuffer);
+    const docx = new window.docxtemplater(zip, { paragraphLoop:true, linebreaks:true, nullGetter:p=>"«"+(p.value||"?")+"»" });
+    docx.render(templateTagValues(d));
+    const out = docx.getZip().generate({ type:"blob", mimeType:"application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+    const url = URL.createObjectURL(out);
+    const a = document.createElement("a"); a.href=url; a.download="short_circuit_study.docx";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url), 2000);
+    showTemplateStatus(L.templateExportOk, "var(--trace)");
+  } catch(err){
+    console.error(err);
+    let detail = err.message || String(err);
+    if(err.properties && err.properties.errors && err.properties.errors.length){
+      detail = err.properties.errors.map(e=>(e.properties&&e.properties.explanation?e.properties.explanation:e.message)).join(" · ");
+    }
+    showTemplateStatus(L.templateErrorMsg+" "+detail, "var(--alarm)");
+    alert(L.templateErrorMsg+"\n\n"+detail);
+    exportWithBuiltInLayout(d);
+  }
+}
+function exportWithBuiltInLayout(d){
+  const html = buildReportPageHTML(d, $('includeLedger').checked, $('includeLogo').checked);
+  const doc = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+  <head><meta charset="utf-8"><title>Short-Circuit Study</title>
+  <!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View></w:WordDocument></xml><![endif]--></head><body>${html}</body></html>`;
+  downloadBlob(doc, "application/msword", "short_circuit_study.doc");
+}
+document.getElementById('exportWordBtn').addEventListener('click', () => {
+  const d = window._lastResults;
+  if(!d) return;
+  d.tag = $('eqTag').value.trim();
+  if(uploadedTemplateBuffer) exportWithTemplate(d); else exportWithBuiltInLayout(d);
+});
+
+document.getElementById('exportExcelBtn').addEventListener('click', () => {
+  const d = window._lastResults;
+  if(!d) return;
+  d.tag = $('eqTag').value.trim();
+  const L = UI[currentLang];
+  const wb = XLSX.utils.book_new();
+  const main = [
+    [L.repInputData,""],
+    [L.lblTag, d.tag || L.untitledTag], [L.xlsMethod, "IEEE 551 / ANSI C37, " + L.xlsMethodDesc],
+    [L.xlsSrcV, fmt(d.srcV,0)], [L.xlsSrcIsc, fmt(d.srcIsc,0)], [L.xlsSrcXR, fmt(d.srcXR,2)],
+    [L.xlsPriCableIncl, d.c1on ? L.yes : L.no],
+    [L.xlsXfmrRating, d.kva], [L.xlsXfmrType, d.dry ? L.dryType : L.liquidFilled],
+    [L.xlsZUsed, fmt(d.Zpct,2)], [L.xlsXRUsed, fmt(d.XR,2)], [L.xlsZSource, d.overridden ? L.nameplateSrc : L.typicalSrc],
+    [L.xlsSecV, fmt(d.V2,0)], [L.xlsSecCableIncl, d.c2on ? L.yes : L.no],
+    ["",""], [L.repResults,""],
+    [L.xlsIscBus, fmt(d.IscBus,0)], [L.xlsTotalZ, fmt(d.Zf,5)],
+    [L.xlsMaxIscA, fmt(d.IscFinal,0)], [L.xlsMaxIscKa, fmt(d.IscFinal/1000,2)],
+    [L.xlsResultingXR, fmt(d.XRfinal,2)], [L.xlsKappa, fmt(d.kappa,3)], [L.xlsPeak, fmt(d.peak/1000,2)]
+  ];
+  if(d.groundOn && d.ground){
+    const g = d.ground;
+    main.push(["",""]); main.push([L.groundStepTitle,""]);
+    main.push([L.lblGroundType, g.type==='hrg'?L.optHrg:(g.type==='lrg'?L.optLrg:L.optSolid)]);
+    if(g.type!=='solid'){
+      main.push(["R_NGR (Ω)", fmt(g.R_ngr,3)]);
+      main.push(["I_g (A)", fmt(g.Ig,3)]);
+      if(g.type==='hrg' && g.Ic!==null){
+        main.push(["I_C (A)", fmt(g.Ic,3)]);
+        main.push(["I_R ≥ I_C", g.satisfiesIrIc?L.passWord:L.failWord]);
+      }
+    }
+  }
+  main.push(["",""]); main.push([L.xlsDisclaimerLbl, L.xlsDisclaimerBody]);
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(main), "Short-Circuit Study");
+
+  if($('includeLedger').checked){
+    const led = [["#","Formula","Note"]];
+    buildLedgerSteps(d).forEach(s=>{
+      led.push([String(s.num).padStart(2,'0')+" — "+s.title,"",""]);
+      s.formula.split("\n").forEach(l=>{ if(l.trim()!=="") led.push(["", l, ""]); });
+      led.push(["","",s.note.replace(/<\/?b>/g,'')]); led.push(["","",""]);
+    });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(led), "Calculation Ledger");
+  }
+  XLSX.writeFile(wb, "short_circuit_study.xlsx");
+});
+
+/* ===================== i18n ===================== */
+let currentLang = 'en';
+const UI = {
+  en: {
+    titleH1: "Maximum Short-Circuit Current Study",
+    titleSub: "Point-of-interconnection → cable → transformer → cable, series R–X (ohmic) method",
+    lblDwg: "Dwg No.", lblScale: "Scale", lblMethod: "Method", lblRev: "Rev",
+    loadExampleTxt: "Load worked example",
+    step1Title: "Source / Point of Interconnection", step1Small: "Utility or upstream system data",
+    lblSrcV: "System voltage at POI (V, line-to-line)", lblSrcIsc: "Max 3φ sym. Isc at POI", lblUnit1: "Unit",
+    lblSrcXR: "X/R ratio at POI",
+    hintStep1: "If the utility gives only Isc with no X/R, <em>IEEE Std 242</em> notes a common conservative assumption of 12–15 for transmission-fed sources.",
+    step2Title: "Primary Cable", optionalTag1: "(optional)", step2Small: "Between POI and transformer primary",
+    lblLength1: "Length", lblUnit2: "Unit", lblCond1: "Conductor", lblRaceway1: "Raceway",
+    optCu1: "Copper", optAl1: "Aluminum", optSteel1: "Steel (magnetic)", optPvc1: "PVC (non-magnetic)",
+    lblSize1: "Conductor size", lblSets1: "Sets / phase (parallel)",
+    hintStep2: "Cable impedance <em>reduces</em> downstream Isc — every run added lengthens the total impedance path.",
+    step3Title: "Transformer", step3Small: "Size, secondary voltage, %Z / X-R",
+    lblRatingX: "Rating", lblConstruction: "Construction", optLiquid: "Liquid-filled", optDry: "Dry-type",
+    lblSecV: "Secondary voltage (V, L-L)", lblVendor: "Vendor family", refOnlyTag: "(reference only)",
+    optgLarge: "Large power (medium/high side)", optgDist: "Distribution class",
+    overrideLabel: "Use actual nameplate %Z / X-R instead of typical table",
+    lblZOverride: "Nameplate %Z", lblXROverride: "Nameplate X/R",
+    step4Title: "Secondary Cable", optionalTag2: "(optional)", step4Small: "Between transformer secondary and equipment",
+    lblLength2: "Length", lblUnit3: "Unit", lblCond2: "Conductor", lblRaceway2: "Raceway",
+    optCu2: "Copper", optAl2: "Aluminum", optSteel2: "Steel (magnetic)", optPvc2: "PVC (non-magnetic)",
+    lblSize2: "Conductor size", lblSets2: "Sets / phase (parallel)",
+    hintStep4: 'This is the cable feeding the "secondary equipment" — the final result below is the Isc it must be rated to interrupt.',
+    sldTitle: "Single-Line Diagram", sldTag: "updates live as components are added",
+    sldCapTxt: "ANSI/IEEE one-line symbols · schematic, not to scale",
+    resultTitle: "Result — Secondary Equipment", gaugeLbl: "kA symmetrical RMS",
+    lblStatFinal: "Max Isc, secondary equipment", lblStatXfmr: "Isc at transformer secondary bus",
+    lblStatZ: "Total Z to fault point", lblStatXR: "Resulting X/R",
+    lblStatPeak: "Peak asym. (crest) current", lblStatKappa: "κ (asymmetry factor)",
+    printBtnLabel: "🖨 Print / Save as PDF", exportWordLabel: "📄 Export study (Word)", exportBtnLabel: "📊 Export study (Excel)",
+    ledgerTitle: "Calculation Ledger", ledgerTag: "ohmic (Ω) method, all impedances referred to secondary voltage base",
+    footerNoteHtml: `<b>Method notes.</b> This tool sums resistance and reactance vectorially (not just impedance magnitudes) per the guidance in IEEE Std 242 (Buff Book) / IEEE Std 551 (Violet Book) recommended practice for short-circuit calculations in industrial and commercial power systems, then refers upstream impedance to the secondary voltage base using Z₂ = Z₁·(V₂/V₁)². Transformer %Z / X-R defaults are typical values consistent with ANSI/IEEE C57.12.00 and C57.12.26 standard impedance levels and the IEEE 242 suggested X/R table — they are <b>not</b> a specific manufacturer's factory test result; always substitute the nameplate %Z and X/R once a unit is selected (tolerance per ANSI/IEEE C57.12.00 §9 is ±7.5% for two-winding units, ±10% for autotransformers/3-winding units). Cable resistance and reactance values are taken from NEC Chapter 9, Table 9 (600 V cables, 3-phase, 60 Hz, 75°C, three single conductors in conduit) — the CSA C22.1 (Canadian Electrical Code Part I) Appendix D tables follow the same underlying methodology for Canadian installations; consult the applicable table directly for conductor sizes or configurations beyond this reference set. The peak (crest) asymmetrical current factor κ uses the IEC 60909-0 approximation κ = 1.02 + 0.98·e^(−3R/X); ANSI/IEEE C37.010 multiplying-factor tables should be used instead when sizing ANSI-rated switchgear. This tool is for preliminary planning only — a stamped short-circuit / coordination study by a qualified engineer is required before equipment is specified or purchased.`,
+    usingNameplate: "Using nameplate values:", typicalFor: "Typical for {kva} kVA {type}:", dryType: "dry-type", liquidFilled: "liquid-filled",
+    verifyMfr: "verify against the selected manufacturer's factory test report.",
+    ratingHintTxt: "Downstream equipment (breakers, switchgear, panelboards) at this bus should carry an interrupting/withstand rating of at least <b>{kA} kA</b> (next standard tier above the calculated {isc} kA) — confirm the exact requirement against the equipment's actual short-circuit rating basis (symmetrical vs. asymmetrical) and any series-rating or current-limiting fuse arrangement in use.",
+    step1Note: "series R + jX summation of complex impedance (not scalar |Z| addition), consistent with the recommended practice in IEEE Std 242 (Buff Book) / IEEE Std 551 (Violet Book) for industrial &amp; commercial short-circuit studies.",
+    methodLbl: "Method —", referenceLbl: "Reference —", basisLbl: "Basis —", formulaLbl: "Formula —",
+    step2LedgerTitle: "Primary cable impedance ({size}, {mat}, {conduit})",
+    lengthLbl: "length", parallelPhase: "parallel/phase",
+    cableRefNote: "resistance &amp; reactance per NEC Chapter 9, Table 9 (600 V cables, 3φ, 60 Hz, 75°C, three single conductors in conduit); CSA C22.1 (Canadian Electrical Code Part I) Appendix D applies the same series-impedance methodology for Canadian jurisdictions.",
+    step2TitleSkipped: "Primary cable — not included", step2SkippedNote: "Step skipped: source impedance carries forward unchanged.",
+    step3Title2: "Refer upstream impedance to secondary voltage base",
+    step3Note: "per-unit / ohmic-referral relationship for impedances viewed across an ideal transformer, standard to the per-unit and ohmic methods described in IEEE Std 551 §4.",
+    step4Title2: "Transformer impedance — {kva} kVA, {type} ({src})", nameplateValuesTag: "nameplate values", typicalTableTag: "typical table",
+    step4Note: "<b>Typical %Z</b> consistent with ANSI/IEEE C57.12.00 / C57.12.26 standard impedance levels (e.g. 5.75% for 750–2500 kVA distribution-class units); <b>typical X/R</b> per the IEEE Std 242 suggested-value table by kVA and voltage class. ANSI/IEEE C57.12.00 §9 sets nameplate tolerance at ±7.5% (two-winding) / ±10% (3-winding, autotransformer) — always substitute the factory test-report values when available.",
+    step5Title: "Impedance &amp; Isc at transformer secondary bus",
+    step5Note: "Maximum 3-phase symmetrical fault current available right at the transformer secondary terminals, before any secondary conductor is added.",
+    step6Title: "Secondary cable impedance ({size}, {mat}, {conduit})",
+    step6Note: "NEC Chapter 9, Table 9 / CSA C22.1 Appendix D methodology, same as Step 2.",
+    step6TitleSkipped: "Secondary cable — not included", step6SkippedNote: "Fault point taken directly at the transformer secondary bus.",
+    step7Title: "Maximum short-circuit current at secondary equipment", symRms: "symmetrical RMS",
+    step7Note: "This is the value the downstream overcurrent device / equipment bus must be rated to withstand and interrupt (equipment short-circuit current rating, e.g. per NEC/CEC 110.9–110.10 or the applicable CSA equipment standard).",
+    step8Title: "Peak asymmetrical (crest) current",
+    step8Note: "IEC 60909-0 §9.1.3.2 peak-current approximation. For sizing ANSI-rated switchgear, use the ANSI/IEEE C37.010 multiplying-factor tables instead, which are derived specifically for North American breaker interrupting/momentary duty.",
+    groundStepTitle: "Secondary Grounding", optionalTag3: "(optional)", step5Small: "Solid, low-resistance, or high-resistance neutral grounding",
+    lblGroundType: "Grounding type", optSolid: "Solidly grounded", optLrg: "Low-resistance grounded (LRG)", optHrg: "High-resistance grounded (HRG)",
+    lblNgrInputMode: "Specify NGR by", lblNgrR: "Neutral grounding resistor, R<sub>NGR</sub> (Ω)", lblNgrI: "Target maximum ground-fault current (A)",
+    lblIc: "System charging current, I<sub>C</sub> (A, optional)", lblNgrDuty: "Resistor duty rating",
+    hintStep5: "High-resistance grounding limits ground-fault current to a low value (typically a few amps up to ~10 A) so a first ground fault can be alarmed rather than tripped immediately — common on continuous-process MV/LV systems. Per IEEE 142 (Green Book) practice, the resistor should be sized so its current I<sub>R</sub> (≈V<sub>phase</sub>/R<sub>NGR</sub>) is not less than the system's own charging current I<sub>C</sub>, to avoid transient overvoltages from repeated arcing restrikes. CSA C22.1 Rule 10 covers the permitted use and marking requirements for high-resistance grounded systems in Canada — verify the applicable sub-rule and voltage-class limits for the current edition.",
+    hrgLabel: "High-resistance grounded (HRG).", lrgLabel: "Low-resistance grounded (LRG).",
+    ngrSummary: "R<sub>NGR</sub> = {r} Ω → estimated ground-fault current I<sub>g</sub> ≈ {ig} A.",
+    solidTitle: "Solidly grounded — full line-to-ground fault calculation not performed.", solidBody: "A rigorous line-to-ground fault current on a solidly grounded system requires the transformer's zero-sequence impedance (Z₀), which is not collected by this tool and can differ meaningfully from the positive-sequence impedance used for the 3-phase fault above depending on winding configuration and core construction. As a rough order-of-magnitude reference only, solidly grounded L-G fault current is often comparable to, and can exceed, the 3-phase fault value shown above — a dedicated sequence-impedance study is required for an actual L-G fault rating.",
+    irIcOkTitle: "Resistor current meets the I<sub>R</sub> ≥ I<sub>C</sub> criterion.", irIcOkBody: "I<sub>g</sub> ({ig} A) is greater than or equal to the entered charging current I<sub>C</sub> ({ic} A) — consistent with IEEE 142 practice for avoiding transient overvoltage from an intermittent (restriking) ground fault.",
+    irIcFailTitle: "Resistor current is below I<sub>C</sub> — review sizing.", irIcFailBody: "I<sub>g</sub> ({ig} A) is less than the entered charging current I<sub>C</sub> ({ic} A). Per IEEE 142 guidance this combination can allow transient overvoltages during an intermittent ground fault — consider a lower resistance (higher I<sub>g</sub>) or confirm the charging current estimate.",
+    irIcUnknownTitle: "System charging current not entered.", irIcUnknownBody: "Enter the system's charging current (from cable/cable-tray capacitance, or a manufacturer/utility estimate) to check the I<sub>R</sub> ≥ I<sub>C</sub> criterion recommended by IEEE 142 for HRG resistor sizing.",
+    hrgHighTitle: "Ground-fault current above typical HRG range.", hrgHighBody: "The calculated ground-fault current ({ig} A) is above the roughly 5–10 A range typical of alarm-only HRG design — confirm this is intentional (some HRG systems are designed up to ~25 A) and not simply a low resistor value entered by mistake.",
+    step9TitleSolid: "Line-to-ground fault (solidly grounded)", clauseSolid: "CSA C22.1 Rule 10",
+    step9NoteSolid: "Solidly grounded L-G fault current requires transformer zero-sequence impedance data not modeled by this tool — treat the note above as a planning-level flag only.",
+    solidFormulaNote: "L-G fault current not calculated — requires transformer Z₀ (zero-sequence impedance) data. See note above.",
+    step9TitleHrg: "Ground-fault current (HRG)", clauseHrg: "IEEE 142 / CSA C22.1 Rule 10",
+    step9NoteHrg: "The neutral grounding resistor dominates the fault-current loop impedance, so system R/X have only a minor effect on Ig. The I<sub>R</sub> ≥ I<sub>C</sub> check follows IEEE Std 142 (Green Book) guidance for avoiding restriking-ground-fault overvoltages on HRG systems.",
+    step9TitleLrg: "Ground-fault current (LRG)", clauseLrg: "IEEE 142 / CSA C22.1 Rule 10",
+    step9NoteLrg: "Low-resistance grounding is typically sized for selective ground-fault relay coordination (commonly in the 200–400 A range) rather than the alarm-only, restrike-overvoltage criterion used for HRG design.",
+    userEntered: "user entered", criterionMet: "criterion met", criterionNotMet: "criterion NOT met",
+    lblIncludeLedger: "Include Calculation Ledger in report", lblIncludeLogo: "Include OhmZone brand mark in report",
+    lblUploadTemplate: "Report template (.docx, optional)",
+    hintUploadTemplate: "Upload your firm's Word template to brand exports with it. The template must contain plain-text placeholders exactly as shown: {tag} {date} {srcV} {srcIsc} {kva} {v2} {iscFinal} {xrFinal} {kappa} {peak} {groundType} {ngrR} {groundFaultI}. Type each tag in one uninterrupted go — Word's autocorrect/spellcheck can split a tag across internal runs.",
+    templateLoadedMsg: "Template loaded: {name}", templateErrorMsg: "Could not read this file as a Word template — using the built-in layout instead.",
+    templateNoTagsFound: "no OhmZone placeholders found in this document.", templateTagsFound: "{n} of {total} placeholders found.",
+    templateTagsMissing: "Not present (will be left out): {list}.", templateTagsUnknown: "Unrecognised tags that will render as «name»: {list}.", templateExportOk: "Template export completed.",
+    repInputData: "Input Data", repResults: "Results", untitledTag: "(untitled)", tagLbl: "Tag",
+    lblTag: "Study / equipment tag",
+    xlsParam: "Parameter", xlsValue: "Value", xlsMethod: "Method", xlsMethodDesc: "ohmic (Ω) method, impedances referred to secondary voltage base",
+    xlsSrcV: "Source voltage (V)", xlsSrcIsc: "Source Isc (A)", xlsSrcXR: "Source X/R",
+    xlsPriCableIncl: "Primary cable included", xlsXfmrRating: "Transformer rating (kVA)", xlsXfmrType: "Transformer type",
+    xlsZUsed: "Transformer %Z used", xlsXRUsed: "Transformer X/R used", xlsZSource: "%Z / X/R source",
+    nameplateSrc: "Nameplate (user entered)", typicalSrc: "Typical value (ANSI/IEEE C57.12.00/C57.12.26)",
+    xlsSecV: "Secondary voltage (V)", xlsIscBus: "Isc at transformer secondary bus (A)", xlsSecCableIncl: "Secondary cable included",
+    xlsTotalZ: "Total Z to fault point (Ω)", xlsMaxIscA: "Max Isc, secondary equipment (A)", xlsMaxIscKa: "Max Isc, secondary equipment (kA)",
+    xlsResultingXR: "Resulting X/R", xlsKappa: "kappa (asymmetry factor)", xlsPeak: "Peak asymmetrical (crest) current (kA)",
+    xlsDisclaimerLbl: "Disclaimer", xlsDisclaimerBody: "This tool is for preliminary planning only — a stamped short-circuit / coordination study by a qualified engineer is required before equipment is specified or purchased.",
+    passWord: "PASS", failWord: "FAIL",
+    yes: "Yes", no: "No"
+  },
+  fr: {
+    titleH1: "Étude du courant de court-circuit maximal",
+    titleSub: "Point d'interconnexion → câble → transformateur → câble, méthode R–X série (ohmique)",
+    lblDwg: "N° dessin", lblScale: "Échelle", lblMethod: "Méthode", lblRev: "Rév.",
+    loadExampleTxt: "Charger l'exemple",
+    step1Title: "Source / Point d'interconnexion", step1Small: "Données du service public ou du réseau amont",
+    lblSrcV: "Tension du système au PDI (V, ligne à ligne)", lblSrcIsc: "Isc sym. 3φ max au PDI", lblUnit1: "Unité",
+    lblSrcXR: "Ratio X/R au PDI",
+    hintStep1: "Si le service public ne fournit que l'Isc sans X/R, la norme <em>IEEE Std 242</em> mentionne une hypothèse prudente courante de 12–15 pour les sources alimentées par transport.",
+    step2Title: "Câble primaire", optionalTag1: "(facultatif)", step2Small: "Entre le PDI et le primaire du transformateur",
+    lblLength1: "Longueur", lblUnit2: "Unité", lblCond1: "Conducteur", lblRaceway1: "Canalisation",
+    optCu1: "Cuivre", optAl1: "Aluminium", optSteel1: "Acier (magnétique)", optPvc1: "PVC (non magnétique)",
+    lblSize1: "Section du conducteur", lblSets1: "Ensembles / phase (parallèle)",
+    hintStep2: "L'impédance du câble <em>réduit</em> l'Isc en aval — chaque parcours ajouté allonge le chemin d'impédance total.",
+    step3Title: "Transformateur", step3Small: "Puissance, tension secondaire, %Z / X-R",
+    lblRatingX: "Puissance", lblConstruction: "Construction", optLiquid: "Rempli de liquide", optDry: "Type sec",
+    lblSecV: "Tension secondaire (V, L-L)", lblVendor: "Famille de fabricant", refOnlyTag: "(référence seulement)",
+    optgLarge: "Grande puissance (moyenne/haute tension)", optgDist: "Classe distribution",
+    overrideLabel: "Utiliser les valeurs réelles de plaque signalétique %Z / X-R au lieu du tableau typique",
+    lblZOverride: "%Z de plaque signalétique", lblXROverride: "X/R de plaque signalétique",
+    step4Title: "Câble secondaire", optionalTag2: "(facultatif)", step4Small: "Entre le secondaire du transformateur et l'équipement",
+    lblLength2: "Longueur", lblUnit3: "Unité", lblCond2: "Conducteur", lblRaceway2: "Canalisation",
+    optCu2: "Cuivre", optAl2: "Aluminium", optSteel2: "Acier (magnétique)", optPvc2: "PVC (non magnétique)",
+    lblSize2: "Section du conducteur", lblSets2: "Ensembles / phase (parallèle)",
+    hintStep4: "Il s'agit du câble alimentant l'« équipement secondaire » — le résultat final ci-dessous est l'Isc que celui-ci doit pouvoir interrompre.",
+    sldTitle: "Schéma unifilaire", sldTag: "se met à jour en direct à mesure que des composants sont ajoutés",
+    sldCapTxt: "Symboles unifilaires ANSI/IEEE · schématique, pas à l'échelle",
+    resultTitle: "Résultat — Équipement secondaire", gaugeLbl: "kA symétrique efficace",
+    lblStatFinal: "Isc max., équipement secondaire", lblStatXfmr: "Isc au jeu de barres secondaire du transformateur",
+    lblStatZ: "Z totale au point de défaut", lblStatXR: "X/R résultant",
+    lblStatPeak: "Courant de crête asymétrique", lblStatKappa: "κ (facteur d'asymétrie)",
+    printBtnLabel: "🖨 Imprimer / Enregistrer en PDF", exportWordLabel: "📄 Exporter l'étude (Word)", exportBtnLabel: "📊 Exporter l'étude (Excel)",
+    ledgerTitle: "Registre de calcul", ledgerTag: "méthode ohmique (Ω), toutes les impédances rapportées à la base de tension secondaire",
+    footerNoteHtml: `<b>Notes sur la méthode.</b> Cet outil additionne la résistance et la réactance de façon vectorielle (et non seulement les magnitudes d'impédance) selon les recommandations de la norme IEEE Std 242 (Buff Book) / IEEE Std 551 (Violet Book) pour les calculs de court-circuit dans les réseaux industriels et commerciaux, puis rapporte l'impédance amont à la base de tension secondaire à l'aide de Z₂ = Z₁·(V₂/V₁)². Les valeurs par défaut de %Z / X-R du transformateur sont des valeurs typiques conformes aux niveaux d'impédance normalisés ANSI/IEEE C57.12.00 et C57.12.26 et au tableau de valeurs suggérées X/R de la norme IEEE 242 — elles <b>ne sont pas</b> le résultat d'un essai d'usine d'un fabricant précis; substituez toujours les valeurs %Z et X/R de la plaque signalétique une fois l'unité sélectionnée (tolérance selon ANSI/IEEE C57.12.00 §9 : ±7,5 % pour les unités à deux enroulements, ±10 % pour les autotransformateurs/unités à 3 enroulements). Les valeurs de résistance et de réactance des câbles proviennent du NEC, chapitre 9, tableau 9 (câbles 600 V, triphasés, 60 Hz, 75 °C, trois conducteurs simples en conduit) — les tableaux de l'annexe D de la CSA C22.1 (Code canadien de l'électricité, Partie I) suivent la même méthodologie sous-jacente pour les installations canadiennes; consultez le tableau applicable directement pour les sections de conducteur ou configurations au-delà de cet ensemble de référence. Le facteur de courant de crête asymétrique κ utilise l'approximation CEI 60909-0 κ = 1,02 + 0,98·e^(−3R/X); les tableaux de facteurs multiplicateurs ANSI/IEEE C37.010 devraient plutôt être utilisés pour le dimensionnement d'appareillage à cote ANSI. Cet outil est destiné à la planification préliminaire seulement — une étude de court-circuit / coordination scellée par un ingénieur qualifié est requise avant de spécifier ou d'acheter l'équipement.`,
+    usingNameplate: "Utilisation des valeurs de plaque signalétique :", typicalFor: "Typique pour {kva} kVA {type} :", dryType: "type sec", liquidFilled: "rempli de liquide",
+    verifyMfr: "vérifiez auprès du rapport d'essai d'usine du fabricant sélectionné.",
+    ratingHintTxt: "L'équipement en aval (disjoncteurs, appareillage, panneaux) à ce jeu de barres devrait avoir une cote de coupure/tenue d'au moins <b>{kA} kA</b> (palier normalisé supérieur au {isc} kA calculé) — confirmez l'exigence exacte selon la base de la cote de court-circuit réelle de l'équipement (symétrique ou asymétrique) et tout arrangement de cote en série ou de fusible limiteur de courant utilisé.",
+    step1Note: "sommation vectorielle R + jX de l'impédance complexe (et non l'addition scalaire de |Z|), conforme à la pratique recommandée par la norme IEEE Std 242 (Buff Book) / IEEE Std 551 (Violet Book) pour les études de court-circuit industrielles et commerciales.",
+    methodLbl: "Méthode —", referenceLbl: "Référence —", basisLbl: "Base —", formulaLbl: "Formule —",
+    step2LedgerTitle: "Impédance du câble primaire ({size}, {mat}, {conduit})",
+    lengthLbl: "longueur", parallelPhase: "parallèle/phase",
+    cableRefNote: "résistance et réactance selon le NEC, chapitre 9, tableau 9 (câbles 600 V, triphasés, 60 Hz, 75 °C, trois conducteurs simples en conduit); l'annexe D de la CSA C22.1 (Code canadien de l'électricité, Partie I) applique la même méthodologie d'impédance série pour les juridictions canadiennes.",
+    step2TitleSkipped: "Câble primaire — non inclus", step2SkippedNote: "Étape ignorée : l'impédance de la source se poursuit inchangée.",
+    step3Title2: "Rapporter l'impédance amont à la base de tension secondaire",
+    step3Note: "relation de rapport par unité / ohmique pour les impédances vues à travers un transformateur idéal, standard aux méthodes par unité et ohmique décrites dans la norme IEEE Std 551 §4.",
+    step4Title2: "Impédance du transformateur — {kva} kVA, {type} ({src})", nameplateValuesTag: "valeurs de plaque signalétique", typicalTableTag: "tableau typique",
+    step4Note: "<b>%Z typique</b> conforme aux niveaux d'impédance normalisés ANSI/IEEE C57.12.00 / C57.12.26 (p. ex. 5,75 % pour les unités de classe distribution de 750–2500 kVA); <b>X/R typique</b> selon le tableau de valeurs suggérées de la norme IEEE Std 242 par kVA et classe de tension. ANSI/IEEE C57.12.00 §9 fixe la tolérance de plaque signalétique à ±7,5 % (deux enroulements) / ±10 % (3 enroulements, autotransformateur) — substituez toujours les valeurs du rapport d'essai d'usine lorsque disponibles.",
+    step5Title: "Impédance et Isc au jeu de barres secondaire du transformateur",
+    step5Note: "Courant de défaut symétrique triphasé maximal disponible directement aux bornes secondaires du transformateur, avant l'ajout d'un conducteur secondaire.",
+    step6Title: "Impédance du câble secondaire ({size}, {mat}, {conduit})",
+    step6Note: "Méthodologie du NEC, chapitre 9, tableau 9 / annexe D de la CSA C22.1, identique à l'étape 2.",
+    step6TitleSkipped: "Câble secondaire — non inclus", step6SkippedNote: "Le point de défaut est pris directement au jeu de barres secondaire du transformateur.",
+    step7Title: "Courant de court-circuit maximal à l'équipement secondaire", symRms: "symétrique efficace",
+    step7Note: "Il s'agit de la valeur que le dispositif de surintensité / jeu de barres en aval doit être en mesure de supporter et d'interrompre (cote de courant de court-circuit de l'équipement, p. ex. selon NEC/CCE 110.9–110.10 ou la norme CSA applicable à l'équipement).",
+    step8Title: "Courant de crête asymétrique",
+    step8Note: "Approximation du courant de crête CEI 60909-0 §9.1.3.2. Pour le dimensionnement d'appareillage à cote ANSI, utilisez plutôt les tableaux de facteurs multiplicateurs ANSI/IEEE C37.010, dérivés spécifiquement pour la cote de coupure/service momentané des disjoncteurs nord-américains.",
+    groundStepTitle: "Mise à la terre secondaire", optionalTag3: "(facultatif)", step5Small: "Mise à la terre du neutre solide, à basse résistance, ou à haute résistance",
+    lblGroundType: "Type de mise à la terre", optSolid: "Mise à la terre solide", optLrg: "Mise à la terre à basse résistance (LRG)", optHrg: "Mise à la terre à haute résistance (HRG)",
+    lblNgrInputMode: "Spécifier le NGR par", lblNgrR: "Résistance de mise à la terre du neutre, R<sub>NGR</sub> (Ω)", lblNgrI: "Courant de défaut à la terre maximal cible (A)",
+    lblIc: "Courant de charge capacitive du système, I<sub>C</sub> (A, facultatif)", lblNgrDuty: "Cote de service de la résistance",
+    hintStep5: "La mise à la terre à haute résistance limite le courant de défaut à la terre à une faible valeur (typiquement quelques ampères jusqu'à ~10 A) afin qu'un premier défaut à la terre puisse être signalé par alarme plutôt que déclenché immédiatement — courant sur les systèmes MT/BT à procédé continu. Selon la pratique de l'IEEE 142 (Green Book), la résistance devrait être dimensionnée pour que son courant I<sub>R</sub> (≈V<sub>phase</sub>/R<sub>NGR</sub>) ne soit pas inférieur au courant de charge capacitive propre du système I<sub>C</sub>, afin d'éviter les surtensions transitoires dues à des réamorçages répétés. La règle 10 de la CSA C22.1 couvre l'utilisation permise et les exigences de marquage pour les systèmes mis à la terre à haute résistance au Canada — vérifiez la sous-règle applicable et les limites de classe de tension pour l'édition en vigueur.",
+    hrgLabel: "Mise à la terre à haute résistance (HRG).", lrgLabel: "Mise à la terre à basse résistance (LRG).",
+    ngrSummary: "R<sub>NGR</sub> = {r} Ω → courant de défaut à la terre estimé I<sub>g</sub> ≈ {ig} A.",
+    solidTitle: "Mise à la terre solide — calcul complet du défaut ligne-terre non effectué.", solidBody: "Un calcul rigoureux du courant de défaut ligne-terre sur un système mis à la terre solidement nécessite l'impédance de séquence zéro (Z₀) du transformateur, qui n'est pas recueillie par cet outil et peut différer sensiblement de l'impédance de séquence positive utilisée pour le défaut triphasé ci-dessus selon la configuration des enroulements et la construction du noyau. À titre de référence d'ordre de grandeur seulement, le courant de défaut L-T d'un système mis à la terre solidement est souvent comparable à, et peut dépasser, la valeur de défaut triphasé indiquée ci-dessus — une étude d'impédance de séquence dédiée est requise pour une cote de défaut L-T réelle.",
+    irIcOkTitle: "Le courant de la résistance satisfait le critère I<sub>R</sub> ≥ I<sub>C</sub>.", irIcOkBody: "I<sub>g</sub> ({ig} A) est supérieur ou égal au courant de charge capacitive I<sub>C</sub> saisi ({ic} A) — conforme à la pratique de l'IEEE 142 pour éviter les surtensions transitoires dues à un défaut à la terre intermittent (réamorçage).",
+    irIcFailTitle: "Le courant de la résistance est inférieur à I<sub>C</sub> — révisez le dimensionnement.", irIcFailBody: "I<sub>g</sub> ({ig} A) est inférieur au courant de charge capacitive I<sub>C</sub> saisi ({ic} A). Selon les directives de l'IEEE 142, cette combinaison peut permettre des surtensions transitoires lors d'un défaut à la terre intermittent — envisagez une résistance plus faible (I<sub>g</sub> plus élevé) ou confirmez l'estimation du courant de charge capacitive.",
+    irIcUnknownTitle: "Courant de charge capacitive du système non saisi.", irIcUnknownBody: "Entrez le courant de charge capacitive du système (à partir de la capacitance des câbles/plateaux de câbles, ou une estimation du fabricant/distributeur) pour vérifier le critère I<sub>R</sub> ≥ I<sub>C</sub> recommandé par l'IEEE 142 pour le dimensionnement de la résistance HRG.",
+    hrgHighTitle: "Courant de défaut à la terre au-dessus de la plage HRG typique.", hrgHighBody: "Le courant de défaut à la terre calculé ({ig} A) est au-dessus de la plage typique d'environ 5–10 A d'une conception HRG à alarme seulement — confirmez que ceci est intentionnel (certains systèmes HRG sont conçus jusqu'à ~25 A) et non simplement une valeur de résistance faible saisie par erreur.",
+    step9TitleSolid: "Défaut ligne-terre (mise à la terre solide)", clauseSolid: "CSA C22.1 Règle 10",
+    step9NoteSolid: "Le courant de défaut L-T d'un système mis à la terre solidement nécessite les données d'impédance de séquence zéro (Z₀) du transformateur, non modélisées par cet outil — traitez la note ci-dessus comme un signalement de niveau planification seulement.",
+    solidFormulaNote: "Courant de défaut L-T non calculé — nécessite les données Z₀ (impédance de séquence zéro) du transformateur. Voir la note ci-dessus.",
+    step9TitleHrg: "Courant de défaut à la terre (HRG)", clauseHrg: "IEEE 142 / CSA C22.1 Règle 10",
+    step9NoteHrg: "La résistance de mise à la terre du neutre domine l'impédance de la boucle de courant de défaut, donc les R/X du système n'ont qu'un effet mineur sur Ig. La vérification I<sub>R</sub> ≥ I<sub>C</sub> suit les directives de l'IEEE Std 142 (Green Book) pour éviter les surtensions de défaut à la terre par réamorçage sur les systèmes HRG.",
+    step9TitleLrg: "Courant de défaut à la terre (LRG)", clauseLrg: "IEEE 142 / CSA C22.1 Règle 10",
+    step9NoteLrg: "La mise à la terre à basse résistance est généralement dimensionnée pour la coordination sélective des relais de défaut à la terre (couramment dans la plage de 200–400 A) plutôt que le critère de surtension par réamorçage à alarme seulement utilisé pour la conception HRG.",
+    userEntered: "saisi par l'utilisateur", criterionMet: "critère satisfait", criterionNotMet: "critère NON satisfait",
+    lblIncludeLedger: "Inclure le registre de calcul dans le rapport", lblIncludeLogo: "Inclure la marque OhmZone dans le rapport",
+    lblUploadTemplate: "Modèle de rapport (.docx, facultatif)",
+    hintUploadTemplate: "Téléversez le modèle Word de votre entreprise pour habiller les exports. Le modèle doit contenir des espaces réservés en texte brut exactement comme indiqué : {tag} {date} {srcV} {srcIsc} {kva} {v2} {iscFinal} {xrFinal} {kappa} {peak} {groundType} {ngrR} {groundFaultI}. Saisissez chaque balise d'un seul coup — le correcteur/la vérification orthographique de Word peut diviser une balise.",
+    templateLoadedMsg: "Modèle chargé : {name}", templateErrorMsg: "Impossible de lire ce fichier comme modèle Word — utilisation de la mise en page intégrée à la place.",
+    templateNoTagsFound: "aucun espace réservé OhmZone trouvé dans ce document.", templateTagsFound: "{n} espaces réservés sur {total} trouvés.",
+    templateTagsMissing: "Absents (seront omis) : {list}.", templateTagsUnknown: "Balises non reconnues qui s'afficheront comme «nom» : {list}.", templateExportOk: "Export du modèle terminé.",
+    repInputData: "Données d'entrée", repResults: "Résultats", untitledTag: "(sans titre)", tagLbl: "Repère",
+    lblTag: "Repère de l'étude / de l'équipement",
+    xlsParam: "Paramètre", xlsValue: "Valeur", xlsMethod: "Méthode", xlsMethodDesc: "méthode ohmique (Ω), impédances rapportées à la base de tension secondaire",
+    xlsSrcV: "Tension source (V)", xlsSrcIsc: "Isc source (A)", xlsSrcXR: "X/R source",
+    xlsPriCableIncl: "Câble primaire inclus", xlsXfmrRating: "Puissance du transformateur (kVA)", xlsXfmrType: "Type de transformateur",
+    xlsZUsed: "%Z du transformateur utilisé", xlsXRUsed: "X/R du transformateur utilisé", xlsZSource: "Source %Z / X/R",
+    nameplateSrc: "Plaque signalétique (saisie par l'utilisateur)", typicalSrc: "Valeur typique (ANSI/IEEE C57.12.00/C57.12.26)",
+    xlsSecV: "Tension secondaire (V)", xlsIscBus: "Isc au jeu de barres secondaire (A)", xlsSecCableIncl: "Câble secondaire inclus",
+    xlsTotalZ: "Z totale au point de défaut (Ω)", xlsMaxIscA: "Isc max., équipement secondaire (A)", xlsMaxIscKa: "Isc max., équipement secondaire (kA)",
+    xlsResultingXR: "X/R résultant", xlsKappa: "kappa (facteur d'asymétrie)", xlsPeak: "Courant de crête asymétrique (kA)",
+    xlsDisclaimerLbl: "Avis", xlsDisclaimerBody: "Cet outil est destiné à la planification préliminaire seulement — une étude de court-circuit / coordination scellée par un ingénieur qualifié est requise avant de spécifier ou d'acheter l'équipement.",
+    passWord: "CONFORME", failWord: "NON CONFORME",
+    yes: "Oui", no: "Non"
+  }
+};
+
+function applyStaticI18n(){
+  const L = UI[currentLang];
+  document.getElementById('titleH1').textContent = L.titleH1;
+  document.getElementById('titleSub').textContent = L.titleSub;
+  document.getElementById('lblDwg').textContent = L.lblDwg;
+  document.getElementById('lblScale').textContent = L.lblScale;
+  document.getElementById('lblMethod').textContent = L.lblMethod;
+  document.getElementById('lblRev').textContent = L.lblRev;
+  document.getElementById('loadExampleTxt').textContent = L.loadExampleTxt;
+  document.getElementById('step1Title').childNodes[0].textContent = L.step1Title;
+  document.getElementById('step1Small').textContent = L.step1Small;
+  document.getElementById('lblTag').textContent = L.lblTag;
+  document.getElementById('lblSrcV').textContent = L.lblSrcV;
+  document.getElementById('lblSrcIsc').textContent = L.lblSrcIsc;
+  document.getElementById('lblUnit1').textContent = L.lblUnit1;
+  document.getElementById('lblSrcXR').textContent = L.lblSrcXR;
+  document.getElementById('hintStep1').innerHTML = L.hintStep1;
+  document.getElementById('step2Title').childNodes[0].textContent = L.step2Title + ' ';
+  document.getElementById('optionalTag1').textContent = L.optionalTag1;
+  document.getElementById('step2Small').textContent = L.step2Small;
+  document.getElementById('lblLength1').textContent = L.lblLength1;
+  document.getElementById('lblUnit2').textContent = L.lblUnit2;
+  document.getElementById('lblCond1').textContent = L.lblCond1;
+  document.getElementById('lblRaceway1').textContent = L.lblRaceway1;
+  document.getElementById('optCu1').textContent = L.optCu1;
+  document.getElementById('optAl1').textContent = L.optAl1;
+  document.getElementById('optSteel1').textContent = L.optSteel1;
+  document.getElementById('optPvc1').textContent = L.optPvc1;
+  document.getElementById('lblSize1').textContent = L.lblSize1;
+  document.getElementById('lblSets1').textContent = L.lblSets1;
+  document.getElementById('hintStep2').innerHTML = L.hintStep2;
+  document.getElementById('step3Title').childNodes[0].textContent = L.step3Title;
+  document.getElementById('step3Small').textContent = L.step3Small;
+  document.getElementById('lblRatingX').textContent = L.lblRatingX;
+  document.getElementById('lblConstruction').textContent = L.lblConstruction;
+  document.getElementById('optLiquid').textContent = L.optLiquid;
+  document.getElementById('optDry').textContent = L.optDry;
+  document.getElementById('lblSecV').textContent = L.lblSecV;
+  document.getElementById('lblVendor').childNodes[0].textContent = L.lblVendor + ' ';
+  document.getElementById('refOnlyTag').textContent = L.refOnlyTag;
+  document.getElementById('optgLarge').label = L.optgLarge;
+  document.getElementById('optgDist').label = L.optgDist;
+  document.getElementById('overrideLabel').textContent = L.overrideLabel;
+  document.getElementById('lblZOverride').textContent = L.lblZOverride;
+  document.getElementById('lblXROverride').textContent = L.lblXROverride;
+  document.getElementById('step4Title').childNodes[0].textContent = L.step4Title;
+  document.getElementById('optionalTag2').textContent = L.optionalTag2;
+  document.getElementById('step4Small').textContent = L.step4Small;
+  document.getElementById('lblLength2').textContent = L.lblLength2;
+  document.getElementById('lblUnit3').textContent = L.lblUnit3;
+  document.getElementById('lblCond2').textContent = L.lblCond2;
+  document.getElementById('lblRaceway2').textContent = L.lblRaceway2;
+  document.getElementById('optCu2').textContent = L.optCu2;
+  document.getElementById('optAl2').textContent = L.optAl2;
+  document.getElementById('optSteel2').textContent = L.optSteel2;
+  document.getElementById('optPvc2').textContent = L.optPvc2;
+  document.getElementById('lblSize2').textContent = L.lblSize2;
+  document.getElementById('lblSets2').textContent = L.lblSets2;
+  document.getElementById('hintStep4').textContent = L.hintStep4;
+  document.getElementById('step5Title').childNodes[0].textContent = L.groundStepTitle + ' ';
+  document.getElementById('optionalTag3').textContent = L.optionalTag3;
+  document.getElementById('step5Small').textContent = L.step5Small;
+  document.getElementById('lblGroundType').textContent = L.lblGroundType;
+  document.getElementById('optSolid').textContent = L.optSolid;
+  document.getElementById('optLrg').textContent = L.optLrg;
+  document.getElementById('optHrg').textContent = L.optHrg;
+  document.getElementById('lblNgrInputMode').textContent = L.lblNgrInputMode;
+  document.getElementById('lblNgrR').innerHTML = L.lblNgrR;
+  document.getElementById('lblNgrI').textContent = L.lblNgrI;
+  document.getElementById('lblIc').innerHTML = L.lblIc;
+  document.getElementById('lblNgrDuty').textContent = L.lblNgrDuty;
+  document.getElementById('hintStep5').innerHTML = L.hintStep5;
+  document.getElementById('sldTitle').textContent = L.sldTitle;
+  document.getElementById('sldTag').textContent = L.sldTag;
+  document.getElementById('sldCapTxt').textContent = L.sldCapTxt;
+  document.getElementById('resultTitle').textContent = L.resultTitle;
+  document.getElementById('gaugeLbl').textContent = L.gaugeLbl;
+  document.getElementById('lblStatFinal').textContent = L.lblStatFinal;
+  document.getElementById('lblStatXfmr').textContent = L.lblStatXfmr;
+  document.getElementById('lblStatZ').textContent = L.lblStatZ;
+  document.getElementById('lblStatXR').textContent = L.lblStatXR;
+  document.getElementById('lblStatPeak').textContent = L.lblStatPeak;
+  document.getElementById('lblStatKappa').textContent = L.lblStatKappa;
+  document.getElementById('lblIncludeLedger').textContent = L.lblIncludeLedger;
+  document.getElementById('lblIncludeLogo').textContent = L.lblIncludeLogo;
+  document.getElementById('printBtn').textContent = L.printBtnLabel;
+  document.getElementById('exportWordBtn').textContent = L.exportWordLabel;
+  document.getElementById('exportExcelBtn').textContent = L.exportBtnLabel;
+  document.getElementById('lblUploadTemplate').textContent = L.lblUploadTemplate;
+  document.getElementById('hintUploadTemplate').textContent = L.hintUploadTemplate;
+  document.getElementById('ledgerTitle').textContent = L.ledgerTitle;
+  document.getElementById('ledgerTag').textContent = L.ledgerTag;
+  document.getElementById('footerNote').innerHTML = L.footerNoteHtml;
+}
+
+function setLang(lang){
+  currentLang = lang;
+  document.getElementById('btn-en').classList.toggle('active', lang==='en');
+  document.getElementById('btn-fr').classList.toggle('active', lang==='fr');
+  document.documentElement.lang = lang;
+  try { localStorage.setItem('ohmzone-lang', lang); } catch(e) {}
+  applyStaticI18n();
+  recalc();
+}
+
+(function(){
+  let saved = 'en';
+  try { saved = localStorage.getItem('ohmzone-lang') || 'en'; } catch(e) {}
+  setLang(saved);
+})();
+</script>
+<div style="position:fixed;bottom:6px;right:12px;z-index:9999;font-family:monospace;font-size:10px;color:#5c7592;opacity:0.75;">© 2026 OhmZone. All rights reserved.</div>
+</body>
+</html>

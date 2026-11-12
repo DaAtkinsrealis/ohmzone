@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fire Alarm Voltage Drop & NAC Load — NFPA 72</title>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3887318872951674" crossorigin="anonymous"></script>
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icon-16.png">
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="OhmZone">
+<meta name="theme-color" content="#0a1728">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.6/dist/pizzip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/docxtemplater@3.47.2/js/docxtemplater.js"></script>
+<style>
+@media print{ .no-print{display:none !important;} body{background:#fff !important;} }
+:root{
+  --bg:#080c14; --bg2:#0d1420; --panel:#111a2a; --panel-soft:#0c1220;
+  --line:#233350; --line-soft:#182238; --grid-line: rgba(96,140,196,0.09);
+  --ink:#e7edf7; --ink-dim:#8497b8; --ink-faint:#516085;
+  --trace:#3b9eff; --trace-soft:#1a3a5c; --gold:#e8b545;
+  --alarm:#ff5d77; --warn:#e3a83b; --radius:2px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',sans-serif;}
+body{background-image:linear-gradient(var(--grid-line) 1px,transparent 1px),linear-gradient(90deg,var(--grid-line) 1px,transparent 1px);background-size:28px 28px;min-height:100vh;}
+::selection{background:var(--trace);color:#04120f;}
+a{color:var(--trace);}
+input:focus-visible, select:focus-visible, button:focus-visible{outline:2px solid var(--trace);outline-offset:2px;}
+.lang-switch{display:flex;align-items:center;background:#0f2036;border:1px solid #2f5678;border-radius:16px;padding:3px;gap:2px;font-family:monospace;font-size:11px;position:fixed;top:10px;right:12px;z-index:9999;}
+.lang-switch button{border:none;background:transparent;color:#8fa8c2;padding:5px 12px;border-radius:13px;cursor:pointer;font-family:inherit;font-size:inherit;}
+.lang-switch button.active{background:var(--trace);color:#04120f;font-weight:700;}
+
+.titleblock{border-bottom:1px solid var(--line);background:linear-gradient(180deg,rgba(17,26,42,.9),rgba(13,20,32,.7));padding:18px 22px;display:flex;flex-wrap:wrap;gap:14px 28px;align-items:flex-end;justify-content:space-between;}
+.titleblock .brand{display:flex;align-items:baseline;gap:12px;}
+.titleblock .brand .mark{width:34px;height:34px;border:1.5px solid var(--trace);border-radius:3px;display:flex;align-items:center;justify-content:center;color:var(--trace);font-family:'IBM Plex Mono';font-weight:700;font-size:11px;flex:none;box-shadow:0 0 14px rgba(59, 158, 255,.18) inset;}
+.titleblock h1{font-family:'IBM Plex Sans Condensed';font-weight:700;letter-spacing:.3px;font-size:20px;margin:0;text-transform:uppercase;}
+.titleblock .sub{color:var(--ink-dim);font-size:12.5px;margin-top:2px;}
+.stamp{display:grid;grid-template-columns:repeat(4,auto);gap:0 22px;font-family:'IBM Plex Mono';font-size:10.5px;color:var(--ink-dim);}
+.stamp div b{display:block;color:var(--ink-faint);font-weight:500;font-size:9px;letter-spacing:.06em;text-transform:uppercase;}
+.stamp div span{color:var(--trace);font-weight:600;font-size:12px;}
+
+.top-disclaimer{max-width:1480px;margin:14px auto 0;padding:10px 16px;border:1px solid var(--warn);background:rgba(227,168,59,.07);border-radius:var(--radius);font-size:11.5px;color:var(--ink-dim);line-height:1.6;}
+.top-disclaimer b{color:var(--warn);}
+
+.app{display:grid;grid-template-columns:400px 1fr;gap:1px;background:var(--line);max-width:1480px;margin:0 auto;}
+@media (max-width:1000px){ .app{grid-template-columns:1fr;} }
+.steps{background:var(--bg2);padding:18px 16px 40px;display:flex;flex-direction:column;gap:14px;}
+.canvas-col{background:var(--line);display:flex;flex-direction:column;gap:1px;}
+.canvas-col > *{background:var(--bg2);}
+
+.step{border:1px solid var(--line-soft);border-radius:var(--radius);background:var(--panel-soft);overflow:hidden;}
+.step-head{display:flex;align-items:center;gap:10px;padding:11px 13px;background:var(--panel);cursor:pointer;user-select:none;border-bottom:1px solid var(--line-soft);}
+.step-num{font-family:'IBM Plex Mono';font-size:11px;font-weight:600;color:var(--bg);background:var(--trace);width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none;}
+.step.optional .step-num{background:var(--ink-faint);color:var(--bg2);}
+.step.optional.on .step-num{background:var(--gold);}
+.step-title{font-size:13px;font-weight:600;letter-spacing:.2px;flex:1;}
+.step-title small{display:block;font-weight:400;color:var(--ink-dim);font-size:10.5px;margin-top:1px;}
+.chev{color:var(--ink-faint);font-size:11px;transition:transform .15s;}
+.step.closed .chev{transform:rotate(-90deg);}
+.step-body{padding:13px;display:flex;flex-direction:column;gap:11px;}
+.step.closed .step-body{display:none;}
+
+label.field{display:flex;flex-direction:column;gap:5px;font-size:11.5px;color:var(--ink-dim);}
+label.field b{color:var(--ink);font-weight:500;font-size:12px;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;}
+input[type=number],input[type=text],select{background:var(--bg2);border:1px solid var(--line);color:var(--ink);font-family:'IBM Plex Mono';font-size:13px;padding:8px 9px;border-radius:var(--radius);width:100%;}
+select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238497b8'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:26px;}
+input:focus,select:focus{border-color:var(--trace);}
+
+.seg{display:flex;border:1px solid var(--line);border-radius:20px;overflow:hidden;width:max-content;flex-wrap:wrap;}
+.seg button{background:transparent;border:none;color:var(--ink-dim);font-family:'IBM Plex Mono';font-size:10.5px;padding:5px 12px;cursor:pointer;}
+.seg button.active{background:var(--trace);color:#04120f;font-weight:600;}
+
+.switch{position:relative;width:34px;height:19px;flex:none;}
+.switch input{opacity:0;width:0;height:0;position:absolute;}
+.switch .track{position:absolute;inset:0;background:var(--line);border-radius:20px;transition:.15s;}
+.switch .track:before{content:'';position:absolute;width:13px;height:13px;left:3px;top:3px;background:var(--ink-dim);border-radius:50%;transition:.15s;}
+.switch input:checked + .track{background:var(--trace-soft);border:1px solid var(--trace);}
+.switch input:checked + .track:before{transform:translateX(15px);background:var(--trace);}
+
+.hint{font-size:10.5px;color:var(--ink-faint);line-height:1.5;}
+.hint em{color:var(--ink-dim);font-style:normal;}
+.example-btn{align-self:flex-start;font-family:'IBM Plex Mono';font-size:11px;font-weight:600;color:#0a1220;background:var(--trace);border:1px solid var(--trace);padding:9px 16px;border-radius:20px;cursor:pointer;box-shadow:0 4px 12px -4px var(--trace-soft);}
+.example-btn:hover{filter:brightness(1.08);}
+.add-btn{font-family:'IBM Plex Mono';font-size:11px;font-weight:600;color:#0a1220;background:var(--gold);border:1px solid var(--gold);padding:6px 12px;border-radius:6px;cursor:pointer;align-self:flex-start;}
+.add-btn:hover{filter:brightness(1.06);}
+.item-row{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--panel);border:1px solid var(--line-soft);border-radius:var(--radius);font-size:11.5px;}
+.item-row .lbl{flex:1;color:var(--ink);}
+.item-row .lbl small{display:block;color:var(--ink-faint);font-size:9.5px;}
+.item-row button{background:transparent;border:none;color:var(--alarm);cursor:pointer;font-size:14px;padding:2px 6px;}
+.empty-note{font-size:11px;color:var(--ink-faint);font-style:italic;padding:8px 2px;}
+
+.panel{padding:16px;}
+.panel-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px;gap:10px;flex-wrap:wrap;}
+.panel-head h2{font-family:'IBM Plex Sans Condensed';font-size:13px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-dim);margin:0;font-weight:600;}
+.panel-head .tag{font-family:'IBM Plex Mono';font-size:10px;color:var(--ink-faint);}
+
+.result-grid{display:grid;grid-template-columns:220px 1fr;gap:16px;align-items:center;}
+@media (max-width:640px){ .result-grid{grid-template-columns:1fr;} }
+.gauge-box{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.gauge-num{font-family:'IBM Plex Mono';font-weight:700;font-size:26px;color:var(--gold);text-align:center;}
+.gauge-lbl{font-size:10px;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.1em;text-align:center;}
+.stat-list{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+@media (max-width:480px){ .stat-list{grid-template-columns:1fr;} }
+.stat{border:1px solid var(--line-soft);border-radius:var(--radius);padding:9px 11px;background:var(--panel-soft);}
+.stat .k{font-size:10px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.06em;}
+.stat .v{font-family:'IBM Plex Mono';font-size:15px;font-weight:600;margin-top:3px;}
+.stat.hot{border-color:var(--gold);background:linear-gradient(180deg,rgba(232,181,69,.08),transparent);}
+.stat.hot .v{color:var(--gold);}
+
+.risk-box{border-radius:var(--radius);padding:11px 13px;margin-top:12px;font-size:12px;line-height:1.6;border:1px solid;}
+.risk-ok{border-color:var(--trace);background:rgba(59, 158, 255,.06);color:var(--ink-dim);}
+.risk-warn{border-color:var(--warn);background:rgba(227,168,59,.08);color:var(--ink-dim);}
+.risk-alarm{border-color:var(--alarm);background:rgba(255,93,119,.08);color:var(--ink-dim);}
+.risk-box b{color:var(--ink);}
+
+.ref-table{width:100%;border-collapse:collapse;font-size:11px;}
+.ref-table th,.ref-table td{padding:6px 8px;border-bottom:1px solid var(--line-soft);text-align:left;}
+.ref-table th{color:var(--ink-faint);font-weight:500;text-transform:uppercase;font-size:9px;letter-spacing:.06em;}
+.ref-table td{color:var(--ink-dim);font-family:'IBM Plex Mono';}
+
+.ledger{display:flex;flex-direction:column;}
+.lstep{padding:13px 16px;border-bottom:1px solid var(--line-soft);display:grid;grid-template-columns:26px 1fr;gap:12px;}
+.lstep:last-child{border-bottom:none;}
+.lstep .ln{font-family:'IBM Plex Mono';color:var(--ink-faint);font-size:11px;padding-top:2px;}
+.lstep h3{margin:0 0 5px;font-size:12.5px;font-weight:600;color:var(--ink);}
+.lstep .formula{font-family:'IBM Plex Mono';font-size:12px;color:var(--trace);background:rgba(59, 158, 255,.06);padding:8px 10px;border-radius:var(--radius);border:1px solid var(--trace-soft);margin:6px 0;overflow-x:auto;white-space:pre;}
+.cite{font-size:9.5px;color:var(--ink-faint);margin-top:6px;line-height:1.5;border-left:2px solid var(--line);padding-left:8px;}
+.cite b{color:var(--ink-dim);font-weight:500;}
+.clause{font-family:'IBM Plex Mono';font-size:9.5px;color:var(--gold);background:rgba(232,181,69,.08);border:1px solid rgba(232,181,69,.25);border-radius:3px;padding:1px 5px;margin-right:4px;white-space:nowrap;}
+
+footer.note{max-width:1480px;margin:22px auto 60px;padding:0 16px;font-size:10.5px;color:var(--ink-faint);line-height:1.7;}
+footer.note b{color:var(--ink-dim);}
+</style>
+</head>
+<body>
+<a href="index.html" class="no-print" style="position:fixed;top:10px;left:12px;z-index:9999;font-family:monospace;font-size:11px;color:#8fa8c2;background:rgba(10,23,40,0.85);border:1px solid #234261;border-radius:14px;padding:5px 12px;text-decoration:none;">← OhmZone</a>
+<div class="lang-switch no-print">
+  <button type="button" id="btn-en" class="active" onclick="setLang('en')">EN</button>
+  <button type="button" id="btn-fr" onclick="setLang('fr')">FR</button>
+</div>
+
+<div class="titleblock">
+  <div class="brand">
+    <div class="mark">FA</div>
+    <div>
+      <h1 id="titleH1">Fire Alarm Voltage Drop & NAC Load</h1>
+      <div class="sub" id="titleSub">Secondary (standby) power calculation — NFPA 72 §18.3.7</div>
+    </div>
+  </div>
+  <div class="stamp">
+    <div><b id="lblDwg">Dwg No.</b><span>FA-001</span></div>
+    <div><b id="lblScale">Scale</b><span>NTS</span></div>
+    <div><b id="lblMethod">Method</b><span>NFPA 72</span></div>
+    <div><b id="lblRev">Rev</b><span id="revTag">—</span></div>
+  </div>
+</div>
+
+<div class="top-disclaimer no-print">
+  <b id="topDiscB">Preliminary sizing aid only.</b> <span id="topDiscTxt">This tool applies the standard NFPA 72 §18.3.7 end-of-line (EOL) voltage drop method with NEC Chapter 9 Table 8 conductor resistance values. It does not include a manufacturer device database — enter each device's worst-case current from the actual UL-listed datasheet. Final voltage drop and NAC loading calculations must be documented and submitted per the AHJ's requirements and reviewed by a qualified fire alarm professional against the specific control panel/power supply manufacturer's own worksheet.</span>
+</div>
+
+<div class="app">
+  <div class="steps">
+    <button class="example-btn" id="loadExample">▸ <span id="loadExampleTxt">Load example</span></button>
+
+    <!-- STEP 1: CIRCUIT & WIRE -->
+    <div class="step" id="step1">
+      <div class="step-head" data-toggle="step1">
+        <div class="step-num">1</div>
+        <div class="step-title" id="step1Title">Circuit &amp; Wire<small id="step1Small">Tag, wire gauge, length, circuit class</small></div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="step-body">
+        <label class="field"><b id="lblTag">Circuit tag</b>
+          <input type="text" id="eqTag" placeholder="e.g. NAC-1">
+        </label>
+        <div class="row2">
+          <label class="field"><b id="lblAwg">Wire gauge (AWG, copper)</b>
+            <select id="awgSel">
+              <option value="18">18 AWG</option>
+              <option value="16">16 AWG</option>
+              <option value="14" selected>14 AWG</option>
+              <option value="12">12 AWG</option>
+              <option value="10">10 AWG</option>
+            </select>
+          </label>
+          <label class="field"><b id="lblLength">One-way run length (ft)</b>
+            <input type="number" id="runLength" value="250" min="1" step="1">
+          </label>
+        </div>
+        <label class="field"><b id="lblCircuitClass">Circuit class</b>
+          <div class="seg" id="circuitClassSeg">
+            <button data-u="B" class="active">Class B</button>
+            <button data-u="A">Class A</button>
+          </div>
+        </label>
+        <div class="hint" id="hintStep1"></div>
+      </div>
+    </div>
+
+    <!-- STEP 2: DEVICES ON CIRCUIT -->
+    <div class="step" id="step2">
+      <div class="step-head" data-toggle="step2">
+        <div class="step-num">2</div>
+        <div class="step-title" id="step2Title">Devices on Circuit<small id="step2Small">NAC appliance current — worst-case from datasheet</small></div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="step-body">
+        <div class="row3">
+          <label class="field"><b id="lblDevName">Label</b>
+            <input type="text" id="devName" placeholder="e.g. Horn/strobe 15cd">
+          </label>
+          <label class="field"><b id="lblDevQty">Qty</b>
+            <input type="number" id="devQty" value="1" min="1" step="1">
+          </label>
+        </div>
+        <label class="field"><b id="lblDevAmp">Current, each (A)</b>
+          <input type="number" id="devAmp" value="0" min="0" step="0.001">
+        </label>
+        <button class="add-btn" id="addDeviceBtn">+ <span id="addDeviceTxt">Add device group</span></button>
+        <div id="deviceList" style="display:flex;flex-direction:column;gap:6px;"></div>
+        <div class="hint" id="hintStep2"></div>
+      </div>
+    </div>
+
+    <!-- STEP 3: SOURCE & LIMITS -->
+    <div class="step" id="step3">
+      <div class="step-head" data-toggle="step3">
+        <div class="step-num">3</div>
+        <div class="step-title" id="step3Title">Source &amp; Limits<small id="step3Small">Panel output, minimum device voltage, NAC rating</small></div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="step-body">
+        <div class="row2">
+          <label class="field"><b id="lblVsource">Source voltage, CUSTV (V)</b>
+            <input type="number" id="vSource" value="20.4" min="1" step="0.1">
+          </label>
+          <label class="field"><b id="lblVmin">Minimum device voltage (V)</b>
+            <input type="number" id="vMin" value="16" min="1" step="0.1">
+          </label>
+        </div>
+        <div class="row2">
+          <label class="field"><b id="lblMva">Module voltage adjustment (V, optional)</b>
+            <input type="number" id="mva" value="0" min="0" step="0.1">
+          </label>
+          <label class="field"><b id="lblNacRating">NAC circuit rated capacity (A)</b>
+            <input type="number" id="nacRating" value="3.0" min="0.1" step="0.1">
+          </label>
+        </div>
+        <div class="hint" id="hintStep3"></div>
+      </div>
+    </div>
+  </div>
+  <div class="canvas-col">
+    <div class="panel">
+      <div class="panel-head"><h2 id="resultTitle">Result — Voltage Drop &amp; NAC Load</h2></div>
+      <div class="result-grid">
+        <div class="gauge-box">
+          <div class="gauge-num" id="gaugeNum">—</div>
+          <div class="gauge-lbl" id="gaugeLbl">End-of-line voltage (V)</div>
+        </div>
+        <div class="stat-list">
+          <div class="stat hot"><div class="k" id="lblStatVd">Voltage drop</div><div class="v" id="statVd">—</div></div>
+          <div class="stat"><div class="k" id="lblStatUtil">NAC utilization</div><div class="v" id="statUtil">—</div></div>
+          <div class="stat"><div class="k" id="lblStatTotalA">Total circuit current</div><div class="v" id="statTotalA">—</div></div>
+          <div class="stat"><div class="k" id="lblStatMaxLen">Max length at this load</div><div class="v" id="statMaxLen">—</div></div>
+          <div class="stat"><div class="k" id="lblStatRPerFt">Wire resistance</div><div class="v" id="statRPerFt">—</div></div>
+          <div class="stat"><div class="k" id="lblStatClass">Circuit class</div><div class="v" id="statClass">—</div></div>
+        </div>
+      </div>
+      <div id="verdictBox"></div>
+      <div id="nacBox"></div>
+    </div>
+
+    <div class="panel no-print" style="border:none;background:transparent;">
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px;font-size:11.5px;color:var(--ink-dim);">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+          <input type="checkbox" id="includeLedger" checked style="width:auto;">
+          <span id="lblIncludeLedger">Include Calculation Ledger in report</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+          <input type="checkbox" id="includeLogo" checked style="width:auto;">
+          <span id="lblIncludeLogo">Include OhmZone brand mark in report</span>
+        </label>
+      </div>
+      <div class="btn-row" style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button id="printBtn" style="padding:9px 16px;border-radius:8px;border:1px solid #2f5678;background:#0f2036;color:#c8d8e8;cursor:pointer;font-family:inherit;">🖨 Print / Save as PDF</button>
+        <button id="exportWordBtn" style="padding:9px 16px;border-radius:8px;border:1px solid #2f5678;background:#0f2036;color:#c8d8e8;cursor:pointer;font-family:inherit;">📄 Export study (Word)</button>
+        <button id="exportExcelBtn" style="padding:9px 16px;border-radius:8px;border:1px solid #2f5678;background:#0f2036;color:#c8d8e8;cursor:pointer;font-family:inherit;">📊 Export study (Excel)</button>
+      </div>
+      <div style="border-top:1px dashed var(--line);margin-top:14px;padding-top:12px;">
+        <label class="field"><b id="lblUploadTemplate">Report template (.docx, optional)</b>
+          <input type="file" id="templateFile" accept=".docx">
+        </label>
+        <div id="templateStatus" style="font-size:11px;color:var(--trace);margin-top:4px;"></div>
+        <div class="hint" id="hintUploadTemplate" style="margin-top:6px;"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2 id="ledgerTitle">Calculation Ledger</h2><span class="tag" id="ledgerTag">clause-by-clause</span></div>
+      <div class="ledger" id="ledger"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2 id="devTableTitle">Device Load Summary</h2></div>
+      <div style="overflow-x:auto;">
+        <table class="ref-table">
+          <thead><tr><th id="thDevLabel">Label</th><th id="thDevQty">Qty</th><th id="thDevAmp">Current (A ea.)</th><th id="thDevAmpTotal">Total (A)</th></tr></thead>
+          <tbody id="devTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<footer class="note" id="footerNote"></footer>
+
+<script>
+const $ = id => document.getElementById(id);
+function fmt(n,d=2){ if(n===undefined||n===null||isNaN(n)) return "—"; return Number(n).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d}); }
+
+let currentLang = 'en';
+let state = { awg:"14", circuitClass:"B", devices:[] };
+let devSeq = 1;
+
+document.querySelectorAll(".step-head").forEach(h=>{
+  h.addEventListener("click", ()=>{ $(h.dataset.toggle).classList.toggle("closed"); });
+});
+
+function wireSeg(segId, stateKey){
+  $(segId).addEventListener("click", e=>{
+    const b = e.target.closest("button"); if(!b) return;
+    document.querySelectorAll("#"+segId+" button").forEach(x=>x.classList.remove("active"));
+    b.classList.add("active");
+    state[stateKey] = b.dataset.u;
+    recalc();
+  });
+}
+wireSeg("circuitClassSeg","circuitClass");
+$("awgSel").addEventListener("change", ()=>{ state.awg = $("awgSel").value; recalc(); });
+
+$("addDeviceBtn").addEventListener("click", ()=>{
+  const L = UI[currentLang];
+  const name = $("devName").value.trim() || L.defaultDeviceName;
+  const qty = Math.max(1, parseInt($("devQty").value)||1);
+  const amp = parseFloat($("devAmp").value)||0;
+  state.devices.push({id:"d"+(devSeq++), name, qty, amp});
+  $("devName").value = "";
+  renderDeviceList();
+  recalc();
+});
+function removeDevice(id){
+  state.devices = state.devices.filter(d=>d.id!==id);
+  renderDeviceList();
+  recalc();
+}
+function renderDeviceList(){
+  const L = UI[currentLang];
+  const list = $("deviceList");
+  if(state.devices.length===0){
+    list.innerHTML = `<div class="empty-note">${L.noDevices}</div>`;
+    return;
+  }
+  list.innerHTML = state.devices.map(d=>`<div class="item-row">
+    <span class="lbl">${d.name} × ${d.qty}
+    <small>${fmt(d.amp,3)} A ${L.eachLbl}</small></span>
+    <button onclick="removeDevice('${d.id}')">✕</button>
+  </div>`).join("");
+}
+
+["eqTag","runLength","devQty","devAmp","vSource","vMin","mva","nacRating"].forEach(id=>{
+  $(id).addEventListener("input", recalc);
+  $(id).addEventListener("change", recalc);
+});
+
+$("loadExample").addEventListener("click", ()=>{
+  $("eqTag").value = "NAC-1";
+  $("awgSel").value = "14"; state.awg = "14";
+  $("runLength").value = 250;
+  state.circuitClass = "B";
+  document.querySelectorAll("#circuitClassSeg button").forEach(x=>x.classList.toggle("active", x.dataset.u==="B"));
+  state.devices = []; devSeq = 1;
+  state.devices.push({id:"d"+(devSeq++), name:"Horn/strobe, 15cd", qty:12, amp:0.053});
+  state.devices.push({id:"d"+(devSeq++), name:"Horn/strobe, 75cd", qty:6, amp:0.150});
+  state.devices.push({id:"d"+(devSeq++), name:"Ceiling speaker/strobe", qty:8, amp:0.075});
+  renderDeviceList();
+  $("vSource").value = 20.4; $("vMin").value = 16; $("mva").value = 0; $("nacRating").value = 3.0;
+  recalc();
+});
+
+/* ===== core calc ===== */
+/* NEC Chapter 9, Table 8 — uncoated copper conductor DC resistance, ohm/1000 ft */
+const WIRE_R = {"18":6.385, "16":4.016, "14":2.525, "12":1.588, "10":0.9989};
+
+function calcAll(){
+  const awg = state.awg;
+  const R = WIRE_R[awg];
+  const L = parseFloat($("runLength").value)||0;
+  const circuitClass = state.circuitClass;
+
+  let totalA = 0;
+  const rows = state.devices.map(d=>{
+    const rowTotal = d.amp*d.qty;
+    totalA += rowTotal;
+    return {...d, rowTotal};
+  });
+
+  const Vsource = parseFloat($("vSource").value)||20.4;
+  const Vmin = parseFloat($("vMin").value)||16;
+  const mva = parseFloat($("mva").value)||0;
+  const nacRating = parseFloat($("nacRating").value)||3.0;
+
+  /* EOL (end-of-line) method: current-carrying loop length depends on circuit
+     class — Class B is a single one-way run to the end device (loop = 2×L for
+     the round-trip circuit); Class A is wired as a loop returning to the panel,
+     so under a single-fault condition it still reduces to the same worst-case
+     one-way run — this tool applies the standard 2×L EOL formula for both,
+     which is the conservative, commonly used convention. */
+  const VD = 2 * L * totalA * R / 1000;
+  const Vend = Vsource - VD - mva;
+  const pass = Vend >= Vmin;
+
+  /* max length solved from the same formula, holding total current fixed */
+  const maxLen = totalA>0 ? ((Vsource - Vmin - mva) * 1000) / (2 * totalA * R) : null;
+
+  const nacUtilPct = nacRating>0 ? (totalA/nacRating*100) : 0;
+  const nacPass = totalA <= nacRating;
+
+  return {awg, R, L, circuitClass, rows, totalA, Vsource, Vmin, mva, nacRating,
+    VD, Vend, pass, maxLen, nacUtilPct, nacPass, tag: $("eqTag").value.trim()};
+}
+
+function recalc(){
+  const L = UI[currentLang];
+  const d = calcAll();
+
+  $("gaugeNum").textContent = fmt(d.Vend,2);
+  $("statVd").textContent = fmt(d.VD,2)+" V";
+  $("statUtil").textContent = fmt(d.nacUtilPct,1)+"%";
+  $("statTotalA").textContent = fmt(d.totalA,3)+" A";
+  $("statMaxLen").textContent = d.maxLen!==null ? fmt(d.maxLen,0)+" ft" : "—";
+  $("statRPerFt").textContent = fmt(d.R,3)+" Ω/1000ft";
+  $("statClass").textContent = "Class "+d.circuitClass;
+  $("revTag").textContent = new Date().toISOString().slice(0,10);
+
+  const verdictBox = $("verdictBox");
+  if(state.devices.length===0){
+    verdictBox.innerHTML = `<div class="risk-box risk-warn"><b>${L.noDevTitle}</b> ${L.noDevBody}</div>`;
+  } else if(d.pass){
+    verdictBox.innerHTML = `<div class="risk-box risk-ok"><b>${L.passTitle}</b> ${L.passBody.replace('{vend}',fmt(d.Vend,2)).replace('{vmin}',fmt(d.Vmin,2))}</div>`;
+  } else {
+    verdictBox.innerHTML = `<div class="risk-box risk-alarm"><b>${L.failTitle}</b> ${L.failBody.replace('{vend}',fmt(d.Vend,2)).replace('{vmin}',fmt(d.Vmin,2)).replace('{maxlen}',d.maxLen!==null?fmt(d.maxLen,0):'—')}</div>`;
+  }
+
+  const nacBox = $("nacBox");
+  if(!d.nacPass){
+    nacBox.innerHTML = `<div class="risk-box risk-alarm"><b>${L.nacFailTitle}</b> ${L.nacFailBody.replace('{total}',fmt(d.totalA,3)).replace('{rating}',fmt(d.nacRating,2))}</div>`;
+  } else if(d.nacUtilPct > 80){
+    nacBox.innerHTML = `<div class="risk-box risk-warn"><b>${L.nacHighTitle}</b> ${L.nacHighBody.replace('{pct}',fmt(d.nacUtilPct,1))}</div>`;
+  } else {
+    nacBox.innerHTML = "";
+  }
+
+  $("devTableBody").innerHTML = d.rows.map(r=>`<tr>
+    <td>${r.name}</td><td>${r.qty}</td><td>${fmt(r.amp,3)}</td><td>${fmt(r.rowTotal,3)}</td></tr>`).join("");
+
+  renderLedger(d);
+  window._lastResults = d;
+}
+
+/* ===== ledger ===== */
+function buildLedgerSteps(d){
+  const L = UI[currentLang];
+  const devLines = d.rows.map(r=>`${r.name}: ${r.qty} × ${fmt(r.amp,3)} A = ${fmt(r.rowTotal,3)} A`).join("\n") || L.noDevicesShort;
+  const steps = [];
+
+  steps.push({num:1, title:L.ls1Title, clause:"—", note:L.ls1Note, formula:
+`${devLines}
+
+${L.totalALbl} = ${fmt(d.totalA,3)} A`});
+
+  steps.push({num:2, title:L.ls2Title, clause:"NEC Ch.9 Table 8", note:L.ls2Note, formula:
+`${L.wireLbl}: ${d.awg} AWG, ${L.rLbl} = ${fmt(d.R,4)} Ω/1000ft
+${L.lengthLbl} = ${fmt(d.L,0)} ft (${L.oneWayLbl})
+${L.circuitClassLbl}: Class ${d.circuitClass}`});
+
+  steps.push({num:3, title:L.ls3Title, clause:"NFPA 72 §18.3.7 (EOL method)", note:L.ls3Note, formula:
+`VD = 2 × L × I_total × R / 1000
+   = 2 × ${fmt(d.L,0)} × ${fmt(d.totalA,3)} × ${fmt(d.R,4)} / 1000
+   = ${fmt(d.VD,3)} V`});
+
+  steps.push({num:4, title:L.ls4Title, clause:"UL 864 (CUSTV) / UL 464 &amp; UL 1638", note:L.ls4Note, formula:
+`V_end = V_source − VD − MVA
+      = ${fmt(d.Vsource,2)} − ${fmt(d.VD,3)} − ${fmt(d.mva,2)}
+      = ${fmt(d.Vend,3)} V
+${L.reqMinLbl}: ${fmt(d.Vmin,2)} V → ${d.pass ? L.resultPass : L.resultFail}`});
+
+  steps.push({num:5, title:L.ls5Title, clause:"—", note:L.ls5Note, formula:
+`${L.nacTotalLbl} = ${fmt(d.totalA,3)} A
+${L.nacRatingLbl} = ${fmt(d.nacRating,2)} A
+${L.nacUtilLbl} = ${fmt(d.nacUtilPct,1)}%  → ${d.nacPass ? L.resultPass : L.resultFail}`});
+
+  if(d.maxLen!==null){
+    steps.push({num:6, title:L.ls6Title, clause:"—", note:L.ls6Note, formula:
+`L_max = (V_source − V_min − MVA) × 1000 / (2 × I_total × R)
+      = (${fmt(d.Vsource,2)} − ${fmt(d.Vmin,2)} − ${fmt(d.mva,2)}) × 1000 / (2 × ${fmt(d.totalA,3)} × ${fmt(d.R,4)})
+      = ${fmt(d.maxLen,0)} ft`});
+  }
+  return steps;
+}
+function renderLedger(d){
+  const steps = buildLedgerSteps(d);
+  $("ledger").innerHTML = steps.map(s=>`<div class="lstep"><div class="ln">${String(s.num).padStart(2,'0')}</div><div>
+    <h3><span class="clause">${s.clause}</span>${s.title}</h3><div class="formula">${s.formula}</div><div class="cite">${s.note}</div></div></div>`).join("");
+}
+
+/* ===== report ===== */
+function buildReportPageHTML(d, includeLedger, includeLogo){
+  const L = UI[currentLang];
+  const today = new Date().toLocaleDateString(currentLang==='fr'?'fr-CA':'en-CA');
+  const cell = (k,v)=>`<td style="padding:2.5pt 6pt 2.5pt 0;color:#333;font-size:9.5pt;white-space:nowrap;">${k}</td><td style="padding:2.5pt 14pt 2.5pt 0;font-weight:600;font-size:9.5pt;border-bottom:0.5pt solid #ddd;">${v}</td>`;
+  const gridRows = (pairs)=>{
+    let html = "";
+    for(let i=0;i<pairs.length;i+=2){
+      const a = pairs[i], b = pairs[i+1];
+      html += `<tr>${cell(a[0],a[1])}${b?cell(b[0],b[1]):'<td></td><td></td>'}</tr>`;
+    }
+    return html;
+  };
+  const sectionHead = (t)=>`<div style="font-size:9.5pt;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;border-bottom:1pt solid #1a1a1a;padding-bottom:2pt;margin:12pt 0 5pt;">${t}</div>`;
+
+  const inputPairs = [
+    [L.lblAwg, d.awg+" AWG"], [L.lblLength, fmt(d.L,0)+" ft"],
+    [L.lblCircuitClass, "Class "+d.circuitClass], [L.lblVsource, fmt(d.Vsource,2)+" V"],
+    [L.lblVmin, fmt(d.Vmin,2)+" V"], [L.lblNacRating, fmt(d.nacRating,2)+" A"]
+  ];
+  const resultPairs = [
+    [L.gaugeLbl, fmt(d.Vend,2)+" V"], [L.lblStatVd, fmt(d.VD,2)+" V"],
+    [L.lblStatUtil, fmt(d.nacUtilPct,1)+"%"], [L.lblStatTotalA, fmt(d.totalA,3)+" A"],
+    [L.lblStatMaxLen, d.maxLen!==null?fmt(d.maxLen,0)+" ft":"—"], [L.xlsResult, d.pass&&d.nacPass?L.passWord:L.failWord]
+  ];
+
+  const devRows = d.rows.map(r=>`<tr>
+    <td style="padding:3pt 8pt;border-bottom:0.5pt solid #e5e5e5;font-size:8.5pt;">${r.name}</td>
+    <td style="padding:3pt 8pt;border-bottom:0.5pt solid #e5e5e5;font-size:8.5pt;">${r.qty}</td>
+    <td style="padding:3pt 8pt;border-bottom:0.5pt solid #e5e5e5;font-size:8.5pt;">${fmt(r.amp,3)} A</td>
+    <td style="padding:3pt 8pt;border-bottom:0.5pt solid #e5e5e5;font-size:8.5pt;">${fmt(r.rowTotal,3)} A</td></tr>`).join("");
+  const devHtml = sectionHead(L.devTableTitle) + `<table style="width:100%;border-collapse:collapse;">
+    <tr>
+      <td style="padding:4pt 8pt;font-size:7.5pt;font-weight:700;text-transform:uppercase;color:#666;border-bottom:1pt solid #999;">${L.thDevLabel}</td>
+      <td style="padding:4pt 8pt;font-size:7.5pt;font-weight:700;text-transform:uppercase;color:#666;border-bottom:1pt solid #999;">${L.thDevQty}</td>
+      <td style="padding:4pt 8pt;font-size:7.5pt;font-weight:700;text-transform:uppercase;color:#666;border-bottom:1pt solid #999;">${L.thDevAmp}</td>
+      <td style="padding:4pt 8pt;font-size:7.5pt;font-weight:700;text-transform:uppercase;color:#666;border-bottom:1pt solid #999;">${L.thDevAmpTotal}</td>
+    </tr>${devRows}</table>`;
+
+  let ledgerHtml = "";
+  if(includeLedger){
+    const steps = buildLedgerSteps(d);
+    ledgerHtml = sectionHead(L.ledgerTitle) + `<table style="width:100%;border-collapse:collapse;">` +
+      steps.map(s=>`<tr>
+        <td style="padding:5pt 8pt 5pt 0;border-bottom:0.5pt solid #e5e5e5;font-size:8.5pt;font-weight:700;vertical-align:top;">${String(s.num).padStart(2,'0')}</td>
+        <td style="padding:5pt 8pt;border-bottom:0.5pt solid #e5e5e5;vertical-align:top;">
+          <div style="font-size:8.5pt;font-weight:700;margin-bottom:2pt;"><span style="color:#b8860b;font-family:'Courier New',monospace;font-size:7.5pt;margin-right:5pt;">${s.clause}</span>${s.title}</div>
+          <div style="font-family:'Courier New',monospace;font-size:8pt;color:#333;line-height:1.5;">${s.formula.split("\n").map(l=>l===""?"&nbsp;":l).join("<br>")}</div>
+          <div style="font-size:7.5pt;color:#888;margin-top:3pt;">${s.note}</div>
+        </td></tr>`).join("") + `</table>`;
+  }
+
+  return `
+  <div style="font-family:Arial,Helvetica,sans-serif;color:#1a1a1a;background:#fff;padding:4pt 2pt;font-size:9.5pt;line-height:1.4;">
+    <table style="width:100%;border-collapse:collapse;border-bottom:1.5pt solid #1a1a1a;padding-bottom:6pt;margin-bottom:4pt;">
+      <tr><td style="font-size:13pt;font-weight:700;padding-bottom:6pt;">${$('titleH1').textContent}</td>
+      <td style="text-align:right;font-size:8.5pt;color:#555;padding-bottom:6pt;">${includeLogo?'Ω OHMZONE':''}</td></tr>
+      <tr><td style="font-size:9pt;color:#333;"><b>${L.lblTag}:</b> ${d.tag || L.untitledTag} &nbsp;&nbsp; <b>${L.lblMethod}:</b> NFPA 72</td>
+      <td style="text-align:right;font-size:8.5pt;color:#555;">${today}</td></tr>
+    </table>
+    ${sectionHead(L.repInputData)}
+    <table style="width:100%;border-collapse:collapse;">${gridRows(inputPairs)}</table>
+    ${sectionHead(L.repResults)}
+    <table style="width:100%;border-collapse:collapse;">${gridRows(resultPairs)}</table>
+    ${devHtml}
+    ${ledgerHtml}
+    <p style="font-size:7.5pt;color:#888;margin-top:14pt;border-top:0.5pt solid #ddd;padding-top:6pt;">${L.disclaimerBody}</p>
+  </div>`;
+}
+
+function downloadBlob(content, mime, filename){
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 2000);
+}
+
+$("printBtn").addEventListener("click", ()=>{
+  const d = window._lastResults;
+  if(!d) return;
+  const html = buildReportPageHTML(d, $("includeLedger").checked, $("includeLogo").checked);
+  const w = window.open("", "_blank");
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${$('titleH1').textContent}</title>
+  <style>body{margin:0;padding:18px;} @media print{body{padding:0;}}</style></head>
+  <body>${html}<script>window.onload=()=>window.print();<\/script></body></html>`);
+  w.document.close();
+});
+
+/* ===== report template upload ===== */
+let uploadedTemplateBuffer = null, uploadedTemplateName = "";
+$("templateFile").addEventListener("change", (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev)=>{ uploadedTemplateBuffer = ev.target.result; uploadedTemplateName = file.name; inspectTemplate(file.name); };
+  reader.readAsArrayBuffer(file);
+});
+function templateTagValues(d){
+  const L = UI[currentLang];
+  const today = new Date().toLocaleDateString(currentLang==='fr'?'fr-CA':'en-CA');
+  return {
+    tag: d.tag || L.untitledTag, date: today,
+    awg: d.awg+" AWG", length: fmt(d.L,0)+" ft", circuitClass: "Class "+d.circuitClass,
+    vSource: fmt(d.Vsource,2)+" V", vEnd: fmt(d.Vend,2)+" V", vd: fmt(d.VD,2)+" V",
+    totalA: fmt(d.totalA,3)+" A", nacUtil: fmt(d.nacUtilPct,1)+"%",
+    maxLen: d.maxLen!==null?fmt(d.maxLen,0)+" ft":"—", result: (d.pass&&d.nacPass)?L.passWord:L.failWord
+  };
+}
+function showTemplateStatus(msg, color){ const el=$("templateStatus"); if(el){ el.textContent=msg; el.style.color=color||"var(--trace)"; } }
+function inspectTemplate(fileName){
+  const L = UI[currentLang];
+  const known = Object.keys(templateTagValues(window._lastResults || calcAll()));
+  try{
+    const zip = new PizZip(uploadedTemplateBuffer);
+    let xml = "";
+    Object.keys(zip.files).forEach(name=>{
+      if(/^word\/(document|header\d*|footer\d*)\.xml$/.test(name)) xml += zip.files[name].asText();
+    });
+    const plain = xml.replace(/<[^>]+>/g, "");
+    const found = known.filter(k => plain.includes("{"+k+"}"));
+    const missing = known.filter(k => !found.includes(k));
+    const allTags = [...plain.matchAll(/\\{([a-zA-Z0-9_]+)\\}/g)].map(m=>m[1]);
+    const unknown = [...new Set(allTags.filter(t => !known.includes(t)))];
+    let msg = L.templateLoadedMsg.replace("{name}", fileName) + " — ";
+    let color = "var(--trace)";
+    if(found.length === 0){ msg += L.templateNoTagsFound; color = "var(--alarm)"; }
+    else {
+      msg += L.templateTagsFound.replace("{n}", found.length).replace("{total}", known.length);
+      if(missing.length) msg += " " + L.templateTagsMissing.replace("{list}", missing.join(", "));
+      if(unknown.length){ msg += " " + L.templateTagsUnknown.replace("{list}", unknown.join(", ")); color = "var(--warn)"; }
+      if(missing.length && !unknown.length) color = "var(--warn)";
+    }
+    showTemplateStatus(msg, color);
+  } catch(err){
+    console.error(err);
+    showTemplateStatus(L.templateErrorMsg + " " + (err.message||""), "var(--alarm)");
+  }
+}
+function exportWithTemplate(d){
+  const L = UI[currentLang];
+  try{
+    const zip = new PizZip(uploadedTemplateBuffer);
+    const docx = new window.docxtemplater(zip, { paragraphLoop:true, linebreaks:true, nullGetter:p=>"«"+(p.value||"?")+"»" });
+    docx.render(templateTagValues(d));
+    const out = docx.getZip().generate({ type:"blob", mimeType:"application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+    const url = URL.createObjectURL(out);
+    const a = document.createElement("a"); a.href=url; a.download="fire_alarm_voltage_drop_calc.docx";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url), 2000);
+    showTemplateStatus(L.templateExportOk, "var(--trace)");
+  } catch(err){
+    console.error(err);
+    let detail = err.message || String(err);
+    if(err.properties && err.properties.errors && err.properties.errors.length){
+      detail = err.properties.errors.map(e=>(e.properties&&e.properties.explanation?e.properties.explanation:e.message)).join(" · ");
+    }
+    showTemplateStatus(L.templateErrorMsg+" "+detail, "var(--alarm)");
+    alert(L.templateErrorMsg+"\\n\\n"+detail);
+    exportWithBuiltInLayout(d);
+  }
+}
+function exportWithBuiltInLayout(d){
+  const html = buildReportPageHTML(d, $("includeLedger").checked, $("includeLogo").checked);
+  const doc = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+  <head><meta charset="utf-8"><title>Fire Alarm Voltage Drop</title>
+  <!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View></w:WordDocument></xml><![endif]--></head><body>${html}</body></html>`;
+  downloadBlob(doc, "application/msword", "fire_alarm_voltage_drop_calc.doc");
+}
+$("exportWordBtn").addEventListener("click", ()=>{
+  const d = window._lastResults;
+  if(!d) return;
+  if(uploadedTemplateBuffer) exportWithTemplate(d); else exportWithBuiltInLayout(d);
+});
+
+$("exportExcelBtn").addEventListener("click", ()=>{
+  const d = window._lastResults;
+  if(!d) return;
+  const L = UI[currentLang];
+  const wb = XLSX.utils.book_new();
+  const main = [
+    [L.repInputData,""],
+    [L.lblTag, d.tag || L.untitledTag],
+    [L.lblAwg, d.awg], [L.lblLength, fmt(d.L,0)], [L.lblCircuitClass, d.circuitClass],
+    [L.lblVsource, fmt(d.Vsource,2)], [L.lblVmin, fmt(d.Vmin,2)], [L.lblNacRating, fmt(d.nacRating,2)],
+    ["",""], [L.repResults,""],
+    [L.gaugeLbl, fmt(d.Vend,2)], [L.lblStatVd, fmt(d.VD,2)],
+    [L.lblStatUtil, fmt(d.nacUtilPct,1)], [L.lblStatTotalA, fmt(d.totalA,3)],
+    [L.lblStatMaxLen, d.maxLen!==null?fmt(d.maxLen,0):"—"],
+    ["",""], [L.disclaimerLbl, L.disclaimerBody]
+  ];
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(main), "Voltage Drop");
+
+  const devs = [[L.thDevLabel, L.thDevQty, L.thDevAmp, L.thDevAmpTotal]];
+  d.rows.forEach(r=>devs.push([r.name, r.qty, fmt(r.amp,3), fmt(r.rowTotal,3)]));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(devs), "Device Loads");
+
+  if($("includeLedger").checked){
+    const led = [["#","Formula","Note"]];
+    buildLedgerSteps(d).forEach(s=>{
+      led.push([String(s.num).padStart(2,'0')+" — "+s.title,"",""]);
+      s.formula.split("\n").forEach(l=>{ if(l.trim()!=="") led.push(["", l, ""]); });
+      led.push(["","",s.note]); led.push(["","",""]);
+    });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(led), "Calculation Ledger");
+  }
+  XLSX.writeFile(wb, "fire_alarm_voltage_drop_calc.xlsx");
+});
+
+/* ===================== i18n ===================== */
+const UI = {
+  en: {
+    titleH1:"Fire Alarm Voltage Drop &amp; NAC Load", titleSub:"Notification appliance circuit voltage drop — NFPA 72 §18.3.7",
+    lblDwg:"Dwg No.", lblScale:"Scale", lblMethod:"Method", lblRev:"Rev",
+    topDiscB:"Preliminary sizing aid only.",
+    topDiscTxt:"This tool applies the standard NFPA 72 §18.3.7 end-of-line (EOL) voltage drop method with NEC Chapter 9 Table 8 conductor resistance values. It does not include a manufacturer device database — enter each device's worst-case current from the actual UL-listed datasheet. Final voltage drop and NAC loading calculations must be documented and submitted per the AHJ's requirements and reviewed by a qualified fire alarm professional against the specific control panel/power supply manufacturer's own worksheet.",
+    loadExampleTxt:"Load example",
+    step1Title:"Circuit &amp; Wire", step1Small:"Tag, wire gauge, length, circuit class",
+    lblTag:"Circuit tag", lblAwg:"Wire gauge (AWG, copper)", lblLength:"One-way run length (ft)", lblCircuitClass:"Circuit class",
+    hintStep1:"This tool uses the standard end-of-line (EOL) method, which assumes the worst-case condition where all connected current flows to the far end of the circuit — the conservative and most commonly used method. Point-to-point (PTP) analysis, which sums voltage drop segment by segment as devices tap off along the run, gives a less conservative result but requires the full device layout sequence; use Custom Points-style segment-by-segment hand calculation if PTP precision is required.",
+    step2Title:"Devices on Circuit", step2Small:"NAC appliance current — worst-case from datasheet",
+    lblDevName:"Label", lblDevQty:"Qty", lblDevAmp:"Current, each (A)", addDeviceTxt:"Add device group",
+    hintStep2:"Use each device's worst-case UL-listed current draw (typically the value at minimum operating voltage, which is higher than at nominal voltage) — using the nominal-voltage current would understate the actual circuit loading.",
+    noDevices:"No device groups added yet — enter a label and current above, then click Add device group.",
+    defaultDeviceName:"Device group", eachLbl:"each",
+    step3Title:"Source &amp; Limits", step3Small:"Panel output, minimum device voltage, NAC rating",
+    lblVsource:"Source voltage, CUSTV (V)", lblVmin:"Minimum device voltage (V)", lblMva:"Module voltage adjustment (V, optional)", lblNacRating:"NAC circuit rated capacity (A)",
+    hintStep3:"CUSTV (Control Unit Starting Terminal Voltage) is commonly taken as 85% of the nominal 24V battery voltage (20.4V) per UL 864 — this represents the panel's guaranteed minimum output at end-of-battery-life conditions, not the nominal 24V. Minimum device voltage is typically 16V per UL 464/UL 1638 appliance listings — always confirm against the specific device's actual listing. If addressable notification modules are used on this circuit, their voltage drop (module voltage adjustment, MVA) must be subtracted separately per the module manufacturer's data.",
+    resultTitle:"Result — Voltage Drop &amp; NAC Load", gaugeLbl:"End-of-line voltage (V)",
+    lblStatVd:"Voltage drop", lblStatUtil:"NAC utilization", lblStatTotalA:"Total circuit current",
+    lblStatMaxLen:"Max length at this load", lblStatRPerFt:"Wire resistance", lblStatClass:"Circuit class",
+    noDevTitle:"No devices entered.", noDevBody:"Add at least one device group in Step 2 to calculate voltage drop.",
+    passTitle:"End-of-line voltage meets the minimum.", passBody:"Calculated end voltage {vend} V ≥ required minimum {vmin} V.",
+    failTitle:"End-of-line voltage is below the minimum — review.", failBody:"Calculated end voltage {vend} V is below the required minimum {vmin} V. At this load, the maximum run length would be approximately {maxlen} ft — consider a larger wire gauge, a shorter run, fewer devices per circuit, or a higher source voltage.",
+    nacFailTitle:"NAC circuit current exceeds rated capacity.", nacFailBody:"Total circuit current {total} A exceeds the {rating} A rated capacity — split the load across additional NAC circuits or use a higher-capacity power supply.",
+    nacHighTitle:"NAC circuit utilization is high.", nacHighBody:"Circuit is at {pct}% of rated capacity — consider leaving margin for future device additions.",
+    lblIncludeLedger:"Include Calculation Ledger in report", lblIncludeLogo:"Include OhmZone brand mark in report",
+    printBtnLabel:"🖨 Print / Save as PDF", exportWordLabel:"📄 Export study (Word)", exportBtnLabel:"📊 Export study (Excel)",
+    lblUploadTemplate:"Report template (.docx, optional)",
+    hintUploadTemplate:"Upload your firm's Word template to brand exports with it. The template must contain plain-text placeholders exactly as shown: {tag} {date} {awg} {length} {circuitClass} {vSource} {vEnd} {vd} {totalA} {nacUtil} {maxLen} {result}. Type each tag in one uninterrupted go — Word's autocorrect/spellcheck can split a tag across internal runs.",
+    templateLoadedMsg:"Template loaded: {name}", templateErrorMsg:"Could not read this file as a Word template — using the built-in layout instead.",
+    templateNoTagsFound:"no OhmZone placeholders found in this document.", templateTagsFound:"{n} of {total} placeholders found.",
+    templateTagsMissing:"Not present (will be left out): {list}.", templateTagsUnknown:"Unrecognised tags that will render as «name»: {list}.", templateExportOk:"Template export completed.",
+    ledgerTitle:"Calculation Ledger", ledgerTag:"clause-by-clause",
+    ls1Title:"Device currents and circuit total", ls1Note:"Total circuit current is the sum of every connected device's worst-case current draw.",
+    totalALbl:"Total circuit current", noDevicesShort:"(no devices entered)",
+    ls2Title:"Wire and circuit basis", ls2Note:"Conductor resistance values are from NEC Chapter 9, Table 8 (uncoated copper). The one-way run length is the distance from the panel/power supply to the farthest device on the circuit.",
+    wireLbl:"Wire", rLbl:"R", lengthLbl:"Length", oneWayLbl:"one-way", circuitClassLbl:"Circuit class",
+    ls3Title:"Voltage drop (end-of-line method)", ls3Note:"The EOL method assumes all circuit current flows the full one-way length (hence the round-trip factor of 2×L) — the standard, conservative approach per NFPA 72 §18.3.7 and common industry practice.",
+    ls4Title:"End-of-line voltage vs. minimum required", ls4Note:"Source voltage (CUSTV) is commonly 85% of nominal 24V (20.4V) per UL 864, representing the panel's guaranteed minimum output at end-of-battery-life. Minimum device voltage is per the specific appliance's UL 464/UL 1638 listing (commonly 16V).",
+    reqMinLbl:"Required minimum", resultPass:"PASS", resultFail:"FAIL",
+    ls5Title:"NAC circuit loading", ls5Note:"Total circuit current must not exceed the notification appliance circuit's rated output capacity, which is set by the specific control panel or power supply used — commonly 2–3 A per circuit.",
+    nacTotalLbl:"Total current", nacRatingLbl:"Rated capacity", nacUtilLbl:"Utilization",
+    ls6Title:"Maximum allowable length at this load", ls6Note:"Solved from the same EOL voltage drop formula, holding the total circuit current fixed — useful for checking how much additional run length remains before the minimum voltage requirement is violated.",
+    devTableTitle:"Device Load Summary", thDevLabel:"Label", thDevQty:"Qty", thDevAmp:"Current (A ea.)", thDevAmpTotal:"Total (A)",
+    repInputData:"Input Data", repResults:"Results", untitledTag:"(untitled)", xlsResult:"Result", passWord:"PASS", failWord:"FAIL",
+    disclaimerLbl:"Disclaimer",
+    disclaimerBody:"Preliminary sizing aid only. Applies the standard NFPA 72 §18.3.7 end-of-line (EOL) voltage drop method with NEC Chapter 9 Table 8 conductor resistance. Does not include a manufacturer device database — currents must come from actual device datasheets. Final voltage drop and NAC loading calculations must be documented and submitted per the AHJ's requirements and reviewed by a qualified fire alarm professional against the specific control panel/power supply manufacturer's own worksheet.",
+    footerHtml:`<b>Method &amp; data notes.</b> This tool implements the end-of-line (EOL) notification appliance circuit voltage drop method commonly used under <b>NFPA 72 §18.3.7</b>: VD = 2 × L × I_total × R / 1000, where L is the one-way run length, I_total is the sum of all connected device currents, and R is the conductor resistance from <b>NEC Chapter 9, Table 8</b> (uncoated copper, ohm/1000 ft). This EOL method is the standard, conservative convention that assumes all circuit current flows the full length of the run — a point-to-point (PTP) analysis that sums drop device-by-device along the actual layout would give a less conservative (smaller) result but requires the full physical device sequence, which this tool does not model. The source voltage default of <b>20.4 V (CUSTV)</b> represents 85% of the nominal 24 V battery voltage per <b>UL 864</b> — the panel's guaranteed minimum output at end-of-battery-life conditions — and the default minimum device voltage of <b>16 V</b> follows common <b>UL 464 / UL 1638</b> notification appliance listings; both must be confirmed against the actual panel and device listings used. An optional module voltage adjustment (MVA) can be subtracted for addressable notification modules per the module manufacturer's data. NAC circuit loading is checked against a user-entered rated capacity (commonly 2–3 A, set by the specific control panel or power supply). This tool does not include a manufacturer device current database, does not model Class A circuit fault conditions in detail, and does not perform audibility/dB, detector spacing, or battery calculations — those are separate modules. Preliminary planning aid only; final voltage drop and NAC loading calculations must be documented, submitted, and reviewed per the authority having jurisdiction's requirements by a qualified fire alarm professional, using the specific control panel/power supply manufacturer's own calculation worksheet.`
+  },
+  fr: {
+    titleH1:"Chute de tension et charge NAC d'alarme incendie", titleSub:"Chute de tension du circuit d'appareils de notification — NFPA 72 §18.3.7",
+    lblDwg:"N° dessin", lblScale:"Échelle", lblMethod:"Méthode", lblRev:"Rév.",
+    topDiscB:"Aide au dimensionnement préliminaire seulement.",
+    topDiscTxt:"Cet outil applique la méthode standard de chute de tension en fin de ligne (EOL) de la NFPA 72 §18.3.7 avec les valeurs de résistance de conducteur du tableau 8 du chapitre 9 du NEC. Il n'inclut pas de base de données de dispositifs de fabricant — entrez le courant le plus défavorable de chaque dispositif à partir de la fiche technique homologuée UL réelle. Les calculs finaux de chute de tension et de charge NAC doivent être documentés et soumis selon les exigences de l'AHJ et révisés par un professionnel qualifié en alarme incendie selon la feuille de calcul propre au fabricant du panneau de contrôle/de l'alimentation.",
+    loadExampleTxt:"Charger l'exemple",
+    step1Title:"Circuit et câblage", step1Small:"Repère, calibre de fil, longueur, classe de circuit",
+    lblTag:"Repère du circuit", lblAwg:"Calibre de fil (AWG, cuivre)", lblLength:"Longueur de parcours aller simple (pi)", lblCircuitClass:"Classe de circuit",
+    hintStep1:"Cet outil utilise la méthode standard de fin de ligne (EOL), qui suppose le pire cas où tout le courant connecté circule jusqu'à l'extrémité éloignée du circuit — la méthode conservatrice et la plus couramment utilisée. L'analyse point à point (PTP), qui additionne la chute de tension segment par segment à mesure que les dispositifs se raccordent le long du parcours, donne un résultat moins conservateur mais nécessite la séquence complète de disposition des dispositifs; utilisez un calcul manuel segment par segment si la précision PTP est requise.",
+    step2Title:"Dispositifs sur le circuit", step2Small:"Courant des appareils NAC — pire cas selon la fiche technique",
+    lblDevName:"Repère", lblDevQty:"Qté", lblDevAmp:"Courant, chacun (A)", addDeviceTxt:"Ajouter un groupe de dispositifs",
+    hintStep2:"Utilisez le courant le plus défavorable homologué UL de chaque dispositif (généralement la valeur à la tension de fonctionnement minimale, qui est supérieure à la tension nominale) — utiliser le courant à tension nominale sous-estimerait la charge réelle du circuit.",
+    noDevices:"Aucun groupe de dispositifs ajouté — entrez un repère et un courant ci-dessus, puis cliquez sur Ajouter un groupe de dispositifs.",
+    defaultDeviceName:"Groupe de dispositifs", eachLbl:"chacun",
+    step3Title:"Source et limites", step3Small:"Sortie du panneau, tension minimale des dispositifs, calibre NAC",
+    lblVsource:"Tension de source, CUSTV (V)", lblVmin:"Tension minimale des dispositifs (V)", lblMva:"Ajustement de tension de module (V, facultatif)", lblNacRating:"Capacité nominale du circuit NAC (A)",
+    hintStep3:"La CUSTV (tension aux bornes de départ de l'unité de contrôle) est généralement prise à 85 % de la tension nominale de batterie de 24 V (20,4 V) selon l'UL 864 — cela représente la sortie minimale garantie du panneau en fin de vie de la batterie, non le 24 V nominal. La tension minimale des dispositifs est généralement de 16 V selon les homologations d'appareils UL 464/UL 1638 — confirmez toujours auprès de l'homologation réelle du dispositif spécifique. Si des modules de notification adressables sont utilisés sur ce circuit, leur chute de tension (ajustement de tension de module, MVA) doit être soustraite séparément selon les données du fabricant du module.",
+    resultTitle:"Résultat — Chute de tension et charge NAC", gaugeLbl:"Tension en fin de ligne (V)",
+    lblStatVd:"Chute de tension", lblStatUtil:"Utilisation NAC", lblStatTotalA:"Courant total du circuit",
+    lblStatMaxLen:"Longueur max. à cette charge", lblStatRPerFt:"Résistance du fil", lblStatClass:"Classe de circuit",
+    noDevTitle:"Aucun dispositif saisi.", noDevBody:"Ajoutez au moins un groupe de dispositifs à l'étape 2 pour calculer la chute de tension.",
+    passTitle:"La tension en fin de ligne respecte le minimum.", passBody:"Tension d'extrémité calculée {vend} V ≥ minimum requis {vmin} V.",
+    failTitle:"La tension en fin de ligne est sous le minimum — à revoir.", failBody:"La tension d'extrémité calculée {vend} V est sous le minimum requis {vmin} V. À cette charge, la longueur maximale de parcours serait d'environ {maxlen} pi — envisagez un calibre de fil plus grand, un parcours plus court, moins de dispositifs par circuit, ou une tension de source plus élevée.",
+    nacFailTitle:"Le courant du circuit NAC dépasse la capacité nominale.", nacFailBody:"Le courant total du circuit {total} A dépasse la capacité nominale de {rating} A — répartissez la charge sur des circuits NAC additionnels ou utilisez une alimentation de capacité supérieure.",
+    nacHighTitle:"L'utilisation du circuit NAC est élevée.", nacHighBody:"Le circuit est à {pct} % de la capacité nominale — envisagez de laisser une marge pour l'ajout futur de dispositifs.",
+    lblIncludeLedger:"Inclure le registre de calcul dans le rapport", lblIncludeLogo:"Inclure la marque OhmZone dans le rapport",
+    printBtnLabel:"🖨 Imprimer / Enregistrer en PDF", exportWordLabel:"📄 Exporter l'étude (Word)", exportBtnLabel:"📊 Exporter l'étude (Excel)",
+    lblUploadTemplate:"Modèle de rapport (.docx, facultatif)",
+    hintUploadTemplate:"Téléversez le modèle Word de votre entreprise pour habiller les exports. Le modèle doit contenir des espaces réservés en texte brut exactement comme indiqué : {tag} {date} {awg} {length} {circuitClass} {vSource} {vEnd} {vd} {totalA} {nacUtil} {maxLen} {result}. Saisissez chaque balise d'un seul coup — le correcteur/la vérification orthographique de Word peut diviser une balise.",
+    templateLoadedMsg:"Modèle chargé : {name}", templateErrorMsg:"Impossible de lire ce fichier comme modèle Word — utilisation de la mise en page intégrée à la place.",
+    templateNoTagsFound:"aucun espace réservé OhmZone trouvé dans ce document.", templateTagsFound:"{n} espaces réservés sur {total} trouvés.",
+    templateTagsMissing:"Absents (seront omis) : {list}.", templateTagsUnknown:"Balises non reconnues qui s'afficheront comme «nom» : {list}.", templateExportOk:"Export du modèle terminé.",
+    ledgerTitle:"Registre de calcul", ledgerTag:"article par article",
+    ls1Title:"Courants des dispositifs et total du circuit", ls1Note:"Le courant total du circuit est la somme du courant le plus défavorable de chaque dispositif connecté.",
+    totalALbl:"Courant total du circuit", noDevicesShort:"(aucun dispositif saisi)",
+    ls2Title:"Base du câblage et du circuit", ls2Note:"Les valeurs de résistance du conducteur proviennent du tableau 8 du chapitre 9 du NEC (cuivre non enrobé). La longueur de parcours aller simple est la distance du panneau/de l'alimentation au dispositif le plus éloigné du circuit.",
+    wireLbl:"Fil", rLbl:"R", lengthLbl:"Longueur", oneWayLbl:"aller simple", circuitClassLbl:"Classe de circuit",
+    ls3Title:"Chute de tension (méthode fin de ligne)", ls3Note:"La méthode EOL suppose que tout le courant du circuit circule sur toute la longueur aller simple (d'où le facteur aller-retour de 2×L) — l'approche standard et conservatrice selon la NFPA 72 §18.3.7 et la pratique courante de l'industrie.",
+    ls4Title:"Tension en fin de ligne vs minimum requis", ls4Note:"La tension de source (CUSTV) est généralement de 85 % du 24 V nominal (20,4 V) selon l'UL 864, représentant la sortie minimale garantie du panneau en fin de vie de la batterie. La tension minimale des dispositifs est selon l'homologation UL 464/UL 1638 de l'appareil spécifique (généralement 16 V).",
+    reqMinLbl:"Minimum requis", resultPass:"CONFORME", resultFail:"NON CONFORME",
+    ls5Title:"Charge du circuit NAC", ls5Note:"Le courant total du circuit ne doit pas dépasser la capacité de sortie nominale du circuit d'appareils de notification, déterminée par le panneau de contrôle ou l'alimentation spécifique utilisé — généralement 2 à 3 A par circuit.",
+    nacTotalLbl:"Courant total", nacRatingLbl:"Capacité nominale", nacUtilLbl:"Utilisation",
+    ls6Title:"Longueur maximale admissible à cette charge", ls6Note:"Résolu à partir de la même formule de chute de tension EOL, en maintenant le courant total du circuit fixe — utile pour vérifier combien de longueur de parcours additionnelle reste avant que l'exigence de tension minimale soit violée.",
+    devTableTitle:"Sommaire des charges de dispositifs", thDevLabel:"Repère", thDevQty:"Qté", thDevAmp:"Courant (A ch.)", thDevAmpTotal:"Total (A)",
+    repInputData:"Données d'entrée", repResults:"Résultats", untitledTag:"(sans titre)", xlsResult:"Résultat", passWord:"CONFORME", failWord:"NON CONFORME",
+    disclaimerLbl:"Avis",
+    disclaimerBody:"Aide au dimensionnement préliminaire seulement. Applique la méthode standard de chute de tension en fin de ligne (EOL) de la NFPA 72 §18.3.7 avec la résistance de conducteur du tableau 8 du chapitre 9 du NEC. N'inclut pas de base de données de dispositifs de fabricant — les courants doivent provenir des fiches techniques réelles des dispositifs. Les calculs finaux de chute de tension et de charge NAC doivent être documentés et soumis selon les exigences de l'AHJ et révisés par un professionnel qualifié en alarme incendie selon la feuille de calcul propre au fabricant du panneau de contrôle/de l'alimentation.",
+    footerHtml:`<b>Notes sur la méthode et les données.</b> Cet outil met en œuvre la méthode de chute de tension de circuit d'appareils de notification en fin de ligne (EOL) couramment utilisée selon la <b>NFPA 72 §18.3.7</b> : VD = 2 × L × I_total × R / 1000, où L est la longueur de parcours aller simple, I_total est la somme de tous les courants des dispositifs connectés, et R est la résistance du conducteur du <b>tableau 8 du chapitre 9 du NEC</b> (cuivre non enrobé, ohm/1000 pi). Cette méthode EOL est la convention standard et conservatrice qui suppose que tout le courant du circuit circule sur toute la longueur du parcours — une analyse point à point (PTP) qui additionne la chute dispositif par dispositif le long de la disposition réelle donnerait un résultat moins conservateur (plus petit) mais nécessite la séquence physique complète des dispositifs, que cet outil ne modélise pas. La tension de source par défaut de <b>20,4 V (CUSTV)</b> représente 85 % de la tension nominale de batterie de 24 V selon l'<b>UL 864</b> — la sortie minimale garantie du panneau en fin de vie de la batterie — et la tension minimale par défaut des dispositifs de <b>16 V</b> suit les homologations courantes d'appareils de notification <b>UL 464/UL 1638</b>; les deux doivent être confirmées auprès des homologations réelles du panneau et des dispositifs utilisés. Un ajustement de tension de module (MVA) facultatif peut être soustrait pour les modules de notification adressables selon les données du fabricant du module. La charge du circuit NAC est vérifiée par rapport à une capacité nominale saisie par l'utilisateur (généralement 2 à 3 A, déterminée par le panneau de contrôle ou l'alimentation spécifique). Cet outil n'inclut pas de base de données de courant de dispositifs de fabricant, ne modélise pas en détail les conditions de défaut de circuit de Classe A, et n'effectue pas les calculs d'audibilité/dB, d'espacement des détecteurs, ni de batterie — ce sont des modules séparés. Aide à la planification préliminaire seulement; les calculs finaux de chute de tension et de charge NAC doivent être documentés, soumis et révisés selon les exigences de l'autorité compétente par un professionnel qualifié en alarme incendie, en utilisant la feuille de calcul propre au fabricant du panneau de contrôle/de l'alimentation.`
+  }
+};
+
+function applyStaticI18n(){
+  const L = UI[currentLang];
+  $('titleH1').innerHTML=L.titleH1; $('titleSub').textContent=L.titleSub;
+  $('lblDwg').textContent=L.lblDwg; $('lblScale').textContent=L.lblScale; $('lblMethod').textContent=L.lblMethod; $('lblRev').textContent=L.lblRev;
+  $('topDiscB').textContent=L.topDiscB; $('topDiscTxt').textContent=L.topDiscTxt;
+  $('loadExampleTxt').textContent=L.loadExampleTxt;
+  $('step1Title').childNodes[0].innerHTML=L.step1Title+' '; $('step1Small').textContent=L.step1Small;
+  $('lblTag').textContent=L.lblTag; $('lblAwg').textContent=L.lblAwg; $('lblLength').textContent=L.lblLength;
+  $('lblCircuitClass').textContent=L.lblCircuitClass; $('hintStep1').textContent=L.hintStep1;
+  $('step2Title').childNodes[0].textContent=L.step2Title+' '; $('step2Small').textContent=L.step2Small;
+  $('lblDevName').textContent=L.lblDevName; $('lblDevQty').textContent=L.lblDevQty;
+  $('lblDevAmp').textContent=L.lblDevAmp; $('addDeviceTxt').textContent=L.addDeviceTxt; $('hintStep2').textContent=L.hintStep2;
+  $('step3Title').childNodes[0].innerHTML=L.step3Title+' '; $('step3Small').textContent=L.step3Small;
+  $('lblVsource').textContent=L.lblVsource; $('lblVmin').textContent=L.lblVmin;
+  $('lblMva').textContent=L.lblMva; $('lblNacRating').textContent=L.lblNacRating; $('hintStep3').textContent=L.hintStep3;
+  $('resultTitle').innerHTML=L.resultTitle; $('gaugeLbl').textContent=L.gaugeLbl;
+  $('lblStatVd').textContent=L.lblStatVd; $('lblStatUtil').textContent=L.lblStatUtil;
+  $('lblStatTotalA').textContent=L.lblStatTotalA; $('lblStatMaxLen').textContent=L.lblStatMaxLen;
+  $('lblStatRPerFt').textContent=L.lblStatRPerFt; $('lblStatClass').textContent=L.lblStatClass;
+  $('lblIncludeLedger').textContent=L.lblIncludeLedger; $('lblIncludeLogo').textContent=L.lblIncludeLogo;
+  $('printBtn').textContent=L.printBtnLabel; $('exportWordBtn').textContent=L.exportWordLabel; $('exportExcelBtn').textContent=L.exportBtnLabel;
+  $('lblUploadTemplate').textContent=L.lblUploadTemplate; $('hintUploadTemplate').textContent=L.hintUploadTemplate;
+  $('ledgerTitle').textContent=L.ledgerTitle; $('ledgerTag').textContent=L.ledgerTag;
+  $('devTableTitle').textContent=L.devTableTitle; $('thDevLabel').textContent=L.thDevLabel; $('thDevQty').textContent=L.thDevQty;
+  $('thDevAmp').textContent=L.thDevAmp; $('thDevAmpTotal').textContent=L.thDevAmpTotal;
+  $('footerNote').innerHTML=L.footerHtml;
+  renderDeviceList();
+}
+
+function setLang(lang){
+  currentLang = lang;
+  $('btn-en').classList.toggle('active', lang==='en');
+  $('btn-fr').classList.toggle('active', lang==='fr');
+  document.documentElement.lang = lang;
+  try { localStorage.setItem('ohmzone-lang', lang); } catch(e) {}
+  applyStaticI18n();
+  recalc();
+}
+(function(){
+  let saved='en';
+  try{ saved=localStorage.getItem('ohmzone-lang')||'en'; }catch(e){}
+  setLang(saved);
+})();
+</script>
+<div style="position:fixed;bottom:6px;right:12px;z-index:9999;font-family:monospace;font-size:10px;color:#5c7592;opacity:0.75;">© 2026 OhmZone. All rights reserved.</div>
+</body>
+</html>

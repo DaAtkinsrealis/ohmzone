@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OhmZone · Electrical Engineering Toolboard</title>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3887318872951674" crossorigin="anonymous"></script>
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icon-16.png">
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="OhmZone">
+<meta name="theme-color" content="#0a1728">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a1728;
+    --bg-deep:#071120;
+    --grid-line: rgba(148,178,209,0.055);
+    --panel:#0f2036;
+    --panel-2:#0c1a2c;
+    --panel-border:#1e3a56;
+    --panel-border-hover:#2f5678;
+    --bus:#3b9eff;
+    --bus-glow: rgba(59, 158, 255,0.35);
+    --live:#43c17e;
+    --dim:#4d6b8a;
+    --text-primary:#eef4fa;
+    --text-secondary:#8fa8c2;
+    --text-tertiary:#5c7592;
+    --danger-hairline: rgba(59, 158, 255,0.15);
+    --radius: 3px;
+  }
+
+  *{ box-sizing:border-box; }
+
+  html,body{
+    margin:0; padding:0;
+    background:
+      linear-gradient(var(--grid-line) 1px, transparent 1px) 0 0/40px 40px,
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px) 0 0/40px 40px,
+      radial-gradient(ellipse 1200px 700px at 50% -10%, #102944 0%, var(--bg) 55%),
+      var(--bg-deep);
+    background-attachment: fixed;
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height:100vh;
+  }
+
+  ::selection{ background: var(--bus-glow); color:#fff; }
+  a{ color:inherit; text-decoration:none; }
+
+  .wrap{ max-width: 1080px; margin: 0 auto; padding: 40px 32px 48px; }
+
+  /* ---------- Top bar: brand + language switch ---------- */
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom: 40px;
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    color: var(--bus);
+    text-transform: uppercase;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .eyebrow::before{
+    content:"";
+    width:7px; height:7px;
+    border-radius:50%;
+    background: var(--live);
+    box-shadow: 0 0 8px 1px rgba(67,193,126,0.7);
+    flex:none;
+  }
+
+  /* language rocker switch */
+  .lang-switch{
+    display:flex;
+    align-items:center;
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 20px;
+    padding: 3px;
+    gap: 2px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+  }
+  .lang-switch button{
+    border:none;
+    background: transparent;
+    color: var(--text-tertiary);
+    padding: 6px 14px;
+    border-radius: 17px;
+    cursor:pointer;
+    font-family: inherit;
+    font-size: inherit;
+    letter-spacing: inherit;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .lang-switch button.active{
+    background: var(--bus);
+    color: #1a1000;
+    font-weight: 600;
+  }
+
+  /* ---------- Header / brand ---------- */
+  header{ margin-bottom: 56px; }
+
+  .brand{ display:flex; align-items:center; gap: 16px; margin-bottom: 14px; }
+  .brand-mark{ width: 52px; height: 52px; flex: none; object-fit: contain; border-radius: 6px; }
+
+  h1{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:600;
+    font-size: clamp(28px, 4.2vw, 40px);
+    letter-spacing: -0.01em;
+    margin: 0;
+    line-height:1.1;
+  }
+  h1 span{ color: var(--bus); font-weight: 600; }
+
+  .tagline{
+    font-family:'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    color: var(--text-secondary);
+    margin: 0 0 14px;
+  }
+
+  .subtitle{ font-family:'Inter', sans-serif; color: var(--text-secondary); font-size: 14px; max-width: 580px; line-height:1.6; margin:0; }
+
+  .cat-filter{ display:flex; flex-wrap:wrap; gap:8px; margin: 22px 0 26px; }
+  .cat-btn{
+    font-family:'Inter', sans-serif; font-weight:500; font-size: 12.5px; color: var(--text-secondary);
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 20px;
+    padding: 7px 15px; cursor:pointer; transition: all 0.15s ease; white-space:nowrap;
+  }
+  .cat-btn:hover{ border-color: var(--panel-border-hover); color: var(--text-primary); }
+  .cat-btn.active{ background: var(--bus); border-color: var(--bus); color: #04101c; font-weight:600; }
+  .breaker.cat-hidden{ display:none; }
+  .cat-empty-note{ font-family:'Inter', sans-serif; font-size:13px; color: var(--text-tertiary); padding: 20px 4px; }
+
+  /* ---------- Switchboard / one-line diagram (vertical bus, horizontal feeder bars) ---------- */
+  .switchboard{ display:flex; gap: 26px; align-items:stretch; }
+
+  .bus-col{ flex:none; width: 34px; display:flex; flex-direction:column; align-items:center; position:relative; padding: 4px 0; }
+  .bus-col-line{
+    position:absolute; top:0; bottom:0; left:50%; width:2px; transform:translateX(-50%);
+    background: linear-gradient(180deg, var(--bus) 0%, var(--bus) 100%);
+    box-shadow: 0 0 10px 0 var(--bus-glow); border-radius: 2px;
+  }
+  .bus-col-line::before, .bus-col-line::after{
+    content:""; position:absolute; left:50%; transform:translateX(-50%);
+    width:6px; height:6px; border-radius:50%; background: var(--bus);
+    box-shadow: 0 0 6px 1px var(--bus-glow);
+  }
+  .bus-col-line::before{ top:0; }
+  .bus-col-line::after{ bottom:0; }
+  .bus-label-v{
+    font-family:'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.14em; color: var(--text-tertiary);
+    writing-mode: vertical-rl; transform: rotate(180deg); white-space:nowrap; z-index:1; background:var(--bg-deep);
+    padding: 6px 0;
+  }
+  .bus-voltage-v{
+    font-family:'IBM Plex Mono', monospace; font-size: 10px; color: var(--bus);
+    writing-mode: vertical-rl; transform: rotate(180deg); white-space:nowrap; z-index:1; background:var(--bg-deep);
+    padding: 6px 0; margin-top:auto;
+  }
+
+  .feeders{ flex:1; min-width:0; display:flex; flex-direction:column; gap: 14px; }
+
+  .breaker{ position:relative; padding-left: 22px; }
+  .breaker .drop{
+    position:absolute; top: 50%; left: -26px; width: 26px; height:1px; transform:translateY(-50%);
+    background: linear-gradient(90deg, var(--bus) 0%, var(--dim) 100%); opacity:0.7;
+  }
+
+  .card{
+    display:flex; flex-direction:row; align-items:center; gap: 18px;
+    background: linear-gradient(180deg, var(--panel) 0%, var(--panel-2) 100%);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    transition: border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+  }
+  .breaker:hover .card{
+    border-color: var(--panel-border-hover);
+    transform: translateX(2px);
+    box-shadow: 0 10px 28px -14px rgba(0,0,0,0.6), 0 0 0 1px rgba(59, 158, 255,0.08);
+  }
+
+  .card-icon-col{ flex:none; display:flex; flex-direction:column; align-items:center; gap:5px; width:38px; }
+  .breaker-icon{ width: 24px; height: 24px; flex:none; }
+  .code{ font-family:'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: 0.06em; color: var(--text-tertiary); white-space:nowrap; }
+
+  .card-main{ flex:1; min-width:0; }
+  .card-title{ font-family:'Inter', sans-serif; font-weight:600; font-size: 15px; margin: 0 0 3px; letter-spacing: -0.003em; line-height:1.3; }
+  .card-desc{
+    font-family:'Inter', sans-serif; font-size: 12.5px; color: var(--text-secondary); line-height:1.5; margin: 0;
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+  }
+
+  .card-foot{
+    flex:none; display:flex; flex-direction:column; align-items:flex-end; gap: 7px;
+    font-family:'Inter', sans-serif; font-size: 12px; padding-left: 14px; border-left: 1px dashed var(--danger-hairline);
+  }
+  .status{ display:flex; align-items:center; gap:6px; color: var(--live); font-weight:500; white-space:nowrap; }
+  .status::before{ content:""; width:6px; height:6px; border-radius:50%; background: var(--live); box-shadow: 0 0 6px 1px rgba(67,193,126,0.6); flex:none; }
+  .go{ color: var(--text-tertiary); font-weight:500; transition: color 0.15s ease, transform 0.15s ease; text-decoration:none; position:relative; z-index:2; white-space:nowrap; }
+  .go:hover{ color: var(--bus); transform: translateX(2px); }
+
+  .breaker.placeholder .card{ background: transparent; border: 1px dashed var(--panel-border); }
+  .breaker.placeholder .card-title, .breaker.placeholder .card-desc{ color: var(--text-tertiary); }
+  .breaker.placeholder .status{ color: var(--text-tertiary); }
+  .breaker.placeholder .status::before{ background: var(--text-tertiary); box-shadow:none; }
+  .breaker.placeholder .drop{ opacity: 0.35; }
+
+  footer{
+    margin-top: 64px; padding-top: 22px; border-top: 1px solid var(--panel-border);
+    display:flex; justify-content:space-between; align-items:center; flex-wrap: wrap; gap: 10px;
+    font-family:'Inter', sans-serif; font-size: 12px; color: var(--text-tertiary);
+  }
+  footer .brand-foot{ display:flex; align-items:center; gap:7px; color: var(--text-secondary); font-weight:500; }
+  footer .brand-foot .omega{ color: var(--bus); font-family:'Space Grotesk', sans-serif; }
+
+  @media (max-width: 680px){
+    .wrap{ padding: 18px 14px 24px; }
+    .topbar{ flex-direction: column; align-items:flex-start; gap: 12px; margin-bottom: 22px; }
+    .eyebrow{ font-size: 10.5px; }
+
+    header{ margin-bottom: 22px; }
+    .brand{ gap: 10px; margin-bottom: 8px; }
+    .brand-mark{ width: 36px; height: 36px; }
+    h1{ font-size: clamp(22px, 8vw, 30px); }
+    .tagline{ font-size: 11px; margin: 0 0 8px; }
+    .subtitle{ font-size: 12.5px; line-height: 1.5; }
+
+    .switchboard{ gap: 12px; }
+    .bus-col{ width: 20px; }
+    .bus-label-v, .bus-voltage-v{ font-size: 8.5px; }
+    .feeders{ gap: 8px; }
+    .breaker{ padding-left: 12px; }
+    .breaker .drop{ left: -14px; width: 14px; }
+
+    .card{ padding: 10px 12px; gap: 10px; }
+    .card-icon-col{ width: 26px; gap:3px; }
+    .breaker-icon{ width: 19px; height: 19px; }
+    .code{ font-size: 8px; }
+    .card-title{ font-size: 13px; margin: 0 0 2px; }
+    .card-desc{ font-size: 11px; -webkit-line-clamp: 2; }
+    .card-foot{ font-size: 10px; gap: 5px; padding-left: 8px; }
+
+    footer{ margin-top: 30px; padding-top: 16px; font-size: 10px; }
+  }
+  @media (max-width: 420px){
+    .card{ flex-wrap:wrap; }
+    .card-foot{ flex-direction:row; align-items:center; gap:10px; border-left:none; border-top:1px dashed var(--danger-hairline); padding-left:0; padding-top:8px; width:calc(100% - 44px); justify-content:space-between; margin-left:44px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="eyebrow" data-i18n="eyebrow">Online · Electrical Engineering Toolboard</div>
+    <div class="lang-switch" role="group" aria-label="Language">
+      <button type="button" id="btn-en" class="active" onclick="setLang('en')">EN</button>
+      <button type="button" id="btn-fr" onclick="setLang('fr')">FR</button>
+    </div>
+  </div>
+
+  <header>
+    <div class="brand">
+      <img class="brand-mark" src="ohmzone-logo.png" alt="OhmZone logo">
+      <h1>Ohm<span>Zone</span></h1>
+    </div>
+    <p class="tagline" data-i18n="tagline">Electrical Engineering Toolboard</p>
+    <p class="subtitle" data-i18n="subtitle">A working panelboard for the calculations I run all the time — each tool is its own feeder breaker, one click to open it. New feeders get added over time, and existing ones keep getting refined.</p>
+  </header>
+
+  <div class="cat-filter no-print" role="group" aria-label="Category filter">
+    <button type="button" class="cat-btn active" data-cat="all" data-i18n="cat-all">All</button>
+    <button type="button" class="cat-btn" data-cat="power" data-i18n="cat-power">⚡ Power</button>
+    <button type="button" class="cat-btn" data-cat="automation" data-i18n="cat-automation">⚙ Automation</button>
+    <button type="button" class="cat-btn" data-cat="fire-alarm" data-i18n="cat-fire">🔥 Fire Alarm</button>
+  </div>
+
+  <div class="switchboard">
+    <div class="bus-col">
+      <span class="bus-label-v" data-i18n="busLabel">MAIN BUS</span>
+      <div class="bus-col-line"></div>
+      <span class="bus-voltage-v">OHMZONE&nbsp;v1</span>
+    </div>
+
+    <div class="feeders">
+
+      <div class="breaker" data-href="cable-tray-calculator.html" data-cat="power">
+        <div class="drop"></div>
+        <div class="card">
+          <div class="card-icon-col">
+            <svg class="breaker-icon" viewBox="0 0 30 30" fill="none">
+              <line x1="15" y1="0" x2="15" y2="7" stroke="#4d6b8a" stroke-width="1.5"/>
+              <rect x="6" y="7" width="18" height="18" rx="1" stroke="#43c17e" stroke-width="1.5"/>
+              <line x1="10" y1="21" x2="20" y2="11" stroke="#43c17e" stroke-width="1.5"/>
+            </svg>
+            <span class="code">CT&nbsp;·&nbsp;01</span>
+          </div>
+          <div class="card-main">
+            <h2 class="card-title" data-i18n="ct-title">Cable Tray Fill</h2>
+            <p class="card-desc" data-i18n="ct-desc">Calculates fill ratio from tray specs and circuit schedule, checks against code-allowed occupancy, with metric/imperial toggle and a design title block.</p>
+          </div>
+          <div class="card-foot">
+            <span class="status" data-i18n="status-stable">Stable</span>
+            <a class="go" data-i18n="open" href="cable-tray-calculator.html">Open →</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="breaker" data-href="voltage_drop_calculator.html" data-cat="power">
+        <div class="drop"></div>
+        <div class="card">
+          <div class="card-icon-col">
+            <svg class="breaker-icon" viewBox="0 0 30 30" fill="none">
+              <line x1="15" y1="0" x2="15" y2="7" stroke="#4d6b8a" stroke-width="1.5"/>
+              <rect x="6" y="7" width="18" height="18" rx="1" stroke="#43c17e" stroke-width="1.5"/>
+              <line x1="10" y1="21" x2="20" y2="11" stroke="#43c17e" stroke-width="1.5"/>
+            </svg>
+            <span class="code">VD&nbsp;·&nbsp;02</span>
+          </div>
+          <div class="card-main">
+            <h2 class="card-title" data-i18n="vd-title">Voltage Drop</h2>
+            <p class="card-desc" data-i18n="vd-desc">Checks feeder voltage drop under CSA C22.1 — enter system voltage, conductor size and run length to see if it clears the allowed percentage.</p>
+          </div>
+          <div class="card-foot">
+            <span class="status" data-i18n="status-stable">Stable</span>
+            <a class="go" data-i18n="open" href="voltage_drop_calculator.html">Open →</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="breaker" data-href="load-diagram.html" data-cat="power">
+        <div class="drop"></div>
+        <div class="card">
+          <div class="card-icon-col">
+            <svg class="breaker-icon" viewBox="0 0 30 30" fill="none">
+              <line x1="15" y1="0" x2="15" y2="7" stroke="#4d6b8a" stroke-width="1.5"/>
+              <rect x="6" y="7" width="18" height="18" rx="1" stroke="#43c17e" stroke-width="1.5"/>
+              <line x1="10" y1="21" x2="20" y2="11" stroke="#43c17e" stroke-width="1.5"/>
+            </svg>
+            <span class="code">LD&nbsp;·&nbsp;03</span>
+          </div>
+          <div class="card-main">
+            <h2 class="card-title" data-i18n="ld-title">Plant Load Single-Line</h2>
+            <p class="card-desc" data-i18n="ld-desc">Plant-wide electrical load allocation as a single-line overview — shows distribution branches and load spread, with sizing recommendations.</p>
+          </div>
+          <div class="card-foot">
+            <span class="status" data-i18n="status-stable">Stable</span>
+            <a class="go" data-i18n="open" href="load-diagram.html">Open →</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="breaker" data-href="transformer_sizing_tool.html" data-cat="power">
+        <div class="drop"></div>
+        <div class="card">
+          <div class="card-icon-col">
+            <svg class="breaker-icon" viewBox="0 0 30 30" fill="none">
+              <line x1="15" y1="0" x2="15" y2="7" stroke="#4d6b8a" stroke-width="1.5"/>
+              <rect x="6" y="7" width="18" height="18" rx="1" stroke="#43c17e" stroke-width="1.5"/>
+              <line x1="10" y1="21" x2="20" y2="11" stroke="#43c17e" stroke-width="1.5"/>
+            </svg>
+            <span class="code">TR&nbsp;·&nbsp;04</span>
+          </div>
+          <div class="card-main">
+            <h2 class="card-title" data-i18n="tr-title">Small Transformer — Cable Sizing &amp; Protection</h2>
+            <p class="card-desc" data-i18n="tr-desc">Cable selection and protective device setup for small dry-type transformers — primary/secondary conductor sizing plus overcurrent protection settings.</p>
+          </div>
+          <div class="card-foot">
+            <span class="status" data-i18n="status-stable">Stable</span>
+            <a class="go" data-i18n="open" href="transformer_sizing_tool.html">Open →</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="breaker" data-href="motor-circuit-calculator.html" data-cat="power">
+        <div class="drop"></div>
+        <div class="card">
+          <div class="card-icon-col">
+            <svg class="breaker-icon" viewBox="0 0 30 30" fill="none">
+              <line x1="15" y1="0" x2="15" y2="7" stroke="#4d6b8a" stroke-width="1.5"/>
+              <rect x="6" y="7" width="18" height="18" rx="1" stroke="#43c17e" stroke-width="1.5"/>
+              <line x1="10" y1="21" x2="20" y2="11" stroke="#43c17e" stroke-width="1.5"/>
+            </svg>
+            <span class="code">MC&nbsp;·&nbsp;05</span>
+          </div>
+          <div class="card-main">
+            <h2 class="card-title" data-i18n="mc-title">Motor Circuit — Cable, Protection &amp; Starting Current</h2>
+            <p class="card-desc" data-i18n="mc-desc">Sizes motor branch-circuit conductors, overload and short-circuit protection, and starting current per CSA C22.1 motor tables.</p>
+          </div>
+          <div class="card-foot">
+            <span class="status" data-i18n="status-stable">Stable</span>
+            <a class="go" data-i18n="open" href="motor-circuit-calculator.html">Open →</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="breaker" data-href="short-circuit-calculator.html" data-cat="power">
+        <div class="drop"></div>
+        <div class="card">
+          <div class="card-icon-col">
+            <svg class="breaker-icon" viewBox="0 0 30 30" fill="none">
+              <line x1="15" y1="0" x2="15" y2="7" stroke="#4d6b8a" stroke-width="1.5"/>
+              <rect x="6" y="7" width="18" height="18" rx="1" stroke="#43c17e" stroke-width="1.5"/>
+              <line x1="10" y1="21" x2="20" y2="11" stroke="#43c17e" stroke-width="1.5"/>
+            </svg>
+            <span class="code">SC&nbsp;·&nbsp;06</span>
+          </div>
+          <div class="card-main">
+            <h2 class="card-title" data-i18n="sc-title">Maximum Short-Circuit Current Study</h2>
+            <p class="card-desc" data-i18n="sc-desc">Estimates maximum available short-circuit current at a bus from source impedance and conductor data, for equipment rating and coordination checks.</p>
+          </div>
+          <div class="card-foot">
+            <span class="status" data-i18n="status-stable">Stable</span>
+            <a class="go" data-i18n="open" href="short-circuit-calculator.html">Open →</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="breaker" data-href="pfc-capacitor-calculator.html" data-cat="power">
+        <div class="drop"></div>
+        <div class="card">
+          <div class="card-icon-col">
+            <svg class="breaker-icon" viewBox="0 0 30 30" fill="none">
+              <line x1="15" y1="0" x2="15" y2="7" stroke="#4d6b8a" stroke-width="1.5"/>
+              <rect x="6" y="7" width="18" height="18" rx="1" stroke="#43c17e" stroke-width="1.5"/>
+              <line x1="10" y1="21" x2="20" y2="11" stroke="#43c17e" stroke-width="1.5"/>
+            </svg>
+            <span class="code">PFC&nbsp;·&nbsp;07</span>
+          </div>
+          <div class="card-main">
+            <h2 class="card-title" data-i18n="pfc-title">Power Factor Correction — Capacitor Sizing</h2>
+            <p class="card-desc" data-i18n="pfc-desc">Sizes shunt capacitor kVAR/µF to correct lagging power factor, with a harmonic/resonance risk check and standard bank sizing.</p>
+          </div>
+          <div class="card-foot">
+            <span class="status" data-i18n="status-stable">Stable</span>
+            <a class="go" data-i18n="open" href="pfc-capacitor-calculator.html">Open →</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="breaker" data-href="conduit-fill-calculator.html" data-cat="power">
+        <div class="drop"></div>
+        <div class="card">
+          <div class="card-icon-col">
+            <svg class="breaker-icon" viewBox="0 0 30 30" fill="none">
+              <line x1="15" y1="0" x2="15" y2="7" stroke="#4d6b8a" stroke-width="1.5"/>
+              <rect x="6" y="7" width="18" height="18" rx="1" stroke="#43c17e" stroke-width="1.5"/>
+              <line x1="10" y1="21" x2="20" y2="11" stroke="#43c17e" stroke-width="1.5"/>
+            </svg>
+            <span class="code">CF&nbsp;·&nbsp;08</span>
+          </div>
+          <div class="card-main">
+            <h2 class="card-title" data-i18n="cf-title">Conduit Fill Calculator</h2>
+            <p class="card-desc" data-i18n="cf-desc">CEC Table 8 raceway fill — individual conductors or whole multiconductor cables, with a project-specific cable schedule built in.</p>
+          </div>
+          <div class="card-foot">
+            <span class="status" data-i18n="status-stable">Stable</span>
+            <a class="go" data-i18n="open" href="conduit-fill-calculator.html">Open →</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="breaker" data-href="mv-transformer-cable-calculator.html" data-cat="power">
+        <div class="drop"></div>
+        <div class="card">
+          <div class="card-icon-col">
+            <svg class="breaker-icon" viewBox="0 0 30 30" fill="none">
+              <line x1="15" y1="0" x2="15" y2="7" stroke="#4d6b8a" stroke-width="1.5"/>
+              <rect x="6" y="7" width="18" height="18" rx="1" stroke="#43c17e" stroke-width="1.5"/>
+              <line x1="10" y1="21" x2="20" y2="11" stroke="#43c17e" stroke-width="1.5"/>
+            </svg>
+            <span class="code">MV&nbsp;·&nbsp;09</span>
+          </div>
+          <div class="card-main">
+            <h2 class="card-title" data-i18n="mv-title">MV Transformer — Primary Cable Sizing</h2>
+            <p class="card-desc" data-i18n="mv-desc">Ampacity, voltage drop and short-circuit thermal withstand for medium-voltage transformer primary feeders — Cu/Al, with or without known protection clearing time.</p>
+          </div>
+          <div class="card-foot">
+            <span class="status" data-i18n="status-stable">Stable</span>
+            <a class="go" data-i18n="open" href="mv-transformer-cable-calculator.html">Open →</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="breaker" data-href="battery-sizing-calculator.html" data-cat="power">
+        <div class="drop"></div>
+        <div class="card">
+          <div class="card-icon-col">
+            <svg class="breaker-icon" viewBox="0 0 30 30" fill="none">
+              <line x1="15" y1="0" x2="15" y2="7" stroke="#4d6b8a" stroke-width="1.5"/>
+              <rect x="6" y="7" width="18" height="18" rx="1" stroke="#43c17e" stroke-width="1.5"/>
+              <line x1="10" y1="21" x2="20" y2="11" stroke="#43c17e" stroke-width="1.5"/>
+            </svg>
+            <span class="code">BAT&nbsp;·&nbsp;10</span>
+          </div>
+          <div class="card-main">
+            <h2 class="card-title" data-i18n="bat-title">Battery Bank Sizing</h2>
+            <p class="card-desc" data-i18n="bat-desc">IEEE 485 capacity sizing — multi-period duty cycle, temperature/aging/margin factors, series-parallel configuration and C-rate check.</p>
+          </div>
+          <div class="card-foot">
+            <span class="status" data-i18n="status-stable">Stable</span>
+            <a class="go" data-i18n="open" href="battery-sizing-calculator.html">Open →</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="breaker" data-href="lv-cable-selection-calculator.html" data-cat="power">
+        <div class="drop"></div>
+        <div class="card">
+          <div class="card-icon-col">
+            <svg class="breaker-icon" viewBox="0 0 30 30" fill="none">
+              <line x1="15" y1="0" x2="15" y2="7" stroke="#4d6b8a" stroke-width="1.5"/>
+              <rect x="6" y="7" width="18" height="18" rx="1" stroke="#43c17e" stroke-width="1.5"/>
+              <line x1="10" y1="21" x2="20" y2="11" stroke="#43c17e" stroke-width="1.5"/>
+            </svg>
+            <span class="code">LV&nbsp;·&nbsp;11</span>
+          </div>
+          <div class="card-main">
+            <h2 class="card-title" data-i18n="lv-title">LV Equipment Cable Selection</h2>
+            <p class="card-desc" data-i18n="lv-desc">Feeder cable sizing to MCC/switchgear/switchboard/panel per CSA C22.1 Tables 1–4 — terminal temperature, 80%/100% breakers, parallel sets beyond 750 kcmil.</p>
+          </div>
+          <div class="card-foot">
+            <span class="status" data-i18n="status-stable">Stable</span>
+            <a class="go" data-i18n="open" href="lv-cable-selection-calculator.html">Open →</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="breaker" data-href="harmonic-emission-calculator.html" data-cat="power">
+        <div class="drop"></div>
+        <div class="card">
+          <div class="card-icon-col">
+            <svg class="breaker-icon" viewBox="0 0 30 30" fill="none">
+              <line x1="15" y1="0" x2="15" y2="7" stroke="#4d6b8a" stroke-width="1.5"/>
+              <rect x="6" y="7" width="18" height="18" rx="1" stroke="#43c17e" stroke-width="1.5"/>
+              <line x1="10" y1="21" x2="20" y2="11" stroke="#43c17e" stroke-width="1.5"/>
+            </svg>
+            <span class="code">THD&nbsp;·&nbsp;12</span>
+          </div>
+          <div class="card-main">
+            <h2 class="card-title" data-i18n="thd-title">Harmonic Emission Assessment</h2>
+            <p class="card-desc" data-i18n="thd-desc">Screening-level harmonic current emission and PCC voltage distortion per CSA C61000-3-6 / Hydro-Québec C.25-01 — device spectra, summation law, resonance check.</p>
+          </div>
+          <div class="card-foot">
+            <span class="status" data-i18n="status-stable">Stable</span>
+            <a class="go" data-i18n="open" href="harmonic-emission-calculator.html">Open →</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="breaker" data-href="protection-coordination-calculator.html" data-cat="power">
+        <div class="drop"></div>
+        <div class="card">
+          <div class="card-icon-col">
+            <svg class="breaker-icon" viewBox="0 0 30 30" fill="none">
+              <line x1="15" y1="0" x2="15" y2="7" stroke="#4d6b8a" stroke-width="1.5"/>
+              <rect x="6" y="7" width="18" height="18" rx="1" stroke="#43c17e" stroke-width="1.5"/>
+              <line x1="10" y1="21" x2="20" y2="11" stroke="#43c17e" stroke-width="1.5"/>
+            </svg>
+            <span class="code">TCC&nbsp;·&nbsp;13</span>
+          </div>
+          <div class="card-main">
+            <h2 class="card-title" data-i18n="tcc-title">Protection Coordination / TCC Study</h2>
+            <p class="card-desc" data-i18n="tcc-desc">Log-log time-current curve screening — manual POI fault current (ETAP/EasyPower style), transformer inrush &amp; withstand, generic device curves, custom datasheet points.</p>
+          </div>
+          <div class="card-foot">
+            <span class="status" data-i18n="status-stable">Stable</span>
+            <a class="go" data-i18n="open" href="protection-coordination-calculator.html">Open →</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="breaker" data-href="fire-alarm-battery-calculator.html" data-cat="fire-alarm">
+        <div class="drop"></div>
+        <div class="card">
+          <div class="card-icon-col">
+            <svg class="breaker-icon" viewBox="0 0 30 30" fill="none">
+              <line x1="15" y1="0" x2="15" y2="7" stroke="#4d6b8a" stroke-width="1.5"/>
+              <rect x="6" y="7" width="18" height="18" rx="1" stroke="#43c17e" stroke-width="1.5"/>
+              <line x1="10" y1="21" x2="20" y2="11" stroke="#43c17e" stroke-width="1.5"/>
+            </svg>
+            <span class="code">FA&nbsp;·&nbsp;14</span>
+          </div>
+          <div class="card-main">
+            <h2 class="card-title" data-i18n="fa-title">Fire Alarm Battery Sizing</h2>
+            <p class="card-desc" data-i18n="fa-desc">Secondary (standby) power calculation per NFPA 72 §10.6.7.2 — 2019/2022 correction factor, device load list, 48h recharge check, UL 1989/2054 reminder.</p>
+          </div>
+          <div class="card-foot">
+            <span class="status" data-i18n="status-stable">Stable</span>
+            <a class="go" data-i18n="open" href="fire-alarm-battery-calculator.html">Open →</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="breaker" data-href="fire-alarm-voltage-drop-calculator.html" data-cat="fire-alarm">
+        <div class="drop"></div>
+        <div class="card">
+          <div class="card-icon-col">
+            <svg class="breaker-icon" viewBox="0 0 30 30" fill="none">
+              <line x1="15" y1="0" x2="15" y2="7" stroke="#4d6b8a" stroke-width="1.5"/>
+              <rect x="6" y="7" width="18" height="18" rx="1" stroke="#43c17e" stroke-width="1.5"/>
+              <line x1="10" y1="21" x2="20" y2="11" stroke="#43c17e" stroke-width="1.5"/>
+            </svg>
+            <span class="code">FA&nbsp;·&nbsp;15</span>
+          </div>
+          <div class="card-main">
+            <h2 class="card-title" data-i18n="favd-title">Fire Alarm Voltage Drop &amp; NAC Load</h2>
+            <p class="card-desc" data-i18n="favd-desc">NAC circuit end-of-line voltage drop per NFPA 72 §18.3.7 — NEC Table 8 wire resistance, CUSTV/UL 464 minimums, NAC loading check, max length solver.</p>
+          </div>
+          <div class="card-foot">
+            <span class="status" data-i18n="status-stable">Stable</span>
+            <a class="go" data-i18n="open" href="fire-alarm-voltage-drop-calculator.html">Open →</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="breaker" data-href="fire-alarm-audibility-calculator.html" data-cat="fire-alarm">
+        <div class="drop"></div>
+        <div class="card">
+          <div class="card-icon-col">
+            <svg class="breaker-icon" viewBox="0 0 30 30" fill="none">
+              <line x1="15" y1="0" x2="15" y2="7" stroke="#4d6b8a" stroke-width="1.5"/>
+              <rect x="6" y="7" width="18" height="18" rx="1" stroke="#43c17e" stroke-width="1.5"/>
+              <line x1="10" y1="21" x2="20" y2="11" stroke="#43c17e" stroke-width="1.5"/>
+            </svg>
+            <span class="code">FA&nbsp;·&nbsp;16</span>
+          </div>
+          <div class="card-main">
+            <h2 class="card-title" data-i18n="faaud-title">Fire Alarm Audibility &amp; Line Loss</h2>
+            <p class="card-desc" data-i18n="faaud-desc">NFPA 72 Ch.18 audibility (public/private/sleeping mode), inverse-square distance attenuation, wall loss, and audio circuit dB loss for 25V/70.7V speaker lines.</p>
+          </div>
+          <div class="card-foot">
+            <span class="status" data-i18n="status-stable">Stable</span>
+            <a class="go" data-i18n="open" href="fire-alarm-audibility-calculator.html">Open →</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="breaker" data-href="fire-alarm-detector-spacing-calculator.html" data-cat="fire-alarm">
+        <div class="drop"></div>
+        <div class="card">
+          <div class="card-icon-col">
+            <svg class="breaker-icon" viewBox="0 0 30 30" fill="none">
+              <line x1="15" y1="0" x2="15" y2="7" stroke="#4d6b8a" stroke-width="1.5"/>
+              <rect x="6" y="7" width="18" height="18" rx="1" stroke="#43c17e" stroke-width="1.5"/>
+              <line x1="10" y1="21" x2="20" y2="11" stroke="#43c17e" stroke-width="1.5"/>
+            </svg>
+            <span class="code">FA&nbsp;·&nbsp;17</span>
+          </div>
+          <div class="card-main">
+            <h2 class="card-title" data-i18n="fadet-title">Fire Alarm Detector Spacing &amp; Coverage</h2>
+            <p class="card-desc" data-i18n="fadet-desc">NFPA 72 Ch.17 smooth-ceiling spacing — 0.7× rule, wall clearance, corridor centerline mode, high-ceiling performance-design flag, to-scale layout diagram.</p>
+          </div>
+          <div class="card-foot">
+            <span class="status" data-i18n="status-stable">Stable</span>
+            <a class="go" data-i18n="open" href="fire-alarm-detector-spacing-calculator.html">Open →</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="breaker placeholder">
+        <div class="drop"></div>
+        <div class="card">
+          <div class="card-icon-col">
+            <svg class="breaker-icon" viewBox="0 0 30 30" fill="none">
+              <line x1="15" y1="0" x2="15" y2="7" stroke="#4d6b8a" stroke-width="1.5" stroke-dasharray="2 2"/>
+              <rect x="6" y="7" width="18" height="18" rx="1" stroke="#4d6b8a" stroke-width="1.5" stroke-dasharray="3 3"/>
+            </svg>
+            <span class="code">··&nbsp;18</span>
+          </div>
+          <div class="card-main">
+            <h2 class="card-title" data-i18n="next-title">Next Feeder</h2>
+            <p class="card-desc" data-i18n="next-desc">Reserved slot — new calculation tools will be wired into this panel over time.</p>
+          </div>
+          <div class="card-foot">
+            <span class="status" data-i18n="status-soon">Coming soon</span>
+            <span class="go"></span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <footer>
+    <span class="brand-foot"><span class="omega">Ω</span> OHMZONE</span>
+    <span data-i18n="footer-note">Always on · tools keep getting added and refined</span>
+    <a href="privacy.html" data-i18n="footer-privacy" style="color:var(--text-tertiary);text-decoration:none;">Privacy Policy</a>
+    <span>© 2026 OhmZone. All rights reserved.</span>
+  </footer>
+
+</div>
+
+<script>
+const translations = {
+  en: {
+    eyebrow: "Online · Electrical Engineering Toolboard",
+    tagline: "Electrical Engineering Toolboard",
+    "cat-all": "All", "cat-power": "⚡ Power", "cat-automation": "⚙ Automation", "cat-fire": "🔥 Fire Alarm",
+    subtitle: "A working panelboard for the calculations I run all the time — each tool is its own feeder breaker, one click to open it. New feeders get added over time, and existing ones keep getting refined.",
+    busLabel: "MAIN BUS",
+    "ct-title": "Cable Tray Fill",
+    "ct-desc": "Calculates fill ratio from tray specs and circuit schedule, checks against code-allowed occupancy, with metric/imperial toggle and a design title block.",
+    "vd-title": "Voltage Drop",
+    "vd-desc": "Checks feeder voltage drop under CSA C22.1 — enter system voltage, conductor size and run length to see if it clears the allowed percentage.",
+    "ld-title": "Plant Load Single-Line",
+    "ld-desc": "Plant-wide electrical load allocation as a single-line overview — shows distribution branches and load spread, with sizing recommendations.",
+    "tr-title": "Small Transformer — Cable Sizing &amp; Protection",
+    "tr-desc": "Cable selection and protective device setup for small dry-type transformers — primary/secondary conductor sizing plus overcurrent protection settings.",
+    "mc-title": "Motor Circuit — Cable, Protection &amp; Starting Current",
+    "mc-desc": "Sizes motor branch-circuit conductors, overload and short-circuit protection, and starting current per CSA C22.1 motor tables.",
+    "sc-title": "Maximum Short-Circuit Current Study",
+    "sc-desc": "Estimates maximum available short-circuit current at a bus from source impedance and conductor data, for equipment rating and coordination checks.",
+    "pfc-title": "Power Factor Correction — Capacitor Sizing",
+    "pfc-desc": "Sizes shunt capacitor kVAR/µF to correct lagging power factor, with a harmonic/resonance risk check and standard bank sizing.",
+    "cf-title": "Conduit Fill Calculator",
+    "cf-desc": "CEC Table 8 raceway fill — individual conductors or whole multiconductor cables, with a project-specific cable schedule built in.",
+    "fadet-title": "Fire Alarm Detector Spacing & Coverage",
+    "fadet-desc": "NFPA 72 Ch.17 smooth-ceiling spacing — 0.7× rule, wall clearance, corridor centerline mode, high-ceiling performance-design flag, to-scale layout diagram.",
+    "faaud-title": "Fire Alarm Audibility & Line Loss",
+    "faaud-desc": "NFPA 72 Ch.18 audibility (public/private/sleeping mode), inverse-square distance attenuation, wall loss, and audio circuit dB loss for 25V/70.7V speaker lines.",
+    "favd-title": "Fire Alarm Voltage Drop & NAC Load",
+    "favd-desc": "NAC circuit end-of-line voltage drop per NFPA 72 §18.3.7 — NEC Table 8 wire resistance, CUSTV/UL 464 minimums, NAC loading check, max length solver.",
+    "fa-title": "Fire Alarm Battery Sizing",
+    "fa-desc": "Secondary (standby) power calculation per NFPA 72 §10.6.7.2 — 2019/2022 correction factor, device load list, 48h recharge check, UL 1989/2054 reminder.",
+    "tcc-title": "Protection Coordination / TCC Study",
+    "tcc-desc": "Log-log time-current curve screening — manual POI fault current (ETAP/EasyPower style), transformer inrush & withstand, generic device curves, custom datasheet points.",
+    "thd-title": "Harmonic Emission Assessment",
+    "thd-desc": "Screening-level harmonic current emission and PCC voltage distortion per CSA C61000-3-6 / Hydro-Québec C.25-01 — device spectra, summation law, resonance check.",
+    "lv-title": "LV Equipment Cable Selection",
+    "lv-desc": "Feeder cable sizing to MCC/switchgear/switchboard/panel per CSA C22.1 Tables 1–4 — terminal temperature, 80%/100% breakers, parallel sets beyond 750 kcmil.",
+    "bat-title": "Battery Bank Sizing",
+    "bat-desc": "IEEE 485 capacity sizing — multi-period duty cycle, temperature/aging/margin factors, series-parallel configuration and C-rate check.",
+    "mv-title": "MV Transformer — Primary Cable Sizing",
+    "mv-desc": "Ampacity, voltage drop and short-circuit thermal withstand for medium-voltage transformer primary feeders — Cu/Al, with or without known protection clearing time.",
+    "next-title": "Next Feeder",
+    "next-desc": "Reserved slot — new calculation tools will be wired into this panel over time.",
+    "status-stable": "Stable",
+    "status-soon": "Coming soon",
+    "open": "Open →",
+    "footer-note": "Always on · tools keep getting added and refined",
+    "footer-privacy": "Privacy Policy"
+  },
+  fr: {
+    eyebrow: "En ligne · Plateforme d'outils de génie électrique",
+    tagline: "Plateforme d'outils de génie électrique",
+    "cat-all": "Tous", "cat-power": "⚡ Puissance", "cat-automation": "⚙ Automatisation", "cat-fire": "🔥 Alarme incendie",
+    subtitle: "Un tableau de distribution regroupant les calculs que j'utilise régulièrement — chaque outil est un départ protégé par son propre disjoncteur, accessible en un clic. De nouveaux départs s'ajoutent avec le temps, et les existants continuent d'être améliorés.",
+    busLabel: "BUS PRINCIPAL",
+    "ct-title": "Remplissage des chemins de câbles",
+    "ct-desc": "Calcule le taux de remplissage à partir des caractéristiques du chemin de câbles et de la liste des circuits, vérifie la conformité au taux d'occupation admis par le code, avec bascule métrique/impérial et cartouche de conception.",
+    "vd-title": "Chute de tension",
+    "vd-desc": "Vérifie la chute de tension d'un départ selon la norme CSA C22.1 — entrez la tension du réseau, la section du conducteur et la longueur du parcours pour valider le pourcentage admissible.",
+    "ld-title": "Schéma unifilaire des charges",
+    "ld-desc": "Répartition des charges électriques de l'usine sous forme de schéma unifilaire — présente les départs de distribution et la répartition des charges, avec recommandations de dimensionnement.",
+    "tr-title": "Petit transformateur — Câbles et protection",
+    "tr-desc": "Sélection des câbles et réglage des dispositifs de protection pour petits transformateurs secs — dimensionnement des conducteurs primaire/secondaire et réglages de protection contre les surintensités.",
+    "mc-title": "Circuit moteur — Câbles, protection et démarrage",
+    "mc-desc": "Dimensionne les conducteurs du circuit de dérivation moteur, la protection contre les surcharges et les courts-circuits, ainsi que le courant de démarrage selon les tableaux CSA C22.1.",
+    "sc-title": "Étude du courant de court-circuit maximal",
+    "sc-desc": "Estime le courant de court-circuit maximal disponible à un jeu de barres à partir de l'impédance de la source et des données des conducteurs, pour la vérification du pouvoir de coupure des équipements et la coordination des protections.",
+    "pfc-title": "Correction du facteur de puissance — Dimensionnement des condensateurs",
+    "pfc-desc": "Dimensionne les condensateurs shunt (kVAR/µF) pour corriger un facteur de puissance en retard, avec vérification du risque harmonique/résonance et taille de banc normalisée.",
+    "cf-title": "Calculateur de remplissage de conduit",
+    "cf-desc": "Remplissage de canalisation selon le tableau 8 du CCE — conducteurs individuels ou câbles multiconducteurs entiers, avec une liste de câbles propre au projet intégrée.",
+    "fadet-title": "Espacement et couverture des détecteurs d'alarme incendie",
+    "fadet-desc": "Espacement à plafond lisse NFPA 72 ch.17 — règle 0,7×, dégagement mural, mode corridor axe central, indicateur plafond élevé, schéma d'aménagement à l'échelle.",
+    "faaud-title": "Audibilité et perte de ligne d'alarme incendie",
+    "faaud-desc": "Audibilité NFPA 72 ch.18 (mode public/privé/sommeil), atténuation de distance, perte par cloison, et perte dB de circuit audio pour lignes 25V/70,7V.",
+    "favd-title": "Chute de tension et charge NAC d'alarme incendie",
+    "favd-desc": "Chute de tension en fin de ligne du circuit NAC selon NFPA 72 §18.3.7 — résistance de fil tableau 8 NEC, minimums CUSTV/UL 464, vérification de charge NAC, calcul de longueur max.",
+    "fa-title": "Dimensionnement de batterie d'alarme incendie",
+    "fa-desc": "Calcul de l'alimentation secondaire selon NFPA 72 §10.6.7.2 — facteur de correction 2019/2022, liste des charges, vérification de recharge 48h, rappel UL 1989/2054.",
+    "tcc-title": "Étude de coordination des protections / TCC",
+    "tcc-desc": "Évaluation de coordination courant-temps log-log — courant de défaut au PCC saisi manuellement (style ETAP/EasyPower), appel de courant et tenue du transformateur, courbes génériques de dispositifs, points personnalisés de fiche technique.",
+    "thd-title": "Évaluation des émissions harmoniques",
+    "thd-desc": "Évaluation préliminaire des émissions de courant harmonique et de la distorsion de tension au PCC selon CSA C61000-3-6 / Hydro-Québec C.25-01 — spectres de dispositifs, loi de sommation, vérification de résonance.",
+    "lv-title": "Sélection de câble pour équipement BT",
+    "lv-desc": "Dimensionnement du câble d'alimentation vers MCC/appareillage/tableau/panneau selon CSA C22.1 tableaux 1–4 — température des bornes, disjoncteurs 80%/100%, ensembles parallèles au-delà de 750 kcmil.",
+    "bat-title": "Dimensionnement de batterie d'accumulateurs",
+    "bat-desc": "Dimensionnement de capacité selon IEEE 485 — cycle de service multi-périodes, facteurs de température/vieillissement/marge, configuration série-parallèle et vérification du taux C.",
+    "mv-title": "Transformateur MT — Dimensionnement du câble primaire",
+    "mv-desc": "Ampacité, chute de tension et tenue thermique au court-circuit pour les départs primaires de transformateurs à moyenne tension — Cu/Al, avec ou sans temps de déclenchement de protection connu.",
+    "next-title": "Prochain départ",
+    "next-desc": "Emplacement réservé — de nouveaux outils de calcul seront intégrés à ce tableau au fil du temps.",
+    "status-stable": "Stable",
+    "status-soon": "Bientôt disponible",
+    "open": "Ouvrir →",
+    "footer-note": "Toujours actif · les outils sont ajoutés et améliorés en continu",
+    "footer-privacy": "Politique de confidentialité"
+  }
+};
+
+const catEmptyText = {
+  en: "No tools in this category yet — more feeders get added as they're built.",
+  fr: "Aucun outil dans cette catégorie pour l'instant — d'autres seront ajoutés au fil du temps."
+};
+function setLang(lang){
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (translations[lang][key] !== undefined) el.innerHTML = translations[lang][key];
+  });
+  document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+  document.getElementById('btn-fr').classList.toggle('active', lang === 'fr');
+  document.documentElement.lang = lang;
+  try { localStorage.setItem('ohmzone-lang', lang); } catch(e) {}
+  const note = document.querySelector('.cat-empty-note');
+  if(note) note.textContent = catEmptyText[lang] || catEmptyText.en;
+}
+
+(function(){
+  let saved = 'en';
+  try { saved = localStorage.getItem('ohmzone-lang') || 'en'; } catch(e) {}
+  setLang(saved);
+})();
+
+/* category filter */
+function applyCategoryFilter(cat){
+  const feeders = document.querySelector('.feeders');
+  const cards = feeders.querySelectorAll('.breaker:not(.placeholder)');
+  let visibleCount = 0;
+  cards.forEach(c=>{
+    const show = cat === 'all' || c.dataset.cat === cat;
+    c.classList.toggle('cat-hidden', !show);
+    if(show) visibleCount++;
+  });
+  const placeholder = feeders.querySelector('.breaker.placeholder');
+  if(placeholder) placeholder.classList.toggle('cat-hidden', cat !== 'all');
+  let note = feeders.querySelector('.cat-empty-note');
+  if(visibleCount === 0){
+    if(!note){
+      note = document.createElement('div');
+      note.className = 'cat-empty-note';
+      feeders.appendChild(note);
+    }
+    note.textContent = catEmptyText[document.documentElement.lang] || catEmptyText.en;
+  } else if(note){
+    note.remove();
+  }
+}
+document.querySelectorAll('.cat-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    applyCategoryFilter(btn.dataset.cat);
+  });
+});
+</script>
+
+</body>
+</html>

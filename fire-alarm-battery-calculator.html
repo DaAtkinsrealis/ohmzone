@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fire Alarm Battery Sizing — NFPA 72</title>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3887318872951674" crossorigin="anonymous"></script>
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icon-16.png">
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="OhmZone">
+<meta name="theme-color" content="#0a1728">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.6/dist/pizzip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/docxtemplater@3.47.2/js/docxtemplater.js"></script>
+<style>
+@media print{ .no-print{display:none !important;} body{background:#fff !important;} }
+:root{
+  --bg:#080c14; --bg2:#0d1420; --panel:#111a2a; --panel-soft:#0c1220;
+  --line:#233350; --line-soft:#182238; --grid-line: rgba(96,140,196,0.09);
+  --ink:#e7edf7; --ink-dim:#8497b8; --ink-faint:#516085;
+  --trace:#3b9eff; --trace-soft:#1a3a5c; --gold:#e8b545;
+  --alarm:#ff5d77; --warn:#e3a83b; --radius:2px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',sans-serif;}
+body{background-image:linear-gradient(var(--grid-line) 1px,transparent 1px),linear-gradient(90deg,var(--grid-line) 1px,transparent 1px);background-size:28px 28px;min-height:100vh;}
+::selection{background:var(--trace);color:#04120f;}
+a{color:var(--trace);}
+input:focus-visible, select:focus-visible, button:focus-visible{outline:2px solid var(--trace);outline-offset:2px;}
+.lang-switch{display:flex;align-items:center;background:#0f2036;border:1px solid #2f5678;border-radius:16px;padding:3px;gap:2px;font-family:monospace;font-size:11px;position:fixed;top:10px;right:12px;z-index:9999;}
+.lang-switch button{border:none;background:transparent;color:#8fa8c2;padding:5px 12px;border-radius:13px;cursor:pointer;font-family:inherit;font-size:inherit;}
+.lang-switch button.active{background:var(--trace);color:#04120f;font-weight:700;}
+
+.titleblock{border-bottom:1px solid var(--line);background:linear-gradient(180deg,rgba(17,26,42,.9),rgba(13,20,32,.7));padding:18px 22px;display:flex;flex-wrap:wrap;gap:14px 28px;align-items:flex-end;justify-content:space-between;}
+.titleblock .brand{display:flex;align-items:baseline;gap:12px;}
+.titleblock .brand .mark{width:34px;height:34px;border:1.5px solid var(--trace);border-radius:3px;display:flex;align-items:center;justify-content:center;color:var(--trace);font-family:'IBM Plex Mono';font-weight:700;font-size:11px;flex:none;box-shadow:0 0 14px rgba(59, 158, 255,.18) inset;}
+.titleblock h1{font-family:'IBM Plex Sans Condensed';font-weight:700;letter-spacing:.3px;font-size:20px;margin:0;text-transform:uppercase;}
+.titleblock .sub{color:var(--ink-dim);font-size:12.5px;margin-top:2px;}
+.stamp{display:grid;grid-template-columns:repeat(4,auto);gap:0 22px;font-family:'IBM Plex Mono';font-size:10.5px;color:var(--ink-dim);}
+.stamp div b{display:block;color:var(--ink-faint);font-weight:500;font-size:9px;letter-spacing:.06em;text-transform:uppercase;}
+.stamp div span{color:var(--trace);font-weight:600;font-size:12px;}
+
+.top-disclaimer{max-width:1480px;margin:14px auto 0;padding:10px 16px;border:1px solid var(--warn);background:rgba(227,168,59,.07);border-radius:var(--radius);font-size:11.5px;color:var(--ink-dim);line-height:1.6;}
+.top-disclaimer b{color:var(--warn);}
+
+.app{display:grid;grid-template-columns:400px 1fr;gap:1px;background:var(--line);max-width:1480px;margin:0 auto;}
+@media (max-width:1000px){ .app{grid-template-columns:1fr;} }
+.steps{background:var(--bg2);padding:18px 16px 40px;display:flex;flex-direction:column;gap:14px;}
+.canvas-col{background:var(--line);display:flex;flex-direction:column;gap:1px;}
+.canvas-col > *{background:var(--bg2);}
+
+.step{border:1px solid var(--line-soft);border-radius:var(--radius);background:var(--panel-soft);overflow:hidden;}
+.step-head{display:flex;align-items:center;gap:10px;padding:11px 13px;background:var(--panel);cursor:pointer;user-select:none;border-bottom:1px solid var(--line-soft);}
+.step-num{font-family:'IBM Plex Mono';font-size:11px;font-weight:600;color:var(--bg);background:var(--trace);width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none;}
+.step.optional .step-num{background:var(--ink-faint);color:var(--bg2);}
+.step.optional.on .step-num{background:var(--gold);}
+.step-title{font-size:13px;font-weight:600;letter-spacing:.2px;flex:1;}
+.step-title small{display:block;font-weight:400;color:var(--ink-dim);font-size:10.5px;margin-top:1px;}
+.chev{color:var(--ink-faint);font-size:11px;transition:transform .15s;}
+.step.closed .chev{transform:rotate(-90deg);}
+.step-body{padding:13px;display:flex;flex-direction:column;gap:11px;}
+.step.closed .step-body{display:none;}
+
+label.field{display:flex;flex-direction:column;gap:5px;font-size:11.5px;color:var(--ink-dim);}
+label.field b{color:var(--ink);font-weight:500;font-size:12px;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;}
+input[type=number],input[type=text],select{background:var(--bg2);border:1px solid var(--line);color:var(--ink);font-family:'IBM Plex Mono';font-size:13px;padding:8px 9px;border-radius:var(--radius);width:100%;}
+select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238497b8'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:26px;}
+input:focus,select:focus{border-color:var(--trace);}
+
+.seg{display:flex;border:1px solid var(--line);border-radius:20px;overflow:hidden;width:max-content;flex-wrap:wrap;}
+.seg button{background:transparent;border:none;color:var(--ink-dim);font-family:'IBM Plex Mono';font-size:10.5px;padding:5px 12px;cursor:pointer;}
+.seg button.active{background:var(--trace);color:#04120f;font-weight:600;}
+
+.switch{position:relative;width:34px;height:19px;flex:none;}
+.switch input{opacity:0;width:0;height:0;position:absolute;}
+.switch .track{position:absolute;inset:0;background:var(--line);border-radius:20px;transition:.15s;}
+.switch .track:before{content:'';position:absolute;width:13px;height:13px;left:3px;top:3px;background:var(--ink-dim);border-radius:50%;transition:.15s;}
+.switch input:checked + .track{background:var(--trace-soft);border:1px solid var(--trace);}
+.switch input:checked + .track:before{transform:translateX(15px);background:var(--trace);}
+
+.hint{font-size:10.5px;color:var(--ink-faint);line-height:1.5;}
+.hint em{color:var(--ink-dim);font-style:normal;}
+.example-btn{align-self:flex-start;font-family:'IBM Plex Mono';font-size:11px;font-weight:600;color:#0a1220;background:var(--trace);border:1px solid var(--trace);padding:9px 16px;border-radius:20px;cursor:pointer;box-shadow:0 4px 12px -4px var(--trace-soft);}
+.example-btn:hover{filter:brightness(1.08);}
+.add-btn{font-family:'IBM Plex Mono';font-size:11px;font-weight:600;color:#0a1220;background:var(--gold);border:1px solid var(--gold);padding:6px 12px;border-radius:6px;cursor:pointer;align-self:flex-start;}
+.add-btn:hover{filter:brightness(1.06);}
+.item-row{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--panel);border:1px solid var(--line-soft);border-radius:var(--radius);font-size:11.5px;}
+.item-row .lbl{flex:1;color:var(--ink);}
+.item-row .lbl small{display:block;color:var(--ink-faint);font-size:9.5px;}
+.item-row button{background:transparent;border:none;color:var(--alarm);cursor:pointer;font-size:14px;padding:2px 6px;}
+.empty-note{font-size:11px;color:var(--ink-faint);font-style:italic;padding:8px 2px;}
+
+.panel{padding:16px;}
+.panel-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px;gap:10px;flex-wrap:wrap;}
+.panel-head h2{font-family:'IBM Plex Sans Condensed';font-size:13px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-dim);margin:0;font-weight:600;}
+.panel-head .tag{font-family:'IBM Plex Mono';font-size:10px;color:var(--ink-faint);}
+
+.result-grid{display:grid;grid-template-columns:220px 1fr;gap:16px;align-items:center;}
+@media (max-width:640px){ .result-grid{grid-template-columns:1fr;} }
+.gauge-box{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.gauge-num{font-family:'IBM Plex Mono';font-weight:700;font-size:26px;color:var(--gold);text-align:center;}
+.gauge-lbl{font-size:10px;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.1em;text-align:center;}
+.stat-list{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+@media (max-width:480px){ .stat-list{grid-template-columns:1fr;} }
+.stat{border:1px solid var(--line-soft);border-radius:var(--radius);padding:9px 11px;background:var(--panel-soft);}
+.stat .k{font-size:10px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.06em;}
+.stat .v{font-family:'IBM Plex Mono';font-size:15px;font-weight:600;margin-top:3px;}
+.stat.hot{border-color:var(--gold);background:linear-gradient(180deg,rgba(232,181,69,.08),transparent);}
+.stat.hot .v{color:var(--gold);}
+
+.risk-box{border-radius:var(--radius);padding:11px 13px;margin-top:12px;font-size:12px;line-height:1.6;border:1px solid;}
+.risk-ok{border-color:var(--trace);background:rgba(59, 158, 255,.06);color:var(--ink-dim);}
+.risk-warn{border-color:var(--warn);background:rgba(227,168,59,.08);color:var(--ink-dim);}
+.risk-alarm{border-color:var(--alarm);background:rgba(255,93,119,.08);color:var(--ink-dim);}
+.risk-box b{color:var(--ink);}
+
+.ref-table{width:100%;border-collapse:collapse;font-size:11px;}
+.ref-table th,.ref-table td{padding:6px 8px;border-bottom:1px solid var(--line-soft);text-align:left;}
+.ref-table th{color:var(--ink-faint);font-weight:500;text-transform:uppercase;font-size:9px;letter-spacing:.06em;}
+.ref-table td{color:var(--ink-dim);font-family:'IBM Plex Mono';}
+
+.ledger{display:flex;flex-direction:column;}
+.lstep{padding:13px 16px;border-bottom:1px solid var(--line-soft);display:grid;grid-template-columns:26px 1fr;gap:12px;}
+.lstep:last-child{border-bottom:none;}
+.lstep .ln{font-family:'IBM Plex Mono';color:var(--ink-faint);font-size:11px;padding-top:2px;}
+.lstep h3{margin:0 0 5px;font-size:12.5px;font-weight:600;color:var(--ink);}
+.lstep .formula{font-family:'IBM Plex Mono';font-size:12px;color:var(--trace);background:rgba(59, 158, 255,.06);padding:8px 10px;border-radius:var(--radius);border:1px solid var(--trace-soft);margin:6px 0;overflow-x:auto;white-space:pre;}
+.cite{font-size:9.5px;color:var(--ink-faint);margin-top:6px;line-height:1.5;border-left:2px solid var(--line);padding-left:8px;}
+.cite b{color:var(--ink-dim);font-weight:500;}
+.clause{font-family:'IBM Plex Mono';font-size:9.5px;color:var(--gold);background:rgba(232,181,69,.08);border:1px solid rgba(232,181,69,.25);border-radius:3px;padding:1px 5px;margin-right:4px;white-space:nowrap;}
+
+footer.note{max-width:1480px;margin:22px auto 60px;padding:0 16px;font-size:10.5px;color:var(--ink-faint);line-height:1.7;}
+footer.note b{color:var(--ink-dim);}
+</style>
+</head>
+<body>
+<a href="index.html" class="no-print" style="position:fixed;top:10px;left:12px;z-index:9999;font-family:monospace;font-size:11px;color:#8fa8c2;background:rgba(10,23,40,0.85);border:1px solid #234261;border-radius:14px;padding:5px 12px;text-decoration:none;">← OhmZone</a>
+<div class="lang-switch no-print">
+  <button type="button" id="btn-en" class="active" onclick="setLang('en')">EN</button>
+  <button type="button" id="btn-fr" onclick="setLang('fr')">FR</button>
+</div>
+
+<div class="titleblock">
+  <div class="brand">
+    <div class="mark">FA</div>
+    <div>
+      <h1 id="titleH1">Fire Alarm Battery Sizing</h1>
+      <div class="sub" id="titleSub">Secondary (standby) power calculation — NFPA 72 §10.6.7.2</div>
+    </div>
+  </div>
+  <div class="stamp">
+    <div><b id="lblDwg">Dwg No.</b><span>FA-001</span></div>
+    <div><b id="lblScale">Scale</b><span>NTS</span></div>
+    <div><b id="lblMethod">Method</b><span>NFPA 72</span></div>
+    <div><b id="lblRev">Rev</b><span id="revTag">—</span></div>
+  </div>
+</div>
+
+<div class="top-disclaimer no-print">
+  <b id="topDiscB">Preliminary sizing aid only.</b> <span id="topDiscTxt">This tool applies the standard NFPA 72 §10.6.7.2 battery formula and the code-edition correction factor (1.20 pre-2022 / 1.25 for 2022 and later, per §10.6.7.2.14) that you select. It does not include a manufacturer device database — enter standby/alarm current per device from the actual datasheet. Final battery calculations must be documented and submitted per the AHJ's requirements and reviewed by a qualified fire alarm professional against the specific control panel/power supply manufacturer's own battery calculation worksheet.</span>
+</div>
+
+<div class="app">
+  <div class="steps">
+    <button class="example-btn" id="loadExample">▸ <span id="loadExampleTxt">Load example</span></button>
+
+    <!-- STEP 1: SYSTEM & CODE BASIS -->
+    <div class="step" id="step1">
+      <div class="step-head" data-toggle="step1">
+        <div class="step-num">1</div>
+        <div class="step-title" id="step1Title">System &amp; Code Basis<small id="step1Small">Tag, system type, code edition, standby time</small></div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="step-body">
+        <label class="field"><b id="lblTag">Project / panel tag</b>
+          <input type="text" id="eqTag" placeholder="e.g. FACP-1">
+        </label>
+        <label class="field"><b id="lblSysType">System type</b>
+          <select id="sysType">
+            <option value="standard" selected>Standard (24h standby + 5 min alarm)</option>
+            <option value="voice">Voice/EVACS (24h standby + 15 min alarm)</option>
+            <option value="mns">Mass Notification (MNS) (24h standby + 15 min alarm)</option>
+          </select>
+        </label>
+        <label class="field"><b id="lblCodeEd">Code edition</b>
+          <div class="seg" id="codeEdSeg">
+            <button data-u="pre2022">2019 &amp; earlier (×1.20)</button>
+            <button data-u="post2022" class="active">2022 &amp; later (×1.25)</button>
+          </div>
+        </label>
+        <label class="field" style="flex-direction:row;align-items:center;gap:8px;">
+          <input type="checkbox" id="genOn" style="width:auto;">
+          <span id="lblGenOn">Qualified emergency generator present (standby time may reduce to 4h)</span>
+        </label>
+        <div class="hint" id="hintStep1"></div>
+      </div>
+    </div>
+
+    <!-- STEP 2: DEVICE LOADS -->
+    <div class="step" id="step2">
+      <div class="step-head" data-toggle="step2">
+        <div class="step-num">2</div>
+        <div class="step-title" id="step2Title">Device Loads<small id="step2Small">Standby &amp; alarm current per device group</small></div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="step-body">
+        <div class="row3">
+          <label class="field"><b id="lblDevName">Label</b>
+            <input type="text" id="devName" placeholder="e.g. Panel standby">
+          </label>
+          <label class="field"><b id="lblDevQty">Qty</b>
+            <input type="number" id="devQty" value="1" min="1" step="1">
+          </label>
+        </div>
+        <div class="row2">
+          <label class="field"><b id="lblDevSb">Standby current, each (mA)</b>
+            <input type="number" id="devSb" value="0" min="0" step="0.1">
+          </label>
+          <label class="field"><b id="lblDevAl">Alarm current, each (mA)</b>
+            <input type="number" id="devAl" value="0" min="0" step="0.1">
+          </label>
+        </div>
+        <button class="add-btn" id="addDeviceBtn">+ <span id="addDeviceTxt">Add device group</span></button>
+        <div id="deviceList" style="display:flex;flex-direction:column;gap:6px;"></div>
+        <div class="hint" id="hintStep2"></div>
+      </div>
+    </div>
+
+    <!-- STEP 3: MARGINS & CHARGER -->
+    <div class="step optional" id="step3">
+      <div class="step-head" data-toggle="step3">
+        <div class="step-num">3</div>
+        <div class="step-title" id="step3Title">Margins &amp; Charger Check <span style="color:var(--ink-faint)" id="optionalTag3">(optional)</span><small id="step3Small">Extra derating and 48-hour recharge verification</small></div>
+        <label class="switch" onclick="event.stopPropagation()">
+          <input type="checkbox" id="chargerOn"><span class="track"></span>
+        </label>
+      </div>
+      <div class="step-body">
+        <label class="field"><b id="lblMargin">Additional margin (%, aging/temperature)</b>
+          <input type="number" id="marginPct" value="0" min="0" max="50" step="1">
+        </label>
+        <label class="field"><b id="lblChargerA">Charger rated recharge current (A)</b>
+          <input type="number" id="chargerA" value="1" min="0.01" step="0.01">
+        </label>
+        <div class="hint" id="hintStep3"></div>
+      </div>
+    </div>
+  </div>
+  <div class="canvas-col">
+    <div class="panel">
+      <div class="panel-head"><h2 id="resultTitle">Result — Required Battery</h2></div>
+      <div class="result-grid">
+        <div class="gauge-box">
+          <div class="gauge-num" id="gaugeNum">—</div>
+          <div class="gauge-lbl" id="gaugeLbl">Ah required</div>
+        </div>
+        <div class="stat-list">
+          <div class="stat hot"><div class="k" id="lblStatRecAh">Recommended battery size</div><div class="v" id="statRecAh">—</div></div>
+          <div class="stat"><div class="k" id="lblStatFactor">Correction factor applied</div><div class="v" id="statFactor">—</div></div>
+          <div class="stat"><div class="k" id="lblStatSbTotal">Total standby current</div><div class="v" id="statSbTotal">—</div></div>
+          <div class="stat"><div class="k" id="lblStatAlTotal">Total alarm current</div><div class="v" id="statAlTotal">—</div></div>
+          <div class="stat"><div class="k" id="lblStatSbTime">Standby time used</div><div class="v" id="statSbTime">—</div></div>
+          <div class="stat"><div class="k" id="lblStatAlTime">Alarm time used</div><div class="v" id="statAlTime">—</div></div>
+        </div>
+      </div>
+      <div id="verdictBox"></div>
+      <div id="ulBox"></div>
+      <div id="chargerBox"></div>
+    </div>
+
+    <div class="panel no-print" style="border:none;background:transparent;">
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px;font-size:11.5px;color:var(--ink-dim);">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+          <input type="checkbox" id="includeLedger" checked style="width:auto;">
+          <span id="lblIncludeLedger">Include Calculation Ledger in report</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+          <input type="checkbox" id="includeLogo" checked style="width:auto;">
+          <span id="lblIncludeLogo">Include OhmZone brand mark in report</span>
+        </label>
+      </div>
+      <div class="btn-row" style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button id="printBtn" style="padding:9px 16px;border-radius:8px;border:1px solid #2f5678;background:#0f2036;color:#c8d8e8;cursor:pointer;font-family:inherit;">🖨 Print / Save as PDF</button>
+        <button id="exportWordBtn" style="padding:9px 16px;border-radius:8px;border:1px solid #2f5678;background:#0f2036;color:#c8d8e8;cursor:pointer;font-family:inherit;">📄 Export study (Word)</button>
+        <button id="exportExcelBtn" style="padding:9px 16px;border-radius:8px;border:1px solid #2f5678;background:#0f2036;color:#c8d8e8;cursor:pointer;font-family:inherit;">📊 Export study (Excel)</button>
+      </div>
+      <div style="border-top:1px dashed var(--line);margin-top:14px;padding-top:12px;">
+        <label class="field"><b id="lblUploadTemplate">Report template (.docx, optional)</b>
+          <input type="file" id="templateFile" accept=".docx">
+        </label>
+        <div id="templateStatus" style="font-size:11px;color:var(--trace);margin-top:4px;"></div>
+        <div class="hint" id="hintUploadTemplate" style="margin-top:6px;"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2 id="ledgerTitle">Calculation Ledger</h2><span class="tag" id="ledgerTag">clause-by-clause</span></div>
+      <div class="ledger" id="ledger"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2 id="devTableTitle">Device Load Summary</h2></div>
+      <div style="overflow-x:auto;">
+        <table class="ref-table">
+          <thead><tr><th id="thDevLabel">Label</th><th id="thDevQty">Qty</th><th id="thDevSb">Standby (mA ea.)</th><th id="thDevAl">Alarm (mA ea.)</th><th id="thDevSbTotal">Standby total</th><th id="thDevAlTotal">Alarm total</th></tr></thead>
+          <tbody id="devTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="note" id="footerNote"></footer>
+
+<script>
+const $ = id => document.getElementById(id);
+function fmt(n,d=2){ if(n===undefined||n===null||isNaN(n)) return "—"; return Number(n).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d}); }
+
+let currentLang = 'en';
+let state = { codeEd:"post2022", devices:[] };
+let devSeq = 1;
+
+document.querySelectorAll(".step-head").forEach(h=>{
+  h.addEventListener("click", ()=>{ $(h.dataset.toggle).classList.toggle("closed"); });
+});
+function wireOptionalToggle(stepId, checkboxId){
+  const cb = $(checkboxId), step = $(stepId);
+  const sync = ()=> step.classList.toggle("on", cb.checked);
+  cb.addEventListener("change", ()=>{ sync(); recalc(); });
+  sync();
+}
+wireOptionalToggle("step3","chargerOn");
+
+function wireSeg(segId, stateKey){
+  $(segId).addEventListener("click", e=>{
+    const b = e.target.closest("button"); if(!b) return;
+    document.querySelectorAll("#"+segId+" button").forEach(x=>x.classList.remove("active"));
+    b.classList.add("active");
+    state[stateKey] = b.dataset.u;
+    recalc();
+  });
+}
+wireSeg("codeEdSeg","codeEd");
+
+$("addDeviceBtn").addEventListener("click", ()=>{
+  const L = UI[currentLang];
+  const name = $("devName").value.trim() || L.defaultDeviceName;
+  const qty = Math.max(1, parseInt($("devQty").value)||1);
+  const sb = parseFloat($("devSb").value)||0;
+  const al = parseFloat($("devAl").value)||0;
+  state.devices.push({id:"d"+(devSeq++), name, qty, sb, al});
+  $("devName").value = "";
+  renderDeviceList();
+  recalc();
+});
+function removeDevice(id){
+  state.devices = state.devices.filter(d=>d.id!==id);
+  renderDeviceList();
+  recalc();
+}
+function renderDeviceList(){
+  const L = UI[currentLang];
+  const list = $("deviceList");
+  if(state.devices.length===0){
+    list.innerHTML = `<div class="empty-note">${L.noDevices}</div>`;
+    return;
+  }
+  list.innerHTML = state.devices.map(d=>`<div class="item-row">
+    <span class="lbl">${d.name} × ${d.qty}
+    <small>${L.standbyLbl}: ${fmt(d.sb,1)} mA ${L.eachLbl} · ${L.alarmLbl}: ${fmt(d.al,1)} mA ${L.eachLbl}</small></span>
+    <button onclick="removeDevice('${d.id}')">✕</button>
+  </div>`).join("");
+}
+
+["eqTag","sysType","devQty","devSb","devAl","marginPct","chargerA"].forEach(id=>{
+  $(id).addEventListener("input", recalc);
+  $(id).addEventListener("change", recalc);
+});
+$("genOn").addEventListener("change", recalc);
+
+$("loadExample").addEventListener("click", ()=>{
+  $("eqTag").value = "FACP-1";
+  $("sysType").value = "standard";
+  state.codeEd = "post2022";
+  document.querySelectorAll("#codeEdSeg button").forEach(x=>x.classList.toggle("active", x.dataset.u==="post2022"));
+  $("genOn").checked = false;
+  state.devices = []; devSeq = 1;
+  state.devices.push({id:"d"+(devSeq++), name:"Control panel standby draw", qty:1, sb:220, al:220});
+  state.devices.push({id:"d"+(devSeq++), name:"Addressable smoke detectors", qty:40, sb:0.5, al:0.9});
+  state.devices.push({id:"d"+(devSeq++), name:"Horn/strobes, 15cd", qty:20, sb:0, al:53});
+  state.devices.push({id:"d"+(devSeq++), name:"Notification appliance modules", qty:4, sb:8, al:8});
+  renderDeviceList();
+  $("chargerOn").checked = true; $("chargerA").value = 1.0; $("marginPct").value = 0;
+  wireOptionalToggle("step3","chargerOn");
+  recalc();
+});
+
+/* ===== core calc ===== */
+const STD_AH = [4,7,12,18,26,33,35,40,55,75,100,110];
+function nextStdAh(a){ return STD_AH.find(s=>s>=a) || STD_AH[STD_AH.length-1]; }
+
+function calcAll(){
+  const sysType = $("sysType").value;
+  const factor = state.codeEd==="post2022" ? 1.25 : 1.20;
+  const genOn = $("genOn").checked;
+  const marginPct = parseFloat($("marginPct").value)||0;
+
+  const Tsb = genOn ? 4 : 24;
+  const Tal = (sysType==="standard") ? (5/60) : (15/60);
+
+  let totalSbMa = 0, totalAlMa = 0;
+  const rows = state.devices.map(d=>{
+    const sbTotal = d.sb*d.qty, alTotal = d.al*d.qty;
+    totalSbMa += sbTotal; totalAlMa += alTotal;
+    return {...d, sbTotal, alTotal};
+  });
+  const totalSbA = totalSbMa/1000, totalAlA = totalAlMa/1000;
+
+  const rawAh = totalSbA*Tsb + totalAlA*Tal;
+  const withMargin = rawAh * (1+marginPct/100);
+  const reqAh = withMargin * factor;
+  const recAh = nextStdAh(reqAh);
+
+  const chargerOn = $("chargerOn").checked;
+  const chargerA = parseFloat($("chargerA").value)||0;
+  let rechargeHrs = null;
+  if(chargerOn && chargerA>0){
+    // typical assumption: charger must restore to ~100% within 48h; effective
+    // charge acceptance derated ~20% for a sealed lead-acid charge curve
+    rechargeHrs = recAh / (chargerA*0.8);
+  }
+
+  return {sysType, factor, codeEd:state.codeEd, genOn, Tsb, Tal, marginPct,
+    totalSbA, totalAlA, rawAh, withMargin, reqAh, recAh, rows,
+    chargerOn, chargerA, rechargeHrs, tag: $("eqTag").value.trim()};
+}
+
+function recalc(){
+  const L = UI[currentLang];
+  const d = calcAll();
+
+  $("gaugeNum").textContent = fmt(d.reqAh,2);
+  $("statRecAh").textContent = d.recAh+" Ah";
+  $("statFactor").textContent = "×"+fmt(d.factor,2);
+  $("statSbTotal").textContent = fmt(d.totalSbA*1000,0)+" mA";
+  $("statAlTotal").textContent = fmt(d.totalAlA*1000,0)+" mA";
+  $("statSbTime").textContent = d.Tsb+" h";
+  $("statAlTime").textContent = fmt(d.Tal*60,0)+" min";
+  $("revTag").textContent = new Date().toISOString().slice(0,10);
+
+  const verdictBox = $("verdictBox");
+  if(state.devices.length===0){
+    verdictBox.innerHTML = `<div class="risk-box risk-warn"><b>${L.noDevTitle}</b> ${L.noDevBody}</div>`;
+  } else {
+    verdictBox.innerHTML = `<div class="risk-box risk-ok"><b>${L.recTitle}</b> ${L.recBody.replace('{ah}',d.recAh).replace('{req}',fmt(d.reqAh,2))}</div>`;
+  }
+
+  const ulBox = $("ulBox");
+  ulBox.innerHTML = d.codeEd==="post2022"
+    ? `<div class="risk-box risk-warn"><b>${L.ulTitle}</b> ${L.ulBody}</div>`
+    : "";
+
+  const chargerBox = $("chargerBox");
+  if(d.chargerOn && d.rechargeHrs!==null){
+    if(d.rechargeHrs <= 48){
+      chargerBox.innerHTML = `<div class="risk-box risk-ok"><b>${L.rechargeOkTitle}</b> ${L.rechargeOkBody.replace('{hrs}',fmt(d.rechargeHrs,1))}</div>`;
+    } else {
+      chargerBox.innerHTML = `<div class="risk-box risk-alarm"><b>${L.rechargeFailTitle}</b> ${L.rechargeFailBody.replace('{hrs}',fmt(d.rechargeHrs,1))}</div>`;
+    }
+  } else {
+    chargerBox.innerHTML = "";
+  }
+
+  $("devTableBody").innerHTML = d.rows.map(r=>`<tr>
+    <td>${r.name}</td><td>${r.qty}</td><td>${fmt(r.sb,2)}</td><td>${fmt(r.al,2)}</td>
+    <td>${fmt(r.sbTotal,1)} mA</td><td>${fmt(r.alTotal,1)} mA</td></tr>`).join("");
+
+  renderLedger(d);
+  window._lastResults = d;
+}
+
+/* ===== ledger ===== */
+function buildLedgerSteps(d){
+  const L = UI[currentLang];
+  const steps = [];
+  const devLines = d.rows.map(r=>`${r.name}: ${r.qty} × (${fmt(r.sb,2)} mA sb / ${fmt(r.al,2)} mA al) = ${fmt(r.sbTotal,1)} mA sb / ${fmt(r.alTotal,1)} mA al`).join("\n") || L.noDevicesShort;
+
+  steps.push({num:1, title:L.ls1Title, clause:"—", note:L.ls1Note, formula:
+`${devLines}
+
+${L.totalSbLbl} = ${fmt(d.totalSbA*1000,1)} mA = ${fmt(d.totalSbA,4)} A
+${L.totalAlLbl} = ${fmt(d.totalAlA*1000,1)} mA = ${fmt(d.totalAlA,4)} A`});
+
+  steps.push({num:2, title:L.ls2Title, clause:"NFPA 72 §10.6.7.2.1 / §10.6.7.2.3–2.4", note:L.ls2Note, formula:
+`${L.sysTypeLbl}: ${d.sysType==='standard'?L.sysStandard:(d.sysType==='voice'?L.sysVoice:L.sysMns)}
+T_standby = ${d.Tsb} h  ${d.genOn ? '('+L.genNote+')' : ''}
+T_alarm = ${fmt(d.Tal*60,0)} min = ${fmt(d.Tal,4)} h`});
+
+  steps.push({num:3, title:L.ls3Title, clause:"—", note:L.ls3Note, formula:
+`Ah(raw) = I_sb × T_sb + I_al × T_al
+       = ${fmt(d.totalSbA,4)} × ${d.Tsb} + ${fmt(d.totalAlA,4)} × ${fmt(d.Tal,4)}
+       = ${fmt(d.rawAh,3)} Ah
+${d.marginPct>0 ? `+ ${d.marginPct}% margin → ${fmt(d.withMargin,3)} Ah` : L.noMargin}`});
+
+  steps.push({num:4, title:L.ls4Title, clause: d.codeEd==="post2022" ? "NFPA 72 §10.6.7.2.14 (2022+)" : "NFPA 72 (2019 & earlier)", note:L.ls4Note, formula:
+`Ah(required) = Ah(with margin) × ${fmt(d.factor,2)}
+            = ${fmt(d.withMargin,3)} × ${fmt(d.factor,2)}
+            = ${fmt(d.reqAh,3)} Ah`});
+
+  steps.push({num:5, title:L.ls5Title, clause:"—", note:L.ls5Note, formula:
+`${L.reqAhLbl} = ${fmt(d.reqAh,3)} Ah
+${L.recAhLbl} = ${d.recAh} Ah`});
+
+  if(d.chargerOn && d.rechargeHrs!==null){
+    steps.push({num:6, title:L.ls6Title, clause:"NFPA 72 (48h recharge)", note:L.ls6Note, formula:
+`t_recharge ≈ Ah / (I_charger × 0.8)
+           = ${d.recAh} / (${fmt(d.chargerA,2)} × 0.8)
+           = ${fmt(d.rechargeHrs,1)} h`});
+  }
+  return steps;
+}
+function renderLedger(d){
+  const steps = buildLedgerSteps(d);
+  $("ledger").innerHTML = steps.map(s=>`<div class="lstep"><div class="ln">${String(s.num).padStart(2,'0')}</div><div>
+    <h3><span class="clause">${s.clause}</span>${s.title}</h3><div class="formula">${s.formula}</div><div class="cite">${s.note}</div></div></div>`).join("");
+}
+
+/* ===== report ===== */
+function buildReportPageHTML(d, includeLedger, includeLogo){
+  const L = UI[currentLang];
+  const today = new Date().toLocaleDateString(currentLang==='fr'?'fr-CA':'en-CA');
+  const cell = (k,v)=>`<td style="padding:2.5pt 6pt 2.5pt 0;color:#333;font-size:9.5pt;white-space:nowrap;">${k}</td><td style="padding:2.5pt 14pt 2.5pt 0;font-weight:600;font-size:9.5pt;border-bottom:0.5pt solid #ddd;">${v}</td>`;
+  const gridRows = (pairs)=>{
+    let html = "";
+    for(let i=0;i<pairs.length;i+=2){
+      const a = pairs[i], b = pairs[i+1];
+      html += `<tr>${cell(a[0],a[1])}${b?cell(b[0],b[1]):'<td></td><td></td>'}</tr>`;
+    }
+    return html;
+  };
+  const sectionHead = (t)=>`<div style="font-size:9.5pt;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;border-bottom:1pt solid #1a1a1a;padding-bottom:2pt;margin:12pt 0 5pt;">${t}</div>`;
+
+  const inputPairs = [
+    [L.lblSysType, d.sysType==='standard'?L.sysStandard:(d.sysType==='voice'?L.sysVoice:L.sysMns)],
+    [L.lblCodeEd, d.codeEd==="post2022"?"2022+":"2019 & earlier"],
+    [L.lblGenOnShort, d.genOn?L.yes:L.no], [L.lblStatSbTime, d.Tsb+" h"],
+    [L.lblStatAlTime, fmt(d.Tal*60,0)+" min"], [L.lblMarginShort, d.marginPct+"%"]
+  ];
+  const resultPairs = [
+    [L.gaugeLbl, fmt(d.reqAh,2)+" Ah"], [L.lblStatRecAh, d.recAh+" Ah"],
+    [L.lblStatFactor, "×"+fmt(d.factor,2)], [L.lblStatSbTotal, fmt(d.totalSbA*1000,0)+" mA"],
+    [L.lblStatAlTotal, fmt(d.totalAlA*1000,0)+" mA"], ["",""]
+  ];
+
+  const devRows = d.rows.map(r=>`<tr>
+    <td style="padding:3pt 8pt;border-bottom:0.5pt solid #e5e5e5;font-size:8.5pt;">${r.name}</td>
+    <td style="padding:3pt 8pt;border-bottom:0.5pt solid #e5e5e5;font-size:8.5pt;">${r.qty}</td>
+    <td style="padding:3pt 8pt;border-bottom:0.5pt solid #e5e5e5;font-size:8.5pt;">${fmt(r.sb,2)} mA</td>
+    <td style="padding:3pt 8pt;border-bottom:0.5pt solid #e5e5e5;font-size:8.5pt;">${fmt(r.al,2)} mA</td>
+    <td style="padding:3pt 8pt;border-bottom:0.5pt solid #e5e5e5;font-size:8.5pt;">${fmt(r.sbTotal,1)} mA</td>
+    <td style="padding:3pt 8pt;border-bottom:0.5pt solid #e5e5e5;font-size:8.5pt;">${fmt(r.alTotal,1)} mA</td></tr>`).join("");
+  const devHtml = sectionHead(L.devTableTitle) + `<table style="width:100%;border-collapse:collapse;">
+    <tr>
+      <td style="padding:4pt 8pt;font-size:7.5pt;font-weight:700;text-transform:uppercase;color:#666;border-bottom:1pt solid #999;">${L.thDevLabel}</td>
+      <td style="padding:4pt 8pt;font-size:7.5pt;font-weight:700;text-transform:uppercase;color:#666;border-bottom:1pt solid #999;">${L.thDevQty}</td>
+      <td style="padding:4pt 8pt;font-size:7.5pt;font-weight:700;text-transform:uppercase;color:#666;border-bottom:1pt solid #999;">${L.thDevSb}</td>
+      <td style="padding:4pt 8pt;font-size:7.5pt;font-weight:700;text-transform:uppercase;color:#666;border-bottom:1pt solid #999;">${L.thDevAl}</td>
+      <td style="padding:4pt 8pt;font-size:7.5pt;font-weight:700;text-transform:uppercase;color:#666;border-bottom:1pt solid #999;">${L.thDevSbTotal}</td>
+      <td style="padding:4pt 8pt;font-size:7.5pt;font-weight:700;text-transform:uppercase;color:#666;border-bottom:1pt solid #999;">${L.thDevAlTotal}</td>
+    </tr>${devRows}</table>`;
+
+  let ledgerHtml = "";
+  if(includeLedger){
+    const steps = buildLedgerSteps(d);
+    ledgerHtml = sectionHead(L.ledgerTitle) + `<table style="width:100%;border-collapse:collapse;">` +
+      steps.map(s=>`<tr>
+        <td style="padding:5pt 8pt 5pt 0;border-bottom:0.5pt solid #e5e5e5;font-size:8.5pt;font-weight:700;vertical-align:top;">${String(s.num).padStart(2,'0')}</td>
+        <td style="padding:5pt 8pt;border-bottom:0.5pt solid #e5e5e5;vertical-align:top;">
+          <div style="font-size:8.5pt;font-weight:700;margin-bottom:2pt;"><span style="color:#b8860b;font-family:'Courier New',monospace;font-size:7.5pt;margin-right:5pt;">${s.clause}</span>${s.title}</div>
+          <div style="font-family:'Courier New',monospace;font-size:8pt;color:#333;line-height:1.5;">${s.formula.split("\n").map(l=>l===""?"&nbsp;":l).join("<br>")}</div>
+          <div style="font-size:7.5pt;color:#888;margin-top:3pt;">${s.note}</div>
+        </td></tr>`).join("") + `</table>`;
+  }
+
+  return `
+  <div style="font-family:Arial,Helvetica,sans-serif;color:#1a1a1a;background:#fff;padding:4pt 2pt;font-size:9.5pt;line-height:1.4;">
+    <table style="width:100%;border-collapse:collapse;border-bottom:1.5pt solid #1a1a1a;padding-bottom:6pt;margin-bottom:4pt;">
+      <tr><td style="font-size:13pt;font-weight:700;padding-bottom:6pt;">${$('titleH1').textContent}</td>
+      <td style="text-align:right;font-size:8.5pt;color:#555;padding-bottom:6pt;">${includeLogo?'Ω OHMZONE':''}</td></tr>
+      <tr><td style="font-size:9pt;color:#333;"><b>${L.lblTag}:</b> ${d.tag || L.untitledTag} &nbsp;&nbsp; <b>${L.lblMethod}:</b> NFPA 72</td>
+      <td style="text-align:right;font-size:8.5pt;color:#555;">${today}</td></tr>
+    </table>
+    ${sectionHead(L.repInputData)}
+    <table style="width:100%;border-collapse:collapse;">${gridRows(inputPairs)}</table>
+    ${sectionHead(L.repResults)}
+    <table style="width:100%;border-collapse:collapse;">${gridRows(resultPairs)}</table>
+    ${devHtml}
+    ${ledgerHtml}
+    <p style="font-size:7.5pt;color:#888;margin-top:14pt;border-top:0.5pt solid #ddd;padding-top:6pt;">${L.disclaimerBody}</p>
+  </div>`;
+}
+
+function downloadBlob(content, mime, filename){
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 2000);
+}
+
+$("printBtn").addEventListener("click", ()=>{
+  const d = window._lastResults;
+  if(!d) return;
+  const html = buildReportPageHTML(d, $("includeLedger").checked, $("includeLogo").checked);
+  const w = window.open("", "_blank");
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${$('titleH1').textContent}</title>
+  <style>body{margin:0;padding:18px;} @media print{body{padding:0;}}</style></head>
+  <body>${html}<script>window.onload=()=>window.print();<\/script></body></html>`);
+  w.document.close();
+});
+
+/* ===== report template upload ===== */
+let uploadedTemplateBuffer = null, uploadedTemplateName = "";
+$("templateFile").addEventListener("change", (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev)=>{ uploadedTemplateBuffer = ev.target.result; uploadedTemplateName = file.name; inspectTemplate(file.name); };
+  reader.readAsArrayBuffer(file);
+});
+function templateTagValues(d){
+  const L = UI[currentLang];
+  const today = new Date().toLocaleDateString(currentLang==='fr'?'fr-CA':'en-CA');
+  return {
+    tag: d.tag || L.untitledTag, date: today,
+    sysType: d.sysType==='standard'?L.sysStandard:(d.sysType==='voice'?L.sysVoice:L.sysMns),
+    codeEd: d.codeEd==="post2022"?"2022+":"2019 & earlier", factor: "×"+fmt(d.factor,2),
+    sbTime: d.Tsb+" h", alTime: fmt(d.Tal*60,0)+" min",
+    sbTotal: fmt(d.totalSbA*1000,0)+" mA", alTotal: fmt(d.totalAlA*1000,0)+" mA",
+    reqAh: fmt(d.reqAh,2)+" Ah", recAh: d.recAh+" Ah"
+  };
+}
+function showTemplateStatus(msg, color){ const el=$("templateStatus"); if(el){ el.textContent=msg; el.style.color=color||"var(--trace)"; } }
+function inspectTemplate(fileName){
+  const L = UI[currentLang];
+  const known = Object.keys(templateTagValues(window._lastResults || calcAll()));
+  try{
+    const zip = new PizZip(uploadedTemplateBuffer);
+    let xml = "";
+    Object.keys(zip.files).forEach(name=>{
+      if(/^word\/(document|header\d*|footer\d*)\.xml$/.test(name)) xml += zip.files[name].asText();
+    });
+    const plain = xml.replace(/<[^>]+>/g, "");
+    const found = known.filter(k => plain.includes("{"+k+"}"));
+    const missing = known.filter(k => !found.includes(k));
+    const allTags = [...plain.matchAll(/\{([a-zA-Z0-9_]+)\}/g)].map(m=>m[1]);
+    const unknown = [...new Set(allTags.filter(t => !known.includes(t)))];
+    let msg = L.templateLoadedMsg.replace("{name}", fileName) + " — ";
+    let color = "var(--trace)";
+    if(found.length === 0){ msg += L.templateNoTagsFound; color = "var(--alarm)"; }
+    else {
+      msg += L.templateTagsFound.replace("{n}", found.length).replace("{total}", known.length);
+      if(missing.length) msg += " " + L.templateTagsMissing.replace("{list}", missing.join(", "));
+      if(unknown.length){ msg += " " + L.templateTagsUnknown.replace("{list}", unknown.join(", ")); color = "var(--warn)"; }
+      if(missing.length && !unknown.length) color = "var(--warn)";
+    }
+    showTemplateStatus(msg, color);
+  } catch(err){
+    console.error(err);
+    showTemplateStatus(L.templateErrorMsg + " " + (err.message||""), "var(--alarm)");
+  }
+}
+function exportWithTemplate(d){
+  const L = UI[currentLang];
+  try{
+    const zip = new PizZip(uploadedTemplateBuffer);
+    const docx = new window.docxtemplater(zip, { paragraphLoop:true, linebreaks:true, nullGetter:p=>"«"+(p.value||"?")+"»" });
+    docx.render(templateTagValues(d));
+    const out = docx.getZip().generate({ type:"blob", mimeType:"application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+    const url = URL.createObjectURL(out);
+    const a = document.createElement("a"); a.href=url; a.download="fire_alarm_battery_calc.docx";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url), 2000);
+    showTemplateStatus(L.templateExportOk, "var(--trace)");
+  } catch(err){
+    console.error(err);
+    let detail = err.message || String(err);
+    if(err.properties && err.properties.errors && err.properties.errors.length){
+      detail = err.properties.errors.map(e=>(e.properties&&e.properties.explanation?e.properties.explanation:e.message)).join(" · ");
+    }
+    showTemplateStatus(L.templateErrorMsg+" "+detail, "var(--alarm)");
+    alert(L.templateErrorMsg+"\n\n"+detail);
+    exportWithBuiltInLayout(d);
+  }
+}
+function exportWithBuiltInLayout(d){
+  const html = buildReportPageHTML(d, $("includeLedger").checked, $("includeLogo").checked);
+  const doc = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+  <head><meta charset="utf-8"><title>Fire Alarm Battery Sizing</title>
+  <!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View></w:WordDocument></xml><![endif]--></head><body>${html}</body></html>`;
+  downloadBlob(doc, "application/msword", "fire_alarm_battery_calc.doc");
+}
+$("exportWordBtn").addEventListener("click", ()=>{
+  const d = window._lastResults;
+  if(!d) return;
+  if(uploadedTemplateBuffer) exportWithTemplate(d); else exportWithBuiltInLayout(d);
+});
+
+$("exportExcelBtn").addEventListener("click", ()=>{
+  const d = window._lastResults;
+  if(!d) return;
+  const L = UI[currentLang];
+  const wb = XLSX.utils.book_new();
+  const main = [
+    [L.repInputData,""],
+    [L.lblTag, d.tag || L.untitledTag],
+    [L.lblSysType, d.sysType==='standard'?L.sysStandard:(d.sysType==='voice'?L.sysVoice:L.sysMns)],
+    [L.lblCodeEd, d.codeEd==="post2022"?"2022+":"2019 & earlier"],
+    [L.lblGenOnShort, d.genOn?L.yes:L.no], [L.lblStatSbTime, d.Tsb],
+    [L.lblStatAlTime, fmt(d.Tal*60,0)], [L.lblMarginShort, d.marginPct],
+    ["",""], [L.repResults,""],
+    [L.gaugeLbl, fmt(d.reqAh,2)], [L.lblStatRecAh, d.recAh],
+    [L.lblStatFactor, fmt(d.factor,2)], [L.lblStatSbTotal, fmt(d.totalSbA*1000,0)],
+    [L.lblStatAlTotal, fmt(d.totalAlA*1000,0)],
+    ["",""], [L.disclaimerLbl, L.disclaimerBody]
+  ];
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(main), "Battery Sizing");
+
+  const devs = [[L.thDevLabel, L.thDevQty, L.thDevSb, L.thDevAl, L.thDevSbTotal, L.thDevAlTotal]];
+  d.rows.forEach(r=>devs.push([r.name, r.qty, fmt(r.sb,2), fmt(r.al,2), fmt(r.sbTotal,1), fmt(r.alTotal,1)]));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(devs), "Device Loads");
+
+  if($("includeLedger").checked){
+    const led = [["#","Formula","Note"]];
+    buildLedgerSteps(d).forEach(s=>{
+      led.push([String(s.num).padStart(2,'0')+" — "+s.title,"",""]);
+      s.formula.split("\n").forEach(l=>{ if(l.trim()!=="") led.push(["", l, ""]); });
+      led.push(["","",s.note]); led.push(["","",""]);
+    });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(led), "Calculation Ledger");
+  }
+  XLSX.writeFile(wb, "fire_alarm_battery_calc.xlsx");
+});
+
+/* ===================== i18n ===================== */
+const UI = {
+  en: {
+    titleH1:"Fire Alarm Battery Sizing", titleSub:"Secondary (standby) power calculation — NFPA 72 §10.6.7.2",
+    lblDwg:"Dwg No.", lblScale:"Scale", lblMethod:"Method", lblRev:"Rev",
+    topDiscB:"Preliminary sizing aid only.",
+    topDiscTxt:"This tool applies the standard NFPA 72 §10.6.7.2 battery formula and the code-edition correction factor (1.20 pre-2022 / 1.25 for 2022 and later, per §10.6.7.2.14) that you select. It does not include a manufacturer device database — enter standby/alarm current per device from the actual datasheet. Final battery calculations must be documented and submitted per the AHJ's requirements and reviewed by a qualified fire alarm professional against the specific control panel/power supply manufacturer's own battery calculation worksheet.",
+    loadExampleTxt:"Load example",
+    step1Title:"System &amp; Code Basis", step1Small:"Tag, system type, code edition, standby time",
+    lblTag:"Project / panel tag", lblSysType:"System type",
+    sysStandard:"Standard (24h standby + 5 min alarm)", sysVoice:"Voice/EVACS (24h standby + 15 min alarm)", sysMns:"Mass Notification (MNS) (24h standby + 15 min alarm)",
+    lblCodeEd:"Code edition", lblGenOn:"Qualified emergency generator present (standby time may reduce to 4h)", lblGenOnShort:"Emergency generator present",
+    hintStep1:"Per NFPA 72 §10.6.7.2.1, standard systems use 24h standby + 5 min alarm; voice/EVACS and mass notification systems (§10.6.7.2.1.2 / §10.6.7.2.3–2.4) use 24h standby + 15 min alarm. The correction factor changed from 1.20 to 1.25 starting with the 2022 edition (§10.6.7.2.14) — confirm which edition your AHJ has adopted. A qualified emergency generator meeting the applicable requirements may permit reducing standby time to 4h — verify this against the current edition and AHJ before relying on it.",
+    step2Title:"Device Loads", step2Small:"Standby &amp; alarm current per device group",
+    lblDevName:"Label", lblDevQty:"Qty", lblDevSb:"Standby current, each (mA)", lblDevAl:"Alarm current, each (mA)", addDeviceTxt:"Add device group",
+    hintStep2:"Only include loads that do not automatically disconnect when the system switches to secondary (battery) power. Use the actual standby and alarm current values from each device's listed datasheet, not a generic estimate, for a real submittal.",
+    noDevices:"No device groups added yet — enter a label and currents above, then click Add device group.",
+    defaultDeviceName:"Device group", standbyLbl:"Standby", alarmLbl:"Alarm", eachLbl:"each",
+    step3Title:"Margins &amp; Charger Check", optionalTag3:"(optional)", step3Small:"Extra derating and 48-hour recharge verification",
+    lblMargin:"Additional margin (%, aging/temperature)", lblMarginShort:"Additional margin", lblChargerA:"Charger rated recharge current (A)",
+    hintStep3:"An additional margin can be added for battery aging or low-temperature derating beyond the standard 1.20/1.25 factor, if your design basis calls for it. The recharge check is an approximate screening calculation only (assumes ~80% charge-acceptance efficiency) — always verify actual recharge time against the specific charger/power-supply manufacturer's published recharge curve, since NFPA 72 requires the system to recharge a fully discharged battery to full capacity within 48 hours.",
+    resultTitle:"Result — Required Battery", gaugeLbl:"Ah required",
+    lblStatRecAh:"Recommended battery size", lblStatFactor:"Correction factor applied",
+    lblStatSbTotal:"Total standby current", lblStatAlTotal:"Total alarm current",
+    lblStatSbTime:"Standby time used", lblStatAlTime:"Alarm time used",
+    noDevTitle:"No device loads entered.", noDevBody:"Add at least one device group in Step 2 to size the battery.",
+    recTitle:"Recommended battery size found.", recBody:"{ah} Ah covers the {req} Ah required by the calculation — round up from the raw requirement to the nearest common SLA battery size.",
+    ulTitle:"UL 1989 / UL 2054 listing required (2022+).", ulBody:"Under NFPA 72 2022 and later editions, the battery used must be UL 1989 or UL 2054 listed — a generic, unlisted sealed lead-acid battery is not code-compliant for new installations under this edition. Confirm the selected battery's listing before specifying it.",
+    rechargeOkTitle:"Recharge time within 48h (approximate).", rechargeOkBody:"Estimated recharge time ≈ {hrs} h, within the 48-hour requirement — verify against the actual charger manufacturer's recharge curve.",
+    rechargeFailTitle:"Recharge time may exceed 48h (approximate) — review.", rechargeFailBody:"Estimated recharge time ≈ {hrs} h, which is above the 48-hour requirement at this approximate efficiency assumption — a higher-output charger or larger power supply may be needed. Verify against the actual manufacturer's recharge specification.",
+    lblIncludeLedger:"Include Calculation Ledger in report", lblIncludeLogo:"Include OhmZone brand mark in report",
+    printBtnLabel:"🖨 Print / Save as PDF", exportWordLabel:"📄 Export study (Word)", exportBtnLabel:"📊 Export study (Excel)",
+    lblUploadTemplate:"Report template (.docx, optional)",
+    hintUploadTemplate:"Upload your firm's Word template to brand exports with it. The template must contain plain-text placeholders exactly as shown: {tag} {date} {sysType} {codeEd} {factor} {sbTime} {alTime} {sbTotal} {alTotal} {reqAh} {recAh}. Type each tag in one uninterrupted go — Word's autocorrect/spellcheck can split a tag across internal runs.",
+    templateLoadedMsg:"Template loaded: {name}", templateErrorMsg:"Could not read this file as a Word template — using the built-in layout instead.",
+    templateNoTagsFound:"no OhmZone placeholders found in this document.", templateTagsFound:"{n} of {total} placeholders found.",
+    templateTagsMissing:"Not present (will be left out): {list}.", templateTagsUnknown:"Unrecognised tags that will render as «name»: {list}.", templateExportOk:"Template export completed.",
+    ledgerTitle:"Calculation Ledger", ledgerTag:"clause-by-clause",
+    ls1Title:"Device loads and current totals", ls1Note:"Only loads that remain connected on secondary (battery) power are summed. Standby and alarm currents are totaled separately since they apply for different durations.",
+    totalSbLbl:"Total standby current", totalAlLbl:"Total alarm current", noDevicesShort:"(no device loads entered)",
+    ls2Title:"Time basis by system type", ls2Note:"Standard systems use 5 minutes of alarm current; voice/EVACS and mass notification systems require 15 minutes. Standby time is 24 hours unless a qualified emergency generator is present, which may permit 4 hours — confirm against the current edition and AHJ.",
+    sysTypeLbl:"System type", genNote:"reduced for qualified emergency generator — verify applicability",
+    ls3Title:"Required capacity (raw)", ls3Note:"The basic NFPA 72 §10.6.7.2 formula: standby current × standby time, plus alarm current × alarm time. An optional additional margin can be applied here for aging/temperature derating beyond the code-mandated factor.",
+    noMargin:"(no additional margin applied)",
+    ls4Title:"Code-edition correction factor", ls4Note:"NFPA 72 §10.6.7.2.14 raised the correction factor from 1.20 (2019 and earlier editions) to 1.25 starting with the 2022 edition. Confirm which edition governs your project before finalizing.",
+    ls5Title:"Standard battery size selection", ls5Note:"The calculated requirement is rounded up to the next commonly available sealed lead-acid (SLA) battery capacity. Under the 2022+ edition, the battery selected must also be UL 1989 or UL 2054 listed.",
+    reqAhLbl:"Required (calculated)", recAhLbl:"Recommended (standard size)",
+    ls6Title:"Recharge time screening (approximate)", ls6Note:"NFPA 72 requires the power supply to recharge a fully discharged battery to full capacity within 48 hours. This is an approximate screening estimate only (assumes ~80% charge-acceptance efficiency) — always verify against the specific charger/power-supply manufacturer's published recharge time table.",
+    devTableTitle:"Device Load Summary", thDevLabel:"Label", thDevQty:"Qty", thDevSb:"Standby (mA ea.)", thDevAl:"Alarm (mA ea.)", thDevSbTotal:"Standby total", thDevAlTotal:"Alarm total",
+    repInputData:"Input Data", repResults:"Results", untitledTag:"(untitled)", yes:"Yes", no:"No",
+    disclaimerLbl:"Disclaimer",
+    disclaimerBody:"Preliminary sizing aid only. Applies the standard NFPA 72 §10.6.7.2 battery formula and the code-edition correction factor you select (1.20 pre-2022 / 1.25 for 2022+, per §10.6.7.2.14). Does not include a manufacturer device database — standby/alarm currents must come from actual device datasheets. The recharge-time check is an approximate screening calculation, not a substitute for the charger manufacturer's published recharge specification. Under NFPA 72 2022 and later editions, the selected battery must be UL 1989 or UL 2054 listed. Final battery calculations must be documented and submitted per the AHJ's requirements and reviewed by a qualified fire alarm professional against the specific control panel/power supply manufacturer's own battery calculation worksheet.",
+    footerHtml:`<b>Method &amp; data notes.</b> This tool implements the standard secondary (standby) power battery calculation of <b>NFPA 72 §10.6.7.2</b>: required capacity = (standby current × standby time + alarm current × alarm time) × correction factor. Standby and alarm time durations follow <b>§10.6.7.2.1</b> (standard systems: 24h + 5 min) and <b>§10.6.7.2.1.2 / §10.6.7.2.3–2.4</b> (voice/EVACS and mass notification systems: 24h + 15 min). The correction factor follows <b>§10.6.7.2.14</b>, which raised the factor from 1.20 (2019 and earlier editions) to 1.25 starting with the 2022 edition — this tool lets you select which edition applies. A qualified emergency generator meeting applicable standby-power requirements may permit reducing the standby duration to 4 hours in some jurisdictions/editions — this is applied here as a commonly cited allowance and must be verified against the current edition and the authority having jurisdiction before use. The recommended battery size rounds the calculated requirement up to the next commonly available sealed lead-acid (SLA) capacity; under NFPA 72 2022 and later editions, the battery used must additionally be <b>UL 1989 or UL 2054 listed</b> — a generic unlisted SLA battery is not code-compliant for new installations under this edition. The optional 48-hour recharge-time screening check uses an approximate ~80% charge-acceptance efficiency assumption and is not a substitute for the specific charger or power-supply manufacturer's published recharge time table, which must be used for the actual submittal. This tool does not include a manufacturer device current/candela database — all standby and alarm current values must be entered from the actual device listings/datasheets used in the design. It does not perform voltage drop, NAC circuit loading, audibility/dB, or detector spacing calculations — those are separate modules. Preliminary planning aid only; final battery and power-supply calculations must be documented, submitted, and reviewed per the authority having jurisdiction's requirements by a qualified fire alarm professional, using the specific control panel/power supply manufacturer's own battery calculation worksheet.`
+  },
+  fr: {
+    titleH1:"Dimensionnement de batterie d'alarme incendie", titleSub:"Calcul de l'alimentation secondaire (secours) — NFPA 72 §10.6.7.2",
+    lblDwg:"N° dessin", lblScale:"Échelle", lblMethod:"Méthode", lblRev:"Rév.",
+    topDiscB:"Aide au dimensionnement préliminaire seulement.",
+    topDiscTxt:"Cet outil applique la formule standard de batterie de la NFPA 72 §10.6.7.2 et le facteur de correction selon l'édition (1,20 avant 2022 / 1,25 pour 2022 et après, selon §10.6.7.2.14) que vous sélectionnez. Il n'inclut pas de base de données de dispositifs de fabricant — entrez le courant de veille/alarme par dispositif à partir de la fiche technique réelle. Les calculs finaux de batterie doivent être documentés et soumis selon les exigences de l'AHJ et révisés par un professionnel qualifié en alarme incendie selon la feuille de calcul de batterie propre au fabricant du panneau de contrôle/de l'alimentation.",
+    loadExampleTxt:"Charger l'exemple",
+    step1Title:"Système et base normative", step1Small:"Repère, type de système, édition du code, temps de veille",
+    lblTag:"Repère du projet / panneau", lblSysType:"Type de système",
+    sysStandard:"Standard (veille 24h + alarme 5 min)", sysVoice:"Voix/EVACS (veille 24h + alarme 15 min)", sysMns:"Notification de masse (MNS) (veille 24h + alarme 15 min)",
+    lblCodeEd:"Édition du code", lblGenOn:"Génératrice d'urgence qualifiée présente (le temps de veille peut être réduit à 4h)", lblGenOnShort:"Génératrice d'urgence présente",
+    hintStep1:"Selon la NFPA 72 §10.6.7.2.1, les systèmes standards utilisent 24h de veille + 5 min d'alarme; les systèmes voix/EVACS et de notification de masse (§10.6.7.2.1.2 / §10.6.7.2.3–2.4) utilisent 24h de veille + 15 min d'alarme. Le facteur de correction est passé de 1,20 à 1,25 à partir de l'édition 2022 (§10.6.7.2.14) — confirmez quelle édition votre AHJ a adoptée. Une génératrice d'urgence qualifiée répondant aux exigences applicables peut permettre de réduire le temps de veille à 4h — vérifiez ceci auprès de l'édition en vigueur et de l'AHJ avant de vous y fier.",
+    step2Title:"Charges des dispositifs", step2Small:"Courant de veille et d'alarme par groupe de dispositifs",
+    lblDevName:"Repère", lblDevQty:"Qté", lblDevSb:"Courant de veille, chacun (mA)", lblDevAl:"Courant d'alarme, chacun (mA)", addDeviceTxt:"Ajouter un groupe de dispositifs",
+    hintStep2:"N'incluez que les charges qui ne se déconnectent pas automatiquement lorsque le système passe à l'alimentation secondaire (batterie). Utilisez les valeurs réelles de courant de veille et d'alarme de la fiche technique homologuée de chaque dispositif, non une estimation générique, pour une soumission réelle.",
+    noDevices:"Aucun groupe de dispositifs ajouté — entrez un repère et des courants ci-dessus, puis cliquez sur Ajouter un groupe de dispositifs.",
+    defaultDeviceName:"Groupe de dispositifs", standbyLbl:"Veille", alarmLbl:"Alarme", eachLbl:"chacun",
+    step3Title:"Marges et vérification du chargeur", optionalTag3:"(facultatif)", step3Small:"Déclassement additionnel et vérification de recharge de 48 heures",
+    lblMargin:"Marge additionnelle (%, vieillissement/température)", lblMarginShort:"Marge additionnelle", lblChargerA:"Courant de recharge nominal du chargeur (A)",
+    hintStep3:"Une marge additionnelle peut être ajoutée pour le vieillissement de la batterie ou le déclassement à basse température, au-delà du facteur standard 1,20/1,25, si votre base de conception l'exige. La vérification de recharge est un calcul d'évaluation approximatif seulement (suppose une efficacité d'acceptation de charge d'environ 80 %) — vérifiez toujours le temps de recharge réel auprès de la courbe de recharge publiée du fabricant du chargeur/de l'alimentation spécifique, puisque la NFPA 72 exige que le système recharge une batterie complètement déchargée à pleine capacité en 48 heures.",
+    resultTitle:"Résultat — Batterie requise", gaugeLbl:"Ah requis",
+    lblStatRecAh:"Calibre de batterie recommandé", lblStatFactor:"Facteur de correction appliqué",
+    lblStatSbTotal:"Courant de veille total", lblStatAlTotal:"Courant d'alarme total",
+    lblStatSbTime:"Temps de veille utilisé", lblStatAlTime:"Temps d'alarme utilisé",
+    noDevTitle:"Aucune charge de dispositif saisie.", noDevBody:"Ajoutez au moins un groupe de dispositifs à l'étape 2 pour dimensionner la batterie.",
+    recTitle:"Calibre de batterie recommandé trouvé.", recBody:"{ah} Ah couvre les {req} Ah requis par le calcul — arrondi vers le haut à partir de l'exigence brute au calibre de batterie SLA courant le plus proche.",
+    ulTitle:"Homologation UL 1989 / UL 2054 requise (2022+).", ulBody:"Selon les éditions 2022 et ultérieures de la NFPA 72, la batterie utilisée doit être homologuée UL 1989 ou UL 2054 — une batterie au plomb-acide scellée générique non homologuée n'est pas conforme au code pour les nouvelles installations sous cette édition. Confirmez l'homologation de la batterie sélectionnée avant de la spécifier.",
+    rechargeOkTitle:"Temps de recharge dans les 48h (approximatif).", rechargeOkBody:"Temps de recharge estimé ≈ {hrs} h, dans l'exigence de 48 heures — vérifiez auprès de la courbe de recharge réelle du fabricant du chargeur.",
+    rechargeFailTitle:"Le temps de recharge pourrait dépasser 48h (approximatif) — à revoir.", rechargeFailBody:"Temps de recharge estimé ≈ {hrs} h, ce qui dépasse l'exigence de 48 heures selon cette hypothèse d'efficacité approximative — un chargeur à sortie plus élevée ou une alimentation plus grande pourrait être nécessaire. Vérifiez auprès de la spécification de recharge réelle du fabricant.",
+    lblIncludeLedger:"Inclure le registre de calcul dans le rapport", lblIncludeLogo:"Inclure la marque OhmZone dans le rapport",
+    printBtnLabel:"🖨 Imprimer / Enregistrer en PDF", exportWordLabel:"📄 Exporter l'étude (Word)", exportBtnLabel:"📊 Exporter l'étude (Excel)",
+    lblUploadTemplate:"Modèle de rapport (.docx, facultatif)",
+    hintUploadTemplate:"Téléversez le modèle Word de votre entreprise pour habiller les exports. Le modèle doit contenir des espaces réservés en texte brut exactement comme indiqué : {tag} {date} {sysType} {codeEd} {factor} {sbTime} {alTime} {sbTotal} {alTotal} {reqAh} {recAh}. Saisissez chaque balise d'un seul coup — le correcteur/la vérification orthographique de Word peut diviser une balise.",
+    templateLoadedMsg:"Modèle chargé : {name}", templateErrorMsg:"Impossible de lire ce fichier comme modèle Word — utilisation de la mise en page intégrée à la place.",
+    templateNoTagsFound:"aucun espace réservé OhmZone trouvé dans ce document.", templateTagsFound:"{n} espaces réservés sur {total} trouvés.",
+    templateTagsMissing:"Absents (seront omis) : {list}.", templateTagsUnknown:"Balises non reconnues qui s'afficheront comme «nom» : {list}.", templateExportOk:"Export du modèle terminé.",
+    ledgerTitle:"Registre de calcul", ledgerTag:"article par article",
+    ls1Title:"Charges des dispositifs et totaux de courant", ls1Note:"Seules les charges qui demeurent connectées sur l'alimentation secondaire (batterie) sont additionnées. Les courants de veille et d'alarme sont totalisés séparément puisqu'ils s'appliquent pour des durées différentes.",
+    totalSbLbl:"Courant de veille total", totalAlLbl:"Courant d'alarme total", noDevicesShort:"(aucune charge de dispositif saisie)",
+    ls2Title:"Base de temps selon le type de système", ls2Note:"Les systèmes standards utilisent 5 minutes de courant d'alarme; les systèmes voix/EVACS et de notification de masse exigent 15 minutes. Le temps de veille est de 24 heures sauf en présence d'une génératrice d'urgence qualifiée, qui peut permettre 4 heures — confirmez auprès de l'édition en vigueur et de l'AHJ.",
+    sysTypeLbl:"Type de système", genNote:"réduit pour génératrice d'urgence qualifiée — vérifier l'applicabilité",
+    ls3Title:"Capacité requise (brute)", ls3Note:"La formule de base de la NFPA 72 §10.6.7.2 : courant de veille × temps de veille, plus courant d'alarme × temps d'alarme. Une marge additionnelle facultative peut être appliquée ici pour le déclassement dû au vieillissement/à la température, au-delà du facteur imposé par le code.",
+    noMargin:"(aucune marge additionnelle appliquée)",
+    ls4Title:"Facteur de correction selon l'édition du code", ls4Note:"La NFPA 72 §10.6.7.2.14 a augmenté le facteur de correction de 1,20 (éditions 2019 et antérieures) à 1,25 à partir de l'édition 2022. Confirmez quelle édition régit votre projet avant de finaliser.",
+    ls5Title:"Sélection du calibre de batterie standard", ls5Note:"L'exigence calculée est arrondie au calibre de batterie au plomb-acide scellée (SLA) couramment disponible supérieur. Selon l'édition 2022+, la batterie sélectionnée doit également être homologuée UL 1989 ou UL 2054.",
+    reqAhLbl:"Requis (calculé)", recAhLbl:"Recommandé (calibre standard)",
+    ls6Title:"Évaluation du temps de recharge (approximatif)", ls6Note:"La NFPA 72 exige que l'alimentation recharge une batterie complètement déchargée à pleine capacité en 48 heures. Ceci est une estimation d'évaluation approximative seulement (suppose une efficacité d'acceptation de charge d'environ 80 %) — vérifiez toujours auprès du tableau de temps de recharge publié du fabricant du chargeur/de l'alimentation spécifique.",
+    devTableTitle:"Sommaire des charges de dispositifs", thDevLabel:"Repère", thDevQty:"Qté", thDevSb:"Veille (mA ch.)", thDevAl:"Alarme (mA ch.)", thDevSbTotal:"Total veille", thDevAlTotal:"Total alarme",
+    repInputData:"Données d'entrée", repResults:"Résultats", untitledTag:"(sans titre)", yes:"Oui", no:"Non",
+    disclaimerLbl:"Avis",
+    disclaimerBody:"Aide au dimensionnement préliminaire seulement. Applique la formule standard de batterie de la NFPA 72 §10.6.7.2 et le facteur de correction selon l'édition sélectionnée (1,20 avant 2022 / 1,25 pour 2022+, selon §10.6.7.2.14). N'inclut pas de base de données de dispositifs de fabricant — les courants de veille/alarme doivent provenir des fiches techniques réelles des dispositifs. La vérification du temps de recharge est un calcul d'évaluation approximatif, non un substitut à la spécification de recharge publiée du fabricant du chargeur. Selon les éditions 2022 et ultérieures de la NFPA 72, la batterie sélectionnée doit être homologuée UL 1989 ou UL 2054. Les calculs finaux de batterie doivent être documentés et soumis selon les exigences de l'AHJ et révisés par un professionnel qualifié en alarme incendie selon la feuille de calcul de batterie propre au fabricant du panneau de contrôle/de l'alimentation.",
+    footerHtml:`<b>Notes sur la méthode et les données.</b> Cet outil met en œuvre le calcul standard de batterie d'alimentation secondaire (de secours) de la <b>NFPA 72 §10.6.7.2</b> : capacité requise = (courant de veille × temps de veille + courant d'alarme × temps d'alarme) × facteur de correction. Les durées de veille et d'alarme suivent <b>§10.6.7.2.1</b> (systèmes standards : 24h + 5 min) et <b>§10.6.7.2.1.2 / §10.6.7.2.3–2.4</b> (systèmes voix/EVACS et de notification de masse : 24h + 15 min). Le facteur de correction suit <b>§10.6.7.2.14</b>, qui a augmenté le facteur de 1,20 (éditions 2019 et antérieures) à 1,25 à partir de l'édition 2022 — cet outil vous permet de sélectionner l'édition applicable. Une génératrice d'urgence qualifiée répondant aux exigences d'alimentation de secours applicables peut permettre de réduire la durée de veille à 4 heures dans certaines juridictions/éditions — ceci est appliqué ici comme une allocation couramment citée et doit être vérifié auprès de l'édition en vigueur et de l'autorité compétente avant utilisation. Le calibre de batterie recommandé arrondit l'exigence calculée au calibre au plomb-acide scellée (SLA) couramment disponible supérieur; selon les éditions 2022 et ultérieures de la NFPA 72, la batterie utilisée doit également être <b>homologuée UL 1989 ou UL 2054</b> — une batterie SLA générique non homologuée n'est pas conforme au code pour les nouvelles installations sous cette édition. La vérification facultative du temps de recharge de 48 heures utilise une hypothèse d'efficacité d'acceptation de charge d'environ 80 % et ne remplace pas le tableau de temps de recharge publié du fabricant du chargeur ou de l'alimentation spécifique, qui doit être utilisé pour la soumission réelle. Cet outil n'inclut pas de base de données de courant/candela de dispositifs de fabricant — toutes les valeurs de courant de veille et d'alarme doivent être saisies à partir des listages/fiches techniques réels des dispositifs utilisés dans la conception. Il n'effectue pas les calculs de chute de tension, de charge de circuit NAC, d'audibilité/dB, ni d'espacement des détecteurs — ce sont des modules séparés. Aide à la planification préliminaire seulement; les calculs finaux de batterie et d'alimentation doivent être documentés, soumis et révisés selon les exigences de l'autorité compétente par un professionnel qualifié en alarme incendie, en utilisant la feuille de calcul de batterie propre au fabricant du panneau de contrôle/de l'alimentation.`
+  }
+};
+
+function applyStaticI18n(){
+  const L = UI[currentLang];
+  $('titleH1').textContent=L.titleH1; $('titleSub').textContent=L.titleSub;
+  $('lblDwg').textContent=L.lblDwg; $('lblScale').textContent=L.lblScale; $('lblMethod').textContent=L.lblMethod; $('lblRev').textContent=L.lblRev;
+  $('topDiscB').textContent=L.topDiscB; $('topDiscTxt').textContent=L.topDiscTxt;
+  $('loadExampleTxt').textContent=L.loadExampleTxt;
+  $('step1Title').childNodes[0].innerHTML=L.step1Title+' '; $('step1Small').textContent=L.step1Small;
+  $('lblTag').textContent=L.lblTag; $('lblSysType').textContent=L.lblSysType;
+  $('sysType').options[0].textContent=L.sysStandard; $('sysType').options[1].textContent=L.sysVoice; $('sysType').options[2].textContent=L.sysMns;
+  $('lblCodeEd').textContent=L.lblCodeEd; $('lblGenOn').textContent=L.lblGenOn; $('hintStep1').innerHTML=L.hintStep1;
+  $('step2Title').childNodes[0].textContent=L.step2Title+' '; $('step2Small').textContent=L.step2Small;
+  $('lblDevName').textContent=L.lblDevName; $('lblDevQty').textContent=L.lblDevQty;
+  $('lblDevSb').textContent=L.lblDevSb; $('lblDevAl').textContent=L.lblDevAl; $('addDeviceTxt').textContent=L.addDeviceTxt; $('hintStep2').textContent=L.hintStep2;
+  $('step3Title').childNodes[0].innerHTML=L.step3Title+' '; $('optionalTag3').textContent=L.optionalTag3; $('step3Small').textContent=L.step3Small;
+  $('lblMargin').textContent=L.lblMargin; $('lblChargerA').textContent=L.lblChargerA; $('hintStep3').innerHTML=L.hintStep3;
+  $('resultTitle').textContent=L.resultTitle; $('gaugeLbl').textContent=L.gaugeLbl;
+  $('lblStatRecAh').textContent=L.lblStatRecAh; $('lblStatFactor').textContent=L.lblStatFactor;
+  $('lblStatSbTotal').textContent=L.lblStatSbTotal; $('lblStatAlTotal').textContent=L.lblStatAlTotal;
+  $('lblStatSbTime').textContent=L.lblStatSbTime; $('lblStatAlTime').textContent=L.lblStatAlTime;
+  $('lblIncludeLedger').textContent=L.lblIncludeLedger; $('lblIncludeLogo').textContent=L.lblIncludeLogo;
+  $('printBtn').textContent=L.printBtnLabel; $('exportWordBtn').textContent=L.exportWordLabel; $('exportExcelBtn').textContent=L.exportBtnLabel;
+  $('lblUploadTemplate').textContent=L.lblUploadTemplate; $('hintUploadTemplate').textContent=L.hintUploadTemplate;
+  $('ledgerTitle').textContent=L.ledgerTitle; $('ledgerTag').textContent=L.ledgerTag;
+  $('devTableTitle').textContent=L.devTableTitle; $('thDevLabel').textContent=L.thDevLabel; $('thDevQty').textContent=L.thDevQty;
+  $('thDevSb').textContent=L.thDevSb; $('thDevAl').textContent=L.thDevAl; $('thDevSbTotal').textContent=L.thDevSbTotal; $('thDevAlTotal').textContent=L.thDevAlTotal;
+  $('footerNote').innerHTML=L.footerHtml;
+  renderDeviceList();
+}
+
+function setLang(lang){
+  currentLang = lang;
+  $('btn-en').classList.toggle('active', lang==='en');
+  $('btn-fr').classList.toggle('active', lang==='fr');
+  document.documentElement.lang = lang;
+  try { localStorage.setItem('ohmzone-lang', lang); } catch(e) {}
+  applyStaticI18n();
+  recalc();
+}
+(function(){
+  let saved='en';
+  try{ saved=localStorage.getItem('ohmzone-lang')||'en'; }catch(e){}
+  setLang(saved);
+})();
+</script>
+<div style="position:fixed;bottom:6px;right:12px;z-index:9999;font-family:monospace;font-size:10px;color:#5c7592;opacity:0.75;">© 2026 OhmZone. All rights reserved.</div>
+</body>
+</html>

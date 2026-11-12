@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Voltage Drop Calculator — CSA C22.1</title>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3887318872951674" crossorigin="anonymous"></script>
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icon-16.png">
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="OhmZone">
+<meta name="theme-color" content="#0a1728">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --navy-950:#0B1F33;
+    --blue:#3b9eff;
+    --blue-soft:#1a3a5c;
+    --navy-900:#0F2942;
+    --navy-800:#173A5C;
+    --navy-700:#254C74;
+    --paper:#0a1120;
+    --paper-card:#111a2a;
+    --line:#233350;
+    --ink:#e7edf7;
+    --ink-soft:#8fa8c2;
+    --copper:#d9853a;
+    --copper-soft:#e8b57d;
+    --copper-tint:#2e2015;
+    --aluminum:#a8b4c4;
+    --good:#43c17e;
+    --warn:#e3a83b;
+    --bad:#ff5d77;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    font-size:15px;
+    line-height:1.5;
+  }
+  h1,h2,h3,h4{font-family:'Space Grotesk',sans-serif;margin:0 0 8px 0;color:var(--ink);letter-spacing:-0.01em;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  .app{display:flex;min-height:100vh;}
+
+  /* ---- Sidebar ---- */
+  .sidebar{
+    width:250px;flex-shrink:0;background:var(--navy-950);color:#DCE6F0;
+    padding:28px 20px;display:flex;flex-direction:column;gap:26px;
+  }
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand-mark{
+    width:34px;height:34px;border-radius:8px;
+    background:linear-gradient(135deg,var(--copper),var(--copper-soft));
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Space Grotesk';font-weight:700;color:var(--ink);font-size:15px;
+  }
+  .brand-text{font-family:'Space Grotesk';font-weight:600;font-size:15px;color:#fff;line-height:1.2;}
+  .brand-text span{display:block;font-family:'IBM Plex Mono';font-weight:400;font-size:10.5px;color:#8FA6BF;letter-spacing:.06em;margin-top:2px;}
+
+  .steps{display:flex;flex-direction:column;gap:2px;}
+  .step-btn{
+    display:flex;align-items:flex-start;gap:12px;padding:11px 10px;border-radius:8px;
+    cursor:pointer;border:none;background:transparent;color:#B7C6D8;text-align:left;
+    font-family:'Inter';font-size:13.5px;transition:background .15s ease;
+  }
+  .step-btn:hover{background:var(--navy-900);}
+  .step-btn.active{background:var(--blue);color:#04101c;}
+  .step-btn.done .step-num{background:var(--blue);color:#04101c;}
+  .step-num{
+    width:22px;height:22px;border-radius:50%;background:var(--navy-800);color:#B7C6D8;
+    display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono';font-size:11px;flex-shrink:0;margin-top:1px;
+  }
+  .step-btn.active .step-num{background:var(--blue);color:#04101c;}
+  .step-label b{display:block;font-weight:600;}
+  .step-label small{display:block;color:#7C90A8;font-size:11.5px;margin-top:1px;}
+  .step-btn.active .step-label small{color:#B7C6D8;}
+
+  .sidebar-foot{margin-top:auto;font-size:11px;color:#5C7189;font-family:'IBM Plex Mono';line-height:1.6;border-top:1px solid var(--navy-800);padding-top:14px;}
+
+  /* ---- Main ---- */
+  .main{flex:1;padding:36px 44px 80px;max-width:980px;}
+  .panel{display:none;}
+  .panel.active{display:block;animation:fade .25s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+
+  .eyebrow{font-family:'IBM Plex Mono';font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--copper);margin-bottom:6px;font-weight:600;}
+  .panel-head{margin-bottom:28px;}
+  .panel-head p{color:var(--ink-soft);max-width:640px;margin-top:6px;}
+
+  .card{background:var(--paper-card);border:1px solid var(--line);border-radius:var(--radius);padding:22px 24px;margin-bottom:18px;}
+  .card h3{font-size:15.5px;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+
+  label.field{display:flex;flex-direction:column;gap:6px;font-size:12.5px;color:var(--ink-soft);font-weight:600;margin-bottom:14px;}
+  input,select{
+    font-family:'IBM Plex Mono';font-size:14px;color:var(--ink);
+    border:1px solid var(--line);border-radius:7px;padding:9px 11px;background:var(--paper-card);
+  }
+  input:focus,select:focus{outline:2px solid var(--copper-soft);outline-offset:1px;border-color:var(--copper);}
+  select{font-family:'Inter';}
+
+  .choice-row{display:flex;gap:10px;flex-wrap:wrap;}
+  .choice{
+    border:1.5px solid var(--line);border-radius:8px;padding:10px 16px;cursor:pointer;
+    font-size:13.5px;font-weight:600;color:var(--ink-soft);background:var(--paper-card);transition:.15s;
+  }
+  .choice:hover{border-color:var(--copper-soft);}
+  .choice.selected{border-color:var(--blue);background:var(--blue-soft);color:var(--ink);}
+
+  .mode-card{
+    border:1.5px solid var(--line);border-radius:var(--radius);padding:20px;cursor:pointer;background:var(--paper-card);
+    display:flex;flex-direction:column;gap:8px;transition:.15s;
+  }
+  .mode-card:hover{border-color:var(--copper-soft);}
+  .mode-card.selected{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-soft);}
+  .mode-card .tag{font-family:'IBM Plex Mono';font-size:11px;color:var(--copper);font-weight:600;letter-spacing:.04em;}
+  .mode-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+
+  .btn{
+    font-family:'Inter';font-weight:600;font-size:13.5px;border-radius:8px;padding:11px 20px;
+    border:1.5px solid var(--blue);background:var(--blue);color:#04101c;cursor:pointer;
+  }
+  .btn.secondary{background:transparent;color:var(--ink);}
+  .btn.copper{background:var(--copper);border-color:var(--copper);}
+  .btn:disabled{opacity:.4;cursor:not-allowed;}
+  .btn-row{display:flex;gap:12px;margin-top:26px;}
+
+  table{width:100%;border-collapse:collapse;font-family:'IBM Plex Mono';font-size:12.5px;}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);}
+  th{color:var(--ink-soft);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.03em;}
+  tr.hl{background:var(--copper-tint);}
+  tr.hl td{font-weight:600;}
+  .table-wrap{max-height:340px;overflow:auto;border:1px solid var(--line);border-radius:8px;}
+
+  .callout{border-left:3px solid var(--copper);background:var(--copper-tint);padding:14px 16px;border-radius:0 8px 8px 0;font-size:13.5px;color:var(--ink);margin:16px 0;}
+  .callout.info{border-color:var(--navy-700);background:#E4EAF1;}
+  .callout.bad{border-color:var(--bad);background:#F6DEDA;}
+  .callout.good{border-color:var(--good);background:#DCF0E7;}
+
+  /* Gauge */
+  .gauge-wrap{display:flex;gap:28px;align-items:center;flex-wrap:wrap;}
+  .gauge-numbers{display:flex;flex-direction:column;gap:10px;}
+  .num-block b{display:block;font-family:'Space Grotesk';font-size:26px;color:var(--ink);}
+  .num-block span{font-size:11.5px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;}
+
+  .result-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
+  .stat{background:var(--paper-card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;}
+  .stat span{font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;}
+  .stat b{display:block;font-family:'Space Grotesk';font-size:22px;margin-top:4px;color:var(--ink);}
+  .stat b.pass{color:var(--good);}
+  .stat b.fail{color:var(--bad);}
+
+  .export-row{display:flex;gap:12px;margin-top:22px;flex-wrap:wrap;}
+  .export-btn{
+    display:flex;align-items:center;gap:9px;border:1.5px solid var(--navy-950);border-radius:8px;
+    padding:11px 18px;background:var(--paper-card);cursor:pointer;font-weight:600;font-size:13.5px;color:var(--ink);
+  }
+  .export-btn:hover{background:var(--blue);color:#04101c;}
+
+  .report-preview{background:var(--paper-card);border:1px solid var(--line);border-radius:var(--radius);padding:34px;margin-top:22px;}
+  .report-preview h2{font-size:19px;border-bottom:2px solid var(--copper);padding-bottom:10px;margin-bottom:14px;}
+  .report-preview .sub{font-family:'IBM Plex Mono';font-size:11px;color:var(--ink-soft);margin-bottom:22px;}
+  .report-section{margin-bottom:26px;}
+  .report-section h4{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--copper);border-bottom:1px solid var(--line);padding-bottom:6px;margin-bottom:10px;}
+  .kv{display:grid;grid-template-columns:1fr 1fr;gap:6px 20px;font-size:13px;}
+  .kv div{display:flex;justify-content:space-between;border-bottom:1px dotted var(--line);padding:4px 0;}
+  .kv div span:last-child{font-family:'IBM Plex Mono';font-weight:600;color:var(--ink);}
+
+  .db-toolbar{display:flex;gap:10px;margin-bottom:12px;align-items:center;flex-wrap:wrap;}
+  .pill{font-family:'IBM Plex Mono';font-size:11px;background:var(--blue);color:#04101c;padding:4px 10px;border-radius:20px;}
+
+  @media print{
+    .sidebar,.no-print{display:none !important;}
+    .main{padding:0;max-width:none;}
+    .panel{display:none !important;}
+    #printArea{display:block !important;}
+    .report-preview{border:none;padding:0;box-shadow:none;}
+    .report-page{page-break-after:always;}
+    /* Printed reports stay light-on-white regardless of the on-screen dark
+       theme — this is what actually goes on paper, not a screen surface. */
+    html,body{background:#fff !important;}
+    .report-page, .report-preview, #printArea{background:#fff !important; color:#12233A !important;}
+    .report-page h1,.report-page h2,.report-page h3,.report-page h4{color:#0B1F33 !important;}
+    .report-page .kv div span:last-child{color:#0B1F33 !important;}
+    .report-page .callout{background:#F6E3CE !important; color:#0B1F33 !important;}
+    .report-page .sub{color:#4C6079 !important;}
+  }
+  #printArea{display:none;}
+
+  @media (max-width:780px){
+    .app{flex-direction:column;min-height:0;}
+    .sidebar{width:100%;flex-shrink:1;padding:16px 16px 14px;gap:14px;}
+    .steps{flex-direction:row;flex-wrap:wrap;gap:6px;}
+    .step-btn{flex:1 1 auto;padding:8px 9px;font-size:12px;gap:8px;}
+    .step-label small{display:none;}
+    .sidebar-foot{display:none;}
+    .main{padding:18px 14px 60px;max-width:none;}
+    .grid2,.grid3,.mode-grid{grid-template-columns:1fr;gap:10px;}
+    .result-summary{grid-template-columns:repeat(2,1fr);gap:10px;}
+    .card{padding:16px;}
+    .kv{grid-template-columns:1fr;gap:4px 0;}
+  }
+
+  .lang-switch{display:flex;align-items:center;background:var(--navy-900);border:1px solid var(--navy-800);border-radius:16px;padding:3px;gap:2px;font-family:'IBM Plex Mono';font-size:11px;}
+  .lang-switch button{border:none;background:transparent;color:#B7C6D8;padding:5px 12px;border-radius:13px;cursor:pointer;font-family:inherit;font-size:inherit;}
+  .lang-switch button.active{background:var(--blue);color:#04101c;font-weight:700;}
+  .home-link{font-family:'IBM Plex Mono';font-size:11px;color:#7C90A8;text-decoration:none;border-bottom:1px dotted #7C90A8;}
+  .home-link:hover{color:var(--copper-soft);}
+  .brand-row{display:flex;align-items:center;justify-content:space-between;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar no-print">
+    <div class="brand-row">
+      <div class="brand">
+        <div class="brand-mark">Vd</div>
+        <div class="brand-text" id="brandText">Voltage Drop Studio
+          <span>CSA C22.1 · CEC PART I</span>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+      <a class="home-link no-print" href="index.html">← OhmZone</a>
+      <div class="lang-switch no-print" role="group" aria-label="Language">
+        <button type="button" id="btn-en" class="active" onclick="setLang('en')">EN</button>
+        <button type="button" id="btn-fr" onclick="setLang('fr')">FR</button>
+      </div>
+    </div>
+    <div class="steps" id="stepNav"></div>
+    <div class="sidebar-foot" id="sidebarFoot">
+      Reference values are compiled for engineering estimation. Confirm against the current CSA C22.1 tables and manufacturer datasheets before final design.
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- STEP 1: CSA INTRO -->
+    <div class="panel" id="panel-0">
+      <div class="panel-head">
+        <div class="eyebrow" id="p0-eyebrow">01 · Reference</div>
+        <h1 id="p0-h1">Voltage drop under CSA C22.1</h1>
+        <p id="p0-intro">This page opens every generated report. It sets out why voltage drop is checked, and the formula this tool uses.</p>
+      </div>
+
+      <div class="card">
+        <h3 id="p0-h3a">Why it's checked</h3>
+        <p id="p0-pa">Excess voltage drop starves connected equipment of the voltage it was designed for — motors run hot and lose torque, lighting dims, electronic loads misbehave, and heating elements under-perform. CSA C22.1 (the Canadian Electrical Code, Part I) addresses this through Rule 8-102 and the associated Appendix B note.</p>
+        <div class="callout info" id="p0-callout"><b id="p0-callout-b">Appendix B guidance to Rule 8-102 (informative, not a mandatory rule):</b> <span id="p0-callout-rest">voltage drop should not exceed <b>3%</b> on either the feeder or the branch circuit alone, and should not exceed a combined <b>5%</b> from the service/supply point to the farthest point of utilization.</span>
+        </div>
+        <p id="p0-pb">Because it sits in the Code's informative appendix, an authority having jurisdiction can apply stricter project-specific limits — always confirm the target percentage against the governing specification before relying on this tool's default.</p>
+      </div>
+
+      <div class="card">
+        <h3 id="p0-h3b">The formula this tool applies</h3>
+        <p id="p0-pc">Voltage drop is calculated from conductor resistance (R) and reactance (X), current, one-way circuit length, and the load's power factor angle θ:</p>
+        <div class="table-wrap" style="max-height:none;">
+          <table>
+            <tr><th id="p0-th1">System</th><th id="p0-th2">Formula</th></tr>
+            <tr><td id="p0-r1">DC</td><td class="mono">Vd = 2 × I × L × R</td></tr>
+            <tr><td id="p0-r2">AC — single phase</td><td class="mono">Vd = 2 × I × L × (R·cosθ + X·sinθ)</td></tr>
+            <tr><td id="p0-r3">AC — three phase</td><td class="mono">Vd = √3 × I × L × (R·cosθ + X·sinθ)</td></tr>
+          </table>
+        </div>
+        <p style="margin-top:12px;" id="p0-pd">Where <b>I</b> is load current (A), <b>L</b> is one-way conductor length (km), and <b>R</b>/<b>X</b> come from the conductor's resistance/reactance table for the chosen material and temperature rating (per the methodology of CSA C22.1 Appendix D, Table D3). Percentage drop is <span class="mono">Vd ÷ Vsystem × 100</span>.</p>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn copper" id="p0-start-btn" onclick="goStep(1)">Start a calculation →</button>
+      </div>
+    </div>
+
+    <!-- STEP 2: SYSTEM SETUP -->
+    <div class="panel" id="panel-1">
+      <div class="panel-head">
+        <div class="eyebrow" id="p1-eyebrow">02 · System setup</div>
+        <h1 id="p1-h1">Describe the electrical system</h1>
+        <p id="p1-intro">These choices set the resistance/reactance table and the drop formula used downstream.</p>
+      </div>
+
+      <div class="card">
+        <h3 id="p1-h3a">System voltage</h3>
+        <div class="choice-row" id="voltagePresets"></div>
+        <label class="field" style="max-width:220px;margin-top:14px;" id="p1-custom-label">Or enter a custom voltage (V)
+          <input type="number" id="customVoltage" placeholder="e.g. 415" min="1">
+        </label>
+      </div>
+
+      <div class="card">
+        <h3 id="p1-h3b">System type</h3>
+        <div class="choice-row" id="systemTypeRow"></div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <h3 id="p1-h3c">Conductor material</h3>
+          <div class="choice-row" id="materialRow"></div>
+        </div>
+        <div class="card">
+          <h3 id="p1-h3d">Insulation temperature rating</h3>
+          <div class="choice-row" id="tempRow"></div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn secondary" id="p1-back-btn" onclick="goStep(0)">← Back</button>
+        <button class="btn copper" id="toStep2" onclick="goStep(2)" disabled>Choose calculation →</button>
+      </div>
+    </div>
+
+    <!-- STEP 3: MODE -->
+    <div class="panel" id="panel-2">
+      <div class="panel-head">
+        <div class="eyebrow" id="p2-eyebrow">03 · Calculation type</div>
+        <h1 id="p2-h1">What do you need to find?</h1>
+      </div>
+      <div class="mode-grid" id="modeGrid"></div>
+      <div class="btn-row">
+        <button class="btn secondary" id="p2-back-btn" onclick="goStep(1)">← Back</button>
+        <button class="btn copper" id="toStep3" onclick="goStep(3)" disabled>Continue →</button>
+      </div>
+    </div>
+
+    <!-- STEP 4: INPUTS + DATABASE -->
+    <div class="panel" id="panel-3">
+      <div class="panel-head">
+        <div class="eyebrow" id="p3-eyebrow">04 · Inputs</div>
+        <h1 id="modeTitle">Calculation inputs</h1>
+        <p id="modeDesc"></p>
+      </div>
+
+      <div class="card">
+        <h3 id="p3-h3a">Load &amp; circuit</h3>
+        <div class="grid3" id="dynamicInputs"></div>
+      </div>
+
+      <div class="card">
+        <h3 id="p3-h3b">Cable reference database <span class="pill" style="margin-left:8px;" id="p3-pill">sample data — verify before use</span></h3>
+        <p style="color:var(--ink-soft);font-size:13px;margin-top:-4px;" id="p3-dbnote">Representative R/X and base ampacity values compiled per the CSA C22.1 Table D3 / Table 2 &amp; 4 methodology, plus a few illustrative North American cable references. Not a substitute for a manufacturer datasheet.</p>
+        <div class="db-toolbar">
+          <span class="pill" id="dbFilterPill"></span>
+        </div>
+        <div class="table-wrap">
+          <table id="cableTable"></table>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn secondary" id="p3-back-btn" onclick="goStep(2)">← Back</button>
+        <button class="btn copper" id="p3-calc-btn" onclick="runCalculation()">Calculate →</button>
+      </div>
+    </div>
+
+    <!-- STEP 5: RESULTS -->
+    <div class="panel" id="panel-4">
+      <div class="panel-head">
+        <div class="eyebrow" id="p4-eyebrow">05 · Results &amp; report</div>
+        <h1 id="p4-h1">Results</h1>
+      </div>
+
+      <div id="resultsArea"></div>
+
+      <div class="card no-print">
+        <h3 id="p4-h3a">Export report</h3>
+        <p style="color:var(--ink-soft);font-size:13px;" id="p4-exportnote">The report opens with the CSA reference page from Step 1, followed by your system setup and results.</p>
+        <div class="export-row">
+          <button class="export-btn" onclick="window.print()" id="p4-print-btn">🖨 Print / Save as PDF</button>
+          <button class="export-btn" onclick="exportWord()" id="p4-word-btn">📄 Download Word (.doc)</button>
+          <button class="export-btn" onclick="exportExcel()" id="p4-excel-btn">📊 Download Excel (.xlsx)</button>
+        </div>
+      </div>
+
+      <div class="card no-print">
+        <h3 id="p4-h3b">Save / load this calculation</h3>
+        <div class="export-row" style="align-items:center;">
+          <button class="export-btn" onclick="saveScheme()" id="p4-save-btn">💾 Save scheme</button>
+          <select id="loadSchemeSelect" onchange="loadScheme(this.value)" style="padding:9px 12px;border-radius:8px;">
+            <option value="">— Load a saved scheme —</option>
+          </select>
+          <button class="export-btn" onclick="deleteScheme()" id="p4-delete-btn">🗑 Delete selected</button>
+        </div>
+      </div>
+
+      <div class="report-preview" id="reportPreview"></div>
+
+      <div class="btn-row no-print">
+        <button class="btn secondary" id="p4-back-btn" onclick="goStep(3)">← Adjust inputs</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="printArea"></div>
+
+<script>
+/* =====================================================================
+   CABLE / CONDUCTOR REFERENCE DATABASE
+   Representative Ω/km resistance & reactance and base ampacity values,
+   compiled for estimation purposes per the CSA C22.1 Table D3 / Table 2 & 4
+   methodology. Verify against the current Code tables and manufacturer
+   data before final design.
+===================================================================== */
+const CONDUCTORS = [
+ {size:"14 AWG", area:2.08,  cuR:10.50, cuX:0.190, alR:null,  alX:null,  cuAmp75:20,  cuAmp90:25,  alAmp75:null, alAmp90:null},
+ {size:"12 AWG", area:3.31,  cuR:6.61,  cuX:0.177, alR:10.80, alX:0.177, cuAmp75:25,  cuAmp90:30,  alAmp75:20,  alAmp90:25},
+ {size:"10 AWG", area:5.26,  cuR:4.15,  cuX:0.164, alR:6.79,  alX:0.164, cuAmp75:35,  cuAmp90:40,  alAmp75:30,  alAmp90:35},
+ {size:"8 AWG",  area:8.37,  cuR:2.61,  cuX:0.171, alR:4.28,  alX:0.171, cuAmp75:50,  cuAmp90:55,  alAmp75:40,  alAmp90:45},
+ {size:"6 AWG",  area:13.3,  cuR:1.64,  cuX:0.167, alR:2.69,  alX:0.167, cuAmp75:65,  cuAmp90:75,  alAmp75:50,  alAmp90:60},
+ {size:"4 AWG",  area:21.2,  cuR:1.03,  cuX:0.157, alR:1.69,  alX:0.157, cuAmp75:85,  cuAmp90:95,  alAmp75:65,  alAmp90:75},
+ {size:"3 AWG",  area:26.7,  cuR:0.820, cuX:0.154, alR:1.34,  alX:0.154, cuAmp75:100, cuAmp90:110, alAmp75:75,  alAmp90:85},
+ {size:"2 AWG",  area:33.6,  cuR:0.650, cuX:0.148, alR:1.07,  alX:0.148, cuAmp75:115, cuAmp90:130, alAmp75:90,  alAmp90:100},
+ {size:"1 AWG",  area:42.4,  cuR:0.516, cuX:0.151, alR:0.847, alX:0.151, cuAmp75:130, cuAmp90:150, alAmp75:100, alAmp90:115},
+ {size:"1/0 AWG",area:53.5,  cuR:0.410, cuX:0.144, alR:0.673, alX:0.144, cuAmp75:150, cuAmp90:170, alAmp75:120, alAmp90:135},
+ {size:"2/0 AWG",area:67.4,  cuR:0.325, cuX:0.141, alR:0.535, alX:0.141, cuAmp75:175, cuAmp90:195, alAmp75:135, alAmp90:150},
+ {size:"3/0 AWG",area:85.0,  cuR:0.258, cuX:0.138, alR:0.424, alX:0.138, cuAmp75:200, cuAmp90:225, alAmp75:155, alAmp90:175},
+ {size:"4/0 AWG",area:107.2, cuR:0.205, cuX:0.135, alR:0.337, alX:0.135, cuAmp75:230, cuAmp90:260, alAmp75:180, alAmp90:205},
+ {size:"250 kcmil",area:127, cuR:0.174, cuX:0.135, alR:0.286, alX:0.135, cuAmp75:255, cuAmp90:290, alAmp75:205, alAmp90:230},
+ {size:"300 kcmil",area:152, cuR:0.145, cuX:0.130, alR:0.238, alX:0.130, cuAmp75:285, cuAmp90:320, alAmp75:230, alAmp90:260},
+ {size:"350 kcmil",area:177, cuR:0.124, cuX:0.130, alR:0.204, alX:0.130, cuAmp75:310, cuAmp90:350, alAmp75:250, alAmp90:280},
+ {size:"400 kcmil",area:203, cuR:0.108, cuX:0.128, alR:0.178, alX:0.128, cuAmp75:335, cuAmp90:380, alAmp75:270, alAmp90:305},
+ {size:"500 kcmil",area:253, cuR:0.0867,cuX:0.128, alR:0.142, alX:0.128, cuAmp75:380, cuAmp90:430, alAmp75:310, alAmp90:350},
+];
+
+const MANUFACTURER_SAMPLES = [
+ {mfr:"Nexans",        series:"RW90 XLPE 600V",     material:"Copper",   note:"Sample reference — confirm current datasheet"},
+ {mfr:"Nexans",        series:"RW90 XLPE 600V",     material:"Aluminum", note:"Sample reference — confirm current datasheet"},
+ {mfr:"General Cable / Prysmian", series:"RWU90 XLPE, direct-bury", material:"Copper", note:"Sample reference — confirm current datasheet"},
+ {mfr:"Southwire",     series:"TECK90 600V armoured", material:"Copper", note:"Sample reference — confirm current datasheet"},
+ {mfr:"Cerrowire",     series:"RW90 XLPE 600V",     material:"Aluminum", note:"Sample reference — confirm current datasheet"},
+];
+
+/* ===================== STATE ===================== */
+const state = {
+  step:0,
+  voltage:null,
+  systemType:null,     // '1P' | '3P' | 'DC'
+  material:null,        // 'Cu' | 'Al'
+  tempRating:null,      // 75 | 90
+  mode:null,            // 'size' | 'distance' | 'percent'
+  inputs:{},
+  result:null,
+};
+
+let currentLang = 'en';
+
+const STEPS_I18N = {
+  en: [
+    {label:"CSA Reference", sub:"Voltage drop basics"},
+    {label:"System Setup", sub:"Voltage · phase · material"},
+    {label:"Calculation Type", sub:"Choose what to solve"},
+    {label:"Inputs", sub:"Load, length & cable data"},
+    {label:"Results & Report", sub:"Export PDF / Word / Excel"},
+  ],
+  fr: [
+    {label:"Référence CSA", sub:"Notions de base"},
+    {label:"Configuration du système", sub:"Tension · phase · matériau"},
+    {label:"Type de calcul", sub:"Choisir l'objectif"},
+    {label:"Données", sub:"Charge, longueur et câbles"},
+    {label:"Résultats et rapport", sub:"Export PDF / Word / Excel"},
+  ]
+};
+function STEPS(){ return STEPS_I18N[currentLang]; }
+
+const VOLTAGE_PRESETS = [120,208,240,277,347,480,600];
+const PF_PRESETS_I18N = {
+  en: [{l:"Motor", v:0.8}, {l:"Lighting", v:1.0}, {l:"Heating", v:1.0}, {l:"Mixed", v:0.9}],
+  fr: [{l:"Moteur", v:0.8}, {l:"Éclairage", v:1.0}, {l:"Chauffage", v:1.0}, {l:"Mixte", v:0.9}]
+};
+function PF_PRESETS(){ return PF_PRESETS_I18N[currentLang]; }
+const SYSTEM_TYPES_I18N = {
+  en: [{k:"1P",l:"AC — Single Phase"},{k:"3P",l:"AC — Three Phase"},{k:"DC",l:"DC"}],
+  fr: [{k:"1P",l:"CA — Monophasé"},{k:"3P",l:"CA — Triphasé"},{k:"DC",l:"CC"}]
+};
+function SYSTEM_TYPES(){ return SYSTEM_TYPES_I18N[currentLang]; }
+const MATERIALS_I18N = {
+  en: [{k:"Cu",l:"Copper"},{k:"Al",l:"Aluminum"}],
+  fr: [{k:"Cu",l:"Cuivre"},{k:"Al",l:"Aluminium"}]
+};
+function MATERIALS(){ return MATERIALS_I18N[currentLang]; }
+const TEMPS = [{k:75,l:"75°C"},{k:90,l:"90°C"}];
+
+const MODES_I18N = {
+  en: [
+   {k:"size", tag:"MODE 1", title:"Minimum conductor size", desc:"Given the load current and the run length, find the smallest conductor that keeps drop within target and carries the current."},
+   {k:"distance", tag:"MODE 2", title:"Maximum circuit length", desc:"Given a chosen conductor size and load current, find the longest run that stays within the target drop."},
+   {k:"percent", tag:"MODE 3", title:"Voltage drop %", desc:"Given an existing conductor size and run length, calculate the resulting voltage drop and percentage."},
+  ],
+  fr: [
+   {k:"size", tag:"MODE 1", title:"Section minimale du conducteur", desc:"À partir du courant de charge et de la longueur du parcours, trouver le plus petit conducteur qui respecte la cible de chute et supporte le courant."},
+   {k:"distance", tag:"MODE 2", title:"Longueur maximale du circuit", desc:"À partir d'une section de conducteur choisie et du courant de charge, trouver le parcours le plus long qui respecte la cible de chute."},
+   {k:"percent", tag:"MODE 3", title:"Chute de tension en %", desc:"À partir d'une section de conducteur et d'une longueur de parcours existantes, calculer la chute de tension résultante et son pourcentage."},
+  ]
+};
+function MODES(){ return MODES_I18N[currentLang]; }
+
+/* ===================== RENDER: SIDEBAR ===================== */
+function renderStepNav(){
+  const el = document.getElementById('stepNav');
+  el.innerHTML = STEPS().map((s,i)=>{
+    const cls = i===state.step?'active':(i<state.step?'done':'');
+    return `<button class="step-btn ${cls}" onclick="tryGoStep(${i})">
+      <span class="step-num">${i+1}</span>
+      <span class="step-label"><b>${s.label}</b><small>${s.sub}</small></span>
+    </button>`;
+  }).join('');
+}
+function tryGoStep(i){ if(i<=state.step || i<=maxReachable()) goStep(i); }
+function maxReachable(){
+  if(state.mode) return 4;
+  if(state.systemType && state.material && state.tempRating && state.voltage) return 3;
+  if(state.systemType && state.material && state.tempRating) return 2;
+  return 1;
+}
+function goStep(i){
+  state.step = i;
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+i).classList.add('active');
+  renderStepNav();
+  if(i===3){ renderDynamicInputs(); renderCableTable(); }
+  if(i===4){ renderResults(); populateSchemeSelect(); }
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ===================== RENDER: STEP 2 SETUP ===================== */
+function renderChoiceRow(containerId, items, currentKey, onPick){
+  const el = document.getElementById(containerId);
+  el.innerHTML = items.map(it=>{
+    const key = it.k!==undefined?it.k:it;
+    const label = it.l!==undefined?it.l:it;
+    const sel = (currentKey===key)?'selected':'';
+    return `<div class="choice ${sel}" onclick="(${onPick})(${typeof key==='string'?`'${key}'`:key})">${label}</div>`;
+  }).join('');
+}
+function pickVoltage(v){ state.voltage=v; document.getElementById('customVoltage').value=''; renderSetupStep(); }
+function pickSystemType(k){ state.systemType=k; renderSetupStep(); }
+function pickMaterial(k){ state.material=k; renderSetupStep(); }
+function pickTemp(k){ state.tempRating=k; renderSetupStep(); }
+
+function renderSetupStep(){
+  renderChoiceRow('voltagePresets', VOLTAGE_PRESETS.map(v=>({k:v,l:v+'V'})), state.voltage, 'pickVoltage');
+  renderChoiceRow('systemTypeRow', SYSTEM_TYPES(), state.systemType, 'pickSystemType');
+  renderChoiceRow('materialRow', MATERIALS(), state.material, 'pickMaterial');
+  renderChoiceRow('tempRow', TEMPS, state.tempRating, 'pickTemp');
+  document.getElementById('toStep2').disabled = !(state.voltage && state.systemType && state.material && state.tempRating);
+}
+document.getElementById('customVoltage').addEventListener('input', e=>{
+  const v = parseFloat(e.target.value);
+  if(v>0){ state.voltage=v; renderChoiceRow('voltagePresets', VOLTAGE_PRESETS.map(v=>({k:v,l:v+'V'})), null, 'pickVoltage'); }
+  document.getElementById('toStep2').disabled = !(state.voltage && state.systemType && state.material && state.tempRating);
+});
+
+/* ===================== RENDER: STEP 3 MODE ===================== */
+function renderModeGrid(){
+  const el = document.getElementById('modeGrid');
+  el.innerHTML = MODES().map(m=>`
+    <div class="mode-card ${state.mode===m.k?'selected':''}" onclick="pickMode('${m.k}')">
+      <div class="tag">${m.tag}</div>
+      <h3>${m.title}</h3>
+      <p style="color:var(--ink-soft);font-size:13px;margin:0;">${m.desc}</p>
+    </div>`).join('');
+}
+function pickMode(k){
+  state.mode=k;
+  renderModeGrid();
+  document.getElementById('toStep3').disabled=false;
+}
+
+/* ===================== RENDER: STEP 4 INPUTS ===================== */
+function renderDynamicInputs(){
+  const m = MODES().find(x=>x.k===state.mode);
+  document.getElementById('modeTitle').textContent = m.title;
+  document.getElementById('modeDesc').textContent = m.desc;
+  const L = UI[currentLang];
+
+  const sizeOptions = CONDUCTORS.map(c=>`<option value="${c.size}">${c.size}</option>`).join('');
+  let fields = `
+    <label class="field">${L.lblCurrent}
+      <input type="number" id="in_current" value="${state.inputs.current||''}" min="0" step="0.1">
+    </label>
+    <label class="field">${L.lblPf}
+      <input type="number" id="in_pf" value="${state.inputs.pf||0.9}" min="0.1" max="1" step="0.01">
+      <div class="pf-presets" style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;">
+        ${PF_PRESETS().map(p=>`<button type="button" class="pf-preset-btn" onclick="document.getElementById('in_pf').value=${p.v}" style="font-size:10.5px;padding:3px 8px;border-radius:10px;border:1px solid var(--navy-800,#1e3a56);background:transparent;color:#8fa8c2;cursor:pointer;">${p.l} (${p.v})</button>`).join('')}
+      </div>
+    </label>
+    <label class="field">${L.lblTarget}
+      <input type="number" id="in_target" value="${state.inputs.target|| (state.mode==='percent'?'':3)}" min="0.1" step="0.1">
+    </label>
+    <label class="field">${L.lblParallel}
+      <input type="number" id="in_parallel" value="${state.inputs.parallel||1}" min="1" max="8" step="1">
+      <div class="field-hint" style="font-size:10.5px;color:#8fa8c2;margin-top:2px;">${L.parallelHint}</div>
+    </label>`;
+
+  if(state.mode==='size'){
+    fields += `<label class="field">${L.lblLength}
+      <input type="number" id="in_length" value="${state.inputs.length||''}" min="1">
+    </label>`;
+  } else if(state.mode==='distance'){
+    fields += `<label class="field">${L.lblSize}
+      <select id="in_size">${sizeOptions}</select>
+    </label>`;
+  } else { // percent
+    fields += `<label class="field">${L.lblSize}
+      <select id="in_size">${sizeOptions}</select>
+    </label>
+    <label class="field">${L.lblLength}
+      <input type="number" id="in_length" value="${state.inputs.length||''}" min="1">
+    </label>`;
+  }
+  document.getElementById('dynamicInputs').innerHTML = fields;
+  if(document.getElementById('in_size') && state.inputs.size){ document.getElementById('in_size').value = state.inputs.size; }
+}
+
+function renderCableTable(){
+  const L = UI[currentLang];
+  const cu = state.material==='Cu';
+  document.getElementById('dbFilterPill').textContent =
+    `${cu?L.copper:L.aluminum} · ${state.tempRating}°C ${L.insulation} · ${state.voltage}V ${state.systemType}`;
+  const rows = CONDUCTORS.filter(c=> cu ? c.cuR!==null : c.alR!==null).map(c=>{
+    const R = cu?c.cuR:c.alR, X = cu?c.cuX:c.alX;
+    const amp = state.tempRating===90 ? (cu?c.cuAmp90:c.alAmp90) : (cu?c.cuAmp75:c.alAmp75);
+    return `<tr><td>${c.size}</td><td>${c.area.toFixed(1)}</td><td>${R.toFixed(3)}</td><td>${X.toFixed(3)}</td><td>${amp} A</td></tr>`;
+  }).join('');
+  document.getElementById('cableTable').innerHTML = `
+    <tr><th>${L.thSize}</th><th>${L.thArea}</th><th>R (Ω/km)</th><th>X (Ω/km)</th><th>${L.thAmpacity} (${state.tempRating}°C)</th></tr>
+    ${rows}`;
+}
+
+/* ===================== CALCULATION ENGINE ===================== */
+function getRX(size, material){
+  const c = CONDUCTORS.find(x=>x.size===size);
+  if(!c) return null;
+  return material==='Cu' ? {R:c.cuR,X:c.cuX} : {R:c.alR,X:c.alX};
+}
+function getAmpacity(size, material, temp){
+  const c = CONDUCTORS.find(x=>x.size===size);
+  if(!c) return null;
+  if(material==='Cu') return temp===90?c.cuAmp90:c.cuAmp75;
+  return temp===90?c.alAmp90:c.alAmp75;
+}
+function multiplierFor(systemType){
+  if(systemType==='3P') return Math.sqrt(3);
+  return 2; // 1P and DC
+}
+function effectiveImpedance(R,X,pf,systemType){
+  if(systemType==='DC') return R;
+  const cos = pf, sin = Math.sqrt(Math.max(0,1-pf*pf));
+  return R*cos + X*sin;
+}
+function vdVolts(I, Lkm, R, X, pf, systemType){
+  const Ze = effectiveImpedance(R,X,pf,systemType);
+  return multiplierFor(systemType) * I * Lkm * Ze;
+}
+
+function runCalculation(){
+  const current = parseFloat(document.getElementById('in_current').value);
+  const pf = parseFloat(document.getElementById('in_pf').value);
+  const target = parseFloat(document.getElementById('in_target').value);
+  const parallel = Math.max(1, parseInt(document.getElementById('in_parallel').value) || 1);
+  state.inputs.current=current; state.inputs.pf=pf; state.inputs.target=target; state.inputs.parallel=parallel;
+
+  if(!current || current<=0){ alert(UI[currentLang].alertCurrent); return; }
+
+  if(state.mode==='size'){
+    const length = parseFloat(document.getElementById('in_length').value);
+    if(!length||length<=0){ alert(UI[currentLang].alertLength); return; }
+    state.inputs.length=length;
+    const Lkm = length/1000;
+    const rows = CONDUCTORS.filter(c=> state.material==='Cu'?c.cuR!==null:c.alR!==null).map(c=>{
+      const {R,X} = getRX(c.size, state.material);
+      const Reff = R/parallel, Xeff = X/parallel;
+      const vd = vdVolts(current, Lkm, Reff, Xeff, pf, state.systemType);
+      const pct = vd/state.voltage*100;
+      const amp = getAmpacity(c.size, state.material, state.tempRating)*parallel;
+      return {size:c.size, R:Reff, X:Xeff, vd, pct, amp, ampOk: amp>=current, vdOk: pct<=target};
+    });
+    const chosen = rows.find(r=>r.ampOk && r.vdOk);
+    state.result = {mode:'size', rows, chosen};
+  }
+
+  if(state.mode==='distance'){
+    const size = document.getElementById('in_size').value;
+    state.inputs.size=size;
+    const {R,X} = getRX(size, state.material);
+    const Reff = R/parallel, Xeff = X/parallel;
+    const Ze = effectiveImpedance(Reff,Xeff,pf,state.systemType);
+    const mult = multiplierFor(state.systemType);
+    const maxVd = target/100*state.voltage;
+    const maxLkm = maxVd/(mult*current*Ze);
+    const maxLm = maxLkm*1000;
+    const amp = getAmpacity(size, state.material, state.tempRating)*parallel;
+    state.result = {mode:'distance', size, R:Reff, X:Xeff, maxLm, amp, ampOk: amp>=current};
+  }
+
+  if(state.mode==='percent'){
+    const size = document.getElementById('in_size').value;
+    const length = parseFloat(document.getElementById('in_length').value);
+    if(!length||length<=0){ alert(UI[currentLang].alertLength); return; }
+    state.inputs.size=size; state.inputs.length=length;
+    const Lkm = length/1000;
+    const {R,X} = getRX(size, state.material);
+    const Reff = R/parallel, Xeff = X/parallel;
+    const vd = vdVolts(current, Lkm, Reff, Xeff, pf, state.systemType);
+    const pct = vd/state.voltage*100;
+    const amp = getAmpacity(size, state.material, state.tempRating)*parallel;
+    state.result = {mode:'percent', size, R:Reff, X:Xeff, vd, pct, amp, ampOk: amp>=current};
+  }
+
+  goStep(4);
+}
+
+/* ===================== RENDER: RESULTS ===================== */
+function statusTag(pct){
+  const L = UI[currentLang];
+  if(pct<=3) return {c:'good', l:L.statusGood};
+  if(pct<=5) return {c:'warn', l:L.statusWarn};
+  return {c:'bad', l:L.statusBad};
+}
+
+function upsizeAndRecalc(size){
+  state.inputs.size = size;
+  const parallel = state.inputs.parallel || 1;
+  const {R,X} = getRX(size, state.material);
+  const Reff = R/parallel, Xeff = X/parallel;
+  const Lkm = state.inputs.length/1000;
+  const vd = vdVolts(state.inputs.current, Lkm, Reff, Xeff, state.inputs.pf, state.systemType);
+  const pct = vd/state.voltage*100;
+  const amp = getAmpacity(size, state.material, state.tempRating)*parallel;
+  state.result = {mode:'percent', size, R:Reff, X:Xeff, vd, pct, amp, ampOk: amp>=state.inputs.current};
+  renderResults();
+}
+
+function schemeStoreKey(){ return 'ohmzone-vd-schemes'; }
+function getSchemes(){
+  try { return JSON.parse(localStorage.getItem(schemeStoreKey())||'{}'); } catch(e){ return {}; }
+}
+function setSchemes(obj){
+  try { localStorage.setItem(schemeStoreKey(), JSON.stringify(obj)); } catch(e){}
+}
+function saveScheme(){
+  const L = UI[currentLang];
+  const name = prompt(L.schemeNamePrompt);
+  if(!name) return;
+  const schemes = getSchemes();
+  schemes[name] = {
+    voltage: state.voltage, systemType: state.systemType, material: state.material,
+    tempRating: state.tempRating, mode: state.mode, inputs: state.inputs
+  };
+  setSchemes(schemes);
+  populateSchemeSelect();
+  alert(L.schemeSaved.replace('{name}', name));
+}
+function populateSchemeSelect(){
+  const sel = document.getElementById('loadSchemeSelect');
+  if(!sel) return;
+  const schemes = getSchemes();
+  const L = UI[currentLang];
+  sel.innerHTML = `<option value="">${L.schemeSelectPlaceholder}</option>` +
+    Object.keys(schemes).map(name=>`<option value="${name}">${name}</option>`).join('');
+}
+function loadScheme(name){
+  if(!name) return;
+  const schemes = getSchemes();
+  const s = schemes[name];
+  if(!s) return;
+  state.voltage = s.voltage; state.systemType = s.systemType; state.material = s.material;
+  state.tempRating = s.tempRating; state.mode = s.mode; state.inputs = s.inputs || {};
+  renderSetupStep(); renderModeGrid();
+  goStep(3);
+  renderDynamicInputs(); renderCableTable();
+  document.getElementById('toStep2').disabled = false;
+  document.getElementById('toStep3').disabled = false;
+}
+function deleteScheme(){
+  const sel = document.getElementById('loadSchemeSelect');
+  const name = sel.value;
+  if(!name) return;
+  const L = UI[currentLang];
+  if(!confirm(L.schemeDeleteConfirm.replace('{name}', name))) return;
+  const schemes = getSchemes();
+  delete schemes[name];
+  setSchemes(schemes);
+  populateSchemeSelect();
+}
+
+function renderResults(){
+  const r = state.result;
+  const target = state.inputs.target;
+  const L = UI[currentLang];
+  let html = '';
+
+  if(state.inputs.parallel && state.inputs.parallel>1){
+    html += `<div class="callout info" style="margin-bottom:12px;">${L.parallelNote.replace('{n}', state.inputs.parallel)}</div>`;
+  }
+
+  if(r.mode==='size'){
+    const c = r.chosen;
+    html += `<div class="result-summary">
+      <div class="stat"><span>${L.stRecSize}</span><b>${c?c.size:L.noneMet}</b></div>
+      <div class="stat"><span>${L.stDropAt}</span><b class="${c&&c.vdOk?'pass':'fail'}">${c?c.pct.toFixed(2)+'%':'—'}</b></div>
+      <div class="stat"><span>${L.stAmpacity} (${state.tempRating}°C)</span><b>${c?c.amp+' A':'—'}</b></div>
+      <div class="stat"><span>${L.stTarget}</span><b>${target}%</b></div>
+    </div>`;
+    if(!c) html += `<div class="callout bad">${L.calloutNoSize.replace('{target}',target).replace('{current}',state.inputs.current)}</div>`;
+    html += `<div class="card"><h3>${L.allSizesEval}</h3><div class="table-wrap"><table>
+      <tr><th>${L.thSize}</th><th>R (Ω/km)</th><th>${L.thDrop}</th><th>${L.thAmpacity}</th><th>${L.thMeetsTarget}</th></tr>
+      ${r.rows.map(row=>`<tr class="${c&&row.size===c.size?'hl':''}"><td>${row.size}</td><td>${row.R.toFixed(3)}</td><td>${row.pct.toFixed(2)}%</td><td>${row.amp} A</td><td>${row.vdOk&&row.ampOk?'✓ '+L.yes:'✗ '+L.no}</td></tr>`).join('')}
+    </table></div></div>`;
+  }
+
+  if(r.mode==='distance'){
+    html += `<div class="result-summary">
+      <div class="stat"><span>${L.stConductor}</span><b>${r.size}</b></div>
+      <div class="stat"><span>${L.stMaxLength}</span><b>${r.maxLm.toFixed(1)} m</b></div>
+      <div class="stat"><span>${L.stAmpCheck}</span><b class="${r.ampOk?'pass':'fail'}">${r.ampOk?L.ok:L.undersized}</b></div>
+      <div class="stat"><span>${L.stTarget}</span><b>${target}%</b></div>
+    </div>`;
+    if(!r.ampOk) html += `<div class="callout bad">${L.calloutUndersized.replace('{amp}',r.amp).replace('{current}',state.inputs.current)}</div>`;
+  }
+
+  if(r.mode==='percent'){
+    const st = statusTag(r.pct);
+    html += `<div class="result-summary">
+      <div class="stat"><span>${L.stConductor}</span><b>${r.size}</b></div>
+      <div class="stat"><span>${L.stVd}</span><b>${r.vd.toFixed(2)} V</b></div>
+      <div class="stat"><span>${L.stDropPct}</span><b class="${st.c==='good'?'pass':'fail'}">${r.pct.toFixed(2)}%</b></div>
+      <div class="stat"><span>${L.stAmpCheck}</span><b class="${r.ampOk?'pass':'fail'}">${r.ampOk?L.ok:L.undersized}</b></div>
+    </div>
+    <div class="callout ${st.c}">${st.l}</div>`;
+    if(st.c!=='good' || !r.ampOk){
+      const idx = CONDUCTORS.findIndex(c=>c.size===r.size);
+      const next = CONDUCTORS.slice(idx+1).find(c=> state.material==='Cu'?c.cuR!==null:c.alR!==null);
+      if(next){
+        html += `<div class="btn-row no-print" style="margin-top:8px;">
+          <button class="btn secondary" onclick="upsizeAndRecalc('${next.size}')">${L.upsizeBtn.replace('{size}', next.size)}</button>
+        </div>`;
+      }
+    }
+  }
+
+  document.getElementById('resultsArea').innerHTML = html;
+  document.getElementById('reportPreview').innerHTML = buildReportHTML();
+}
+function buildReportHTML(){
+  const r = state.result;
+  const L = UI[currentLang];
+  const today = new Date().toLocaleDateString(currentLang==='fr'?'fr-CA':'en-CA');
+  let resultBlock = '';
+  if(r.mode==='size'){
+    resultBlock = `<div class="kv">
+      <div><span>${L.repRecSize}</span><span>${r.chosen?r.chosen.size:L.noneMet}</span></div>
+      <div><span>${L.repResultingVd}</span><span>${r.chosen?r.chosen.pct.toFixed(2)+'%':'—'}</span></div>
+      <div><span>${L.repAmpAtRating}</span><span>${r.chosen?r.chosen.amp+' A':'—'}</span></div>
+      <div><span>${L.repTargetDrop}</span><span>${state.inputs.target}%</span></div>
+    </div>`;
+  } else if(r.mode==='distance'){
+    resultBlock = `<div class="kv">
+      <div><span>${L.repCondSize}</span><span>${r.size}</span></div>
+      <div><span>${L.repMaxLength}</span><span>${r.maxLm.toFixed(1)} m</span></div>
+      <div><span>${L.repAmpCheck}</span><span>${r.ampOk?L.pass:L.undersizedLoad}</span></div>
+      <div><span>${L.repTargetDrop}</span><span>${state.inputs.target}%</span></div>
+    </div>`;
+  } else {
+    resultBlock = `<div class="kv">
+      <div><span>${L.repCondSize}</span><span>${r.size}</span></div>
+      <div><span>${L.repRunLength}</span><span>${state.inputs.length} m</span></div>
+      <div><span>${L.repVd}</span><span>${r.vd.toFixed(2)} V</span></div>
+      <div><span>${L.repVdPct}</span><span>${r.pct.toFixed(2)}%</span></div>
+      <div><span>${L.repAmpCheck}</span><span>${r.ampOk?L.pass:L.undersizedLoad}</span></div>
+    </div>`;
+  }
+
+  return `
+  <div class="report-page">
+    <h2>${L.repTitle1}</h2>
+    <div class="sub">${L.repGenerated} ${today}</div>
+    <div class="report-section">
+      <h4>${L.repWhyChecked}</h4>
+      <p style="font-size:13.5px;">${L.repWhyBody}</p>
+      <h4 style="margin-top:18px;">${L.repFormulaUsed}</h4>
+      <p style="font-size:13.5px;" class="mono">
+        ${L.repFormulaLine}
+      </p>
+    </div>
+  </div>
+  <div class="report-page">
+    <h2>${L.repTitle2}</h2>
+    <div class="report-section">
+      <div class="kv">
+        <div><span>${L.repSysVoltage}</span><span>${state.voltage} V</span></div>
+        <div><span>${L.repSysType}</span><span>${state.systemType==='1P'?L.repAc1p:state.systemType==='3P'?L.repAc3p:L.repDc}</span></div>
+        <div><span>${L.repCondMaterial}</span><span>${state.material==='Cu'?L.copper:L.aluminum}</span></div>
+        <div><span>${L.repInsulation}</span><span>${state.tempRating}°C</span></div>
+        <div><span>${L.repLoadCurrent}</span><span>${state.inputs.current} A</span></div>
+        <div><span>${L.repPf}</span><span>${state.inputs.pf}</span></div>
+        <div><span>${L.lblParallel}</span><span>${state.inputs.parallel||1}</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="report-page">
+    <h2>${L.repTitle3} — ${MODES().find(m=>m.k===state.mode).title}</h2>
+    <div class="report-section">${resultBlock}</div>
+    <div class="report-section">
+      <h4>${L.repDisclaimer}</h4>
+      <p style="font-size:12px;color:var(--ink-soft);">${L.repDisclaimerBody}</p>
+    </div>
+  </div>`;
+}
+
+/* ===================== EXPORTS ===================== */
+function exportWord(){
+  const html = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+  <head><meta charset="utf-8"><title>Voltage Drop Report</title></head>
+  <body style="font-family:Calibri,Arial,sans-serif;">${document.getElementById('reportPreview').innerHTML}<div style="position:fixed;bottom:6px;right:12px;z-index:9999;font-family:monospace;font-size:10px;color:#5c7592;opacity:0.75;">© 2026 OhmZone. All rights reserved.</div>
+</body></html>`;
+  const blob = new Blob(['\ufeff', html], {type:'application/msword'});
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'voltage_drop_report.doc';
+  link.click();
+}
+
+function exportExcel(){
+  const L = UI[currentLang];
+  const wb = XLSX.utils.book_new();
+
+  const dbRows = [["Size","Area (mm2)","Cu R (Ω/km)","Cu X (Ω/km)","Al R (Ω/km)","Al X (Ω/km)",
+    "Cu Amp 75C","Cu Amp 90C","Al Amp 75C","Al Amp 90C"]];
+  CONDUCTORS.forEach(c=>dbRows.push([c.size,c.area,c.cuR,c.cuX,c.alR,c.alX,c.cuAmp75,c.cuAmp90,c.alAmp75,c.alAmp90]));
+  const wsDb = XLSX.utils.aoa_to_sheet(dbRows);
+  XLSX.utils.book_append_sheet(wb, wsDb, L.xlsCableDb);
+
+  const r = state.result;
+  const resRows = [[L.xlsParam,L.xlsValue],
+    [L.repSysVoltage+" (V)", state.voltage],
+    [L.repSysType, state.systemType],
+    [L.repCondMaterial, state.material],
+    [L.repInsulation+" (C)", state.tempRating],
+    [L.repLoadCurrent+" (A)", state.inputs.current],
+    [L.repPf, state.inputs.pf],
+    [L.xlsMode, state.mode]];
+  if(r.mode==='size'){
+    resRows.push([L.repTargetDrop+" (%)", state.inputs.target],[L.repRunLength+" (m)", state.inputs.length]);
+    resRows.push([L.xlsRecSize, r.chosen?r.chosen.size:L.noneMet]);
+    resRows.push([L.xlsResultingDrop+" (%)", r.chosen?r.chosen.pct.toFixed(2):"—"]);
+  } else if(r.mode==='distance'){
+    resRows.push([L.repTargetDrop+" (%)", state.inputs.target],[L.repCondSize, r.size]);
+    resRows.push([L.xlsMaxLength+" (m)", r.maxLm.toFixed(1)]);
+  } else {
+    resRows.push([L.repCondSize, r.size],[L.repRunLength+" (m)", state.inputs.length]);
+    resRows.push([L.repVd+" (V)", r.vd.toFixed(2)],[L.repVdPct+" (%)", r.pct.toFixed(2)]);
+  }
+  const wsRes = XLSX.utils.aoa_to_sheet(resRows);
+  XLSX.utils.book_append_sheet(wb, wsRes, L.xlsCalculation);
+
+  if(r.mode==='size'){
+    const evalRows = [[L.thSize,"R (Ω/km)",L.xlsDropPct,L.xlsAmpacityA,L.xlsMeetsTarget]];
+    r.rows.forEach(row=>evalRows.push([row.size,row.R,row.pct.toFixed(2),row.amp,(row.vdOk&&row.ampOk)?L.yes:L.no]));
+    const wsEval = XLSX.utils.aoa_to_sheet(evalRows);
+    XLSX.utils.book_append_sheet(wb, wsEval, L.xlsSizesEval);
+  }
+
+  XLSX.writeFile(wb, "voltage_drop_report.xlsx");
+}
+
+/* ===================== INIT ===================== */
+const UI = {
+  en: {
+    brandLine1:"Voltage Drop Studio", brandLine2:"CSA C22.1 · CEC PART I",
+    sidebarFoot:"Reference values are compiled for engineering estimation. Confirm against the current CSA C22.1 tables and manufacturer datasheets before final design.",
+    p0eyebrow:"01 · Reference", p0h1:"Voltage drop under CSA C22.1",
+    p0intro:"This page opens every generated report. It sets out why voltage drop is checked, and the formula this tool uses.",
+    p0h3a:"Why it's checked",
+    p0pa:"Excess voltage drop starves connected equipment of the voltage it was designed for — motors run hot and lose torque, lighting dims, electronic loads misbehave, and heating elements under-perform. CSA C22.1 (the Canadian Electrical Code, Part I) addresses this through Rule 8-102 and the associated Appendix B note.",
+    p0calloutb:"Appendix B guidance to Rule 8-102 (informative, not a mandatory rule):",
+    p0calloutrest:"voltage drop should not exceed <b>3%</b> on either the feeder or the branch circuit alone, and should not exceed a combined <b>5%</b> from the service/supply point to the farthest point of utilization.",
+    p0pb:"Because it sits in the Code's informative appendix, an authority having jurisdiction can apply stricter project-specific limits — always confirm the target percentage against the governing specification before relying on this tool's default.",
+    p0h3b:"The formula this tool applies",
+    p0pc:"Voltage drop is calculated from conductor resistance (R) and reactance (X), current, one-way circuit length, and the load's power factor angle θ:",
+    p0th1:"System", p0th2:"Formula", p0r1:"DC", p0r2:"AC — single phase", p0r3:"AC — three phase",
+    p0pd:"Where <b>I</b> is load current (A), <b>L</b> is one-way conductor length (km), and <b>R</b>/<b>X</b> come from the conductor's resistance/reactance table for the chosen material and temperature rating (per the methodology of CSA C22.1 Appendix D, Table D3). Percentage drop is <span class=\"mono\">Vd ÷ Vsystem × 100</span>.",
+    p0startBtn:"Start a calculation →",
+    p1eyebrow:"02 · System setup", p1h1:"Describe the electrical system",
+    p1intro:"These choices set the resistance/reactance table and the drop formula used downstream.",
+    p1h3a:"System voltage", p1customLabel:"Or enter a custom voltage (V)",
+    p1h3b:"System type", p1h3c:"Conductor material", p1h3d:"Insulation temperature rating",
+    backBtn:"← Back", chooseCalcBtn:"Choose calculation →",
+    p2eyebrow:"03 · Calculation type", p2h1:"What do you need to find?", continueBtn:"Continue →",
+    p3eyebrow:"04 · Inputs", p3h3a:"Load & circuit",
+    p3h3b:"Cable reference database", p3pill:"sample data — verify before use",
+    p3dbnote:"Representative R/X and base ampacity values compiled per the CSA C22.1 Table D3 / Table 2 & 4 methodology, plus a few illustrative North American cable references. Not a substitute for a manufacturer datasheet.",
+    calcBtn:"Calculate →",
+    p4eyebrow:"05 · Results & report", p4h1:"Results", p4h3a:"Export report",
+    p4exportnote:"The report opens with the CSA reference page from Step 1, followed by your system setup and results.",
+    printBtn:"🖨 Print / Save as PDF", wordBtn:"📄 Download Word (.doc)", excelBtn:"📊 Download Excel (.xlsx)",
+    adjustBtn:"← Adjust inputs",
+    lblCurrent:"Load current, I (A)", lblPf:"Power factor (cosθ)", lblTarget:"Target voltage drop (%)",
+    lblLength:"One-way run length (m)", lblSize:"Conductor size",
+    copper:"Copper", aluminum:"Aluminum", insulation:"insulation",
+    thSize:"Size", thArea:"Area (mm²)", thAmpacity:"Base ampacity", thDrop:"Drop", thMeetsTarget:"Meets target?",
+    alertCurrent:"Enter a load current greater than 0.", alertLength:"Enter a run length greater than 0.",
+    statusGood:"Within 3% — meets recommended feeder/branch limit",
+    statusWarn:"Between 3–5% — check combined run against the 5% total",
+    statusBad:"Exceeds 5% — recommended to resize or shorten the run",
+    stRecSize:"Recommended size", stDropAt:"Drop at that size", stAmpacity:"Ampacity", stTarget:"Target",
+    noneMet:"None met criteria", yes:"Yes", no:"No",
+    calloutNoSize:"No listed size meets both the {target}% drop target and the {current}A ampacity requirement — consider parallel conductors or a lower target reassessment.",
+    allSizesEval:"All sizes evaluated",
+    stConductor:"Conductor", stMaxLength:"Max one-way length", stAmpCheck:"Ampacity check", ok:"OK", undersized:"Undersized",
+    calloutUndersized:"This conductor's base ampacity ({amp} A) is below the {current}A load current — increase conductor size regardless of the length result above.",
+    stVd:"Voltage drop", stDropPct:"Drop %",
+    repRecSize:"Recommended conductor size", repResultingVd:"Resulting voltage drop", repAmpAtRating:"Ampacity at rating", repTargetDrop:"Target drop",
+    repCondSize:"Conductor size", repMaxLength:"Maximum one-way length", repAmpCheck:"Ampacity check", pass:"Pass", undersizedLoad:"Undersized for load",
+    repRunLength:"Run length", repVd:"Voltage drop", repVdPct:"Voltage drop %",
+    repTitle1:"Voltage Drop Reference — CSA C22.1", repGenerated:"Generated",
+    repWhyChecked:"Why voltage drop is checked",
+    repWhyBody:"Excess voltage drop reduces the voltage available to connected equipment. CSA C22.1 Rule 8-102, via its Appendix B note, recommends voltage drop not exceed 3% on a feeder or branch circuit alone, and not exceed 5% combined from the supply point to the farthest point of utilization. This is informative guidance — confirm project-specific limits with the governing specification or authority having jurisdiction.",
+    repFormulaUsed:"Formula used",
+    repFormulaLine:"DC: Vd = 2·I·L·R &nbsp;|&nbsp; 1-phase: Vd = 2·I·L·(R·cosθ+X·sinθ) &nbsp;|&nbsp; 3-phase: Vd = √3·I·L·(R·cosθ+X·sinθ)",
+    repTitle2:"System Parameters", repSysVoltage:"System voltage", repSysType:"System type",
+    repAc1p:"AC Single Phase", repAc3p:"AC Three Phase", repDc:"DC",
+    repCondMaterial:"Conductor material", repInsulation:"Insulation rating", repLoadCurrent:"Load current", repPf:"Power factor",
+    repTitle3:"Calculation Result",
+    repDisclaimer:"Disclaimer",
+    repDisclaimerBody:"Conductor R/X and ampacity values used in this report are representative engineering estimates compiled for planning purposes and are not a substitute for the current CSA C22.1 tables or the applicable manufacturer's cable datasheet. Ampacity shown is a base table value only and does not include derating for ambient temperature, grouping, or installation method.",
+    xlsCableDb:"Cable Database", xlsParam:"Parameter", xlsValue:"Value", xlsMode:"Mode",
+    xlsRecSize:"Recommended size", xlsResultingDrop:"Resulting drop", xlsMaxLength:"Max one-way length",
+    xlsCalculation:"Calculation", xlsDropPct:"Drop (%)", xlsAmpacityA:"Ampacity (A)", xlsMeetsTarget:"Meets target",
+    xlsSizesEval:"Sizes Evaluated",
+    lblParallel: "Parallel conductors per phase (n)", parallelHint: "Each parallel conductor is identical length/size. Ampacity and R/X scale with n; grouping derating is not applied automatically — verify separately.",
+    parallelNote: "Result reflects {n} parallel conductors per phase. Confirm ampacity grouping/derating for {n} conductors in the same raceway per CSA C22.1.",
+    upsizeBtn: "↑ Try next size up ({size}) and recalculate",
+    p4h3b: "Save / load this calculation",
+    schemeNamePrompt: "Name this calculation scheme:",
+    schemeSaved: "Saved scheme \"{name}\".",
+    schemeSelectPlaceholder: "— Load a saved scheme —",
+    schemeDeleteConfirm: "Delete saved scheme \"{name}\"?",
+    saveBtnText: "💾 Save scheme", deleteBtnText: "🗑 Delete selected"
+  },
+  fr: {
+    brandLine1:"Studio de chute de tension", brandLine2:"CSA C22.1 · CCE PARTIE I",
+    sidebarFoot:"Les valeurs de référence sont compilées à des fins d'estimation technique. Vérifiez auprès des tableaux CSA C22.1 en vigueur et des fiches techniques du fabricant avant la conception finale.",
+    p0eyebrow:"01 · Référence", p0h1:"Chute de tension selon la norme CSA C22.1",
+    p0intro:"Cette page ouvre chaque rapport généré. Elle explique pourquoi la chute de tension est vérifiée et la formule utilisée par cet outil.",
+    p0h3a:"Pourquoi elle est vérifiée",
+    p0pa:"Une chute de tension excessive prive les équipements raccordés de la tension pour laquelle ils ont été conçus — les moteurs chauffent et perdent du couple, l'éclairage faiblit, les charges électroniques fonctionnent mal et les éléments chauffants sous-performent. La norme CSA C22.1 (Code canadien de l'électricité, Partie I) traite ce sujet à la règle 8-102 et dans la note associée de l'annexe B.",
+    p0calloutb:"Recommandation de l'annexe B relative à la règle 8-102 (indicative, non obligatoire) :",
+    p0calloutrest:"la chute de tension ne devrait pas dépasser <b>3 %</b> sur le départ ou le circuit de dérivation pris séparément, et ne devrait pas dépasser <b>5 %</b> au total entre le point d'alimentation et le point d'utilisation le plus éloigné.",
+    p0pb:"Comme cette note figure dans l'annexe indicative du Code, l'autorité compétente peut imposer des limites plus strictes propres au projet — validez toujours le pourcentage cible auprès du devis applicable avant de vous fier à la valeur par défaut de cet outil.",
+    p0h3b:"Formule appliquée par cet outil",
+    p0pc:"La chute de tension est calculée à partir de la résistance (R) et de la réactance (X) du conducteur, du courant, de la longueur unidirectionnelle du circuit et de l'angle de facteur de puissance θ de la charge :",
+    p0th1:"Système", p0th2:"Formule", p0r1:"CC", p0r2:"CA — monophasé", p0r3:"CA — triphasé",
+    p0pd:"Où <b>I</b> est le courant de charge (A), <b>L</b> est la longueur unidirectionnelle du conducteur (km), et <b>R</b>/<b>X</b> proviennent du tableau de résistance/réactance du conducteur pour le matériau et la température choisis (selon la méthodologie de l'annexe D, tableau D3, de la CSA C22.1). Le pourcentage de chute est <span class=\"mono\">Vd ÷ Vsystème × 100</span>.",
+    p0startBtn:"Commencer un calcul →",
+    p1eyebrow:"02 · Configuration du système", p1h1:"Décrire le système électrique",
+    p1intro:"Ces choix déterminent le tableau de résistance/réactance et la formule de chute utilisée par la suite.",
+    p1h3a:"Tension du système", p1customLabel:"Ou entrez une tension personnalisée (V)",
+    p1h3b:"Type de système", p1h3c:"Matériau du conducteur", p1h3d:"Température nominale d'isolation",
+    backBtn:"← Retour", chooseCalcBtn:"Choisir le calcul →",
+    p2eyebrow:"03 · Type de calcul", p2h1:"Que souhaitez-vous déterminer ?", continueBtn:"Continuer →",
+    p3eyebrow:"04 · Données", p3h3a:"Charge et circuit",
+    p3h3b:"Base de données des câbles de référence", p3pill:"données d'exemple — à vérifier avant utilisation",
+    p3dbnote:"Valeurs représentatives de R/X et d'ampacité de base compilées selon la méthodologie du tableau D3 / tableaux 2 et 4 de la CSA C22.1, ainsi que quelques références de câbles nord-américains à titre indicatif. Ne remplace pas une fiche technique du fabricant.",
+    calcBtn:"Calculer →",
+    p4eyebrow:"05 · Résultats et rapport", p4h1:"Résultats", p4h3a:"Exporter le rapport",
+    p4exportnote:"Le rapport s'ouvre avec la page de référence CSA de l'étape 1, suivie de la configuration du système et des résultats.",
+    printBtn:"🖨 Imprimer / Enregistrer en PDF", wordBtn:"📄 Télécharger en Word (.doc)", excelBtn:"📊 Télécharger en Excel (.xlsx)",
+    adjustBtn:"← Ajuster les données",
+    lblCurrent:"Courant de charge, I (A)", lblPf:"Facteur de puissance (cosθ)", lblTarget:"Chute de tension cible (%)",
+    lblLength:"Longueur unidirectionnelle (m)", lblSize:"Section du conducteur",
+    copper:"Cuivre", aluminum:"Aluminium", insulation:"isolation",
+    thSize:"Section", thArea:"Aire (mm²)", thAmpacity:"Ampacité de base", thDrop:"Chute", thMeetsTarget:"Cible atteinte?",
+    alertCurrent:"Entrez un courant de charge supérieur à 0.", alertLength:"Entrez une longueur de parcours supérieure à 0.",
+    statusGood:"Sous 3 % — respecte la limite recommandée pour un départ/circuit de dérivation",
+    statusWarn:"Entre 3 et 5 % — vérifiez le parcours combiné par rapport au total de 5 %",
+    statusBad:"Dépasse 5 % — il est recommandé de redimensionner ou de raccourcir le parcours",
+    stRecSize:"Section recommandée", stDropAt:"Chute à cette section", stAmpacity:"Ampacité", stTarget:"Cible",
+    noneMet:"Aucune section ne satisfait aux critères", yes:"Oui", no:"Non",
+    calloutNoSize:"Aucune section de la liste ne respecte à la fois la cible de chute de {target} % et l'exigence d'ampacité de {current} A — envisagez des conducteurs en parallèle ou une réévaluation de la cible.",
+    allSizesEval:"Toutes les sections évaluées",
+    stConductor:"Conducteur", stMaxLength:"Longueur max. unidirectionnelle", stAmpCheck:"Vérification d'ampacité", ok:"OK", undersized:"Sous-dimensionné",
+    calloutUndersized:"L'ampacité de base de ce conducteur ({amp} A) est inférieure au courant de charge de {current} A — augmentez la section du conducteur, peu importe le résultat de longueur ci-dessus.",
+    stVd:"Chute de tension", stDropPct:"Chute (%)",
+    repRecSize:"Section de conducteur recommandée", repResultingVd:"Chute de tension résultante", repAmpAtRating:"Ampacité à la température nominale", repTargetDrop:"Chute cible",
+    repCondSize:"Section du conducteur", repMaxLength:"Longueur unidirectionnelle maximale", repAmpCheck:"Vérification d'ampacité", pass:"Conforme", undersizedLoad:"Sous-dimensionné pour la charge",
+    repRunLength:"Longueur du parcours", repVd:"Chute de tension", repVdPct:"Chute de tension (%)",
+    repTitle1:"Référence — Chute de tension CSA C22.1", repGenerated:"Généré le",
+    repWhyChecked:"Pourquoi la chute de tension est vérifiée",
+    repWhyBody:"Une chute de tension excessive réduit la tension disponible pour les équipements raccordés. La règle 8-102 de la CSA C22.1, via la note de son annexe B, recommande que la chute de tension ne dépasse pas 3 % sur un départ ou un circuit de dérivation pris seul, et ne dépasse pas 5 % au total entre le point d'alimentation et le point d'utilisation le plus éloigné. Il s'agit d'une recommandation indicative — validez les limites propres au projet auprès du devis applicable ou de l'autorité compétente.",
+    repFormulaUsed:"Formule utilisée",
+    repFormulaLine:"CC : Vd = 2·I·L·R &nbsp;|&nbsp; monophasé : Vd = 2·I·L·(R·cosθ+X·sinθ) &nbsp;|&nbsp; triphasé : Vd = √3·I·L·(R·cosθ+X·sinθ)",
+    repTitle2:"Paramètres du système", repSysVoltage:"Tension du système", repSysType:"Type de système",
+    repAc1p:"CA monophasé", repAc3p:"CA triphasé", repDc:"CC",
+    repCondMaterial:"Matériau du conducteur", repInsulation:"Température nominale d'isolation", repLoadCurrent:"Courant de charge", repPf:"Facteur de puissance",
+    repTitle3:"Résultat du calcul",
+    repDisclaimer:"Avis",
+    repDisclaimerBody:"Les valeurs de R/X et d'ampacité du conducteur utilisées dans ce rapport sont des estimations techniques représentatives compilées à des fins de planification et ne remplacent pas les tableaux CSA C22.1 en vigueur ni la fiche technique du câble du fabricant applicable. L'ampacité indiquée est une valeur de tableau de base uniquement et n'inclut aucun déclassement pour la température ambiante, le groupement ou la méthode d'installation.",
+    xlsCableDb:"Base de données des câbles", xlsParam:"Paramètre", xlsValue:"Valeur", xlsMode:"Mode",
+    xlsRecSize:"Section recommandée", xlsResultingDrop:"Chute résultante", xlsMaxLength:"Longueur max. unidirectionnelle",
+    xlsCalculation:"Calcul", xlsDropPct:"Chute (%)", xlsAmpacityA:"Ampacité (A)", xlsMeetsTarget:"Cible atteinte",
+    xlsSizesEval:"Sections évaluées",
+    lblParallel: "Conducteurs en parallèle par phase (n)", parallelHint: "Chaque conducteur en parallèle a la même longueur/section. L'ampacité et R/X sont mises à l'échelle selon n; le déclassement pour groupement n'est pas appliqué automatiquement — à vérifier séparément.",
+    parallelNote: "Le résultat reflète {n} conducteurs en parallèle par phase. Confirmez le déclassement pour groupement de {n} conducteurs dans le même chemin de câbles selon la CSA C22.1.",
+    upsizeBtn: "↑ Essayer la section supérieure ({size}) et recalculer",
+    p4h3b: "Sauvegarder / charger ce calcul",
+    schemeNamePrompt: "Nommez ce scénario de calcul :",
+    schemeSaved: "Scénario « {name} » sauvegardé.",
+    schemeSelectPlaceholder: "— Charger un scénario sauvegardé —",
+    schemeDeleteConfirm: "Supprimer le scénario sauvegardé « {name} » ?",
+    saveBtnText: "💾 Sauvegarder le scénario", deleteBtnText: "🗑 Supprimer la sélection"
+  }
+};
+
+function applyStaticI18n(){
+  const L = UI[currentLang];
+  document.getElementById('brandText').innerHTML = L.brandLine1 + '<span>' + L.brandLine2 + '</span>';
+  document.getElementById('sidebarFoot').textContent = L.sidebarFoot;
+  document.getElementById('p0-eyebrow').textContent = L.p0eyebrow;
+  document.getElementById('p0-h1').textContent = L.p0h1;
+  document.getElementById('p0-intro').textContent = L.p0intro;
+  document.getElementById('p0-h3a').textContent = L.p0h3a;
+  document.getElementById('p0-pa').textContent = L.p0pa;
+  document.getElementById('p0-callout-b').textContent = L.p0calloutb;
+  document.getElementById('p0-callout-rest').innerHTML = L.p0calloutrest;
+  document.getElementById('p0-pb').textContent = L.p0pb;
+  document.getElementById('p0-h3b').textContent = L.p0h3b;
+  document.getElementById('p0-pc').textContent = L.p0pc;
+  document.getElementById('p0-th1').textContent = L.p0th1;
+  document.getElementById('p0-th2').textContent = L.p0th2;
+  document.getElementById('p0-r1').textContent = L.p0r1;
+  document.getElementById('p0-r2').textContent = L.p0r2;
+  document.getElementById('p0-r3').textContent = L.p0r3;
+  document.getElementById('p0-pd').innerHTML = L.p0pd;
+  document.getElementById('p0-start-btn').textContent = L.p0startBtn;
+  document.getElementById('p1-eyebrow').textContent = L.p1eyebrow;
+  document.getElementById('p1-h1').textContent = L.p1h1;
+  document.getElementById('p1-intro').textContent = L.p1intro;
+  document.getElementById('p1-h3a').textContent = L.p1h3a;
+  document.getElementById('p1-custom-label').childNodes[0].textContent = L.p1customLabel + ' ';
+  document.getElementById('p1-h3b').textContent = L.p1h3b;
+  document.getElementById('p1-h3c').textContent = L.p1h3c;
+  document.getElementById('p1-h3d').textContent = L.p1h3d;
+  document.getElementById('p1-back-btn').textContent = L.backBtn;
+  document.getElementById('toStep2').textContent = L.chooseCalcBtn;
+  document.getElementById('p2-eyebrow').textContent = L.p2eyebrow;
+  document.getElementById('p2-h1').textContent = L.p2h1;
+  document.getElementById('p2-back-btn').textContent = L.backBtn;
+  document.getElementById('toStep3').textContent = L.continueBtn;
+  document.getElementById('p3-eyebrow').textContent = L.p3eyebrow;
+  document.getElementById('p3-h3a').textContent = L.p3h3a;
+  document.getElementById('p3-pill').textContent = L.p3pill;
+  document.getElementById('p3-dbnote').textContent = L.p3dbnote;
+  document.getElementById('p3-back-btn').textContent = L.backBtn;
+  document.getElementById('p3-calc-btn').textContent = L.calcBtn;
+  document.getElementById('p4-eyebrow').textContent = L.p4eyebrow;
+  document.getElementById('p4-h1').textContent = L.p4h1;
+  document.getElementById('p4-h3a').textContent = L.p4h3a;
+  document.getElementById('p4-exportnote').textContent = L.p4exportnote;
+  document.getElementById('p4-print-btn').textContent = L.printBtn;
+  document.getElementById('p4-word-btn').textContent = L.wordBtn;
+  document.getElementById('p4-excel-btn').textContent = L.excelBtn;
+  document.getElementById('p4-back-btn').textContent = L.adjustBtn;
+  document.getElementById('customVoltage').placeholder = currentLang==='fr' ? 'p. ex. 415' : 'e.g. 415';
+  document.getElementById('p4-h3b').textContent = L.p4h3b;
+  document.getElementById('p4-save-btn').textContent = L.saveBtnText;
+  document.getElementById('p4-delete-btn').textContent = L.deleteBtnText;
+  populateSchemeSelect();
+}
+
+function setLang(lang){
+  currentLang = lang;
+  document.getElementById('btn-en').classList.toggle('active', lang==='en');
+  document.getElementById('btn-fr').classList.toggle('active', lang==='fr');
+  document.documentElement.lang = lang;
+  try { localStorage.setItem('ohmzone-lang', lang); } catch(e) {}
+  applyStaticI18n();
+  renderStepNav();
+  renderSetupStep();
+  renderModeGrid();
+  if(state.step===3){ renderDynamicInputs(); renderCableTable(); }
+  if(state.step===4 && state.result){ renderResults(); }
+}
+
+renderStepNav();
+renderSetupStep();
+renderModeGrid();
+goStep(0);
+(function(){
+  let saved = 'en';
+  try { saved = localStorage.getItem('ohmzone-lang') || 'en'; } catch(e) {}
+  setLang(saved);
+})();
+</script>
+</body>
+</html>

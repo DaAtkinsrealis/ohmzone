@@ -1,0 +1,1342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Protection Coordination / TCC Study</title>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3887318872951674" crossorigin="anonymous"></script>
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icon-16.png">
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="OhmZone">
+<meta name="theme-color" content="#0a1728">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.6/dist/pizzip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/docxtemplater@3.47.2/js/docxtemplater.js"></script>
+<style>
+@media print{ .no-print{display:none !important;} body{background:#fff !important;} }
+:root{
+  --bg:#080c14; --bg2:#0d1420; --panel:#111a2a; --panel-soft:#0c1220;
+  --line:#233350; --line-soft:#182238; --grid-line: rgba(96,140,196,0.09);
+  --ink:#e7edf7; --ink-dim:#8497b8; --ink-faint:#516085;
+  --trace:#3b9eff; --trace-soft:#1a3a5c; --gold:#e8b545;
+  --alarm:#ff5d77; --warn:#e3a83b; --radius:2px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',sans-serif;}
+body{background-image:linear-gradient(var(--grid-line) 1px,transparent 1px),linear-gradient(90deg,var(--grid-line) 1px,transparent 1px);background-size:28px 28px;min-height:100vh;}
+::selection{background:var(--trace);color:#04120f;}
+a{color:var(--trace);}
+input:focus-visible, select:focus-visible, button:focus-visible{outline:2px solid var(--trace);outline-offset:2px;}
+.lang-switch{display:flex;align-items:center;background:#0f2036;border:1px solid #2f5678;border-radius:16px;padding:3px;gap:2px;font-family:monospace;font-size:11px;position:fixed;top:10px;right:12px;z-index:9999;}
+.lang-switch button{border:none;background:transparent;color:#8fa8c2;padding:5px 12px;border-radius:13px;cursor:pointer;font-family:inherit;font-size:inherit;}
+.lang-switch button.active{background:var(--trace);color:#04120f;font-weight:700;}
+
+.titleblock{border-bottom:1px solid var(--line);background:linear-gradient(180deg,rgba(17,26,42,.9),rgba(13,20,32,.7));padding:18px 22px;display:flex;flex-wrap:wrap;gap:14px 28px;align-items:flex-end;justify-content:space-between;}
+.titleblock .brand{display:flex;align-items:baseline;gap:12px;}
+.titleblock .brand .mark{width:34px;height:34px;border:1.5px solid var(--trace);border-radius:3px;display:flex;align-items:center;justify-content:center;color:var(--trace);font-family:'IBM Plex Mono';font-weight:700;font-size:11px;flex:none;box-shadow:0 0 14px rgba(59, 158, 255,.18) inset;}
+.titleblock h1{font-family:'IBM Plex Sans Condensed';font-weight:700;letter-spacing:.3px;font-size:20px;margin:0;text-transform:uppercase;}
+.titleblock .sub{color:var(--ink-dim);font-size:12.5px;margin-top:2px;}
+.stamp{display:grid;grid-template-columns:repeat(4,auto);gap:0 22px;font-family:'IBM Plex Mono';font-size:10.5px;color:var(--ink-dim);}
+.stamp div b{display:block;color:var(--ink-faint);font-weight:500;font-size:9px;letter-spacing:.06em;text-transform:uppercase;}
+.stamp div span{color:var(--trace);font-weight:600;font-size:12px;}
+
+.top-disclaimer{max-width:1560px;margin:14px auto 0;padding:10px 16px;border:1px solid var(--warn);background:rgba(227,168,59,.07);border-radius:var(--radius);font-size:11.5px;color:var(--ink-dim);line-height:1.6;}
+.top-disclaimer b{color:var(--warn);}
+
+.app{display:grid;grid-template-columns:420px 1fr;gap:1px;background:var(--line);max-width:1560px;margin:0 auto;}
+@media (max-width:1000px){ .app{grid-template-columns:1fr;} }
+.steps{background:var(--bg2);padding:18px 16px 40px;display:flex;flex-direction:column;gap:14px;}
+.canvas-col{background:var(--line);display:flex;flex-direction:column;gap:1px;}
+.canvas-col > *{background:var(--bg2);}
+
+.step{border:1px solid var(--line-soft);border-radius:var(--radius);background:var(--panel-soft);overflow:hidden;}
+.step-head{display:flex;align-items:center;gap:10px;padding:11px 13px;background:var(--panel);cursor:pointer;user-select:none;border-bottom:1px solid var(--line-soft);}
+.step-num{font-family:'IBM Plex Mono';font-size:11px;font-weight:600;color:var(--bg);background:var(--trace);width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none;}
+.step.optional .step-num{background:var(--ink-faint);color:var(--bg2);}
+.step.optional.on .step-num{background:var(--gold);}
+.step-title{font-size:13px;font-weight:600;letter-spacing:.2px;flex:1;}
+.step-title small{display:block;font-weight:400;color:var(--ink-dim);font-size:10.5px;margin-top:1px;}
+.chev{color:var(--ink-faint);font-size:11px;transition:transform .15s;}
+.step.closed .chev{transform:rotate(-90deg);}
+.step-body{padding:13px;display:flex;flex-direction:column;gap:11px;}
+.step.closed .step-body{display:none;}
+
+label.field{display:flex;flex-direction:column;gap:5px;font-size:11.5px;color:var(--ink-dim);}
+label.field b{color:var(--ink);font-weight:500;font-size:12px;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;}
+input[type=number],input[type=text],select{background:var(--bg2);border:1px solid var(--line);color:var(--ink);font-family:'IBM Plex Mono';font-size:13px;padding:8px 9px;border-radius:var(--radius);width:100%;}
+select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238497b8'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:26px;}
+input:focus,select:focus{border-color:var(--trace);}
+
+.seg{display:flex;border:1px solid var(--line);border-radius:20px;overflow:hidden;width:max-content;flex-wrap:wrap;}
+.seg button{background:transparent;border:none;color:var(--ink-dim);font-family:'IBM Plex Mono';font-size:10.5px;padding:5px 12px;cursor:pointer;}
+.seg button.active{background:var(--trace);color:#04120f;font-weight:600;}
+
+.switch{position:relative;width:34px;height:19px;flex:none;}
+.switch input{opacity:0;width:0;height:0;position:absolute;}
+.switch .track{position:absolute;inset:0;background:var(--line);border-radius:20px;transition:.15s;}
+.switch .track:before{content:'';position:absolute;width:13px;height:13px;left:3px;top:3px;background:var(--ink-dim);border-radius:50%;transition:.15s;}
+.switch input:checked + .track{background:var(--trace-soft);border:1px solid var(--trace);}
+.switch input:checked + .track:before{transform:translateX(15px);background:var(--trace);}
+
+.hint{font-size:10.5px;color:var(--ink-faint);line-height:1.5;}
+.hint em{color:var(--ink-dim);font-style:normal;}
+.example-btn{align-self:flex-start;font-family:'IBM Plex Mono';font-size:11px;font-weight:600;color:#0a1220;background:var(--trace);border:1px solid var(--trace);padding:9px 16px;border-radius:20px;cursor:pointer;box-shadow:0 4px 12px -4px var(--trace-soft);}
+.example-btn:hover{filter:brightness(1.08);}
+.add-btn{font-family:'IBM Plex Mono';font-size:11px;font-weight:600;color:#0a1220;background:var(--gold);border:1px solid var(--gold);padding:6px 12px;border-radius:6px;cursor:pointer;align-self:flex-start;}
+.add-btn:hover{filter:brightness(1.06);}
+.item-row{display:flex;align-items:center;gap:8px;padding:6px 9px;background:var(--panel);border:1px solid var(--line-soft);border-radius:var(--radius);font-size:11px;}
+.item-row .lbl{flex:1;color:var(--ink);font-family:'IBM Plex Mono';}
+.item-row button{background:transparent;border:none;color:var(--alarm);cursor:pointer;font-size:13px;padding:2px 6px;}
+.empty-note{font-size:10.5px;color:var(--ink-faint);font-style:italic;padding:4px 2px;}
+
+.panel{padding:16px;}
+.panel-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px;gap:10px;flex-wrap:wrap;}
+.panel-head h2{font-family:'IBM Plex Sans Condensed';font-size:13px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-dim);margin:0;font-weight:600;}
+.panel-head .tag{font-family:'IBM Plex Mono';font-size:10px;color:var(--ink-faint);}
+
+.stat-list{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+@media (max-width:480px){ .stat-list{grid-template-columns:1fr;} }
+.stat{border:1px solid var(--line-soft);border-radius:var(--radius);padding:9px 11px;background:var(--panel-soft);}
+.stat .k{font-size:10px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.06em;}
+.stat .v{font-family:'IBM Plex Mono';font-size:14px;font-weight:600;margin-top:3px;}
+.stat.hot{border-color:var(--gold);background:linear-gradient(180deg,rgba(232,181,69,.08),transparent);}
+.stat.hot .v{color:var(--gold);}
+
+.risk-box{border-radius:var(--radius);padding:11px 13px;margin-top:12px;font-size:12px;line-height:1.6;border:1px solid;}
+.risk-ok{border-color:var(--trace);background:rgba(59, 158, 255,.06);color:var(--ink-dim);}
+.risk-warn{border-color:var(--warn);background:rgba(227,168,59,.08);color:var(--ink-dim);}
+.risk-alarm{border-color:var(--alarm);background:rgba(255,93,119,.08);color:var(--ink-dim);}
+.risk-box b{color:var(--ink);}
+
+.ref-table{width:100%;border-collapse:collapse;font-size:11px;}
+.ref-table th,.ref-table td{padding:5px 7px;border-bottom:1px solid var(--line-soft);text-align:left;}
+.ref-table th{color:var(--ink-faint);font-weight:500;text-transform:uppercase;font-size:9px;letter-spacing:.06em;}
+.ref-table td{color:var(--ink-dim);font-family:'IBM Plex Mono';}
+.ref-table input{background:var(--bg2);border:1px solid var(--line);color:var(--ink);font-family:'IBM Plex Mono';font-size:11px;padding:3px 5px;width:72px;border-radius:2px;}
+
+.ledger{display:flex;flex-direction:column;}
+.lstep{padding:13px 16px;border-bottom:1px solid var(--line-soft);display:grid;grid-template-columns:26px 1fr;gap:12px;}
+.lstep:last-child{border-bottom:none;}
+.lstep .ln{font-family:'IBM Plex Mono';color:var(--ink-faint);font-size:11px;padding-top:2px;}
+.lstep h3{margin:0 0 5px;font-size:12.5px;font-weight:600;color:var(--ink);}
+.lstep .formula{font-family:'IBM Plex Mono';font-size:12px;color:var(--trace);background:rgba(59, 158, 255,.06);padding:8px 10px;border-radius:var(--radius);border:1px solid var(--trace-soft);margin:6px 0;overflow-x:auto;white-space:pre;}
+.cite{font-size:9.5px;color:var(--ink-faint);margin-top:6px;line-height:1.5;border-left:2px solid var(--line);padding-left:8px;}
+.cite b{color:var(--ink-dim);font-weight:500;}
+.clause{font-family:'IBM Plex Mono';font-size:9.5px;color:var(--gold);background:rgba(232,181,69,.08);border:1px solid rgba(232,181,69,.25);border-radius:3px;padding:1px 5px;margin-right:4px;white-space:nowrap;}
+
+.tcc-wrap{background:#0a0e18;border:1px solid var(--line-soft);border-radius:var(--radius);overflow-x:auto;}
+#tccChart{display:block;min-width:640px;}
+.legend{display:flex;flex-wrap:wrap;gap:10px 16px;margin-top:10px;font-size:10.5px;color:var(--ink-dim);}
+.legend span{display:flex;align-items:center;gap:5px;}
+.legend .sw{width:16px;height:2px;display:inline-block;}
+.legend .sw.dot{width:8px;height:8px;border-radius:50%;}
+
+footer.note{max-width:1560px;margin:22px auto 60px;padding:0 16px;font-size:10.5px;color:var(--ink-faint);line-height:1.7;}
+footer.note b{color:var(--ink-dim);}
+</style>
+</head>
+<body>
+<a href="index.html" class="no-print" style="position:fixed;top:10px;left:12px;z-index:9999;font-family:monospace;font-size:11px;color:#8fa8c2;background:rgba(10,23,40,0.85);border:1px solid #234261;border-radius:14px;padding:5px 12px;text-decoration:none;">← OhmZone</a>
+<div class="lang-switch no-print">
+  <button type="button" id="btn-en" class="active" onclick="setLang('en')">EN</button>
+  <button type="button" id="btn-fr" onclick="setLang('fr')">FR</button>
+</div>
+
+<div class="titleblock">
+  <div class="brand">
+    <div class="mark">TCC</div>
+    <div>
+      <h1 id="titleH1">Protection Coordination / TCC Study</h1>
+      <div class="sub" id="titleSub">Time-current curve coordination — transformer inrush, through-fault withstand, and protective device curves</div>
+    </div>
+  </div>
+  <div class="stamp">
+    <div><b id="lblDwg">Dwg No.</b><span>TCC-001</span></div>
+    <div><b id="lblScale">Scale</b><span>Log-log</span></div>
+    <div><b id="lblMethod">Method</b><span>IEEE C57.109</span></div>
+    <div><b id="lblRev">Rev</b><span id="revTag">—</span></div>
+  </div>
+</div>
+
+<div class="top-disclaimer no-print">
+  <b id="topDiscB">Preliminary coordination screening only.</b> <span id="topDiscTxt">This tool does not use a licensed manufacturer curve library like ETAP or EasyPower. The transformer inrush point and through-fault withstand curve use commonly published planning approximations (12×FLA/0.1s inrush; a simplified I²t withstand anchored at 25×FLA/2s) — not the exact IEEE C57.109 category curve. Generic fuse/breaker curves are illustrative shapes, not specific manufacturer curves. Use the "Custom points" device option to plot your actual datasheet curve for a real coordination check. Final coordination must be verified by a qualified protection engineer against manufacturer TCC data and the current IEEE/CSA standards.</span>
+</div>
+
+<div class="app">
+  <div class="steps">
+    <button class="example-btn" id="loadExample">▸ <span id="loadExampleTxt">Load example</span></button>
+
+    <!-- STEP 1: TRANSFORMER & SYSTEM -->
+    <div class="step" id="step1">
+      <div class="step-head" data-toggle="step1">
+        <div class="step-num">1</div>
+        <div class="step-title" id="step1Title">Transformer &amp; System<small id="step1Small">Tag, rating, voltages, impedance</small></div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="step-body">
+        <label class="field"><b id="lblTag">Equipment tag</b>
+          <input type="text" id="eqTag" placeholder="e.g. TX-101">
+        </label>
+        <div class="row2">
+          <label class="field"><b id="lblKva">Transformer rating (kVA)</b>
+            <input type="number" id="kva" value="1500" min="1" step="1">
+          </label>
+          <label class="field"><b id="lblImped">Impedance, %Z</b>
+            <input type="number" id="impedZ" value="5.75" min="1" max="15" step="0.01">
+          </label>
+        </div>
+        <div class="row2">
+          <label class="field"><b id="lblPriV">Primary voltage (V, L-L)</b>
+            <input type="number" id="priV" value="13800" min="1">
+          </label>
+          <label class="field"><b id="lblSecV">Secondary voltage (V, L-L)</b>
+            <input type="number" id="secV" value="600" min="1">
+          </label>
+        </div>
+        <div class="hint" id="hintStep1"></div>
+      </div>
+    </div>
+
+    <!-- STEP 2: SHORT-CIRCUIT AT POI -->
+    <div class="step" id="step2">
+      <div class="step-head" data-toggle="step2">
+        <div class="step-num">2</div>
+        <div class="step-title" id="step2Title">Short-Circuit at POI<small id="step2Small">Manually entered — matches ETAP/EasyPower utility-contribution convention</small></div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="step-body">
+        <div class="row2">
+          <label class="field"><b id="lblIscMax">Max. available fault current (kA sym.)</b>
+            <input type="number" id="iscMax" value="8.5" min="0.1" step="0.1">
+          </label>
+          <label class="field"><b id="lblIscMin">Min. available fault current (kA sym.)</b>
+            <input type="number" id="iscMin" value="4.0" min="0.1" step="0.1">
+          </label>
+        </div>
+        <label class="field"><b id="lblSrcXR">X/R ratio at POI</b>
+          <input type="number" id="srcXR" value="15" min="0.1" step="0.1">
+        </label>
+        <div class="hint" id="hintStep2"></div>
+      </div>
+    </div>
+
+    <!-- STEP 3: TRANSFORMER INRUSH -->
+    <div class="step" id="step3">
+      <div class="step-head" data-toggle="step3">
+        <div class="step-num">3</div>
+        <div class="step-title" id="step3Title">Transformer Inrush<small id="step3Small">Energization inrush reference point(s)</small></div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="step-body">
+        <div class="row2">
+          <label class="field"><b id="lblInrushMult1">Point 1 — multiple of FLA</b>
+            <input type="number" id="inrushMult1" value="12" min="1" step="0.5">
+          </label>
+          <label class="field"><b id="lblInrushT1">Point 1 — duration (s)</b>
+            <input type="number" id="inrushT1" value="0.1" min="0.001" step="0.01">
+          </label>
+        </div>
+        <label class="field" style="flex-direction:row;align-items:center;gap:8px;">
+          <input type="checkbox" id="inrush2On" style="width:auto;">
+          <span id="lblInrush2On">Include initial peak point (25×FLA @ 0.01s)</span>
+        </label>
+        <div class="hint" id="hintStep3"></div>
+      </div>
+    </div>
+
+    <!-- STEP 4: DAMAGE / WITHSTAND CURVE -->
+    <div class="step optional" id="step4">
+      <div class="step-head" data-toggle="step4">
+        <div class="step-num">4</div>
+        <div class="step-title" id="step4Title">Transformer Withstand Curve <span style="color:var(--ink-faint)" id="optionalTag4">(optional)</span><small id="step4Small">Simplified through-fault I²t approximation</small></div>
+        <label class="switch" onclick="event.stopPropagation()">
+          <input type="checkbox" id="withstandOn" checked><span class="track"></span>
+        </label>
+      </div>
+      <div class="step-body">
+        <div class="row2">
+          <label class="field"><b id="lblWithstandMult">Anchor point — multiple of FLA</b>
+            <input type="number" id="withstandMult" value="25" min="1" step="1">
+          </label>
+          <label class="field"><b id="lblWithstandT">Anchor point — duration (s)</b>
+            <input type="number" id="withstandT" value="2" min="0.1" step="0.1">
+          </label>
+        </div>
+        <div class="hint" id="hintStep4"></div>
+      </div>
+    </div>
+
+    <!-- STEP 5: PROTECTIVE DEVICE -->
+    <div class="step optional" id="step5">
+      <div class="step-head" data-toggle="step5">
+        <div class="step-num">5</div>
+        <div class="step-title" id="step5Title">Protective Device <span style="color:var(--ink-faint)" id="optionalTag5">(optional)</span><small id="step5Small">Generic fuse/breaker shape, or plot your own datasheet points</small></div>
+        <label class="switch" onclick="event.stopPropagation()">
+          <input type="checkbox" id="deviceOn"><span class="track"></span>
+        </label>
+      </div>
+      <div class="step-body">
+        <label class="field"><b id="lblDeviceType">Device model</b>
+          <select id="deviceType">
+            <option value="fuse" selected>Fuse — by UL 248 class</option>
+            <option value="ul489">Breaker — standard thermal-magnetic (UL 489)</option>
+            <option value="breaker">Breaker — generic adjustable-trip</option>
+            <option value="custom">Custom points (from datasheet)</option>
+          </select>
+        </label>
+
+        <div id="fuseFields">
+          <label class="field"><b id="lblFuseClass">Fuse class</b>
+            <select id="fuseClass"></select>
+          </label>
+          <div class="hint" id="fuseClassHint"></div>
+          <label class="field"><b id="lblFuseRating">Fuse ampere rating (A)</b>
+            <input type="number" id="fuseRating" value="80" min="1" step="1">
+          </label>
+        </div>
+
+        <div id="ul489Fields" style="display:none;">
+          <label class="field"><b id="lblUl489Rating">Breaker ampere rating (A)</b>
+            <input type="number" id="ul489Rating" value="80" min="1" step="1">
+          </label>
+          <label class="field"><b id="lblUl489Inst">Instantaneous (magnetic) pickup (× rating)</b>
+            <input type="number" id="ul489Inst" value="10" min="3" max="20" step="0.5">
+          </label>
+          <div class="hint" id="hintUl489"></div>
+        </div>
+
+        <div id="breakerFields" style="display:none;">
+          <div class="row2">
+            <label class="field"><b id="lblLtPickup">Long-time pickup (A)</b>
+              <input type="number" id="ltPickup" value="80" min="1" step="1">
+            </label>
+            <label class="field"><b id="lblLtBand">Long-time band @ 6× pickup (s)</b>
+              <input type="number" id="ltBand" value="8" min="0.1" step="0.1">
+            </label>
+          </div>
+          <div class="row2">
+            <label class="field"><b id="lblStPickup">Short-time pickup (× LT pickup)</b>
+              <input type="number" id="stPickup" value="6" min="1.5" step="0.5">
+            </label>
+            <label class="field"><b id="lblStDelay">Short-time delay (s)</b>
+              <input type="number" id="stDelay" value="0.2" min="0.01" step="0.01">
+            </label>
+          </div>
+          <label class="field"><b id="lblInstPickup">Instantaneous pickup (× LT pickup)</b>
+            <input type="number" id="instPickup" value="10" min="2" step="0.5">
+          </label>
+        </div>
+
+        <div id="customFields" style="display:none;">
+          <div id="customPointsList" style="display:flex;flex-direction:column;gap:5px;"></div>
+          <div class="row2">
+            <input type="number" id="customI" placeholder="A" step="1">
+            <input type="number" id="customT" placeholder="s" step="0.001">
+          </div>
+          <button class="add-btn" id="addCustomPoint">+ <span id="addPointTxt">Add point</span></button>
+        </div>
+        <div class="hint" id="hintStep5"></div>
+      </div>
+    </div>
+
+    <!-- STEP 6: CABLE WITHSTAND (optional) -->
+    <div class="step optional" id="step6">
+      <div class="step-head" data-toggle="step6">
+        <div class="step-num">6</div>
+        <div class="step-title" id="step6Title">Cable Withstand Curve <span style="color:var(--ink-faint)" id="optionalTag6">(optional)</span><small id="step6Small">ICEA P-32-382 conductor thermal limit</small></div>
+        <label class="switch" onclick="event.stopPropagation()">
+          <input type="checkbox" id="cableOn"><span class="track"></span>
+        </label>
+      </div>
+      <div class="step-body">
+        <div class="row2">
+          <label class="field"><b id="lblCableMat">Conductor material</b>
+            <div class="seg" id="cableMatSeg">
+              <button data-u="cu" class="active">Copper</button>
+              <button data-u="al">Aluminum</button>
+            </div>
+          </label>
+          <label class="field"><b id="lblCableCm">Conductor size (kcmil)</b>
+            <input type="number" id="cableCm" value="250" min="1" step="1">
+          </label>
+        </div>
+        <div class="row2">
+          <label class="field"><b id="lblT1">Normal temp., T1 (°C)</b>
+            <input type="number" id="cableT1" value="90" min="60" max="105" step="1">
+          </label>
+          <label class="field"><b id="lblT2">Max short-circuit temp., T2 (°C)</b>
+            <input type="number" id="cableT2" value="250" min="150" max="350" step="5">
+          </label>
+        </div>
+        <div class="hint" id="hintStep6"></div>
+      </div>
+    </div>
+  </div>
+  <div class="canvas-col">
+    <div class="panel">
+      <div class="panel-head"><h2 id="resultTitle">Result — Coordination Screening</h2></div>
+      <div class="stat-list">
+        <div class="stat hot"><div class="k" id="lblStatFlaP">Primary FLA</div><div class="v" id="statFlaP">—</div></div>
+        <div class="stat"><div class="k" id="lblStatFlaS">Secondary FLA</div><div class="v" id="statFlaS">—</div></div>
+        <div class="stat"><div class="k" id="lblStatIscS">Isc at secondary bus</div><div class="v" id="statIscS">—</div></div>
+        <div class="stat"><div class="k" id="lblStatInrush">Inrush point</div><div class="v" id="statInrush">—</div></div>
+      </div>
+      <div id="verdictBox"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2 id="tccTitle">Time-Current Curve</h2><span class="tag" id="tccTag">log-log, current in amperes, time in seconds</span></div>
+      <div class="tcc-wrap"><svg id="tccChart" viewBox="0 0 900 520" xmlns="http://www.w3.org/2000/svg"></svg></div>
+      <div class="legend" id="tccLegend"></div>
+    </div>
+
+    <div class="panel no-print" style="border:none;background:transparent;">
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px;font-size:11.5px;color:var(--ink-dim);">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+          <input type="checkbox" id="includeLedger" checked style="width:auto;">
+          <span id="lblIncludeLedger">Include Calculation Ledger in report</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+          <input type="checkbox" id="includeLogo" checked style="width:auto;">
+          <span id="lblIncludeLogo">Include OhmZone brand mark in report</span>
+        </label>
+      </div>
+      <div class="btn-row" style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button id="printBtn" style="padding:9px 16px;border-radius:8px;border:1px solid #2f5678;background:#0f2036;color:#c8d8e8;cursor:pointer;font-family:inherit;">🖨 Print / Save as PDF</button>
+        <button id="exportWordBtn" style="padding:9px 16px;border-radius:8px;border:1px solid #2f5678;background:#0f2036;color:#c8d8e8;cursor:pointer;font-family:inherit;">📄 Export study (Word)</button>
+        <button id="exportExcelBtn" style="padding:9px 16px;border-radius:8px;border:1px solid #2f5678;background:#0f2036;color:#c8d8e8;cursor:pointer;font-family:inherit;">📊 Export study (Excel)</button>
+      </div>
+      <div style="border-top:1px dashed var(--line);margin-top:14px;padding-top:12px;">
+        <label class="field"><b id="lblUploadTemplate">Report template (.docx, optional)</b>
+          <input type="file" id="templateFile" accept=".docx">
+        </label>
+        <div id="templateStatus" style="font-size:11px;color:var(--trace);margin-top:4px;"></div>
+        <div class="hint" id="hintUploadTemplate" style="margin-top:6px;"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2 id="ledgerTitle">Calculation Ledger</h2><span class="tag" id="ledgerTag">clause-by-clause</span></div>
+      <div class="ledger" id="ledger"></div>
+    </div>
+  </div>
+</div>
+
+<footer class="note" id="footerNote"></footer>
+
+<script>
+const $ = id => document.getElementById(id);
+function fmt(n,d=2){ if(n===undefined||n===null||isNaN(n)) return "—"; return Number(n).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d}); }
+
+let currentLang = 'en';
+let state = { cableMat:"cu", customPoints:[] };
+
+document.querySelectorAll(".step-head").forEach(h=>{
+  h.addEventListener("click", ()=>{ $(h.dataset.toggle).classList.toggle("closed"); });
+});
+function wireOptionalToggle(stepId, checkboxId){
+  const cb = $(checkboxId), step = $(stepId);
+  const sync = ()=> step.classList.toggle("on", cb.checked);
+  cb.addEventListener("change", ()=>{ sync(); recalc(); });
+  sync();
+}
+wireOptionalToggle("step4","withstandOn");
+wireOptionalToggle("step5","deviceOn");
+wireOptionalToggle("step6","cableOn");
+
+$("deviceType").addEventListener("change", ()=>{
+  const t = $("deviceType").value;
+  $("fuseFields").style.display = t==="fuse" ? "flex" : "none";
+  $("ul489Fields").style.display = t==="ul489" ? "flex" : "none";
+  $("breakerFields").style.display = t==="breaker" ? "flex" : "none";
+  $("customFields").style.display = t==="custom" ? "flex" : "none";
+  recalc();
+});
+function populateFuseClasses(){
+  const L = UI[currentLang];
+  const sel = $("fuseClass");
+  const prev = sel.value;
+  sel.innerHTML = Object.keys(FUSE_CLASSES).map(k=>`<option value="${k}">${FUSE_CLASSES[k].label}</option>`).join("");
+  if(prev) sel.value = prev;
+  updateFuseClassHint();
+}
+function updateFuseClassHint(){
+  const cls = FUSE_CLASSES[$("fuseClass").value];
+  if(!cls) return;
+  $("fuseClassHint").innerHTML = `${cls.voltage}, ${cls.interrupt} interrupting — <em>${cls.anchorCite}</em>`;
+}
+$("fuseClass").addEventListener("change", ()=>{ updateFuseClassHint(); recalc(); });
+$("ul489Inst").addEventListener("input", recalc);
+$("ul489Rating").addEventListener("input", recalc);
+
+document.getElementById("cableMatSeg").addEventListener("click", e=>{
+  const b = e.target.closest("button"); if(!b) return;
+  document.querySelectorAll("#cableMatSeg button").forEach(x=>x.classList.remove("active"));
+  b.classList.add("active");
+  state.cableMat = b.dataset.u;
+  recalc();
+});
+
+$("addCustomPoint").addEventListener("click", ()=>{
+  const I = parseFloat($("customI").value), t = parseFloat($("customT").value);
+  if(!(I>0) || !(t>0)) return;
+  state.customPoints.push({I,t});
+  state.customPoints.sort((a,b)=>a.I-b.I);
+  renderCustomPoints();
+  recalc();
+});
+function removeCustomPoint(i){
+  state.customPoints.splice(i,1);
+  renderCustomPoints();
+  recalc();
+}
+function renderCustomPoints(){
+  const L = UI[currentLang];
+  const list = $("customPointsList");
+  if(state.customPoints.length===0){
+    list.innerHTML = `<div class="empty-note">${L.noCustomPoints}</div>`;
+    return;
+  }
+  list.innerHTML = state.customPoints.map((p,i)=>`<div class="item-row">
+    <span class="lbl">${fmt(p.I,1)} A @ ${fmt(p.t,3)} s</span>
+    <button onclick="removeCustomPoint(${i})">✕</button>
+  </div>`).join("");
+}
+
+["eqTag","kva","impedZ","priV","secV","iscMax","iscMin","srcXR",
+ "inrushMult1","inrushT1","inrush2On","withstandMult","withstandT",
+ "fuseRating","ltPickup","ltBand","stPickup","stDelay","instPickup",
+ "cableCm","cableT1","cableT2"].forEach(id=>{
+  $(id).addEventListener("input", recalc);
+  $(id).addEventListener("change", recalc);
+});
+
+$("loadExample").addEventListener("click", ()=>{
+  $("eqTag").value = "TX-101";
+  $("kva").value = 1500; $("impedZ").value = 5.75;
+  $("priV").value = 13800; $("secV").value = 600;
+  $("iscMax").value = 8.5; $("iscMin").value = 4.0; $("srcXR").value = 15;
+  $("inrushMult1").value = 12; $("inrushT1").value = 0.1; $("inrush2On").checked = true;
+  $("withstandOn").checked = true; $("withstandMult").value = 25; $("withstandT").value = 2;
+  $("deviceOn").checked = true; $("deviceType").value = "fuse"; $("fuseClass").value = "rk1"; updateFuseClassHint(); $("fuseRating").value = 80;
+  $("fuseFields").style.display = "flex"; $("ul489Fields").style.display = "none"; $("breakerFields").style.display = "none"; $("customFields").style.display = "none";
+  $("cableOn").checked = false;
+  wireOptionalToggle("step4","withstandOn");
+  wireOptionalToggle("step5","deviceOn");
+  wireOptionalToggle("step6","cableOn");
+  recalc();
+});
+
+/* ===== curve generation ===== */
+function sampleLogRange(iMin, iMax, n){
+  const out = [];
+  const lo = Math.log10(iMin), hi = Math.log10(iMax);
+  for(let k=0;k<=n;k++){ out.push(Math.pow(10, lo + (hi-lo)*k/n)); }
+  return out;
+}
+
+/* Simplified I²t withstand line: t = K / I², K anchored at (mult×FLA, anchorT). */
+function withstandCurve(FLA, mult, anchorT, iMin, iMax){
+  const K = Math.pow(mult*FLA, 2) * anchorT;
+  const tMaxCap = 3600, tMinCap = 0.01;
+  return sampleLogRange(iMin, iMax, 60).map(I=>({I, t: Math.min(tMaxCap, Math.max(tMinCap, K/(I*I)))}));
+}
+
+/* Fuse class library — voltage/interrupting ratings and time-delay test points are
+   real, cited UL 248-series requirements that apply to every listed manufacturer's
+   fuse in that class (Bussmann/Eaton, Littelfuse, Mersen, Ferraz, etc. all must meet
+   the same UL minimum). Where a numeric time-delay test point is confirmed (RK1/RK5,
+   CC), the curve is calibrated through that real point. Where it is not (J, L, T —
+   UL either does not test time-delay for that class, or the specific number was not
+   independently confirmed here), the curve shape is representative only. The curve
+   SHAPE between/around that anchor point is still an interpolated approximation in
+   every case, not a specific manufacturer's exact published melt curve — a real
+   manufacturer's fuse in a given class typically clears faster (is more protective)
+   than the bare UL-minimum anchor used here. */
+const FUSE_CLASSES = {
+  rk5: { label:"Class RK5, dual-element time-delay (e.g. Bussmann Fusetron FRN-R/FRS-R)", voltage:"250/600 V", interrupt:"200 kA", anchor:{mult:5, t:10}, anchorCite:"UL 248-12 time-delay option: shall not open before 10 s at 500% rated current", shapeExp:2.0 },
+  rk1: { label:"Class RK1, time-delay (e.g. Bussmann Low-Peak LPN-RK/LPS-RK)", voltage:"250/600 V", interrupt:"300 kA", anchor:{mult:5, t:10}, anchorCite:"UL 248-12 time-delay option: shall not open before 10 s at 500% rated current", shapeExp:2.6 },
+  j: { label:"Class J, dual-element time-delay (e.g. Bussmann Low-Peak LPJ)", voltage:"600 V", interrupt:"200 kA", anchor:null, anchorCite:"UL 248-8 — specific numeric time-delay test point not independently confirmed here; representative curve shape only", shapeExp:2.2 },
+  cc: { label:"Class CC, time-delay option", voltage:"600 V", interrupt:"200 kA", anchor:{mult:2, t:12}, anchorCite:"UL 248 time-delay option (fuses >3 A): shall not open before 12 s at 200% rated current", shapeExp:1.8 },
+  t: { label:"Class T, fast-acting current-limiting", voltage:"300/600 V", interrupt:"200 kA", anchor:null, anchorCite:"UL 248-15 — fast-acting class, no standard time-delay test; representative curve shape only", shapeExp:2.4 },
+  l: { label:"Class L, time-delay (UL does not independently test time-delay marking)", voltage:"600 V", interrupt:"200 kA", anchor:null, anchorCite:"UL 248-10 — manufacturers may mark time-delay but UL does not investigate it for this class; representative curve shape only", shapeExp:1.6 }
+};
+
+/* Calibrated fuse melt/clear curve: shape follows the same knee-type formula as
+   before, but the coefficient is now solved so the curve passes through the real
+   UL anchor point when one exists for the selected class (see FUSE_CLASSES above). */
+function genericFuseCurve(rating, iMin, iMax, classKey){
+  const cls = FUSE_CLASSES[classKey] || FUSE_CLASSES.rk5;
+  const p = cls.shapeExp;
+  let A = 900; // fallback coefficient when no real anchor point exists for this class
+  if(cls.anchor){
+    const denomAnchor = Math.pow(cls.anchor.mult, p) - 1;
+    if(denomAnchor > 0) A = cls.anchor.t * denomAnchor;
+  }
+  const melt = [], clear = [];
+  const pts = sampleLogRange(Math.max(iMin, rating*1.05), iMax, 80);
+  pts.forEach(I=>{
+    const ratio = I/rating;
+    const denom = Math.pow(ratio, p) - 1;
+    if(denom<=0) return;
+    const tMelt = Math.min(300, Math.max(0.005, A/denom));
+    melt.push({I, t:tMelt});
+    clear.push({I, t:tMelt*0.72});
+  });
+  return {melt, clear};
+}
+
+/* Generic adjustable-trip breaker shape: long-time band (I²t-like), short-time flat
+   band, instantaneous vertical line. A legitimately standard generic MCCB/LVPCB
+   curve shape — still illustrative, not a specific manufacturer's curve. */
+function genericBreakerCurve(ltPickup, ltBandAt6x, stMult, stDelay, instMult){
+  const curve = [];
+  const stPickupA = ltPickup*stMult;
+  const instPickupA = ltPickup*instMult;
+  // long-time band: I^2 t = K, calibrated at 6x pickup = ltBandAt6x seconds
+  const K = Math.pow(ltPickup*6,2) * ltBandAt6x;
+  const ltPts = sampleLogRange(ltPickup*1.05, stPickupA, 40);
+  ltPts.forEach(I=> curve.push({I, t: Math.max(stDelay, K/(I*I))}));
+  // short-time flat band
+  curve.push({I:stPickupA, t:stDelay});
+  curve.push({I:instPickupA*0.999, t:stDelay});
+  // instantaneous vertical (drawn as a near-vertical drop)
+  curve.push({I:instPickupA, t:stDelay});
+  curve.push({I:instPickupA, t:0.008});
+  return curve;
+}
+
+/* Standard (non-adjustable) thermal-magnetic MCCB, calibrated to real UL 489
+   calibration test points — these are regulatory maximum trip times that every
+   UL 489-listed breaker must meet, not a specific manufacturer's exact curve:
+   - 135% of rated current: shall trip within 1 h (rating ≤50 A) or 2 h (>50 A)     [UL 489 §7.1.2.3 / §26.6, H3 calibration]
+   - 200% of rated current: shall trip within 2 min for the smaller-frame ratings
+     UL 489 documents (this tool applies that 2-minute figure as a representative
+     value across ratings; larger frames may be permitted a different time band —
+     verify against the specific breaker's published curve for the exact figure)
+   Instantaneous trip is set at a typical 8–12× rating range (magnetic pickup),
+   consistent with common thermal-magnetic breaker practice — not itself a UL 489
+   numeric requirement. */
+function ul489BreakerCurve(rating, instMult, iMin, iMax){
+  const t135 = rating<=50 ? 3600 : 7200;
+  const t200 = 120;
+  // fit t = C * (I/rating)^(-n) exactly through both real regulatory points —
+  // standard log-log linear interpolation between two known calibration points
+  const n = (Math.log(t135)-Math.log(t200)) / (Math.log(2.0)-Math.log(1.35));
+  const C = t135 * Math.pow(1.35, n);
+  const instPickupA = rating*instMult;
+  const curve = [];
+  const pts = sampleLogRange(Math.max(iMin, rating*1.1), Math.min(instPickupA*0.98, iMax), 60);
+  pts.forEach(I=>{
+    const mult = I/rating;
+    const t = mult>1.05 ? C/Math.pow(mult, n) : t135;
+    curve.push({I, t: Math.max(0.02, Math.min(t135, t))});
+  });
+  curve.push({I:instPickupA*0.999, t:0.02});
+  curve.push({I:instPickupA, t:0.02});
+  curve.push({I:instPickupA, t:0.008});
+  return curve;
+}
+
+/* Cable I^2t thermal withstand — ICEA P-32-382 formula, same methodology already
+   used in the MV Transformer Primary Cable Sizing tool. */
+function cableCurve(mat, cm, t1, t2, iMin, iMax){
+  return sampleLogRange(iMin, iMax, 60).map(I=>{
+    let t;
+    if(mat==="cu") t = 0.0297 * Math.pow(cm/I,2) * Math.log10((t2+234)/(t1+234));
+    else t = 0.0125 * Math.pow(cm/I,2) * Math.log10((t2+228)/(t1+228));
+    return {I, t: Math.min(3600, Math.max(0.005, t))};
+  });
+}
+
+/* ===== core calc ===== */
+function calcAll(){
+  const kva = parseFloat($("kva").value)||0;
+  const impedZ = parseFloat($("impedZ").value)||5;
+  const priV = parseFloat($("priV").value)||1;
+  const secV = parseFloat($("secV").value)||1;
+  const iscMaxKa = parseFloat($("iscMax").value)||0;
+  const iscMinKa = parseFloat($("iscMin").value)||0;
+  const srcXR = parseFloat($("srcXR").value)||10;
+
+  const flaP = (kva*1000)/(Math.sqrt(3)*priV);
+  const flaS = (kva*1000)/(Math.sqrt(3)*secV);
+
+  // secondary fault current via same series-impedance method as the Short-Circuit tool
+  function iscAtSecondary(iscPoiKa){
+    const iscPoiA = iscPoiKa*1000;
+    const Zsrc = priV/(Math.sqrt(3)*iscPoiA);
+    const theta = Math.atan(srcXR);
+    const Rsrc = Zsrc*Math.cos(theta), Xsrc = Zsrc*Math.sin(theta);
+    const ratio = Math.pow(secV/priV,2);
+    const Rsrc2 = Rsrc*ratio, Xsrc2 = Xsrc*ratio;
+    const Zbase2 = (secV*secV)/(kva*1000);
+    const Zxfmr = (impedZ/100)*Zbase2;
+    // assume transformer X/R ~ typical (use same 6x rule as short-circuit tool would with typical table, fallback X/R=6)
+    const xfmrXR = kva<=1000 ? 4 : (kva<=2500 ? 6 : 8);
+    const thetaX = Math.atan(xfmrXR);
+    const Rx = Zxfmr*Math.cos(thetaX), Xx = Zxfmr*Math.sin(thetaX);
+    const Rf = Rsrc2+Rx, Xf = Xsrc2+Xx;
+    const Zf = Math.hypot(Rf,Xf);
+    return (secV/(Math.sqrt(3)*Zf))/1000; // kA
+  }
+  const iscSecMax = iscAtSecondary(iscMaxKa);
+  const iscSecMin = iscAtSecondary(iscMinKa);
+
+  const inrushMult1 = parseFloat($("inrushMult1").value)||12;
+  const inrushT1 = parseFloat($("inrushT1").value)||0.1;
+  const inrush2On = $("inrush2On").checked;
+  const inrushPoints = [{I: flaP*inrushMult1, t: inrushT1, mult:inrushMult1}];
+  if(inrush2On) inrushPoints.push({I: flaP*25, t: 0.01, mult:25});
+
+  const withstandOn = $("withstandOn").checked;
+  const withstandMult = parseFloat($("withstandMult").value)||25;
+  const withstandT = parseFloat($("withstandT").value)||2;
+
+  const deviceOn = $("deviceOn").checked;
+  const deviceType = $("deviceType").value;
+
+  const cableOn = $("cableOn").checked;
+  const cableMat = state.cableMat;
+  const cableCm = parseFloat($("cableCm").value)||250;
+  const cableT1v = parseFloat($("cableT1").value)||90;
+  const cableT2v = parseFloat($("cableT2").value)||250;
+
+  // chart current range: from ~0.3x FLA to ~2x max Isc (primary-referred) or inrush, whichever bigger
+  const iMin = Math.max(1, flaP*0.3);
+  const iscSecMaxAsPrimary = iscSecMax*1000*(secV/priV); // rough primary-equivalent for range sizing only
+  const iMax = Math.max(flaP*40, iscSecMaxAsPrimary*1.5, inrushPoints[0].I*1.5);
+
+  return {kva, impedZ, priV, secV, iscMaxKa, iscMinKa, srcXR, flaP, flaS,
+    iscSecMax, iscSecMin, inrushPoints, withstandOn, withstandMult, withstandT,
+    deviceOn, deviceType, cableOn, cableMat, cableCm, cableT1:cableT1v, cableT2:cableT2v,
+    iMin, iMax, tag: $("eqTag").value.trim()};
+}
+
+/* ===== log-log TCC chart ===== */
+function xPix(I, iMin, iMax, padL, plotW){ return padL + (Math.log10(I)-Math.log10(iMin))/(Math.log10(iMax)-Math.log10(iMin)) * plotW; }
+function yPix(t, tMin, tMax, padT, plotH){ return padT + plotH - (Math.log10(t)-Math.log10(tMin))/(Math.log10(tMax)-Math.log10(tMin)) * plotH; }
+
+function pointsToPath(pts, iMin, iMax, tMin, tMax, padL, padT, plotW, plotH){
+  return pts.map((p,i)=>{
+    const x = xPix(Math.min(Math.max(p.I,iMin),iMax), iMin, iMax, padL, plotW);
+    const y = yPix(Math.min(Math.max(p.t,tMin),tMax), tMin, tMax, padT, plotH);
+    return (i===0?"M":"L")+x.toFixed(1)+","+y.toFixed(1);
+  }).join(" ");
+}
+
+function renderChart(d){
+  const L = UI[currentLang];
+  const svg = $("tccChart");
+  const W=900, H=520, padL=56, padR=16, padT=16, padB=40;
+  const plotW = W-padL-padR, plotH = H-padT-padB;
+  const iMin = d.iMin, iMax = d.iMax;
+  const tMin = 0.008, tMax = 1000;
+
+  let s = "";
+  // grid: decade lines
+  const iDecades = [];
+  for(let e=Math.floor(Math.log10(iMin)); e<=Math.ceil(Math.log10(iMax)); e++) iDecades.push(Math.pow(10,e));
+  const tDecades = [0.01,0.1,1,10,100,1000];
+  iDecades.forEach(v=>{
+    if(v<iMin||v>iMax) return;
+    const x = xPix(v,iMin,iMax,padL,plotW);
+    s += `<line x1="${x}" y1="${padT}" x2="${x}" y2="${padT+plotH}" stroke="#233350" stroke-width="1"/>`;
+    s += `<text x="${x}" y="${padT+plotH+16}" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#8497b8">${v>=1000?(v/1000)+"k":v}</text>`;
+  });
+  tDecades.forEach(v=>{
+    const y = yPix(v,tMin,tMax,padT,plotH);
+    s += `<line x1="${padL}" y1="${y}" x2="${padL+plotW}" y2="${y}" stroke="#233350" stroke-width="1"/>`;
+    s += `<text x="${padL-6}" y="${y+3}" text-anchor="end" font-family="IBM Plex Mono" font-size="9" fill="#8497b8">${v}</text>`;
+  });
+  s += `<text x="${padL+plotW/2}" y="${H-4}" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#516085">${L.axisCurrent}</text>`;
+  s += `<text x="14" y="${padT+plotH/2}" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#516085" transform="rotate(-90 14 ${padT+plotH/2})">${L.axisTime}</text>`;
+
+  const legendItems = [];
+
+  // withstand curve
+  if(d.withstandOn){
+    const pts = withstandCurve(d.flaP, d.withstandMult, d.withstandT, iMin, iMax);
+    s += `<path d="${pointsToPath(pts,iMin,iMax,tMin,tMax,padL,padT,plotW,plotH)}" fill="none" stroke="#ff5d77" stroke-width="2" stroke-dasharray="5 3"/>`;
+    legendItems.push({color:"#ff5d77", label:L.legendWithstand, dash:true});
+  }
+
+  // cable curve
+  if(d.cableOn){
+    const pts = cableCurve(d.cableMat, d.cableCm, d.cableT1, d.cableT2, iMin, iMax);
+    s += `<path d="${pointsToPath(pts,iMin,iMax,tMin,tMax,padL,padT,plotW,plotH)}" fill="none" stroke="#c792ea" stroke-width="2" stroke-dasharray="2 2"/>`;
+    legendItems.push({color:"#c792ea", label:L.legendCable, dash:true});
+  }
+
+  // device curve
+  if(d.deviceOn){
+    if(d.deviceType==="fuse"){
+      const rating = parseFloat($("fuseRating").value)||80;
+      const classKey = $("fuseClass").value || "rk5";
+      const {melt,clear} = genericFuseCurve(rating, iMin, iMax, classKey);
+      s += `<path d="${pointsToPath(melt,iMin,iMax,tMin,tMax,padL,padT,plotW,plotH)}" fill="none" stroke="#3b9eff" stroke-width="2"/>`;
+      s += `<path d="${pointsToPath(clear,iMin,iMax,tMin,tMax,padL,padT,plotW,plotH)}" fill="none" stroke="#3b9eff" stroke-width="1.4" stroke-dasharray="3 2"/>`;
+      legendItems.push({color:"#3b9eff", label:L.legendFuseMelt});
+      legendItems.push({color:"#3b9eff", label:L.legendFuseClear, dash:true});
+    } else if(d.deviceType==="ul489"){
+      const rating = parseFloat($("ul489Rating").value)||80;
+      const instMult = parseFloat($("ul489Inst").value)||10;
+      const pts = ul489BreakerCurve(rating, instMult, iMin, iMax);
+      s += `<path d="${pointsToPath(pts,iMin,iMax,tMin,tMax,padL,padT,plotW,plotH)}" fill="none" stroke="#3b9eff" stroke-width="2"/>`;
+      legendItems.push({color:"#3b9eff", label:L.legendUl489});
+    } else if(d.deviceType==="breaker"){
+      const ltPickup = parseFloat($("ltPickup").value)||80;
+      const ltBand = parseFloat($("ltBand").value)||8;
+      const stMult = parseFloat($("stPickup").value)||6;
+      const stDelay = parseFloat($("stDelay").value)||0.2;
+      const instMult = parseFloat($("instPickup").value)||10;
+      const pts = genericBreakerCurve(ltPickup, ltBand, stMult, stDelay, instMult);
+      s += `<path d="${pointsToPath(pts,iMin,iMax,tMin,tMax,padL,padT,plotW,plotH)}" fill="none" stroke="#3b9eff" stroke-width="2"/>`;
+      legendItems.push({color:"#3b9eff", label:L.legendBreaker});
+    } else {
+      if(state.customPoints.length>=2){
+        s += `<path d="${pointsToPath(state.customPoints,iMin,iMax,tMin,tMax,padL,padT,plotW,plotH)}" fill="none" stroke="#3b9eff" stroke-width="2"/>`;
+      }
+      state.customPoints.forEach(p=>{
+        const x = xPix(Math.min(Math.max(p.I,iMin),iMax),iMin,iMax,padL,plotW);
+        const y = yPix(Math.min(Math.max(p.t,tMin),tMax),tMin,tMax,padT,plotH);
+        s += `<circle cx="${x}" cy="${y}" r="3" fill="#3b9eff"/>`;
+      });
+      legendItems.push({color:"#3b9eff", label:L.legendCustom});
+    }
+  }
+
+  // inrush points
+  d.inrushPoints.forEach(p=>{
+    const x = xPix(Math.min(Math.max(p.I,iMin),iMax),iMin,iMax,padL,plotW);
+    const y = yPix(Math.min(Math.max(p.t,tMin),tMax),tMin,tMax,padT,plotH);
+    s += `<circle cx="${x}" cy="${y}" r="4.5" fill="#e8b545" stroke="#0a0e18" stroke-width="1"/>`;
+  });
+  legendItems.push({color:"#e8b545", label:L.legendInrush, isDot:true});
+
+  // fault current band at secondary (shown at rated secondary side reference - vertical band using flaS reference is not meaningful for primary-referred chart, so we just show Isc as a marked vertical range at top)
+  const iscMinI = d.iscSecMin*1000*(d.secV/d.priV);
+  const iscMaxI = d.iscSecMax*1000*(d.secV/d.priV);
+  if(iscMinI>=iMin && iscMinI<=iMax){
+    const x1 = xPix(iscMinI,iMin,iMax,padL,plotW);
+    const x2 = xPix(Math.min(iscMaxI,iMax),iMin,iMax,padL,plotW);
+    s += `<rect x="${x1}" y="${padT}" width="${Math.max(1,x2-x1)}" height="${plotH}" fill="#5b9bd5" fill-opacity="0.08"/>`;
+    s += `<line x1="${x1}" y1="${padT}" x2="${x1}" y2="${padT+plotH}" stroke="#5b9bd5" stroke-width="1" stroke-dasharray="2 2"/>`;
+    s += `<line x1="${x2}" y1="${padT}" x2="${x2}" y2="${padT+plotH}" stroke="#5b9bd5" stroke-width="1" stroke-dasharray="2 2"/>`;
+    legendItems.push({color:"#5b9bd5", label:L.legendIscBand});
+  }
+
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  svg.innerHTML = s;
+
+  $("tccLegend").innerHTML = legendItems.map(li=>
+    `<span><span class="sw ${li.isDot?'dot':''}" style="background:${li.color};${li.dash?'border-top:2px dashed '+li.color+';background:transparent;height:0;':''}"></span>${li.label}</span>`
+  ).join("");
+}
+
+function recalc(){
+  const L = UI[currentLang];
+  const d = calcAll();
+
+  $("statFlaP").textContent = fmt(d.flaP,1)+" A";
+  $("statFlaS").textContent = fmt(d.flaS,1)+" A";
+  $("statIscS").textContent = fmt(d.iscSecMax,2)+" kA ("+L.maxShort+") / "+fmt(d.iscSecMin,2)+" kA ("+L.minShort+")";
+  $("statInrush").textContent = fmt(d.inrushPoints[0].I,0)+" A @ "+d.inrushPoints[0].t+" s";
+  $("revTag").textContent = new Date().toISOString().slice(0,10);
+
+  const verdictBox = $("verdictBox");
+  let html = "";
+  if(d.deviceOn){
+    let deviceTAtInrush = null;
+    const inrushI = d.inrushPoints[0].I;
+    if(d.deviceType==="fuse"){
+      const rating = parseFloat($("fuseRating").value)||80;
+      const classKey = $("fuseClass").value || "rk5";
+      const {melt} = genericFuseCurve(rating, d.iMin, d.iMax, classKey);
+      const near = melt.reduce((best,p)=> Math.abs(p.I-inrushI)<Math.abs(best.I-inrushI)?p:best, melt[0]||{I:0,t:999});
+      deviceTAtInrush = near.t;
+    } else if(d.deviceType==="ul489"){
+      const rating = parseFloat($("ul489Rating").value)||80;
+      const instMult = parseFloat($("ul489Inst").value)||10;
+      const pts = ul489BreakerCurve(rating, instMult, d.iMin, d.iMax);
+      const near = pts.reduce((best,p)=> Math.abs(p.I-inrushI)<Math.abs(best.I-inrushI)?p:best, pts[0]||{I:0,t:999});
+      deviceTAtInrush = near.t;
+    } else if(d.deviceType==="breaker"){
+      const ltPickup = parseFloat($("ltPickup").value)||80;
+      const instMult = parseFloat($("instPickup").value)||10;
+      deviceTAtInrush = inrushI >= ltPickup*instMult ? 0.008 : null;
+    }
+    if(deviceTAtInrush!==null){
+      if(deviceTAtInrush > d.inrushPoints[0].t*3){
+        html += `<div class="risk-box risk-ok"><b>${L.inrushClearTitle}</b> ${L.inrushClearBody}</div>`;
+      } else {
+        html += `<div class="risk-box risk-alarm"><b>${L.inrushRiskTitle}</b> ${L.inrushRiskBody}</div>`;
+      }
+    }
+  }
+  if(html==="") html = `<div class="risk-box risk-warn"><b>${L.screeningOnlyTitle}</b> ${L.screeningOnlyBody}</div>`;
+  verdictBox.innerHTML = html;
+
+  renderChart(d);
+  renderLedger(d);
+  window._lastResults = d;
+}
+
+/* ===== ledger ===== */
+function buildLedgerSteps(d){
+  const L = UI[currentLang];
+  const steps = [];
+  steps.push({num:1, title:L.ls1Title, clause:"—", note:L.ls1Note, formula:
+`FLA(primary) = kVA×1000 / (√3×Vp) = ${d.kva}×1000 / (1.732×${fmt(d.priV,0)}) = ${fmt(d.flaP,1)} A
+FLA(secondary) = kVA×1000 / (√3×Vs) = ${d.kva}×1000 / (1.732×${fmt(d.secV,0)}) = ${fmt(d.flaS,1)} A`});
+
+  steps.push({num:2, title:L.ls2Title, clause:"ETAP/EasyPower convention", note:L.ls2Note, formula:
+`${L.maxShort}: ${fmt(d.iscMaxKa,2)} kA @ POI → ${fmt(d.iscSecMax,2)} kA at secondary bus
+${L.minShort}: ${fmt(d.iscMinKa,2)} kA @ POI → ${fmt(d.iscSecMin,2)} kA at secondary bus
+X/R at POI = ${fmt(d.srcXR,1)}, transformer %Z = ${fmt(d.impedZ,2)}%`});
+
+  const p1 = d.inrushPoints[0];
+  let inrushFormula = `Point 1: I = ${p1.mult}×FLA = ${p1.mult}×${fmt(d.flaP,1)} = ${fmt(p1.I,0)} A @ ${p1.t} s`;
+  if(d.inrushPoints[1]) inrushFormula += `\nPoint 2 (initial peak): I = 25×FLA = ${fmt(d.inrushPoints[1].I,0)} A @ ${d.inrushPoints[1].t} s`;
+  steps.push({num:3, title:L.ls3Title, clause:L.clauseInrush, note:L.ls3Note, formula:inrushFormula});
+
+  if(d.withstandOn){
+    steps.push({num:4, title:L.ls4Title, clause:"IEEE C57.109 (simplified)", note:L.ls4Note, formula:
+`Anchor: I = ${d.withstandMult}×FLA = ${fmt(d.withstandMult*d.flaP,0)} A @ ${d.withstandT} s
+K = I²×t = ${fmt(Math.pow(d.withstandMult*d.flaP,2)*d.withstandT,0)}
+t(I) = K / I²`});
+  }
+
+  if(d.deviceOn){
+    let df = "", clause = "—";
+    if(d.deviceType==="fuse"){
+      const rating = parseFloat($("fuseRating").value)||80;
+      const classKey = $("fuseClass").value || "rk5";
+      const cls = FUSE_CLASSES[classKey];
+      clause = cls.anchor ? "UL 248 (real anchor point)" : "UL 248 (shape only)";
+      const anchorLine = cls.anchor
+        ? `Calibration point: ${cls.anchorCite}\nCurve solved to pass exactly through (${(cls.anchor.mult*rating).toFixed(0)} A, ${cls.anchor.t} s)`
+        : `${cls.anchorCite}`;
+      df = `${cls.label}: ${rating} A, ${cls.voltage}, ${cls.interrupt} interrupting\n${anchorLine}\nt_melt(I) = A / ((I/Ir)^${cls.shapeExp.toFixed(1)} − 1)  [${L.illustrativeShape}]\nt_clear ≈ 0.72 × t_melt`;
+    } else if(d.deviceType==="ul489"){
+      const rating = parseFloat($("ul489Rating").value)||80;
+      const instMult = parseFloat($("ul489Inst").value)||10;
+      const t135 = rating<=50 ? "1 h (3600 s)" : "2 h (7200 s)";
+      clause = "UL 489 §7.1.2.3 / §26.8 (real anchor points)";
+      df = `Standard thermal-magnetic, ${rating} A\n135% calibration: shall not trip before ${t135}\n200% calibration: shall trip within 2 min (120 s)\nCurve fit: log-log linear interpolation exactly through both real points\nInstantaneous (magnetic) pickup: ${instMult}× rating [${L.illustrativeShape} — not a UL 489 numeric requirement]`;
+    } else if(d.deviceType==="breaker"){
+      clause = "—";
+      df = `${L.deviceBreakerLbl}\nLT pickup ${$("ltPickup").value} A, band ${$("ltBand").value}s @6×\nST pickup ${$("stPickup").value}×LT, delay ${$("stDelay").value}s\nInst. pickup ${$("instPickup").value}×LT  [${L.illustrativeShape}]`;
+    } else {
+      clause = "—";
+      df = `${L.deviceCustomLbl}: ${state.customPoints.length} ${L.pointsEntered}`;
+    }
+    steps.push({num:5, title:L.ls5Title, clause, note:L.ls5Note, formula:df});
+  }
+
+  if(d.cableOn){
+    steps.push({num:6, title:L.ls6Title, clause:"ICEA P-32-382", note:L.ls6Note, formula:
+`${d.cableMat==="cu"?"Cu":"Al"}, ${d.cableCm} kcmil, T1=${d.cableT1}°C, T2=${d.cableT2}°C
+t = ${d.cableMat==="cu"?"0.0297":"0.0125"} × (CM/I)² × log10((T2+${d.cableMat==="cu"?234:228})/(T1+${d.cableMat==="cu"?234:228}))`});
+  }
+  return steps;
+}
+function renderLedger(d){
+  const steps = buildLedgerSteps(d);
+  $("ledger").innerHTML = steps.map(s=>`<div class="lstep"><div class="ln">${String(s.num).padStart(2,'0')}</div><div>
+    <h3><span class="clause">${s.clause}</span>${s.title}</h3><div class="formula">${s.formula}</div><div class="cite">${s.note}</div></div></div>`).join("");
+}
+
+/* ===== report ===== */
+function buildReportPageHTML(d, includeLedger, includeLogo){
+  const L = UI[currentLang];
+  const today = new Date().toLocaleDateString(currentLang==='fr'?'fr-CA':'en-CA');
+  const cell = (k,v)=>`<td style="padding:2.5pt 6pt 2.5pt 0;color:#333;font-size:9.5pt;white-space:nowrap;">${k}</td><td style="padding:2.5pt 14pt 2.5pt 0;font-weight:600;font-size:9.5pt;border-bottom:0.5pt solid #ddd;">${v}</td>`;
+  const gridRows = (pairs)=>{
+    let html = "";
+    for(let i=0;i<pairs.length;i+=2){
+      const a = pairs[i], b = pairs[i+1];
+      html += `<tr>${cell(a[0],a[1])}${b?cell(b[0],b[1]):'<td></td><td></td>'}</tr>`;
+    }
+    return html;
+  };
+  const sectionHead = (t)=>`<div style="font-size:9.5pt;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;border-bottom:1pt solid #1a1a1a;padding-bottom:2pt;margin:12pt 0 5pt;">${t}</div>`;
+
+  const inputPairs = [
+    [L.lblKva, d.kva+" kVA"], [L.lblImped, fmt(d.impedZ,2)+"%"],
+    [L.lblPriV, fmt(d.priV,0)+" V"], [L.lblSecV, fmt(d.secV,0)+" V"],
+    [L.lblIscMax, fmt(d.iscMaxKa,2)+" kA"], [L.lblIscMin, fmt(d.iscMinKa,2)+" kA"]
+  ];
+  const resultPairs = [
+    [L.lblStatFlaP, fmt(d.flaP,1)+" A"], [L.lblStatFlaS, fmt(d.flaS,1)+" A"],
+    [L.maxShort, fmt(d.iscSecMax,2)+" kA"], [L.minShort, fmt(d.iscSecMin,2)+" kA"],
+    [L.lblStatInrush, fmt(d.inrushPoints[0].I,0)+" A @ "+d.inrushPoints[0].t+" s"], ["",""]
+  ];
+
+  let ledgerHtml = "";
+  if(includeLedger){
+    const steps = buildLedgerSteps(d);
+    ledgerHtml = sectionHead(L.ledgerTitle) + `<table style="width:100%;border-collapse:collapse;">` +
+      steps.map(s=>`<tr>
+        <td style="padding:5pt 8pt 5pt 0;border-bottom:0.5pt solid #e5e5e5;font-size:8.5pt;font-weight:700;vertical-align:top;">${String(s.num).padStart(2,'0')}</td>
+        <td style="padding:5pt 8pt;border-bottom:0.5pt solid #e5e5e5;vertical-align:top;">
+          <div style="font-size:8.5pt;font-weight:700;margin-bottom:2pt;"><span style="color:#b8860b;font-family:'Courier New',monospace;font-size:7.5pt;margin-right:5pt;">${s.clause}</span>${s.title}</div>
+          <div style="font-family:'Courier New',monospace;font-size:8pt;color:#333;line-height:1.5;">${s.formula.split("\n").map(l=>l===""?"&nbsp;":l).join("<br>")}</div>
+          <div style="font-size:7.5pt;color:#888;margin-top:3pt;">${s.note}</div>
+        </td></tr>`).join("") + `</table>`;
+  }
+
+  return `
+  <div style="font-family:Arial,Helvetica,sans-serif;color:#1a1a1a;background:#fff;padding:4pt 2pt;font-size:9.5pt;line-height:1.4;">
+    <table style="width:100%;border-collapse:collapse;border-bottom:1.5pt solid #1a1a1a;padding-bottom:6pt;margin-bottom:4pt;">
+      <tr><td style="font-size:13pt;font-weight:700;padding-bottom:6pt;">${$('titleH1').textContent}</td>
+      <td style="text-align:right;font-size:8.5pt;color:#555;padding-bottom:6pt;">${includeLogo?'Ω OHMZONE':''}</td></tr>
+      <tr><td style="font-size:9pt;color:#333;"><b>${L.lblTag}:</b> ${d.tag || L.untitledTag} &nbsp;&nbsp; <b>${L.lblMethod}:</b> IEEE C57.109 (screening)</td>
+      <td style="text-align:right;font-size:8.5pt;color:#555;">${today}</td></tr>
+    </table>
+    ${sectionHead(L.repInputData)}
+    <table style="width:100%;border-collapse:collapse;">${gridRows(inputPairs)}</table>
+    ${sectionHead(L.repResults)}
+    <table style="width:100%;border-collapse:collapse;">${gridRows(resultPairs)}</table>
+    ${ledgerHtml}
+    <p style="font-size:7.5pt;color:#888;margin-top:14pt;border-top:0.5pt solid #ddd;padding-top:6pt;">${L.disclaimerBody}</p>
+  </div>`;
+}
+
+function downloadBlob(content, mime, filename){
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 2000);
+}
+
+$("printBtn").addEventListener("click", ()=>{
+  const d = window._lastResults;
+  if(!d) return;
+  const html = buildReportPageHTML(d, $("includeLedger").checked, $("includeLogo").checked);
+  const w = window.open("", "_blank");
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${$('titleH1').textContent}</title>
+  <style>body{margin:0;padding:18px;} @media print{body{padding:0;}}</style></head>
+  <body>${html}<script>window.onload=()=>window.print();<\/script></body></html>`);
+  w.document.close();
+});
+
+/* ===== report template upload ===== */
+let uploadedTemplateBuffer = null, uploadedTemplateName = "";
+$("templateFile").addEventListener("change", (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev)=>{ uploadedTemplateBuffer = ev.target.result; uploadedTemplateName = file.name; inspectTemplate(file.name); };
+  reader.readAsArrayBuffer(file);
+});
+function templateTagValues(d){
+  const L = UI[currentLang];
+  const today = new Date().toLocaleDateString(currentLang==='fr'?'fr-CA':'en-CA');
+  return {
+    tag: d.tag || L.untitledTag, date: today,
+    kva: String(d.kva), priV: fmt(d.priV,0)+" V", secV: fmt(d.secV,0)+" V",
+    flaP: fmt(d.flaP,1)+" A", flaS: fmt(d.flaS,1)+" A",
+    iscSecMax: fmt(d.iscSecMax,2)+" kA", iscSecMin: fmt(d.iscSecMin,2)+" kA",
+    inrushI: fmt(d.inrushPoints[0].I,0)+" A", inrushT: d.inrushPoints[0].t+" s"
+  };
+}
+function showTemplateStatus(msg, color){ const el=$("templateStatus"); if(el){ el.textContent=msg; el.style.color=color||"var(--trace)"; } }
+function inspectTemplate(fileName){
+  const L = UI[currentLang];
+  const known = Object.keys(templateTagValues(window._lastResults || calcAll()));
+  try{
+    const zip = new PizZip(uploadedTemplateBuffer);
+    let xml = "";
+    Object.keys(zip.files).forEach(name=>{
+      if(/^word\/(document|header\d*|footer\d*)\.xml$/.test(name)) xml += zip.files[name].asText();
+    });
+    const plain = xml.replace(/<[^>]+>/g, "");
+    const found = known.filter(k => plain.includes("{"+k+"}"));
+    const missing = known.filter(k => !found.includes(k));
+    const allTags = [...plain.matchAll(/\{([a-zA-Z0-9_]+)\}/g)].map(m=>m[1]);
+    const unknown = [...new Set(allTags.filter(t => !known.includes(t)))];
+    let msg = L.templateLoadedMsg.replace("{name}", fileName) + " — ";
+    let color = "var(--trace)";
+    if(found.length === 0){ msg += L.templateNoTagsFound; color = "var(--alarm)"; }
+    else {
+      msg += L.templateTagsFound.replace("{n}", found.length).replace("{total}", known.length);
+      if(missing.length) msg += " " + L.templateTagsMissing.replace("{list}", missing.join(", "));
+      if(unknown.length){ msg += " " + L.templateTagsUnknown.replace("{list}", unknown.join(", ")); color = "var(--warn)"; }
+      if(missing.length && !unknown.length) color = "var(--warn)";
+    }
+    showTemplateStatus(msg, color);
+  } catch(err){
+    console.error(err);
+    showTemplateStatus(L.templateErrorMsg + " " + (err.message||""), "var(--alarm)");
+  }
+}
+function exportWithTemplate(d){
+  const L = UI[currentLang];
+  try{
+    const zip = new PizZip(uploadedTemplateBuffer);
+    const docx = new window.docxtemplater(zip, { paragraphLoop:true, linebreaks:true, nullGetter:p=>"«"+(p.value||"?")+"»" });
+    docx.render(templateTagValues(d));
+    const out = docx.getZip().generate({ type:"blob", mimeType:"application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+    const url = URL.createObjectURL(out);
+    const a = document.createElement("a"); a.href=url; a.download="protection_coordination_study.docx";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url), 2000);
+    showTemplateStatus(L.templateExportOk, "var(--trace)");
+  } catch(err){
+    console.error(err);
+    let detail = err.message || String(err);
+    if(err.properties && err.properties.errors && err.properties.errors.length){
+      detail = err.properties.errors.map(e=>(e.properties&&e.properties.explanation?e.properties.explanation:e.message)).join(" · ");
+    }
+    showTemplateStatus(L.templateErrorMsg+" "+detail, "var(--alarm)");
+    alert(L.templateErrorMsg+"\n\n"+detail);
+    exportWithBuiltInLayout(d);
+  }
+}
+function exportWithBuiltInLayout(d){
+  const html = buildReportPageHTML(d, $("includeLedger").checked, $("includeLogo").checked);
+  const doc = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+  <head><meta charset="utf-8"><title>Protection Coordination Study</title>
+  <!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View></w:WordDocument></xml><![endif]--></head><body>${html}</body></html>`;
+  downloadBlob(doc, "application/msword", "protection_coordination_study.doc");
+}
+$("exportWordBtn").addEventListener("click", ()=>{
+  const d = window._lastResults;
+  if(!d) return;
+  if(uploadedTemplateBuffer) exportWithTemplate(d); else exportWithBuiltInLayout(d);
+});
+
+$("exportExcelBtn").addEventListener("click", ()=>{
+  const d = window._lastResults;
+  if(!d) return;
+  const L = UI[currentLang];
+  const wb = XLSX.utils.book_new();
+  const main = [
+    [L.repInputData,""],
+    [L.lblTag, d.tag || L.untitledTag],
+    [L.lblKva, d.kva], [L.lblImped, fmt(d.impedZ,2)],
+    [L.lblPriV, fmt(d.priV,0)], [L.lblSecV, fmt(d.secV,0)],
+    [L.lblIscMax, fmt(d.iscMaxKa,2)], [L.lblIscMin, fmt(d.iscMinKa,2)],
+    ["",""], [L.repResults,""],
+    [L.lblStatFlaP, fmt(d.flaP,1)], [L.lblStatFlaS, fmt(d.flaS,1)],
+    [L.maxShort, fmt(d.iscSecMax,2)], [L.minShort, fmt(d.iscSecMin,2)],
+    [L.lblStatInrush, fmt(d.inrushPoints[0].I,0)+" A @ "+d.inrushPoints[0].t+"s"],
+    ["",""], [L.disclaimerLbl, L.disclaimerBody]
+  ];
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(main), "TCC Study");
+
+  if($("includeLedger").checked){
+    const led = [["Clause","Formula","Note"]];
+    buildLedgerSteps(d).forEach(s=>{
+      led.push([s.clause+" — "+s.title,"",""]);
+      s.formula.split("\n").forEach(l=>{ if(l.trim()!=="") led.push(["", l, ""]); });
+      led.push(["","",s.note]); led.push(["","",""]);
+    });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(led), "Calculation Ledger");
+  }
+  XLSX.writeFile(wb, "protection_coordination_study.xlsx");
+});
+
+/* ===================== i18n ===================== */
+const UI = {
+  en: {
+    titleH1:"Protection Coordination / TCC Study", titleSub:"Time-current curve coordination — transformer inrush, through-fault withstand, and protective device curves",
+    lblDwg:"Dwg No.", lblScale:"Scale", lblMethod:"Method", lblRev:"Rev",
+    topDiscB:"Preliminary coordination screening only.",
+    topDiscTxt:"This tool does not use a licensed manufacturer curve library like ETAP or EasyPower. Fuse-class and standard-breaker curves are now calibrated through real, cited UL 248 / UL 489 calibration test points (see the hint text under each device option for the exact clause) — these are regulatory minimums/maximums every listed manufacturer's device in that class must meet, not one specific manufacturer's exact published curve, which typically clears faster than the bare UL point used here. The transformer inrush point and through-fault withstand curve still use commonly published planning approximations (12×FLA/0.1s inrush; a simplified I²t withstand anchored at 25×FLA/2s) — not the exact IEEE C57.109 category curve. Use the \"Custom points\" device option to plot your actual manufacturer datasheet curve for a fully precise coordination check. Final coordination must be verified by a qualified protection engineer against manufacturer TCC data and the current IEEE/CSA/UL standards.",
+    loadExampleTxt:"Load example",
+    step1Title:"Transformer &amp; System", step1Small:"Tag, rating, voltages, impedance",
+    lblTag:"Equipment tag", lblKva:"Transformer rating (kVA)", lblImped:"Impedance, %Z",
+    lblPriV:"Primary voltage (V, L-L)", lblSecV:"Secondary voltage (V, L-L)",
+    hintStep1:"Impedance and an assumed transformer X/R (by kVA band) are used to refer the POI fault current to the secondary bus — the same series-impedance method as the Short-Circuit Calculator.",
+    step2Title:"Short-Circuit at POI", step2Small:"Manually entered — matches ETAP/EasyPower utility-contribution convention",
+    lblIscMax:"Max. available fault current (kA sym.)", lblIscMin:"Min. available fault current (kA sym.)", lblSrcXR:"X/R ratio at POI",
+    hintStep2:"Enter both the maximum and minimum utility contribution, as you would in ETAP or EasyPower — the maximum sets device interrupting-rating requirements, the minimum is used for sensitivity/coordination checks at the far end of the system.",
+    step3Title:"Transformer Inrush", step3Small:"Energization inrush reference point(s)",
+    lblInrushMult1:"Point 1 — multiple of FLA", lblInrushT1:"Point 1 — duration (s)", lblInrush2On:"Include initial peak point (25×FLA @ 0.01s)",
+    hintStep3:"12×FLA for 0.1 s is the most commonly cited single-point planning convention for transformer energization inrush in protection coordination guides. The primary protective device curve should sit to the right of (i.e. not trip faster than) this point.",
+    step4Title:"Transformer Withstand Curve", optionalTag4:"(optional)", step4Small:"Simplified through-fault I²t approximation",
+    lblWithstandMult:"Anchor point — multiple of FLA", lblWithstandT:"Anchor point — duration (s)",
+    hintStep4:"This draws a simplified I²t = constant line anchored at the entered point (25×FLA/2s is a commonly cited planning approximation) — it is not the actual IEEE C57.109 category I-IV through-fault curve, which has multiple segments and depends on fault frequency (frequent vs. infrequent). Use this as a rough screening reference only.",
+    step5Title:"Protective Device", optionalTag5:"(optional)", step5Small:"Generic fuse/breaker shape, or plot your own datasheet points",
+    lblDeviceType:"Device model", lblFuseRating:"Fuse ampere rating (A)",
+    lblLtPickup:"Long-time pickup (A)", lblLtBand:"Long-time band @ 6× pickup (s)",
+    lblStPickup:"Short-time pickup (× LT pickup)", lblStDelay:"Short-time delay (s)", lblInstPickup:"Instantaneous pickup (× LT pickup)",
+    addPointTxt:"Add point", noCustomPoints:"No points added yet — enter current (A) and time (s) from your datasheet curve, then click Add point.",
+    hintStep5:"Generic fuse/breaker curves are illustrative shapes only, built from standard characteristic formulas — not a specific manufacturer's published curve. For an actual coordination check, use \"Custom points\" and enter values read directly from the manufacturer's TCC.",
+    step6Title:"Cable Withstand Curve", optionalTag6:"(optional)", step6Small:"ICEA P-32-382 conductor thermal limit",
+    lblCableMat:"Conductor material", lblCableCm:"Conductor size (kcmil)", lblT1:"Normal temp., T1 (°C)", lblT2:"Max short-circuit temp., T2 (°C)",
+    hintStep6:"Same ICEA P-32-382 conductor-heating formula used in the MV Transformer Primary Cable Sizing tool — confirm T1/T2 against the actual insulation rating.",
+    resultTitle:"Result — Coordination Screening",
+    lblStatFlaP:"Primary FLA", lblStatFlaS:"Secondary FLA", lblStatIscS:"Isc at secondary bus", lblStatInrush:"Inrush point",
+    maxShort:"max", minShort:"min",
+    inrushClearTitle:"Device curve appears clear of the inrush point.", inrushClearBody:"At the estimated screening level, the device does not appear to trip within roughly the inrush duration — verify against the real manufacturer curve before finalizing.",
+    inrushRiskTitle:"Device curve may trip on inrush — review.", inrushRiskBody:"At the estimated screening level, the device curve is close to or faster than the transformer inrush point, which risks nuisance tripping on energization. Consider a higher rating, a different curve shape, or verify with the real manufacturer curve.",
+    screeningOnlyTitle:"Screening reference only.", screeningOnlyBody:"Enable a protective device curve in Step 5 to run the inrush-clearance screening check.",
+    tccTitle:"Time-Current Curve", tccTag:"log-log, current in amperes, time in seconds",
+    axisCurrent:"Current (A)", axisTime:"Time (s)",
+    legendWithstand:"Transformer withstand (simplified)", legendCable:"Cable withstand (ICEA)",
+    legendFuseMelt:"Fuse — minimum melt", legendFuseClear:"Fuse — total clear", legendBreaker:"Breaker (generic adjustable-trip)", legendUl489:"Breaker (standard thermal-magnetic, UL 489)",
+    legendCustom:"Device (custom points)", legendInrush:"Inrush point(s)", legendIscBand:"Isc range at secondary (min–max)",
+    lblIncludeLedger:"Include Calculation Ledger in report", lblIncludeLogo:"Include OhmZone brand mark in report",
+    printBtnLabel:"🖨 Print / Save as PDF", exportWordLabel:"📄 Export study (Word)", exportBtnLabel:"📊 Export study (Excel)",
+    lblUploadTemplate:"Report template (.docx, optional)",
+    hintUploadTemplate:"Upload your firm's Word template to brand exports with it. The template must contain plain-text placeholders exactly as shown: {tag} {date} {kva} {priV} {secV} {flaP} {flaS} {iscSecMax} {iscSecMin} {inrushI} {inrushT}. Type each tag in one uninterrupted go — Word's autocorrect/spellcheck can split a tag across internal runs.",
+    templateLoadedMsg:"Template loaded: {name}", templateErrorMsg:"Could not read this file as a Word template — using the built-in layout instead.",
+    templateNoTagsFound:"no OhmZone placeholders found in this document.", templateTagsFound:"{n} of {total} placeholders found.",
+    templateTagsMissing:"Not present (will be left out): {list}.", templateTagsUnknown:"Unrecognised tags that will render as «name»: {list}.", templateExportOk:"Template export completed.",
+    ledgerTitle:"Calculation Ledger", ledgerTag:"clause-by-clause",
+    ls1Title:"Full-load current, primary &amp; secondary", ls1Note:"Standard three-phase FLA calculation, used as the base multiplier for the inrush and withstand reference points.",
+    ls2Title:"Fault current referred to secondary bus", ls2Note:"Uses the same series source+transformer impedance method as the Short-Circuit Calculator — source impedance from the manually entered POI fault current and X/R, referred to the secondary voltage base, combined with the transformer's own impedance.",
+    ls3Title:"Transformer inrush reference point(s)", clauseInrush:"Common planning convention",
+    ls3Note:"12×FLA for 0.1 s is the most widely cited single-point approximation for transformer energization inrush in protection coordination references; the 25×FLA/0.01s point approximates the initial asymmetrical peak. Neither is a precise waveform model.",
+    ls4Title:"Simplified transformer through-fault withstand", ls4Note:"A single I²t=constant line anchored at the entered point — a common simplification for planning-level screening, not the full multi-segment IEEE C57.109 category curve (which also depends on frequent vs. infrequent fault duty classification).",
+    ls5Title:"Protective device curve", ls5Note:"Generic fuse/breaker curves are built from standard characteristic-shape formulas for illustration only. Use Custom Points with real datasheet values for an actual coordination determination.",
+    deviceFuseLbl:"Generic time-delay fuse", deviceBreakerLbl:"Generic adjustable-trip breaker", deviceCustomLbl:"Custom points",
+    lblFuseClass:"Fuse class (UL 248)", lblUl489Rating:"Breaker ampere rating (A)", lblUl489Inst:"Instantaneous (magnetic) pickup (× rating)",
+    hintUl489:"135% and 200% calibration points are real UL 489 maximum trip-time requirements that every UL 489-listed thermal-magnetic breaker must meet — the curve is solved to pass exactly through both. The instantaneous (magnetic) pickup multiplier is a typical value you set yourself, not itself a UL 489 numeric requirement, since it varies by frame/trip unit.",
+    optFuseClass:"Fuse — by UL 248 class", optUl489:"Breaker — standard thermal-magnetic (UL 489)", optGenericBreaker:"Breaker — generic adjustable-trip", optCustomPoints:"Custom points (from datasheet)",
+    illustrativeShape:"illustrative shape only", pointsEntered:"points entered",
+    ls6Title:"Cable thermal withstand", ls6Note:"ICEA P-32-382 conductor-heating formula — same methodology as used elsewhere in this toolboard.",
+    repInputData:"Input Data", repResults:"Results", untitledTag:"(untitled)",
+    disclaimerLbl:"Disclaimer",
+    disclaimerBody:"Preliminary coordination screening only — this tool does not use a licensed manufacturer TCC library. Transformer inrush and withstand curves use commonly published planning approximations, not exact IEEE C57.109 category curves. Generic fuse/breaker curves are illustrative shapes, not manufacturer-specific data. Use the Custom Points device option with real datasheet values, and have final coordination verified by a qualified protection engineer against actual manufacturer curves and the current IEEE/CSA standards.",
+    footerHtml:`<b>Method &amp; data notes.</b> Full-load currents use standard three-phase calculations. The fault current at the secondary bus is derived from the manually entered point-of-interconnection fault current (matching the manual utility-contribution entry convention used in ETAP and EasyPower) combined in series with the transformer's own impedance, using the same source+transformer series-impedance method already validated in this toolboard's Short-Circuit Calculator; the transformer's X/R is assumed by kVA band since it isn't collected as a separate input here. The <b>transformer inrush point</b> (default 12×FLA for 0.1 s, with an optional 25×FLA/0.01s initial-peak point) is a widely cited single-point planning approximation for energization inrush found in many protection coordination references — it is not a precise inrush waveform model, which in reality decays over several cycles and depends on core design, residual flux, and switching angle. The <b>transformer through-fault withstand curve</b> shown is a simplified single I²t=constant line anchored at a user-adjustable point (default 25×FLA for 2 s, another commonly cited planning approximation) — it is <b>not</b> the actual IEEE C57.109 Category I-IV through-fault protection curve, which consists of multiple curve segments and depends on whether the installation is classified for frequent or infrequent fault incidence; a real coordination study must use the actual category curve from IEEE C57.109. The <b>generic fuse and breaker curves</b> are built from standard characteristic-shape formulas (a knee-type melt/clear formula for the fuse; a long-time/short-time/instantaneous band structure for the breaker) to illustrate typical curve shapes — neither represents any specific manufacturer's published TCC. The <b>Custom Points</b> device option lets you plot actual current/time pairs read from a manufacturer datasheet curve, which is the only way to get a real coordination check from this tool. The <b>cable withstand curve</b> reuses the ICEA P-32-382 conductor-heating formula already used elsewhere in this toolboard. This tool does not model interrupting-rating verification, arc-flash energy, protective relay curves (IEEE/IEC formula curves), motor starting curves, or Zone-Selective Interlocking. It is a preliminary screening aid only — a full protection coordination study using actual manufacturer TCC data must be performed and stamped by a qualified protection engineer before any device settings are finalized.`
+  },
+  fr: {
+    titleH1:"Étude de coordination des protections / TCC", titleSub:"Coordination des courbes courant-temps — appel de courant du transformateur, tenue au défaut traversant, et courbes des dispositifs de protection",
+    lblDwg:"N° dessin", lblScale:"Échelle", lblMethod:"Méthode", lblRev:"Rév.",
+    topDiscB:"Évaluation de coordination préliminaire seulement.",
+    topDiscTxt:"Cet outil n'utilise pas de bibliothèque de courbes de fabricant sous licence comme ETAP ou EasyPower. Les courbes de classe de fusible et de disjoncteur standard sont maintenant calibrées à travers des points de test de calibration réels et cités de l'UL 248 / UL 489 (voir le texte d'indice sous chaque option de dispositif pour la clause exacte) — ce sont des minimums/maximums réglementaires que tout dispositif de fabricant homologué dans cette classe doit respecter, non la courbe exacte publiée d'un fabricant précis, qui dégage généralement plus rapidement que le simple point UL utilisé ici. Le point d'appel de courant du transformateur et la courbe de tenue au défaut traversant utilisent encore des approximations de planification couramment publiées (appel 12×FLA/0,1s; tenue I²t simplifiée ancrée à 25×FLA/2s) — non la courbe exacte de catégorie IEEE C57.109. Utilisez l'option de dispositif « Points personnalisés » pour tracer votre courbe réelle de fiche technique du fabricant pour une vérification de coordination entièrement précise. La coordination finale doit être vérifiée par un ingénieur en protection qualifié auprès des données TCC du fabricant et des normes IEEE/CSA/UL en vigueur.",
+    loadExampleTxt:"Charger l'exemple",
+    step1Title:"Transformateur et système", step1Small:"Repère, puissance, tensions, impédance",
+    lblTag:"Repère de l'équipement", lblKva:"Puissance du transformateur (kVA)", lblImped:"Impédance, %Z",
+    lblPriV:"Tension primaire (V, L-L)", lblSecV:"Tension secondaire (V, L-L)",
+    hintStep1:"L'impédance et un X/R de transformateur supposé (selon la plage de kVA) sont utilisés pour rapporter le courant de défaut du PCC au jeu de barres secondaire — la même méthode d'impédance série que le calculateur de court-circuit.",
+    step2Title:"Court-circuit au PCC", step2Small:"Saisi manuellement — conforme à la convention de contribution du distributeur d'ETAP/EasyPower",
+    lblIscMax:"Courant de défaut disponible max. (kA sym.)", lblIscMin:"Courant de défaut disponible min. (kA sym.)", lblSrcXR:"Rapport X/R au PCC",
+    hintStep2:"Entrez la contribution maximale et minimale du distributeur, comme vous le feriez dans ETAP ou EasyPower — le maximum détermine les exigences de pouvoir de coupure des dispositifs, le minimum est utilisé pour les vérifications de sensibilité/coordination à l'extrémité éloignée du système.",
+    step3Title:"Appel de courant du transformateur", step3Small:"Point(s) de référence d'appel de courant à l'énergisation",
+    lblInrushMult1:"Point 1 — multiple du FLA", lblInrushT1:"Point 1 — durée (s)", lblInrush2On:"Inclure le point de crête initiale (25×FLA @ 0,01s)",
+    hintStep3:"12×FLA pendant 0,1 s est la convention de planification à point unique la plus couramment citée pour l'appel de courant à l'énergisation du transformateur dans les guides de coordination des protections. La courbe du dispositif de protection primaire devrait se situer à droite de (c.-à-d. ne pas déclencher plus vite que) ce point.",
+    step4Title:"Courbe de tenue du transformateur", optionalTag4:"(facultatif)", step4Small:"Approximation I²t simplifiée du défaut traversant",
+    lblWithstandMult:"Point d'ancrage — multiple du FLA", lblWithstandT:"Point d'ancrage — durée (s)",
+    hintStep4:"Ceci trace une ligne I²t = constante simplifiée ancrée au point saisi (25×FLA/2s est une approximation de planification couramment citée) — ce n'est pas la courbe réelle de défaut traversant de catégorie I-IV de l'IEEE C57.109, qui comporte plusieurs segments et dépend de la fréquence du défaut (fréquent vs peu fréquent). Utilisez ceci comme référence d'évaluation préliminaire seulement.",
+    step5Title:"Dispositif de protection", optionalTag5:"(facultatif)", step5Small:"Forme générique de fusible/disjoncteur, ou tracez vos propres points de fiche technique",
+    lblDeviceType:"Modèle de dispositif", lblFuseRating:"Calibre du fusible (A)",
+    lblLtPickup:"Seuil à long délai (A)", lblLtBand:"Bande à long délai @ 6× seuil (s)",
+    lblStPickup:"Seuil à court délai (× seuil LT)", lblStDelay:"Délai court (s)", lblInstPickup:"Seuil instantané (× seuil LT)",
+    addPointTxt:"Ajouter un point", noCustomPoints:"Aucun point ajouté — entrez le courant (A) et le temps (s) de votre courbe de fiche technique, puis cliquez sur Ajouter un point.",
+    hintStep5:"Les courbes génériques de fusible/disjoncteur sont des formes illustratives seulement, construites à partir de formules caractéristiques standard — non la courbe publiée d'un fabricant précis. Pour une vérification de coordination réelle, utilisez « Points personnalisés » et entrez des valeurs lues directement sur le TCC du fabricant.",
+    step6Title:"Courbe de tenue du câble", optionalTag6:"(facultatif)", step6Small:"Limite thermique du conducteur ICEA P-32-382",
+    lblCableMat:"Matériau du conducteur", lblCableCm:"Section du conducteur (kcmil)", lblT1:"Température normale, T1 (°C)", lblT2:"Température max. de court-circuit, T2 (°C)",
+    hintStep6:"Même formule d'échauffement de conducteur ICEA P-32-382 utilisée dans l'outil de dimensionnement du câble primaire de transformateur MT — confirmez T1/T2 auprès de la nominale d'isolation réelle.",
+    resultTitle:"Résultat — Évaluation de coordination",
+    lblStatFlaP:"FLA primaire", lblStatFlaS:"FLA secondaire", lblStatIscS:"Isc au jeu de barres secondaire", lblStatInrush:"Point d'appel de courant",
+    maxShort:"max", minShort:"min",
+    inrushClearTitle:"La courbe du dispositif semble dégagée du point d'appel de courant.", inrushClearBody:"Au niveau d'évaluation estimé, le dispositif ne semble pas déclencher dans environ la durée d'appel de courant — vérifiez auprès de la courbe réelle du fabricant avant de finaliser.",
+    inrushRiskTitle:"La courbe du dispositif pourrait déclencher sur l'appel de courant — à revoir.", inrushRiskBody:"Au niveau d'évaluation estimé, la courbe du dispositif est proche ou plus rapide que le point d'appel de courant du transformateur, ce qui risque un déclenchement intempestif à l'énergisation. Envisagez un calibre plus élevé, une forme de courbe différente, ou vérifiez avec la courbe réelle du fabricant.",
+    screeningOnlyTitle:"Référence d'évaluation seulement.", screeningOnlyBody:"Activez une courbe de dispositif de protection à l'étape 5 pour exécuter la vérification de dégagement de l'appel de courant.",
+    tccTitle:"Courbe courant-temps", tccTag:"log-log, courant en ampères, temps en secondes",
+    axisCurrent:"Courant (A)", axisTime:"Temps (s)",
+    legendWithstand:"Tenue du transformateur (simplifiée)", legendCable:"Tenue du câble (ICEA)",
+    legendFuseMelt:"Fusible — fusion minimale", legendFuseClear:"Fusible — dégagement total", legendBreaker:"Disjoncteur (déclenchement réglable générique)", legendUl489:"Disjoncteur (thermomagnétique standard, UL 489)",
+    legendCustom:"Dispositif (points personnalisés)", legendInrush:"Point(s) d'appel de courant", legendIscBand:"Plage Isc au secondaire (min–max)",
+    lblIncludeLedger:"Inclure le registre de calcul dans le rapport", lblIncludeLogo:"Inclure la marque OhmZone dans le rapport",
+    printBtnLabel:"🖨 Imprimer / Enregistrer en PDF", exportWordLabel:"📄 Exporter l'étude (Word)", exportBtnLabel:"📊 Exporter l'étude (Excel)",
+    lblUploadTemplate:"Modèle de rapport (.docx, facultatif)",
+    hintUploadTemplate:"Téléversez le modèle Word de votre entreprise pour habiller les exports. Le modèle doit contenir des espaces réservés en texte brut exactement comme indiqué : {tag} {date} {kva} {priV} {secV} {flaP} {flaS} {iscSecMax} {iscSecMin} {inrushI} {inrushT}. Saisissez chaque balise d'un seul coup — le correcteur/la vérification orthographique de Word peut diviser une balise.",
+    templateLoadedMsg:"Modèle chargé : {name}", templateErrorMsg:"Impossible de lire ce fichier comme modèle Word — utilisation de la mise en page intégrée à la place.",
+    templateNoTagsFound:"aucun espace réservé OhmZone trouvé dans ce document.", templateTagsFound:"{n} espaces réservés sur {total} trouvés.",
+    templateTagsMissing:"Absents (seront omis) : {list}.", templateTagsUnknown:"Balises non reconnues qui s'afficheront comme «nom» : {list}.", templateExportOk:"Export du modèle terminé.",
+    ledgerTitle:"Registre de calcul", ledgerTag:"article par article",
+    ls1Title:"Courant à pleine charge, primaire et secondaire", ls1Note:"Calcul standard du FLA triphasé, utilisé comme multiplicateur de base pour les points de référence d'appel de courant et de tenue.",
+    ls2Title:"Courant de défaut rapporté au jeu de barres secondaire", ls2Note:"Utilise la même méthode d'impédance série source+transformateur que le calculateur de court-circuit — impédance de source à partir du courant de défaut au PCC saisi manuellement et du X/R, rapportée à la base de tension secondaire, combinée à l'impédance propre du transformateur.",
+    ls3Title:"Point(s) de référence d'appel de courant du transformateur", clauseInrush:"Convention de planification courante",
+    ls3Note:"12×FLA pendant 0,1 s est l'approximation à point unique la plus largement citée pour l'appel de courant à l'énergisation du transformateur dans les références de coordination des protections; le point 25×FLA/0,01s approxime la crête asymétrique initiale. Aucun des deux n'est un modèle de forme d'onde précis.",
+    ls4Title:"Tenue simplifiée au défaut traversant du transformateur", ls4Note:"Une seule ligne I²t=constante ancrée au point saisi — une simplification courante pour l'évaluation de niveau planification, non la courbe complète à segments multiples de catégorie IEEE C57.109 (qui dépend aussi de la classification de fréquence de défaut).",
+    ls5Title:"Courbe du dispositif de protection", ls5Note:"Les courbes génériques de fusible/disjoncteur sont construites à partir de formules de forme caractéristique standard à des fins d'illustration seulement. Utilisez les Points personnalisés avec des valeurs réelles de fiche technique pour une détermination de coordination réelle.",
+    deviceFuseLbl:"Fusible générique à retard", deviceBreakerLbl:"Disjoncteur générique à déclenchement réglable", deviceCustomLbl:"Points personnalisés",
+    lblFuseClass:"Classe de fusible (UL 248)", lblUl489Rating:"Calibre du disjoncteur (A)", lblUl489Inst:"Seuil instantané (magnétique) (× calibre)",
+    hintUl489:"Les points de calibration à 135 % et 200 % sont des exigences réelles de temps de déclenchement maximal de l'UL 489 que tout disjoncteur thermomagnétique homologué UL 489 doit respecter — la courbe est calculée pour passer exactement par ces deux points. Le multiplicateur du seuil instantané (magnétique) est une valeur typique que vous définissez vous-même, non une exigence numérique de l'UL 489, car elle varie selon le châssis/l'unité de déclenchement.",
+    optFuseClass:"Fusible — par classe UL 248", optUl489:"Disjoncteur — thermomagnétique standard (UL 489)", optGenericBreaker:"Disjoncteur — déclenchement réglable générique", optCustomPoints:"Points personnalisés (fiche technique)",
+    illustrativeShape:"forme illustrative seulement", pointsEntered:"points saisis",
+    ls6Title:"Tenue thermique du câble", ls6Note:"Formule d'échauffement de conducteur ICEA P-32-382 — même méthodologie qu'utilisée ailleurs dans ce tableau d'outils.",
+    repInputData:"Données d'entrée", repResults:"Résultats", untitledTag:"(sans titre)",
+    disclaimerLbl:"Avis",
+    disclaimerBody:"Évaluation de coordination préliminaire seulement — cet outil n'utilise pas de bibliothèque TCC de fabricant sous licence. Les courbes d'appel de courant et de tenue du transformateur utilisent des approximations de planification couramment publiées, non les courbes exactes de catégorie IEEE C57.109. Les courbes génériques de fusible/disjoncteur sont des formes illustratives, non des données spécifiques au fabricant. Utilisez l'option de dispositif Points personnalisés avec des valeurs réelles de fiche technique, et faites vérifier la coordination finale par un ingénieur en protection qualifié auprès des courbes réelles du fabricant et des normes IEEE/CSA en vigueur.",
+    footerHtml:`<b>Notes sur la méthode et les données.</b> Les courants à pleine charge utilisent les calculs triphasés standard. Le courant de défaut au jeu de barres secondaire est dérivé du courant de défaut au point de raccordement saisi manuellement (conforme à la convention de saisie manuelle de la contribution du distributeur utilisée dans ETAP et EasyPower) combiné en série avec l'impédance propre du transformateur, selon la même méthode d'impédance série source+transformateur déjà validée dans le calculateur de court-circuit de ce tableau d'outils; le X/R du transformateur est supposé selon la plage de kVA puisqu'il n'est pas recueilli comme saisie séparée ici. Le <b>point d'appel de courant du transformateur</b> (par défaut 12×FLA pendant 0,1 s, avec un point de crête initiale facultatif de 25×FLA/0,01s) est une approximation de planification à point unique largement citée pour l'appel de courant à l'énergisation trouvée dans de nombreuses références de coordination des protections — ce n'est pas un modèle précis de forme d'onde d'appel de courant, qui en réalité s'atténue sur plusieurs cycles et dépend de la conception du noyau, du flux résiduel et de l'angle de commutation. La <b>courbe de tenue au défaut traversant du transformateur</b> affichée est une seule ligne I²t=constante simplifiée ancrée à un point ajustable par l'utilisateur (par défaut 25×FLA pendant 2 s, une autre approximation de planification couramment citée) — ce <b>n'est pas</b> la courbe réelle de protection au défaut traversant de catégorie I-IV de l'IEEE C57.109, qui comporte plusieurs segments de courbe et dépend de la classification de l'installation pour incidence de défaut fréquente ou peu fréquente; une étude de coordination réelle doit utiliser la courbe de catégorie réelle de l'IEEE C57.109. Les <b>courbes génériques de fusible et de disjoncteur</b> sont construites à partir de formules de forme caractéristique standard (une formule de fusion/dégagement de type coude pour le fusible; une structure de bande à long délai/court délai/instantané pour le disjoncteur) pour illustrer les formes de courbe typiques — aucune ne représente le TCC publié d'un fabricant précis. L'option de dispositif <b>Points personnalisés</b> vous permet de tracer des paires courant/temps réelles lues sur une courbe de fiche technique de fabricant, ce qui est la seule façon d'obtenir une vérification de coordination réelle de cet outil. La <b>courbe de tenue du câble</b> réutilise la formule d'échauffement de conducteur ICEA P-32-382 déjà utilisée ailleurs dans ce tableau d'outils. Cet outil ne modélise pas la vérification du pouvoir de coupure, l'énergie d'arc électrique, les courbes de relais de protection (courbes de formule IEEE/IEC), les courbes de démarrage de moteur, ni l'interverrouillage sélectif de zone. Il s'agit d'une aide à l'évaluation préliminaire seulement — une étude complète de coordination des protections utilisant des données TCC réelles du fabricant doit être effectuée et scellée par un ingénieur en protection qualifié avant de finaliser tout réglage de dispositif.`
+  }
+};
+
+function applyStaticI18n(){
+  const L = UI[currentLang];
+  $('titleH1').innerHTML=L.titleH1; $('titleSub').textContent=L.titleSub;
+  $('lblDwg').textContent=L.lblDwg; $('lblScale').textContent=L.lblScale; $('lblMethod').textContent=L.lblMethod; $('lblRev').textContent=L.lblRev;
+  $('topDiscB').textContent=L.topDiscB; $('topDiscTxt').textContent=L.topDiscTxt;
+  $('loadExampleTxt').textContent=L.loadExampleTxt;
+  $('step1Title').childNodes[0].innerHTML=L.step1Title+' '; $('step1Small').textContent=L.step1Small;
+  $('lblTag').textContent=L.lblTag; $('lblKva').textContent=L.lblKva; $('lblImped').textContent=L.lblImped;
+  $('lblPriV').textContent=L.lblPriV; $('lblSecV').textContent=L.lblSecV; $('hintStep1').textContent=L.hintStep1;
+  $('step2Title').childNodes[0].textContent=L.step2Title+' '; $('step2Small').textContent=L.step2Small;
+  $('lblIscMax').textContent=L.lblIscMax; $('lblIscMin').textContent=L.lblIscMin; $('lblSrcXR').textContent=L.lblSrcXR; $('hintStep2').textContent=L.hintStep2;
+  $('step3Title').childNodes[0].textContent=L.step3Title+' '; $('step3Small').textContent=L.step3Small;
+  $('lblInrushMult1').textContent=L.lblInrushMult1; $('lblInrushT1').textContent=L.lblInrushT1; $('lblInrush2On').textContent=L.lblInrush2On; $('hintStep3').textContent=L.hintStep3;
+  $('step4Title').childNodes[0].innerHTML=L.step4Title+' '; $('optionalTag4').textContent=L.optionalTag4; $('step4Small').textContent=L.step4Small;
+  $('lblWithstandMult').textContent=L.lblWithstandMult; $('lblWithstandT').textContent=L.lblWithstandT; $('hintStep4').textContent=L.hintStep4;
+  $('step5Title').childNodes[0].textContent=L.step5Title+' '; $('optionalTag5').textContent=L.optionalTag5; $('step5Small').textContent=L.step5Small;
+  $('lblDeviceType').textContent=L.lblDeviceType; $('lblFuseRating').textContent=L.lblFuseRating;
+  $('lblFuseClass').textContent=L.lblFuseClass;
+  $('lblUl489Rating').textContent=L.lblUl489Rating; $('lblUl489Inst').textContent=L.lblUl489Inst; $('hintUl489').textContent=L.hintUl489;
+  const dtOpts = $('deviceType').options;
+  if(dtOpts[0]) dtOpts[0].textContent = L.optFuseClass;
+  if(dtOpts[1]) dtOpts[1].textContent = L.optUl489;
+  if(dtOpts[2]) dtOpts[2].textContent = L.optGenericBreaker;
+  if(dtOpts[3]) dtOpts[3].textContent = L.optCustomPoints;
+  populateFuseClasses();
+  $('lblLtPickup').textContent=L.lblLtPickup; $('lblLtBand').textContent=L.lblLtBand;
+  $('lblStPickup').textContent=L.lblStPickup; $('lblStDelay').textContent=L.lblStDelay; $('lblInstPickup').textContent=L.lblInstPickup;
+  $('addPointTxt').textContent=L.addPointTxt; $('hintStep5').textContent=L.hintStep5;
+  $('step6Title').childNodes[0].textContent=L.step6Title+' '; $('optionalTag6').textContent=L.optionalTag6; $('step6Small').textContent=L.step6Small;
+  $('lblCableMat').textContent=L.lblCableMat; $('lblCableCm').textContent=L.lblCableCm; $('lblT1').textContent=L.lblT1; $('lblT2').textContent=L.lblT2; $('hintStep6').textContent=L.hintStep6;
+  $('resultTitle').textContent=L.resultTitle;
+  $('lblStatFlaP').textContent=L.lblStatFlaP; $('lblStatFlaS').textContent=L.lblStatFlaS;
+  $('lblStatIscS').textContent=L.lblStatIscS; $('lblStatInrush').textContent=L.lblStatInrush;
+  $('tccTitle').textContent=L.tccTitle; $('tccTag').textContent=L.tccTag;
+  $('lblIncludeLedger').textContent=L.lblIncludeLedger; $('lblIncludeLogo').textContent=L.lblIncludeLogo;
+  $('printBtn').textContent=L.printBtnLabel; $('exportWordBtn').textContent=L.exportWordLabel; $('exportExcelBtn').textContent=L.exportBtnLabel;
+  $('lblUploadTemplate').textContent=L.lblUploadTemplate; $('hintUploadTemplate').textContent=L.hintUploadTemplate;
+  $('ledgerTitle').textContent=L.ledgerTitle; $('ledgerTag').textContent=L.ledgerTag;
+  $('footerNote').innerHTML=L.footerHtml;
+  renderCustomPoints();
+}
+
+function setLang(lang){
+  currentLang = lang;
+  $('btn-en').classList.toggle('active', lang==='en');
+  $('btn-fr').classList.toggle('active', lang==='fr');
+  document.documentElement.lang = lang;
+  try { localStorage.setItem('ohmzone-lang', lang); } catch(e) {}
+  applyStaticI18n();
+  recalc();
+}
+(function(){
+  let saved='en';
+  try{ saved=localStorage.getItem('ohmzone-lang')||'en'; }catch(e){}
+  setLang(saved);
+})();
+</script>
+<div style="position:fixed;bottom:6px;right:12px;z-index:9999;font-family:monospace;font-size:10px;color:#5c7592;opacity:0.75;">© 2026 OhmZone. All rights reserved.</div>
+</body>
+</html>

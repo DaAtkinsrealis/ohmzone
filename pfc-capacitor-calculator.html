@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Power Factor Correction — Capacitor Sizing</title>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3887318872951674" crossorigin="anonymous"></script>
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icon-16.png">
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="OhmZone">
+<meta name="theme-color" content="#0a1728">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<style>
+@media print{
+  .no-print{display:none !important;}
+  body{background:#fff !important;}
+}
+:root{
+  --bg:#080c14;
+  --bg2:#0d1420;
+  --panel:#111a2a;
+  --panel-soft:#0c1220;
+  --line:#233350;
+  --line-soft:#182238;
+  --grid-line: rgba(96,140,196,0.09);
+  --ink:#e7edf7;
+  --ink-dim:#8497b8;
+  --ink-faint:#516085;
+  --trace:#3b9eff;
+  --trace-soft:#1a3a5c;
+  --gold:#e8b545;
+  --alarm:#ff5d77;
+  --alarm-soft:#4a1f2b;
+  --warn:#e3a83b;
+  --warn-soft:#4a3a1a;
+  --radius:2px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',sans-serif;}
+body{
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size:28px 28px;
+  min-height:100vh;
+}
+::selection{background:var(--trace);color:#04120f;}
+a{color:var(--trace);}
+.mono{font-family:'IBM Plex Mono',monospace;}
+input:focus-visible, select:focus-visible, button:focus-visible{
+  outline:2px solid var(--trace); outline-offset:2px;
+}
+
+.lang-switch{display:flex;align-items:center;background:#0f2036;border:1px solid #2f5678;border-radius:16px;padding:3px;gap:2px;font-family:monospace;font-size:11px;position:fixed;top:10px;right:12px;z-index:9999;}
+.lang-switch button{border:none;background:transparent;color:#8fa8c2;padding:5px 12px;border-radius:13px;cursor:pointer;font-family:inherit;font-size:inherit;}
+.lang-switch button.active{background:var(--trace);color:#04120f;font-weight:700;}
+
+/* ===== Title block ===== */
+.titleblock{
+  border-bottom:1px solid var(--line);
+  background:linear-gradient(180deg, rgba(17,26,42,.9), rgba(13,20,32,.7));
+  padding:18px 22px;
+  display:flex; flex-wrap:wrap; gap:14px 28px; align-items:flex-end; justify-content:space-between;
+}
+.titleblock .brand{display:flex; align-items:baseline; gap:12px;}
+.titleblock .brand .mark{
+  width:34px;height:34px;border:1.5px solid var(--trace); border-radius:3px;
+  display:flex;align-items:center;justify-content:center;color:var(--trace);
+  font-family:'IBM Plex Mono';font-weight:700;font-size:14px;flex:none;
+  box-shadow:0 0 14px rgba(59, 158, 255,.18) inset;
+}
+.titleblock h1{
+  font-family:'IBM Plex Sans Condensed'; font-weight:700; letter-spacing:.3px;
+  font-size:20px; margin:0; text-transform:uppercase;
+}
+.titleblock .sub{color:var(--ink-dim); font-size:12.5px; margin-top:2px;}
+.stamp{
+  display:grid; grid-template-columns:repeat(4,auto); gap:0 22px;
+  font-family:'IBM Plex Mono'; font-size:10.5px; color:var(--ink-dim);
+}
+.stamp div b{display:block; color:var(--ink-faint); font-weight:500; font-size:9px; letter-spacing:.06em; text-transform:uppercase;}
+.stamp div span{color:var(--trace); font-weight:600; font-size:12px;}
+
+.top-disclaimer{
+  max-width:1480px; margin:14px auto 0; padding:10px 16px; border:1px solid var(--warn);
+  background:rgba(227,168,59,.07); border-radius:var(--radius); font-size:11.5px; color:var(--ink-dim); line-height:1.6;
+}
+.top-disclaimer b{color:var(--warn);}
+
+/* ===== layout ===== */
+.app{
+  display:grid; grid-template-columns:378px 1fr;
+  gap:1px; background:var(--line);
+  max-width:1480px; margin:0 auto;
+}
+@media (max-width:980px){ .app{grid-template-columns:1fr;} }
+
+.steps{background:var(--bg2); padding:18px 16px 40px; display:flex; flex-direction:column; gap:14px;}
+.canvas-col{background:var(--bg2); display:flex; flex-direction:column; gap:1px; background:var(--line);}
+.canvas-col > *{background:var(--bg2);}
+
+/* ===== step cards ===== */
+.step{
+  border:1px solid var(--line-soft); border-radius:var(--radius); background:var(--panel-soft);
+  overflow:hidden;
+}
+.step-head{
+  display:flex; align-items:center; gap:10px; padding:11px 13px;
+  background:var(--panel); cursor:pointer; user-select:none;
+  border-bottom:1px solid var(--line-soft);
+}
+.step-num{
+  font-family:'IBM Plex Mono'; font-size:11px; font-weight:600; color:var(--bg);
+  background:var(--trace); width:22px; height:22px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center; flex:none;
+}
+.step.optional .step-num{background:var(--ink-faint); color:var(--bg2);}
+.step.optional.on .step-num{background:var(--gold);}
+.step-title{font-size:13px; font-weight:600; letter-spacing:.2px; flex:1;}
+.step-title small{display:block; font-weight:400; color:var(--ink-dim); font-size:10.5px; margin-top:1px;}
+.chev{color:var(--ink-faint); font-size:11px; transition:transform .15s;}
+.step.closed .chev{transform:rotate(-90deg);}
+.step-body{padding:13px; display:flex; flex-direction:column; gap:11px;}
+.step.closed .step-body{display:none;}
+
+label.field{display:flex; flex-direction:column; gap:5px; font-size:11.5px; color:var(--ink-dim);}
+label.field b{color:var(--ink); font-weight:500; font-size:12px;}
+.row2{display:grid; grid-template-columns:1fr 1fr; gap:9px;}
+.row3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:9px;}
+
+input[type=number], select{
+  background:var(--bg2); border:1px solid var(--line); color:var(--ink);
+  font-family:'IBM Plex Mono'; font-size:13px; padding:8px 9px; border-radius:var(--radius);
+  width:100%;
+}
+select{appearance:none; -webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238497b8'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:right 10px center; padding-right:26px;
+}
+input[type=number]:focus, select:focus{border-color:var(--trace);}
+
+.chip-row{display:flex; flex-wrap:wrap; gap:6px;}
+.chip{
+  font-family:'IBM Plex Mono'; font-size:10.5px; color:var(--ink-dim);
+  border:1px solid var(--line); padding:4px 8px; border-radius:20px; cursor:pointer;
+  background:var(--bg2);
+}
+.chip:hover{border-color:var(--trace); color:var(--ink);}
+.chip.active{border-color:var(--trace); color:var(--trace); background:var(--trace-soft);}
+
+.seg{display:flex; border:1px solid var(--line); border-radius:20px; overflow:hidden; width:max-content;}
+.seg button{
+  background:transparent; border:none; color:var(--ink-dim); font-family:'IBM Plex Mono';
+  font-size:10.5px; padding:5px 12px; cursor:pointer;
+}
+.seg button.active{background:var(--trace); color:#04120f; font-weight:600;}
+
+.switch{position:relative; width:34px; height:19px; flex:none;}
+.switch input{opacity:0; width:0; height:0; position:absolute;}
+.switch .track{position:absolute; inset:0; background:var(--line); border-radius:20px; transition:.15s;}
+.switch .track:before{content:''; position:absolute; width:13px; height:13px; left:3px; top:3px; background:var(--ink-dim); border-radius:50%; transition:.15s;}
+.switch input:checked + .track{background:var(--trace-soft); border:1px solid var(--trace);}
+.switch input:checked + .track:before{transform:translateX(15px); background:var(--trace);}
+
+.hint{font-size:10.5px; color:var(--ink-faint); line-height:1.5;}
+.hint em{color:var(--ink-dim); font-style:normal;}
+.override-box{
+  border:1px dashed var(--line); border-radius:var(--radius); padding:9px 10px;
+  display:flex; flex-direction:column; gap:8px; background:rgba(255,255,255,.015);
+}
+.override-head{display:flex; align-items:center; gap:8px; font-size:11px; color:var(--ink-dim);}
+
+.example-btn{
+  align-self:flex-start; font-family:'IBM Plex Mono'; font-size:11px; font-weight:600; color:#0a1220;
+  background:var(--trace); border:1px solid var(--trace); padding:9px 16px; border-radius:20px; cursor:pointer;
+  box-shadow:0 0 0 1px rgba(0,0,0,0), 0 4px 12px -4px var(--trace-soft);
+}
+.example-btn:hover{filter:brightness(1.08);}
+
+/* ===== panels ===== */
+.panel{padding:16px;}
+.panel-head{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:10px; gap:10px; flex-wrap:wrap;}
+.panel-head h2{font-family:'IBM Plex Sans Condensed'; font-size:13px; text-transform:uppercase; letter-spacing:.1em; color:var(--ink-dim); margin:0; font-weight:600;}
+.panel-head .tag{font-family:'IBM Plex Mono'; font-size:10px; color:var(--ink-faint);}
+
+/* ===== gauge + summary ===== */
+.result-grid{display:grid; grid-template-columns:220px 1fr; gap:16px; align-items:center;}
+@media (max-width:640px){ .result-grid{grid-template-columns:1fr;} }
+.gauge-box{display:flex; flex-direction:column; align-items:center; gap:4px;}
+.gauge-num{font-family:'IBM Plex Mono'; font-weight:700; font-size:30px; color:var(--gold); text-shadow:0 0 22px rgba(232,181,69,.35);}
+.gauge-lbl{font-size:10px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:.1em;}
+
+.stat-list{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+@media (max-width:480px){ .stat-list{grid-template-columns:1fr;} }
+.stat{
+  border:1px solid var(--line-soft); border-radius:var(--radius); padding:9px 11px; background:var(--panel-soft);
+}
+.stat .k{font-size:10px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.06em;}
+.stat .v{font-family:'IBM Plex Mono'; font-size:16px; font-weight:600; margin-top:3px;}
+.stat.hot{border-color:var(--gold); background:linear-gradient(180deg, rgba(232,181,69,.08), transparent);}
+.stat.hot .v{color:var(--gold);}
+
+.risk-box{border-radius:var(--radius); padding:11px 13px; margin-top:12px; font-size:12px; line-height:1.6; border:1px solid;}
+.risk-ok{border-color:var(--trace); background:rgba(59, 158, 255,.06); color:var(--ink-dim);}
+.risk-warn{border-color:var(--warn); background:rgba(227,168,59,.08); color:var(--ink-dim);}
+.risk-alarm{border-color:var(--alarm); background:rgba(255,93,119,.08); color:var(--ink-dim);}
+.risk-box b{color:var(--ink);}
+
+/* ===== ledger ===== */
+.ledger{display:flex; flex-direction:column;}
+.lstep{
+  padding:13px 16px; border-bottom:1px solid var(--line-soft); display:grid; grid-template-columns:26px 1fr; gap:12px;
+}
+.lstep:last-child{border-bottom:none;}
+.lstep .ln{font-family:'IBM Plex Mono'; color:var(--ink-faint); font-size:11px; padding-top:2px;}
+.lstep h3{margin:0 0 5px; font-size:12.5px; font-weight:600; color:var(--ink);}
+.lstep .formula{
+  font-family:'IBM Plex Mono'; font-size:12px; color:var(--trace); background:rgba(59, 158, 255,.06);
+  padding:8px 10px; border-radius:var(--radius); border:1px solid var(--trace-soft); margin:6px 0; overflow-x:auto; white-space:pre;
+}
+.cite{font-size:9.5px; color:var(--ink-faint); margin-top:6px; line-height:1.5; border-left:2px solid var(--line); padding-left:8px;}
+.cite b{color:var(--ink-dim); font-weight:500;}
+
+/* ===== reference table ===== */
+.ref-table{width:100%; border-collapse:collapse; font-size:11.5px;}
+.ref-table th, .ref-table td{padding:6px 9px; border-bottom:1px solid var(--line-soft); text-align:left;}
+.ref-table th{color:var(--ink-faint); font-weight:500; text-transform:uppercase; font-size:9.5px; letter-spacing:.06em;}
+.ref-table td{color:var(--ink-dim); font-family:'IBM Plex Mono';}
+
+footer.note{
+  max-width:1480px; margin:22px auto 60px; padding:0 16px; font-size:10.5px; color:var(--ink-faint); line-height:1.7;
+}
+footer.note b{color:var(--ink-dim);}
+</style>
+</head>
+<body>
+<a href="index.html" class="no-print" style="position:fixed;top:10px;left:12px;z-index:9999;font-family:monospace;font-size:11px;color:#8fa8c2;background:rgba(10,23,40,0.85);border:1px solid #234261;border-radius:14px;padding:5px 12px;text-decoration:none;">← OhmZone</a>
+<div class="lang-switch no-print">
+  <button type="button" id="btn-en" class="active" onclick="setLang('en')">EN</button>
+  <button type="button" id="btn-fr" onclick="setLang('fr')">FR</button>
+</div>
+
+<div class="titleblock">
+  <div class="brand">
+    <div class="mark">PFC</div>
+    <div>
+      <h1 id="titleH1">Power Factor Correction — Capacitor Sizing</h1>
+      <div class="sub" id="titleSub">Shunt capacitor sizing for inductive-load power factor correction — single-phase or balanced three-phase</div>
+    </div>
+  </div>
+  <div class="stamp">
+    <div><b id="lblDwg">Dwg No.</b><span>PFC-001</span></div>
+    <div><b id="lblScale">Scale</b><span>NTS</span></div>
+    <div><b id="lblMethod">Method</b><span>P·tanφ</span></div>
+    <div><b id="lblRev">Rev</b><span id="revTag">—</span></div>
+  </div>
+</div>
+
+<div class="top-disclaimer no-print">
+  <b id="topDiscB">Reference tool only.</b> <span id="topDiscTxt">This calculator provides a preliminary estimate of capacitor sizing for power factor correction. It is not a substitute for a qualified electrical engineer's design, site measurements, harmonic/resonance assessment, or compliance with local codes and utility requirements.</span>
+</div>
+
+<div class="app">
+  <div class="steps">
+
+    <button class="example-btn" id="loadExample">▸ <span id="loadExampleTxt">Load example</span></button>
+
+    <!-- STEP 1: SYSTEM -->
+    <div class="step" id="step1">
+      <div class="step-head" data-toggle="step1">
+        <div class="step-num">1</div>
+        <div class="step-title" id="step1Title">System &amp; Load<small id="step1Small">Phase, connection, voltage, frequency, active power</small></div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="step-body">
+        <label class="field"><b id="lblPhase">Phase / connection</b>
+          <div class="seg" id="phaseSeg">
+            <button data-p="1p" class="active">1φ</button>
+            <button data-p="3p-delta">3φ Δ</button>
+            <button data-p="3p-wye">3φ Y</button>
+          </div>
+        </label>
+        <div class="row2">
+          <label class="field"><b id="lblVoltage">System voltage (V)</b>
+            <input type="number" id="sysV" value="600" min="1">
+          </label>
+          <label class="field"><b id="lblFreq">Frequency</b>
+            <div class="seg" id="freqSeg"><button data-f="60" class="active">60 Hz</button><button data-f="50">50 Hz</button></div>
+          </label>
+        </div>
+        <div class="chip-row" id="voltChips" data-chips-for="sysV">
+          <div class="chip" data-v="120">120 V</div>
+          <div class="chip" data-v="208">208 V</div>
+          <div class="chip" data-v="240">240 V</div>
+          <div class="chip" data-v="480">480 V</div>
+          <div class="chip" data-v="600">600 V</div>
+          <div class="chip" data-v="4160">4160 V</div>
+        </div>
+        <label class="field" id="voltNoteWrap"><span class="hint" id="voltNote">For 3φ connections, enter the line-to-line voltage.</span></label>
+        <label class="field"><b id="lblActiveP">Active power, P (kW)</b>
+          <input type="number" id="P" value="150" min="0" step="0.1">
+        </label>
+      </div>
+    </div>
+
+    <!-- STEP 2: POWER FACTOR -->
+    <div class="step" id="step2">
+      <div class="step-head" data-toggle="step2">
+        <div class="step-num">2</div>
+        <div class="step-title" id="step2Title">Power Factor<small id="step2Small">Current (lagging) and target power factor</small></div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="step-body">
+        <label class="field"><b id="lblPf1">Current power factor, PF₁ (lagging)</b>
+          <input type="number" id="pf1" value="0.75" min="0.1" max="0.999" step="0.01">
+        </label>
+        <label class="field"><b id="lblPf2">Target power factor, PF₂</b>
+          <input type="number" id="pf2" value="0.95" min="0.1" max="0.99" step="0.01">
+        </label>
+        <div class="chip-row" id="pf2Chips" data-chips-for="pf2">
+          <div class="chip" data-v="0.90">0.90</div>
+          <div class="chip" data-v="0.92">0.92</div>
+          <div class="chip" data-v="0.95">0.95</div>
+          <div class="chip" data-v="0.98">0.98</div>
+        </div>
+        <div class="hint" id="pf2Hint">Industry practice typically targets 0.90–0.98. Avoid setting the target at 1.00 — this risks tipping the load into leading (over-compensated) power factor under normal load swings.</div>
+      </div>
+    </div>
+
+    <!-- STEP 3: HARMONIC RISK (optional) -->
+    <div class="step optional" id="step3">
+      <div class="step-head" data-toggle="step3">
+        <div class="step-num">3</div>
+        <div class="step-title" id="step3Title">Harmonic / Resonance Check <span style="color:var(--ink-faint)" id="optionalTag3">(optional)</span><small id="step3Small">Nonlinear loads (VFDs, UPS, rectifiers) can create resonance with shunt capacitors</small></div>
+        <label class="switch" onclick="event.stopPropagation()">
+          <input type="checkbox" id="harmOn"><span class="track"></span>
+        </label>
+      </div>
+      <div class="step-body">
+        <label class="field"><b id="lblSsc">Short-circuit capacity at bus, S<sub>sc</sub> (MVA)</b>
+          <input type="number" id="ssc" value="" min="0" step="0.1" placeholder="e.g. 15">
+        </label>
+        <label class="field"><b id="lblThd">Measured / estimated voltage THD (%)</b>
+          <input type="number" id="thdv" value="" min="0" step="0.1" placeholder="e.g. 4.5">
+        </label>
+        <div class="hint" id="hintStep3">Provide the bus short-circuit capacity (from a short-circuit study or utility data) to estimate the resonant harmonic order. If unavailable, at minimum flag whether known nonlinear loads (VFDs, UPS, rectifiers, arc/induction furnaces, LED drivers) are present on this bus.</div>
+        <label class="field" style="flex-direction:row;align-items:center;gap:8px;">
+          <input type="checkbox" id="nonlinearPresent" style="width:auto;">
+          <span id="lblNonlinear">Known nonlinear loads present on this bus</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- STEP 4: CROSS-CHECK (optional) -->
+    <div class="step optional" id="step4">
+      <div class="step-head" data-toggle="step4">
+        <div class="step-num">4</div>
+        <div class="step-title" id="step4Title">Cross-check <span style="color:var(--ink-faint)" id="optionalTag4">(optional)</span><small id="step4Small">Existing capacitance or measured current/kVA, for validation</small></div>
+        <label class="switch" onclick="event.stopPropagation()">
+          <input type="checkbox" id="crossOn"><span class="track"></span>
+        </label>
+      </div>
+      <div class="step-body">
+        <label class="field"><b id="lblExistingC">Existing capacitor bank, if any (kVAR)</b>
+          <input type="number" id="existingQc" value="" min="0" step="0.1" placeholder="e.g. 0">
+        </label>
+        <label class="field"><b id="lblMeasI">Measured line current, if available (A)</b>
+          <input type="number" id="measI" value="" min="0" step="0.1" placeholder="optional">
+        </label>
+        <div class="hint" id="hintStep4">These fields don't change the sizing calculation — they're shown alongside the results so you can sanity-check the estimate against what's already installed or measured on site.</div>
+      </div>
+    </div>
+
+    <div class="step optional" id="step5">
+      <div class="step-head" data-toggle="step5">
+        <div class="step-num">5</div>
+        <div class="step-title" id="step5Title">Capacitor Bank Cable <span style="color:var(--ink-faint)" id="optionalTag5">(optional)</span><small id="step5Small">Feeder cable from switchboard to the capacitor bank — CSA C22.1</small></div>
+        <label class="switch" onclick="event.stopPropagation()">
+          <input type="checkbox" id="cableOn"><span class="track"></span>
+        </label>
+      </div>
+      <div class="step-body">
+        <label class="field"><b id="lblCableMat">Conductor material</b>
+          <div class="seg" id="cableMatSeg">
+            <button data-v="cu" class="active">Copper</button>
+            <button data-v="al">Aluminum</button>
+          </div>
+        </label>
+        <label class="field"><b id="lblCableInstall">Installation method</b>
+          <div class="seg" id="cableInstallSeg">
+            <button data-v="raceway" class="active">≤3 in raceway/cable</button>
+            <button data-v="freeair">Single conductor, free air</button>
+          </div>
+        </label>
+        <label class="field"><b id="lblCableTemp">Ampacity column (lower of insulation / terminal rating)</b>
+          <div class="seg" id="cableTempSeg">
+            <button data-v="60">60°C</button>
+            <button data-v="75" class="active">75°C</button>
+            <button data-v="90">90°C</button>
+          </div>
+        </label>
+        <div class="hint" id="hintStep5"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="canvas-col">
+    <div class="panel">
+      <div class="panel-head"><h2 id="resultTitle">Result — Required Compensation</h2></div>
+      <div class="result-grid">
+        <div class="gauge-box">
+          <div class="gauge-num" id="gaugeNum">—</div>
+          <div class="gauge-lbl" id="gaugeLbl">kVAR required (Qc)</div>
+        </div>
+        <div class="stat-list">
+          <div class="stat hot"><div class="k" id="lblStatC">Capacitance</div><div class="v" id="statC">—</div></div>
+          <div class="stat"><div class="k" id="lblStatStep">Suggested standard bank</div><div class="v" id="statStep">—</div></div>
+          <div class="stat"><div class="k" id="lblStatS1">Apparent power before (S₁)</div><div class="v" id="statS1">—</div></div>
+          <div class="stat"><div class="k" id="lblStatS2">Apparent power after (S₂)</div><div class="v" id="statS2">—</div></div>
+          <div class="stat"><div class="k" id="lblStatI1">Line current before (I₁)</div><div class="v" id="statI1">—</div></div>
+          <div class="stat"><div class="k" id="lblStatI2">Line current after (I₂)</div><div class="v" id="statI2">—</div></div>
+        </div>
+      </div>
+      <div class="stat" style="margin-top:10px;">
+        <div class="k" id="lblStatIRed">Line current reduction</div><div class="v" id="statIRed" style="color:var(--trace);">—</div>
+      </div>
+      <div id="overCompBox"></div>
+      <div id="harmBox"></div>
+      <div id="crossCheckBox"></div>
+      <div id="cableBox"></div>
+    </div>
+
+    <div class="panel no-print" style="border:none;background:transparent;">
+      <div class="btn-row" style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button id="printBtn" style="padding:9px 16px;border-radius:8px;border:1px solid #2f5678;background:#0f2036;color:#c8d8e8;cursor:pointer;font-family:inherit;">🖨 Print / Save as PDF</button>
+        <button id="exportWordBtn" style="padding:9px 16px;border-radius:8px;border:1px solid #2f5678;background:#0f2036;color:#c8d8e8;cursor:pointer;font-family:inherit;">📄 Export study (Word)</button>
+        <button id="exportExcelBtn" style="padding:9px 16px;border-radius:8px;border:1px solid #2f5678;background:#0f2036;color:#c8d8e8;cursor:pointer;font-family:inherit;">📊 Export study (Excel)</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2 id="ledgerTitle">Calculation Ledger</h2><span class="tag" id="ledgerTag">P·tanφ method, expand for full derivation</span></div>
+      <div class="ledger" id="ledger"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2 id="refTableTitle">Typical Power Factor Reference</h2></div>
+      <div class="tbl-scroll">
+        <table class="ref-table">
+          <thead><tr><th id="refThLoad">Load type</th><th id="refThPf">Typical PF</th></tr></thead>
+          <tbody id="refTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="note" id="footerNote"></footer>
+
+<script>
+const $ = id => document.getElementById(id);
+
+const STD_KVAR = [2.5,5,7.5,10,12.5,15,20,25,30,40,50,60,75,100,125,150,200,250,300,400,500,600,750,1000];
+
+/* Same CSA C22.1 Table 2 (Cu) / Table 4 (Al) ampacity basis used in the LV
+   Equipment Cable Selection tool — representative/commonly published values,
+   verify against the current edition for final design. */
+const CAP_SIZES = ["14","12","10","8","6","4","3","2","1","1/0","2/0","3/0","4/0","250","300","350","400","500","600","700","750"];
+const CAP_T2_CU = {
+  "14":{60:15,75:20,90:25}, "12":{60:20,75:25,90:30}, "10":{60:30,75:35,90:40},
+  "8":{60:40,75:50,90:55}, "6":{60:55,75:65,90:75}, "4":{60:70,75:85,90:95},
+  "3":{60:85,75:100,90:110}, "2":{60:95,75:115,90:130}, "1":{60:110,75:130,90:145},
+  "1/0":{60:125,75:150,90:170}, "2/0":{60:145,75:175,90:195}, "3/0":{60:165,75:200,90:225},
+  "4/0":{60:195,75:230,90:260}, "250":{60:215,75:255,90:290}, "300":{60:240,75:285,90:320},
+  "350":{60:260,75:310,90:350}, "400":{60:280,75:335,90:380}, "500":{60:320,75:380,90:430},
+  "600":{60:350,75:420,90:475}, "700":{60:385,75:460,90:520}, "750":{60:400,75:475,90:535}
+};
+const CAP_T4_AL = {
+  "12":{60:15,75:20,90:25}, "10":{60:25,75:30,90:35}, "8":{60:30,75:40,90:45},
+  "6":{60:40,75:50,90:55}, "4":{60:55,75:65,90:75}, "3":{60:65,75:75,90:85},
+  "2":{60:75,75:90,90:100}, "1":{60:85,75:100,90:115}, "1/0":{60:100,75:120,90:135},
+  "2/0":{60:115,75:135,90:150}, "3/0":{60:130,75:155,90:175}, "4/0":{60:150,75:180,90:205},
+  "250":{60:170,75:205,90:230}, "300":{60:195,75:230,90:260}, "350":{60:210,75:250,90:280},
+  "400":{60:225,75:270,90:305}, "500":{60:260,75:310,90:350}, "600":{60:285,75:340,90:385},
+  "700":{60:315,75:375,90:425}, "750":{60:320,75:385,90:435}
+};
+function capFreeAirFactor(size){
+  const big = ["250","300","350","400","500","600","700","750"];
+  if(big.includes(size)) return (size==="600"||size==="700"||size==="750") ? 1.15 : 1.18;
+  const small = ["14","12","10","8","6","4"];
+  return small.includes(size) ? 1.30 : 1.25;
+}
+function capAmpacityLookup(mat, install, size, col){
+  const base = (mat==="cu" ? CAP_T2_CU : CAP_T4_AL)[size];
+  if(!base) return null;
+  const v = base[col];
+  if(v===undefined) return null;
+  return install==="freeair" ? Math.round(v*capFreeAirFactor(size)) : v;
+}
+function sizeCapacitorCable(reqAmp, mat, install, col){
+  const rows = CAP_SIZES.map(sz=>({size:sz, perSet: capAmpacityLookup(mat, install, sz, col)})).filter(r=>r.perSet!==null);
+  let chosen=null, sets=1;
+  for(const r of rows){ if(r.perSet>=reqAmp){ chosen=r; sets=1; break; } }
+  if(!chosen){
+    const cap750 = rows.find(r=>r.size==="750");
+    const capVal = cap750 ? cap750.perSet : rows[rows.length-1].perSet;
+    sets = Math.ceil(reqAmp/capVal);
+    for(const r of rows){ if(r.perSet*sets>=reqAmp){ chosen=r; break; } }
+    if(!chosen){ chosen = rows[rows.length-1]; sets = Math.ceil(reqAmp/chosen.perSet); }
+  }
+  return {rows, chosen, sets, totalAmp: chosen?chosen.perSet*sets:null};
+}
+
+const REF_LOADS = [
+  {en:"Induction motor, lightly loaded (<50%)", fr:"Moteur à induction, faiblement chargé (<50 %)", pf:"0.55 – 0.70"},
+  {en:"Induction motor, fully loaded", fr:"Moteur à induction, pleinement chargé", pf:"0.80 – 0.90"},
+  {en:"Welding equipment", fr:"Équipement de soudage", pf:"0.40 – 0.60"},
+  {en:"Fluorescent / discharge lighting (no correction)", fr:"Éclairage fluorescent / à décharge (sans correction)", pf:"0.50 – 0.60"},
+  {en:"Resistive heating", fr:"Chauffage résistif", pf:"≈ 1.00"},
+  {en:"Distribution transformer, no load", fr:"Transformateur de distribution, à vide", pf:"0.10 – 0.40"},
+  {en:"Plant average (uncorrected, mixed load)", fr:"Moyenne d'usine (non corrigée, charge mixte)", pf:"0.65 – 0.85"},
+];
+
+let state = { phase:"1p", V:600, f:60 };
+let currentLang = 'en';
+
+function fmt(n,d=2){ if(n===undefined||n===null||isNaN(n)) return "—"; return Number(n).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d}); }
+
+/* ===== step collapse ===== */
+document.querySelectorAll(".step-head").forEach(h=>{
+  h.addEventListener("click", ()=>{
+    const step = document.getElementById(h.dataset.toggle);
+    step.classList.toggle("closed");
+  });
+});
+["step3","step4"].forEach(id=>{ /* start collapsed-ish but visible; leave open by default for clarity */ });
+
+/* toggle 'on' visual for optional steps */
+function wireOptionalToggle(stepId, checkboxId){
+  const cb = $(checkboxId), step = $(stepId);
+  const sync = ()=> step.classList.toggle("on", cb.checked);
+  cb.addEventListener("change", sync);
+  sync();
+}
+wireOptionalToggle("step3","harmOn");
+wireOptionalToggle("step4","crossOn");
+wireOptionalToggle("step5","cableOn");
+
+function wireCapSeg(segId, cb){
+  document.getElementById(segId).addEventListener("click", e=>{
+    const b = e.target.closest("button"); if(!b) return;
+    document.querySelectorAll("#"+segId+" button").forEach(x=>x.classList.remove("active"));
+    b.classList.add("active");
+    cb(b.dataset.v);
+    recalc();
+  });
+}
+let capState = { mat:"cu", install:"raceway", col:75 };
+wireCapSeg("cableMatSeg", v=>capState.mat=v);
+wireCapSeg("cableInstallSeg", v=>capState.install=v);
+wireCapSeg("cableTempSeg", v=>capState.col=Number(v));
+document.getElementById("cableOn").addEventListener("change", recalc);
+
+/* ===== phase/connection segmented control ===== */
+$("phaseSeg").addEventListener("click", e=>{
+  const b = e.target.closest("button"); if(!b) return;
+  document.querySelectorAll("#phaseSeg button").forEach(x=>x.classList.remove("active"));
+  b.classList.add("active");
+  state.phase = b.dataset.p;
+  updateVoltNote();
+  recalc();
+});
+function updateVoltNote(){
+  const L = UI[currentLang];
+  $("voltNote").textContent = state.phase==="1p" ? L.voltNote1p : L.voltNote3p;
+}
+
+/* ===== frequency segmented control ===== */
+$("freqSeg").addEventListener("click", e=>{
+  const b = e.target.closest("button"); if(!b) return;
+  document.querySelectorAll("#freqSeg button").forEach(x=>x.classList.remove("active"));
+  b.classList.add("active");
+  state.f = Number(b.dataset.f);
+  recalc();
+});
+
+/* ===== voltage chips ===== */
+$("voltChips").addEventListener("click", e=>{
+  const c = e.target.closest(".chip"); if(!c) return;
+  $("sysV").value = c.dataset.v;
+  recalc();
+});
+$("sysV").addEventListener("input", recalc);
+
+/* ===== pf2 chips ===== */
+$("pf2Chips").addEventListener("click", e=>{
+  const c = e.target.closest(".chip"); if(!c) return;
+  $("pf2").value = c.dataset.v;
+  recalc();
+});
+
+/* ===== inputs that trigger recalc ===== */
+["P","pf1","pf2","ssc","thdv","existingQc","measI"].forEach(id=>{
+  $(id).addEventListener("input", recalc);
+});
+$("nonlinearPresent").addEventListener("change", recalc);
+$("harmOn").addEventListener("change", recalc);
+$("crossOn").addEventListener("change", recalc);
+
+/* ===== example ===== */
+$("loadExample").addEventListener("click", ()=>{
+  document.querySelectorAll("#phaseSeg button").forEach(x=>x.classList.toggle("active", x.dataset.p==="3p-wye"));
+  state.phase = "3p-wye";
+  document.querySelectorAll("#freqSeg button").forEach(x=>x.classList.toggle("active", x.dataset.f==="60"));
+  state.f = 60;
+  $("sysV").value = 600;
+  $("P").value = 250;
+  $("pf1").value = 0.72;
+  $("pf2").value = 0.95;
+  $("harmOn").checked = true;
+  $("ssc").value = 12;
+  $("thdv").value = 4.2;
+  $("nonlinearPresent").checked = true;
+  $("crossOn").checked = false;
+  $("existingQc").value = "";
+  $("measI").value = "";
+  wireOptionalToggle("step3","harmOn");
+  wireOptionalToggle("step4","crossOn");
+  updateVoltNote();
+  recalc();
+});
+
+/* ===== core calculation ===== */
+function capUF(Qkvar, Vv, f){
+  return Qkvar*1e9/(2*Math.PI*f*Vv*Vv);
+}
+
+function recalc(){
+  const L = UI[currentLang];
+  const P = parseFloat($("P").value)||0;
+  const pf1 = parseFloat($("pf1").value)||0.001;
+  const pf2 = parseFloat($("pf2").value)||0.999;
+  const V = parseFloat($("sysV").value)||1;
+  const f = state.f;
+  const phase = state.phase;
+
+  const phi1 = Math.acos(Math.min(Math.max(pf1,-1),1));
+  const phi2 = Math.acos(Math.min(Math.max(pf2,-1),1));
+  const Qc = P*(Math.tan(phi1)-Math.tan(phi2));
+  const Q1 = P*Math.tan(phi1);
+  const Q2 = P*Math.tan(phi2);
+  const S1 = pf1>0 ? P/pf1 : 0;
+  const S2 = pf2>0 ? P/pf2 : 0;
+
+  let Cuf, Cnote;
+  if(phase==="1p"){
+    Cuf = capUF(Qc, V, f);
+    Cnote = "total";
+  } else if(phase==="3p-delta"){
+    Cuf = capUF(Qc/3, V, f);
+    Cnote = "perphase-delta";
+  } else {
+    const Vph = V/Math.sqrt(3);
+    Cuf = capUF(Qc/3, Vph, f);
+    Cnote = "perphase-wye";
+  }
+
+  let I1, I2;
+  if(phase==="1p"){
+    I1 = S1*1000/V;
+    I2 = S2*1000/V;
+  } else {
+    I1 = S1*1000/(Math.sqrt(3)*V);
+    I2 = S2*1000/(Math.sqrt(3)*V);
+  }
+  const IRedPct = I1>0 ? (I1-I2)/I1*100 : 0;
+  const stdStep = STD_KVAR.find(s=>s>=Qc) || STD_KVAR[STD_KVAR.length-1];
+
+  $("gaugeNum").textContent = fmt(Qc,2);
+  $("statC").textContent = (Cuf>=0?fmt(Cuf,2):"—") + " µF";
+  $("statStep").textContent = Qc>0 ? stdStep + " kVAR" : "—";
+  $("statS1").textContent = fmt(S1,1) + " kVA";
+  $("statS2").textContent = fmt(S2,1) + " kVA";
+  $("statI1").textContent = fmt(I1,1) + " A";
+  $("statI2").textContent = fmt(I2,1) + " A";
+  $("statIRed").textContent = fmt(IRedPct,1) + " %";
+  $("revTag").textContent = new Date().toISOString().slice(0,10);
+
+  /* over-compensation warning */
+  const overBox = $("overCompBox");
+  if(pf2 >= 0.995){
+    overBox.innerHTML = `<div class="risk-box risk-alarm"><b>${L.overCompTitle}</b> ${L.overCompBody}</div>`;
+  } else if(Qc < 0){
+    overBox.innerHTML = `<div class="risk-box risk-alarm"><b>${L.negQcTitle}</b> ${L.negQcBody}</div>`;
+  } else {
+    overBox.innerHTML = "";
+  }
+
+  /* harmonic risk */
+  const harmBox = $("harmBox");
+  if($("harmOn").checked){
+    const ssc = parseFloat($("ssc").value);
+    const thd = parseFloat($("thdv").value);
+    const nonlinear = $("nonlinearPresent").checked;
+    let html = "";
+    if(ssc>0 && Qc>0){
+      const hr = Math.sqrt((ssc*1000)/Qc);
+      const nearOrders = [5,7,11,13].filter(h=>Math.abs(h-hr)<=0.5);
+      if(nearOrders.length>0){
+        html = `<div class="risk-box risk-alarm"><b>${L.harmAlarmTitle}</b> ${L.harmAlarmBody.replace('{hr}',fmt(hr,2)).replace('{orders}',nearOrders.join(', '))}</div>`;
+      } else {
+        html = `<div class="risk-box risk-ok"><b>${L.harmOkTitle}</b> ${L.harmOkBody.replace('{hr}',fmt(hr,2))}</div>`;
+      }
+    } else if(nonlinear || thd>5){
+      html = `<div class="risk-box risk-warn"><b>${L.harmWarnTitle}</b> ${L.harmWarnBody}</div>`;
+    } else {
+      html = `<div class="risk-box risk-warn"><b>${L.harmNoDataTitle}</b> ${L.harmNoDataBody}</div>`;
+    }
+    harmBox.innerHTML = html;
+  } else {
+    harmBox.innerHTML = "";
+  }
+
+  /* cross-check */
+  const crossBox = $("crossCheckBox");
+  if($("crossOn").checked){
+    const existingQc = parseFloat($("existingQc").value);
+    const measI = parseFloat($("measI").value);
+    let lines = [];
+    if(!isNaN(existingQc)){
+      const diff = Qc - existingQc;
+      lines.push(L.crossExisting.replace('{existing}',fmt(existingQc,1)).replace('{diff}',fmt(Math.abs(diff),1)).replace('{dir}', diff>0?L.crossMore:L.crossLess));
+    }
+    if(!isNaN(measI)){
+      const diffPct = I1>0 ? ((measI-I1)/I1*100) : 0;
+      lines.push(L.crossMeasured.replace('{measI}',fmt(measI,1)).replace('{calcI}',fmt(I1,1)).replace('{diffPct}',fmt(Math.abs(diffPct),1)));
+    }
+    crossBox.innerHTML = lines.length ? `<div class="risk-box risk-ok">${lines.map(l=>'<div>'+l+'</div>').join('')}</div>` : '';
+  } else {
+    crossBox.innerHTML = "";
+  }
+
+  /* capacitor bank feeder cable */
+  const cableBox = $("cableBox");
+  let cableResult = null;
+  if($("cableOn").checked && Qc>0){
+    const Ic = phase==="1p" ? (Qc*1000)/V : (Qc*1000)/(Math.sqrt(3)*V);
+    const reqAmpCable = Ic * 1.35;
+    cableResult = sizeCapacitorCable(reqAmpCable, capState.mat, capState.install, capState.col);
+    cableResult.Ic = Ic; cableResult.reqAmpCable = reqAmpCable;
+    if(cableResult.chosen){
+      const sizeLabel = (cableResult.sets>1 ? cableResult.sets+"× " : "") + cableResult.chosen.size;
+      cableBox.innerHTML = `<div class="risk-box risk-ok"><b>${L.cableTitle}</b> ${L.cableBody
+        .replace('{ic}', fmt(Ic,1)).replace('{req}', fmt(reqAmpCable,1))
+        .replace('{size}', sizeLabel).replace('{total}', fmt(cableResult.totalAmp,0))}</div>`;
+    } else {
+      cableBox.innerHTML = `<div class="risk-box risk-alarm"><b>${L.cableFailTitle}</b> ${L.cableFailBody}</div>`;
+    }
+  } else {
+    cableBox.innerHTML = "";
+  }
+
+  renderLedger({P,pf1,pf2,phi1,phi2,Qc,Q1,Q2,S1,S2,V,f,phase,Cuf,I1,I2,IRedPct,stdStep});
+  window._lastResults = {P,pf1,pf2,phi1,phi2,Qc,Q1,Q2,S1,S2,V,f,phase,Cuf,I1,I2,IRedPct,stdStep,
+    cableOn: $("cableOn").checked, cableResult, cableMat:capState.mat, cableInstall:capState.install, cableCol:capState.col};
+}
+
+function connectionLabel(phase, L){
+  if(phase==="1p") return L.conn1p;
+  if(phase==="3p-delta") return L.conn3pd;
+  return L.conn3py;
+}
+
+function renderLedger(d){
+  const L = UI[currentLang];
+  let html = "";
+
+  html += lstep(1, L.lstep1Title,
+`φ1 = acos(PF1) = acos(${fmt(d.pf1,3)}) = ${fmt(d.phi1*180/Math.PI,2)}°
+φ2 = acos(PF2) = acos(${fmt(d.pf2,3)}) = ${fmt(d.phi2*180/Math.PI,2)}°`,
+L.lstep1Note);
+
+  html += lstep(2, L.lstep2Title,
+`Qc = P × (tan φ1 − tan φ2)
+   = ${fmt(d.P,1)} × (tan ${fmt(d.phi1*180/Math.PI,2)}° − tan ${fmt(d.phi2*180/Math.PI,2)}°)
+   = ${fmt(d.P,1)} × (${fmt(Math.tan(d.phi1),4)} − ${fmt(Math.tan(d.phi2),4)})
+   = ${fmt(d.Qc,3)} kVAR`,
+L.lstep2Note);
+
+  const connLbl = connectionLabel(d.phase, L);
+  let capFormula;
+  if(d.phase==="1p"){
+    capFormula = `C = Qc × 10⁹ / (2π f V²)
+  = ${fmt(d.Qc,3)} × 10⁹ / (2π × ${d.f} × ${fmt(d.V,0)}²)
+  = ${fmt(d.Cuf,2)} µF  (${L.totalBank})`;
+  } else if(d.phase==="3p-delta"){
+    capFormula = `C_Δ (per phase) = (Qc/3) × 10⁹ / (2π f V_L²)
+  = (${fmt(d.Qc,3)}/3) × 10⁹ / (2π × ${d.f} × ${fmt(d.V,0)}²)
+  = ${fmt(d.Cuf,2)} µF  (${L.perLegDelta})`;
+  } else {
+    const Vph = d.V/Math.sqrt(3);
+    capFormula = `V_ph = V_L / √3 = ${fmt(d.V,0)} / 1.732 = ${fmt(Vph,1)} V
+C_Y (per phase) = (Qc/3) × 10⁹ / (2π f V_ph²)
+  = (${fmt(d.Qc,3)}/3) × 10⁹ / (2π × ${d.f} × ${fmt(Vph,1)}²)
+  = ${fmt(d.Cuf,2)} µF  (${L.perLegWye})`;
+  }
+  html += lstep(3, L.lstep3Title.replace('{conn}',connLbl), capFormula, L.lstep3Note);
+
+  html += lstep(4, L.lstep4Title,
+`S1 = P / PF1 = ${fmt(d.P,1)} / ${fmt(d.pf1,3)} = ${fmt(d.S1,2)} kVA
+S2 = P / PF2 = ${fmt(d.P,1)} / ${fmt(d.pf2,3)} = ${fmt(d.S2,2)} kVA
+Q1 = P × tan φ1 = ${fmt(d.Q1,2)} kVAR   (${L.reactiveBefore})
+Q2 = P × tan φ2 = ${fmt(d.Q2,2)} kVAR   (${L.reactiveAfter})`,
+L.lstep4Note);
+
+  const curFormula = d.phase==="1p"
+    ? `I1 = S1 × 1000 / V = ${fmt(d.S1,2)}×1000 / ${fmt(d.V,0)} = ${fmt(d.I1,2)} A
+I2 = S2 × 1000 / V = ${fmt(d.S2,2)}×1000 / ${fmt(d.V,0)} = ${fmt(d.I2,2)} A`
+    : `I1 = S1×1000 / (√3 × V_L) = ${fmt(d.S1,2)}×1000 / (1.732×${fmt(d.V,0)}) = ${fmt(d.I1,2)} A
+I2 = S2×1000 / (√3 × V_L) = ${fmt(d.S2,2)}×1000 / (1.732×${fmt(d.V,0)}) = ${fmt(d.I2,2)} A`;
+  html += lstep(5, L.lstep5Title, curFormula + `\n\n${L.reductionLbl} = (I1−I2)/I1 × 100 = ${fmt(d.IRedPct,1)}%`, L.lstep5Note);
+
+  html += lstep(6, L.lstep6Title,
+`${L.stdStepLbl}: ${d.stdStep} kVAR`,
+L.lstep6Note);
+
+  if(d.cableOn && d.cableResult && d.cableResult.chosen){
+    const cr = d.cableResult;
+    const icFormula = d.phase==="1p"
+      ? `Ic = Qc × 1000 / V = ${fmt(d.Qc,3)}×1000 / ${fmt(d.V,0)} = ${fmt(cr.Ic,1)} A`
+      : `Ic = Qc × 1000 / (√3 × V) = ${fmt(d.Qc,3)}×1000 / (1.732×${fmt(d.V,0)}) = ${fmt(cr.Ic,1)} A`;
+    const sizeLabel = (cr.sets>1 ? cr.sets+"× " : "") + cr.chosen.size;
+    html += lstep(7, L.lstep7Title,
+`${icFormula}
+${L.reqCableLbl} = 1.35 × Ic = 1.35 × ${fmt(cr.Ic,1)} = ${fmt(cr.reqAmpCable,1)} A
+${L.chosenCableLbl} = ${sizeLabel} → ${fmt(cr.totalAmp,0)} A (${d.cableMat==='cu'?L.copper:L.aluminum}, ${d.cableCol}°C, ${d.cableInstall==='raceway'?L.installRaceway:L.installFreeair})`,
+L.lstep7Note);
+  }
+
+  $("ledger").innerHTML = html;
+}
+
+function lstep(n,title,formula,note){
+  return `<div class="lstep"><div class="ln">${String(n).padStart(2,'0')}</div><div>
+    <h3>${title}</h3>
+    <div class="formula">${formula}</div>
+    <div class="cite">${note}</div>
+  </div></div>`;
+}
+
+function renderRefTable(){
+  const tbody = $("refTableBody");
+  tbody.innerHTML = REF_LOADS.map(r=>`<tr><td>${currentLang==='fr'?r.fr:r.en}</td><td>${r.pf}</td></tr>`).join("");
+}
+
+/* ===== export ===== */
+function buildReportRows(){
+  const d = window._lastResults;
+  if(!d) return null;
+  const L = UI[currentLang];
+  const rows = [
+    [L.xlsParam, L.xlsValue],
+    [L.xlsPhase, connectionLabel(d.phase,L)],
+    [L.xlsVoltage, fmt(d.V,0)],
+    [L.xlsFreq, d.f],
+    [L.xlsP, fmt(d.P,1)],
+    [L.xlsPf1, fmt(d.pf1,3)],
+    [L.xlsPf2, fmt(d.pf2,3)],
+    ["", ""],
+    [L.xlsQc, fmt(d.Qc,3)],
+    [L.xlsC, fmt(d.Cuf,2)],
+    [L.xlsStdStep, d.stdStep],
+    [L.xlsS1, fmt(d.S1,2)],
+    [L.xlsS2, fmt(d.S2,2)],
+    [L.xlsI1, fmt(d.I1,2)],
+    [L.xlsI2, fmt(d.I2,2)],
+    [L.xlsIRed, fmt(d.IRedPct,1)]
+  ];
+  if(d.cableOn && d.cableResult && d.cableResult.chosen){
+    const cr = d.cableResult;
+    const sizeLabel = (cr.sets>1 ? cr.sets+"x " : "") + cr.chosen.size;
+    rows.push(["", ""]);
+    rows.push([L.lstep7Title, ""]);
+    rows.push(["Ic (A)", fmt(cr.Ic,1)]);
+    rows.push([L.reqCableLbl, fmt(cr.reqAmpCable,1)]);
+    rows.push([L.chosenCableLbl, sizeLabel]);
+    rows.push(["Ampacity (A)", fmt(cr.totalAmp,0)]);
+    rows.push([L.lblCableMat, d.cableMat==='cu'?L.copper:L.aluminum]);
+    rows.push([L.lblCableInstall, d.cableInstall==='raceway'?L.installRaceway:L.installFreeair]);
+    rows.push([L.lblCableTemp, d.cableCol+"°C"]);
+  }
+  rows.push(["", ""]);
+  rows.push([L.xlsDisclaimerLbl, L.xlsDisclaimerBody]);
+  return rows;
+}
+
+document.getElementById('printBtn').addEventListener('click', () => window.print());
+
+document.getElementById('exportWordBtn').addEventListener('click', () => {
+  const rows = buildReportRows();
+  if(!rows) return;
+  const L = UI[currentLang];
+  const bodyRows = rows.map(r=>{
+    const isHeader = r[0]===L.xlsParam;
+    const isBlank = r[0]==="" && r[1]==="";
+    if(isBlank) return `<tr><td colspan="2" style="border:none;padding:4px;"></td></tr>`;
+    if(isHeader) return `<tr><td style="padding:6px 10px;background:#1a2f4a;color:#fff;font-weight:600;border:1px solid #ccc;">${r[0]}</td><td style="padding:6px 10px;background:#1a2f4a;color:#fff;font-weight:600;border:1px solid #ccc;">${r[1]}</td></tr>`;
+    return `<tr><td style="padding:5px 10px;border:1px solid #ccc;">${r[0]}</td><td style="padding:5px 10px;border:1px solid #ccc;">${r[1]}</td></tr>`;
+  }).join("");
+  const doc = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+  <head><meta charset="utf-8"><title>PFC Capacitor Sizing Report</title>
+  <!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View></w:WordDocument></xml><![endif]-->
+  </head><body style="font-family:Calibri,Arial,sans-serif;color:#1a1a1a;background:#fff;">
+  <h2 style="font-family:Calibri,Arial,sans-serif;">${$('titleH1').textContent}</h2>
+  <p style="color:#555;font-size:11pt;">${$('titleSub').textContent}</p>
+  <table style="border-collapse:collapse;width:100%;font-size:10.5pt;">${bodyRows}</table>
+  <p style="font-size:9pt;color:#777;margin-top:16px;">© 2026 OhmZone. All rights reserved.</p>
+  </body></html>`;
+  downloadBlob(doc, "application/msword", "pfc_capacitor_sizing.doc");
+});
+
+function downloadBlob(content, mime, filename){
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 2000);
+}
+
+document.getElementById('exportExcelBtn').addEventListener('click', () => {
+  const rows = buildReportRows();
+  if(!rows) return;
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "PFC Sizing");
+  XLSX.writeFile(wb, "pfc_capacitor_sizing.xlsx");
+});
+
+/* ===================== i18n ===================== */
+const UI = {
+  en: {
+    titleH1: "Power Factor Correction — Capacitor Sizing",
+    titleSub: "Shunt capacitor sizing for inductive-load power factor correction — single-phase or balanced three-phase",
+    lblDwg: "Dwg No.", lblScale: "Scale", lblMethod: "Method", lblRev: "Rev",
+    topDiscB: "Reference tool only.",
+    topDiscTxt: "This calculator provides a preliminary estimate of capacitor sizing for power factor correction. It is not a substitute for a qualified electrical engineer's design, site measurements, harmonic/resonance assessment, or compliance with local codes and utility requirements.",
+    loadExampleTxt: "Load example",
+    step1Title: "System &amp; Load", step1Small: "Phase, connection, voltage, frequency, active power",
+    lblPhase: "Phase / connection",
+    lblVoltage: "System voltage (V)", lblFreq: "Frequency",
+    voltNote1p: "Enter the single-phase system voltage.",
+    voltNote3p: "For 3φ connections, enter the line-to-line voltage.",
+    lblActiveP: "Active power, P (kW)",
+    step2Title: "Power Factor", step2Small: "Current (lagging) and target power factor",
+    lblPf1: "Current power factor, PF₁ (lagging)", lblPf2: "Target power factor, PF₂",
+    pf2Hint: "Industry practice typically targets 0.90–0.98. Avoid setting the target at 1.00 — this risks tipping the load into leading (over-compensated) power factor under normal load swings.",
+    step3Title: "Harmonic / Resonance Check", optionalTag3: "(optional)",
+    step3Small: "Nonlinear loads (VFDs, UPS, rectifiers) can create resonance with shunt capacitors",
+    lblSsc: "Short-circuit capacity at bus, S<sub>sc</sub> (MVA)",
+    lblThd: "Measured / estimated voltage THD (%)",
+    hintStep3: "Provide the bus short-circuit capacity (from a short-circuit study or utility data) to estimate the resonant harmonic order. If unavailable, at minimum flag whether known nonlinear loads (VFDs, UPS, rectifiers, arc/induction furnaces, LED drivers) are present on this bus.",
+    lblNonlinear: "Known nonlinear loads present on this bus",
+    step4Title: "Cross-check", optionalTag4: "(optional)", step4Small: "Existing capacitance or measured current/kVA, for validation",
+    lblExistingC: "Existing capacitor bank, if any (kVAR)",
+    lblMeasI: "Measured line current, if available (A)",
+    hintStep4: "These fields don't change the sizing calculation — they're shown alongside the results so you can sanity-check the estimate against what's already installed or measured on site.",
+    resultTitle: "Result — Required Compensation", gaugeLbl: "kVAR required (Qc)",
+    lblStatC: "Capacitance", lblStatStep: "Suggested standard bank",
+    lblStatS1: "Apparent power before (S₁)", lblStatS2: "Apparent power after (S₂)",
+    lblStatI1: "Line current before (I₁)", lblStatI2: "Line current after (I₂)",
+    lblStatIRed: "Line current reduction",
+    printBtnLabel: "🖨 Print / Save as PDF", exportWordLabel: "📄 Export study (Word)", exportBtnLabel: "📊 Export study (Excel)",
+    ledgerTitle: "Calculation Ledger", ledgerTag: "P·tanφ method, expand for full derivation",
+    refTableTitle: "Typical Power Factor Reference", refThLoad: "Load type", refThPf: "Typical PF",
+    conn1p: "Single-phase", conn3pd: "Three-phase, Δ (delta)", conn3py: "Three-phase, Y (wye)",
+    overCompTitle: "Target power factor too close to unity.", overCompBody: "Setting PF₂ at 0.995 or higher risks leading (over-compensated) power factor during light-load periods, which can cause overvoltage and self-excitation issues, especially on motor terminals. Consider a target of 0.95–0.98 with staged/automatic switching instead of a single large fixed bank.",
+    negQcTitle: "Target power factor is lower than current power factor.", negQcBody: "No capacitor is needed — check that PF₂ is greater than PF₁.",
+    harmAlarmTitle: "Resonance risk — proceed with caution.", harmAlarmBody: "Estimated resonant harmonic order h ≈ {hr}, close to a common system harmonic ({orders}). A detuned reactor (typically 7% for moderate risk, 14% for higher-risk systems with significant 5th-harmonic content) is strongly recommended instead of a plain capacitor bank. Confirm with a harmonic study before installation.",
+    harmOkTitle: "Estimated resonance point is clear of common harmonics.", harmOkBody: "Estimated resonant harmonic order h ≈ {hr}. This is a simplified single-frequency estimate only — a full harmonic study is still recommended for buses with significant nonlinear load.",
+    harmWarnTitle: "Nonlinear loads or elevated THD flagged.", harmWarnBody: "Known nonlinear loads and/or voltage THD above 5% were indicated. Without short-circuit capacity data, the resonant point can't be estimated here — a detuned reactor should be considered by default, and a harmonic study is recommended before final selection.",
+    harmNoDataTitle: "Harmonic check enabled but no data entered.", harmNoDataBody: "Enter the bus short-circuit capacity to estimate the resonant harmonic order, or flag known nonlinear loads / THD if that data isn't available.",
+    crossExisting: "Existing bank: {existing} kVAR. This is {diff} kVAR {dir} the calculated requirement.",
+    crossMore: "more than", crossLess: "less than",
+    crossMeasured: "Measured current: {measI} A vs. calculated pre-correction current {calcI} A (difference {diffPct}%) — a large gap may indicate the entered P/PF values don't match actual site conditions.",
+    lstep1Title: "Power factor angles",
+    lstep1Note: "φ is the angle between real and apparent power (impedance angle for the equivalent load); acos(PF) recovers it directly from the power factor.",
+    lstep2Title: "Required reactive compensation, Qc",
+    lstep2Note: "Standard power-triangle method: the capacitor must supply the difference between the reactive power drawn at the current PF and the reactive power that would be drawn at the target PF, both computed from the same real power P.",
+    lstep3Title: "Capacitance — {conn}",
+    lstep3Note: "Capacitive reactive power Q = 2πfCV² (VAR); solving for C and converting to µF gives the formulas above. For 3-phase, Qc is split evenly across the three legs, with V matched to how each leg is actually connected (line-to-line for Δ, line-to-neutral for Y).",
+    totalBank: "total bank", perLegDelta: "per leg, connected line-to-line", perLegWye: "per leg, connected line-to-neutral",
+    lstep4Title: "Apparent power &amp; reactive power, before/after",
+    lstep4Note: "Shown for reference — confirms the power triangle closes correctly and gives the residual reactive power Q2 still drawn from the source after correction.",
+    reactiveBefore: "before correction", reactiveAfter: "after correction, residual",
+    lstep5Title: "Line current, before/after correction",
+    lstep5Note: "This is the current reduction the utility/upstream equipment sees — useful for checking whether correction also relieves loading on feeders, transformers or switchgear.",
+    reductionLbl: "Reduction",
+    lstep6Title: "Suggested standard capacitor bank size",
+    lstep6Note: "Rounded up to the next commonly available commercial kVAR rating. Actual bank selection should also account for manufacturing tolerance (commonly +5% to +15%), voltage rating margin, and whether staged/automatic switching is preferred over a single fixed bank.",
+    step5Title: "Capacitor Bank Cable", optionalTag5: "(optional)", step5Small: "Feeder cable from switchboard to the capacitor bank — CSA C22.1",
+    lblCableMat: "Conductor material", lblCableInstall: "Installation method", lblCableTemp: "Ampacity column (lower of insulation / terminal rating)",
+    hintStep5: "Capacitor bank feeder conductors are commonly sized at not less than 135% of the capacitor bank's rated current — this mirrors the multiplier widely applied in North American practice (paralleling the NEC 460.8(A) principle) to cover the capacitor's continuous overcurrent from harmonics and voltage above nominal. Confirm the exact CSA C22.1 provision for the installation.",
+    installRaceway: "≤3 conductors in raceway/cable", installFreeair: "single conductor, free air", copper: "Copper", aluminum: "Aluminum",
+    cableTitle: "Capacitor cable sized.", cableBody: "Rated current Ic = {ic} A → required ampacity (135%) = {req} A → {size} provides {total} A.",
+    cableFailTitle: "No cable configuration found.", cableFailBody: "Increase kVA or reduce PF correction so a valid capacitor kVAR results, then re-check.",
+    lstep7Title: "Capacitor bank feeder cable", lstep7Note: "Capacitor circuit conductors are sized at not less than 135% of the bank's rated current — this margin is standard North American practice (the same multiplier as NEC 460.8(A)) to account for continuous overcurrent from harmonics and above-nominal system voltage, not a starting/inrush allowance. Ampacity table basis is the same CSA C22.1 Table 2/4 methodology as the LV Equipment Cable Selection tool; verify against the current edition.",
+    reqCableLbl: "Required ampacity", chosenCableLbl: "Selected",
+    stdStepLbl: "Next standard step",
+    xlsParam: "Parameter", xlsValue: "Value", xlsPhase: "Phase / connection", xlsVoltage: "System voltage (V)",
+    xlsFreq: "Frequency (Hz)", xlsP: "Active power P (kW)", xlsPf1: "Current PF1", xlsPf2: "Target PF2",
+    xlsQc: "Required Qc (kVAR)", xlsC: "Capacitance (µF)", xlsStdStep: "Suggested standard bank (kVAR)",
+    xlsS1: "S1 before (kVA)", xlsS2: "S2 after (kVA)", xlsI1: "I1 before (A)", xlsI2: "I2 after (A)",
+    xlsIRed: "Current reduction (%)",
+    xlsDisclaimerLbl: "Disclaimer",
+    xlsDisclaimerBody: "Preliminary estimate only. Assumes sinusoidal conditions, negligible harmonics, purely inductive lagging load, constant balanced voltage, and ideal capacitors. Final selection requires a qualified electrical engineer, accounting for capacitor voltage rating margin, harmonic/resonance risk, switching method, protection, and applicable codes.",
+    footerHtml: `<b>Assumptions &amp; limitations.</b> This tool assumes sinusoidal voltage/current with negligible harmonic content, a purely inductive lagging-power-factor load, constant and balanced system voltage, and an ideal capacitor (no losses, temperature effects, or aging). It does not automatically evaluate over-compensation, self-excitation, or resonance beyond the simplified single-frequency estimate offered in the optional harmonic check step. <b>Safety.</b> Sizing, selection and installation of power factor correction equipment on any medium- or high-power system must be carried out by a qualified electrical professional. The kVAR/µF values calculated here are a starting point only — final equipment selection must also account for capacitor voltage rating (commonly 1.10–1.15× system voltage), current withstand, ambient temperature, switching method (contactor, thyristor, automatic controller), and protective devices. Avoid a single large fixed bank on lightly-loaded or variable systems — staged or automatically switched capacitor steps are generally safer. A harmonic measurement and short-circuit capacity assessment should be performed before final installation, particularly where variable-frequency drives, UPS systems, rectifiers, arc furnaces, or significant LED/electronic lighting loads are present. This tool is for preliminary planning only and does not replace a stamped engineering design.`
+  },
+  fr: {
+    titleH1: "Correction du facteur de puissance — Dimensionnement des condensateurs",
+    titleSub: "Dimensionnement de condensateurs shunt pour la correction du facteur de puissance de charges inductives — monophasé ou triphasé équilibré",
+    lblDwg: "N° dessin", lblScale: "Échelle", lblMethod: "Méthode", lblRev: "Rév.",
+    topDiscB: "Outil de référence seulement.",
+    topDiscTxt: "Ce calculateur fournit une estimation préliminaire du dimensionnement des condensateurs pour la correction du facteur de puissance. Il ne remplace pas la conception d'un ingénieur électricien qualifié, les mesures sur site, l'évaluation des harmoniques/résonance, ni la conformité aux codes locaux et exigences du distributeur.",
+    loadExampleTxt: "Charger l'exemple",
+    step1Title: "Système et charge", step1Small: "Phase, raccordement, tension, fréquence, puissance active",
+    lblPhase: "Phase / raccordement",
+    lblVoltage: "Tension du système (V)", lblFreq: "Fréquence",
+    voltNote1p: "Entrez la tension du système monophasé.",
+    voltNote3p: "Pour les raccordements triphasés, entrez la tension ligne à ligne.",
+    lblActiveP: "Puissance active, P (kW)",
+    step2Title: "Facteur de puissance", step2Small: "Facteur de puissance actuel (retard) et cible",
+    lblPf1: "Facteur de puissance actuel, FP₁ (retard)", lblPf2: "Facteur de puissance cible, FP₂",
+    pf2Hint: "La pratique courante vise généralement 0,90–0,98. Évitez de fixer la cible à 1,00 — cela risque de faire basculer la charge en facteur de puissance avancé (surcompensé) lors des variations normales de charge.",
+    step3Title: "Vérification harmonique / résonance", optionalTag3: "(facultatif)",
+    step3Small: "Les charges non linéaires (VFD, ASI, redresseurs) peuvent créer une résonance avec les condensateurs shunt",
+    lblSsc: "Puissance de court-circuit au jeu de barres, S<sub>cc</sub> (MVA)",
+    lblThd: "THD de tension mesuré / estimé (%)",
+    hintStep3: "Fournissez la puissance de court-circuit du jeu de barres (issue d'une étude de court-circuit ou de données du distributeur) pour estimer le rang harmonique de résonance. Si non disponible, indiquez au minimum si des charges non linéaires connues (VFD, ASI, redresseurs, fours à arc/induction, pilotes DEL) sont présentes sur ce jeu de barres.",
+    lblNonlinear: "Charges non linéaires connues présentes sur ce jeu de barres",
+    step4Title: "Vérification croisée", optionalTag4: "(facultatif)", step4Small: "Capacité existante ou courant/kVA mesuré, pour validation",
+    lblExistingC: "Banc de condensateurs existant, le cas échéant (kVAR)",
+    lblMeasI: "Courant de ligne mesuré, si disponible (A)",
+    hintStep4: "Ces champs ne modifient pas le calcul de dimensionnement — ils sont affichés à côté des résultats pour permettre une vérification de cohérence avec ce qui est déjà installé ou mesuré sur le terrain.",
+    resultTitle: "Résultat — Compensation requise", gaugeLbl: "kVAR requis (Qc)",
+    lblStatC: "Capacité", lblStatStep: "Banc normalisé suggéré",
+    lblStatS1: "Puissance apparente avant (S₁)", lblStatS2: "Puissance apparente après (S₂)",
+    lblStatI1: "Courant de ligne avant (I₁)", lblStatI2: "Courant de ligne après (I₂)",
+    lblStatIRed: "Réduction du courant de ligne",
+    printBtnLabel: "🖨 Imprimer / Enregistrer en PDF", exportWordLabel: "📄 Exporter l'étude (Word)", exportBtnLabel: "📊 Exporter l'étude (Excel)",
+    ledgerTitle: "Registre de calcul", ledgerTag: "méthode P·tanφ, déplier pour la dérivation complète",
+    refTableTitle: "Référence des facteurs de puissance typiques", refThLoad: "Type de charge", refThPf: "FP typique",
+    conn1p: "Monophasé", conn3pd: "Triphasé, Δ (triangle)", conn3py: "Triphasé, Y (étoile)",
+    overCompTitle: "Facteur de puissance cible trop près de l'unité.", overCompBody: "Fixer FP₂ à 0,995 ou plus risque de produire un facteur de puissance avancé (surcompensé) pendant les périodes de faible charge, pouvant causer une surtension et des problèmes d'auto-excitation, particulièrement aux bornes des moteurs. Envisagez une cible de 0,95–0,98 avec commutation étagée/automatique plutôt qu'un seul grand banc fixe.",
+    negQcTitle: "Le facteur de puissance cible est inférieur au facteur de puissance actuel.", negQcBody: "Aucun condensateur n'est requis — vérifiez que FP₂ est supérieur à FP₁.",
+    harmAlarmTitle: "Risque de résonance — procéder avec prudence.", harmAlarmBody: "Rang harmonique de résonance estimé h ≈ {hr}, proche d'un harmonique courant du système ({orders}). Une réactance déclassée (« detuned reactor », typiquement 7 % pour un risque modéré, 14 % pour les systèmes à risque plus élevé avec contenu important en 5e harmonique) est fortement recommandée plutôt qu'un simple banc de condensateurs. Confirmez avec une étude harmonique avant l'installation.",
+    harmOkTitle: "Le point de résonance estimé est éloigné des harmoniques courants.", harmOkBody: "Rang harmonique de résonance estimé h ≈ {hr}. Il s'agit d'une estimation simplifiée à fréquence unique seulement — une étude harmonique complète demeure recommandée pour les jeux de barres avec charge non linéaire importante.",
+    harmWarnTitle: "Charges non linéaires ou THD élevé signalés.", harmWarnBody: "Des charges non linéaires connues et/ou un THD de tension supérieur à 5 % ont été indiqués. Sans données de puissance de court-circuit, le point de résonance ne peut être estimé ici — une réactance déclassée devrait être envisagée par défaut, et une étude harmonique est recommandée avant la sélection finale.",
+    harmNoDataTitle: "Vérification harmonique activée mais aucune donnée saisie.", harmNoDataBody: "Entrez la puissance de court-circuit du jeu de barres pour estimer le rang harmonique de résonance, ou signalez les charges non linéaires connues / le THD si ces données ne sont pas disponibles.",
+    crossExisting: "Banc existant : {existing} kVAR. Cela représente {diff} kVAR {dir} l'exigence calculée.",
+    crossMore: "de plus que", crossLess: "de moins que",
+    crossMeasured: "Courant mesuré : {measI} A vs courant calculé avant correction {calcI} A (écart {diffPct} %) — un écart important peut indiquer que les valeurs de P/FP saisies ne correspondent pas aux conditions réelles du site.",
+    lstep1Title: "Angles de facteur de puissance",
+    lstep1Note: "φ est l'angle entre la puissance réelle et la puissance apparente (angle d'impédance de la charge équivalente); acos(FP) le retrouve directement à partir du facteur de puissance.",
+    lstep2Title: "Compensation réactive requise, Qc",
+    lstep2Note: "Méthode standard du triangle de puissance : le condensateur doit fournir la différence entre la puissance réactive appelée au FP actuel et celle qui serait appelée au FP cible, toutes deux calculées à partir de la même puissance réelle P.",
+    lstep3Title: "Capacité — {conn}",
+    lstep3Note: "La puissance réactive capacitive Q = 2πfCV² (VAR); en isolant C et en convertissant en µF, on obtient les formules ci-dessus. En triphasé, Qc est réparti également sur les trois branches, avec V correspondant au raccordement réel de chaque branche (ligne à ligne pour Δ, ligne à neutre pour Y).",
+    totalBank: "banc total", perLegDelta: "par branche, raccordée ligne à ligne", perLegWye: "par branche, raccordée ligne à neutre",
+    lstep4Title: "Puissance apparente et réactive, avant/après",
+    lstep4Note: "Affiché à titre de référence — confirme que le triangle de puissance se referme correctement et donne la puissance réactive résiduelle Q2 toujours appelée à la source après correction.",
+    reactiveBefore: "avant correction", reactiveAfter: "après correction, résiduelle",
+    lstep5Title: "Courant de ligne, avant/après correction",
+    lstep5Note: "Il s'agit de la réduction de courant vue par le distributeur/l'équipement amont — utile pour vérifier si la correction soulage aussi la charge des départs, transformateurs ou appareillage.",
+    reductionLbl: "Réduction",
+    lstep6Title: "Taille de banc de condensateurs normalisé suggérée",
+    lstep6Note: "Arrondi au calibre kVAR commercial couramment disponible supérieur. La sélection finale du banc devrait aussi tenir compte de la tolérance de fabrication (généralement +5 % à +15 %), de la marge de tension nominale et du choix entre commutation étagée/automatique ou un seul banc fixe.",
+    step5Title: "Câble du banc de condensateurs", optionalTag5: "(facultatif)", step5Small: "Câble d'alimentation du tableau vers le banc de condensateurs — CSA C22.1",
+    lblCableMat: "Matériau du conducteur", lblCableInstall: "Méthode d'installation", lblCableTemp: "Colonne d'ampacité (plus basse entre isolation / bornes)",
+    hintStep5: "Les conducteurs d'alimentation du banc de condensateurs sont généralement dimensionnés à au moins 135 % du courant nominal du banc — ceci reflète le multiplicateur largement appliqué en pratique nord-américaine (parallèle au principe de la règle 460.8(A) du NEC) pour couvrir la surintensité continue due aux harmoniques et à la tension supérieure à la nominale. Confirmez la disposition exacte de la CSA C22.1 pour l'installation.",
+    installRaceway: "≤3 conducteurs en canalisation/câble", installFreeair: "conducteur unique, air libre", copper: "Cuivre", aluminum: "Aluminium",
+    cableTitle: "Câble du condensateur dimensionné.", cableBody: "Courant nominal Ic = {ic} A → ampacité requise (135 %) = {req} A → {size} fournit {total} A.",
+    cableFailTitle: "Aucune configuration de câble trouvée.", cableFailBody: "Augmentez le kVA ou réduisez la correction du FP pour obtenir un kVAR de condensateur valide, puis revérifiez.",
+    lstep7Title: "Câble d'alimentation du banc de condensateurs", lstep7Note: "Les conducteurs du circuit de condensateurs sont dimensionnés à au moins 135 % du courant nominal du banc — cette marge est la pratique standard nord-américaine (même multiplicateur que la règle 460.8(A) du NEC) pour tenir compte de la surintensité continue due aux harmoniques et à la tension du système supérieure à la nominale, non une marge de démarrage/appel. La base du tableau d'ampacité est la même méthodologie des tableaux 2/4 de la CSA C22.1 que l'outil de sélection de câble BT; vérifiez auprès de l'édition en vigueur.",
+    reqCableLbl: "Ampacité requise", chosenCableLbl: "Sélectionné",
+    stdStepLbl: "Prochain palier normalisé",
+    xlsParam: "Paramètre", xlsValue: "Valeur", xlsPhase: "Phase / raccordement", xlsVoltage: "Tension du système (V)",
+    xlsFreq: "Fréquence (Hz)", xlsP: "Puissance active P (kW)", xlsPf1: "FP1 actuel", xlsPf2: "FP2 cible",
+    xlsQc: "Qc requis (kVAR)", xlsC: "Capacité (µF)", xlsStdStep: "Banc normalisé suggéré (kVAR)",
+    xlsS1: "S1 avant (kVA)", xlsS2: "S2 après (kVA)", xlsI1: "I1 avant (A)", xlsI2: "I2 après (A)",
+    xlsIRed: "Réduction de courant (%)",
+    xlsDisclaimerLbl: "Avis",
+    xlsDisclaimerBody: "Estimation préliminaire seulement. Suppose des conditions sinusoïdales, des harmoniques négligeables, une charge purement inductive en retard, une tension équilibrée constante et des condensateurs idéaux. La sélection finale requiert un ingénieur électricien qualifié, tenant compte de la marge de tension nominale du condensateur, du risque harmonique/résonance, de la méthode de commutation, de la protection et des codes applicables.",
+    footerHtml: `<b>Hypothèses et limites.</b> Cet outil suppose une tension/un courant sinusoïdaux avec un contenu harmonique négligeable, une charge purement inductive à facteur de puissance en retard, une tension du système constante et équilibrée, et un condensateur idéal (sans pertes, effets de température ou vieillissement). Il n'évalue pas automatiquement la surcompensation, l'auto-excitation, ni la résonance au-delà de l'estimation simplifiée à fréquence unique offerte dans l'étape facultative de vérification harmonique. <b>Sécurité.</b> Le dimensionnement, la sélection et l'installation d'équipement de correction du facteur de puissance sur tout système à moyenne ou haute puissance doivent être effectués par un professionnel électricien qualifié. Les valeurs de kVAR/µF calculées ici ne sont qu'un point de départ — la sélection finale de l'équipement doit aussi tenir compte de la tension nominale du condensateur (généralement 1,10–1,15× la tension du système), de la tenue en courant, de la température ambiante, de la méthode de commutation (contacteur, thyristor, contrôleur automatique) et des dispositifs de protection. Évitez un seul grand banc fixe sur les systèmes faiblement chargés ou variables — des étages de condensateurs commutés automatiquement sont généralement plus sûrs. Une mesure harmonique et une évaluation de la puissance de court-circuit devraient être effectuées avant l'installation finale, particulièrement en présence de variateurs de fréquence, systèmes ASI, redresseurs, fours à arc, ou charges d'éclairage DEL/électronique importantes. Cet outil est destiné à la planification préliminaire seulement et ne remplace pas une conception d'ingénierie scellée.`
+  }
+};
+
+function applyStaticI18n(){
+  const L = UI[currentLang];
+  $('titleH1').textContent = L.titleH1;
+  $('titleSub').textContent = L.titleSub;
+  $('lblDwg').textContent = L.lblDwg;
+  $('lblScale').textContent = L.lblScale;
+  $('lblMethod').textContent = L.lblMethod;
+  $('lblRev').textContent = L.lblRev;
+  $('topDiscB').textContent = L.topDiscB;
+  $('topDiscTxt').textContent = L.topDiscTxt;
+  $('loadExampleTxt').textContent = L.loadExampleTxt;
+  $('step1Title').childNodes[0].textContent = L.step1Title + ' ';
+  $('step1Small').textContent = L.step1Small;
+  $('lblPhase').textContent = L.lblPhase;
+  $('lblVoltage').textContent = L.lblVoltage;
+  $('lblFreq').textContent = L.lblFreq;
+  updateVoltNote();
+  $('lblActiveP').textContent = L.lblActiveP;
+  $('step2Title').childNodes[0].textContent = L.step2Title + ' ';
+  $('step2Small').textContent = L.step2Small;
+  $('lblPf1').textContent = L.lblPf1;
+  $('lblPf2').textContent = L.lblPf2;
+  $('pf2Hint').textContent = L.pf2Hint;
+  $('step3Title').childNodes[0].textContent = L.step3Title + ' ';
+  $('optionalTag3').textContent = L.optionalTag3;
+  $('step3Small').textContent = L.step3Small;
+  $('lblSsc').innerHTML = L.lblSsc;
+  $('lblThd').textContent = L.lblThd;
+  $('hintStep3').textContent = L.hintStep3;
+  $('lblNonlinear').textContent = L.lblNonlinear;
+  $('step4Title').childNodes[0].textContent = L.step4Title + ' ';
+  $('optionalTag4').textContent = L.optionalTag4;
+  $('step4Small').textContent = L.step4Small;
+  $('lblExistingC').textContent = L.lblExistingC;
+  $('lblMeasI').textContent = L.lblMeasI;
+  $('hintStep4').textContent = L.hintStep4;
+  $('step5Title').childNodes[0].textContent = L.step5Title + ' ';
+  $('optionalTag5').textContent = L.optionalTag5;
+  $('step5Small').textContent = L.step5Small;
+  $('lblCableMat').textContent = L.lblCableMat;
+  $('lblCableInstall').textContent = L.lblCableInstall;
+  $('lblCableTemp').textContent = L.lblCableTemp;
+  $('hintStep5').textContent = L.hintStep5;
+  $('resultTitle').textContent = L.resultTitle;
+  $('gaugeLbl').textContent = L.gaugeLbl;
+  $('lblStatC').textContent = L.lblStatC;
+  $('lblStatStep').textContent = L.lblStatStep;
+  $('lblStatS1').textContent = L.lblStatS1;
+  $('lblStatS2').textContent = L.lblStatS2;
+  $('lblStatI1').textContent = L.lblStatI1;
+  $('lblStatI2').textContent = L.lblStatI2;
+  $('lblStatIRed').textContent = L.lblStatIRed;
+  $('printBtn').textContent = L.printBtnLabel;
+  $('exportWordBtn').textContent = L.exportWordLabel;
+  $('exportExcelBtn').textContent = L.exportBtnLabel;
+  $('ledgerTitle').textContent = L.ledgerTitle;
+  $('ledgerTag').textContent = L.ledgerTag;
+  $('refTableTitle').textContent = L.refTableTitle;
+  $('refThLoad').textContent = L.refThLoad;
+  $('refThPf').textContent = L.refThPf;
+  $('footerNote').innerHTML = L.footerHtml;
+  renderRefTable();
+}
+
+function setLang(lang){
+  currentLang = lang;
+  $('btn-en').classList.toggle('active', lang==='en');
+  $('btn-fr').classList.toggle('active', lang==='fr');
+  document.documentElement.lang = lang;
+  try { localStorage.setItem('ohmzone-lang', lang); } catch(e) {}
+  applyStaticI18n();
+  recalc();
+}
+
+(function(){
+  let saved = 'en';
+  try { saved = localStorage.getItem('ohmzone-lang') || 'en'; } catch(e) {}
+  setLang(saved);
+})();
+</script>
+<div style="position:fixed;bottom:6px;right:12px;z-index:9999;font-family:monospace;font-size:10px;color:#5c7592;opacity:0.75;">© 2026 OhmZone. All rights reserved.</div>
+</body>
+</html>

@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Harmonic Emission Assessment — CSA C61000-3-6 / HQ</title>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3887318872951674" crossorigin="anonymous"></script>
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icon-16.png">
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="OhmZone">
+<meta name="theme-color" content="#0a1728">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.6/dist/pizzip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/docxtemplater@3.47.2/js/docxtemplater.js"></script>
+<style>
+@media print{ .no-print{display:none !important;} body{background:#fff !important;} }
+:root{
+  --bg:#080c14; --bg2:#0d1420; --panel:#111a2a; --panel-soft:#0c1220;
+  --line:#233350; --line-soft:#182238; --grid-line: rgba(96,140,196,0.09);
+  --ink:#e7edf7; --ink-dim:#8497b8; --ink-faint:#516085;
+  --trace:#3b9eff; --trace-soft:#1a3a5c; --gold:#e8b545;
+  --alarm:#ff5d77; --warn:#e3a83b; --radius:2px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',sans-serif;}
+body{background-image:linear-gradient(var(--grid-line) 1px,transparent 1px),linear-gradient(90deg,var(--grid-line) 1px,transparent 1px);background-size:28px 28px;min-height:100vh;}
+::selection{background:var(--trace);color:#04120f;}
+a{color:var(--trace);}
+input:focus-visible, select:focus-visible, button:focus-visible{outline:2px solid var(--trace);outline-offset:2px;}
+.lang-switch{display:flex;align-items:center;background:#0f2036;border:1px solid #2f5678;border-radius:16px;padding:3px;gap:2px;font-family:monospace;font-size:11px;position:fixed;top:10px;right:12px;z-index:9999;}
+.lang-switch button{border:none;background:transparent;color:#8fa8c2;padding:5px 12px;border-radius:13px;cursor:pointer;font-family:inherit;font-size:inherit;}
+.lang-switch button.active{background:var(--trace);color:#04120f;font-weight:700;}
+
+.titleblock{border-bottom:1px solid var(--line);background:linear-gradient(180deg,rgba(17,26,42,.9),rgba(13,20,32,.7));padding:18px 22px;display:flex;flex-wrap:wrap;gap:14px 28px;align-items:flex-end;justify-content:space-between;}
+.titleblock .brand{display:flex;align-items:baseline;gap:12px;}
+.titleblock .brand .mark{width:34px;height:34px;border:1.5px solid var(--trace);border-radius:3px;display:flex;align-items:center;justify-content:center;color:var(--trace);font-family:'IBM Plex Mono';font-weight:700;font-size:12px;flex:none;box-shadow:0 0 14px rgba(59, 158, 255,.18) inset;}
+.titleblock h1{font-family:'IBM Plex Sans Condensed';font-weight:700;letter-spacing:.3px;font-size:20px;margin:0;text-transform:uppercase;}
+.titleblock .sub{color:var(--ink-dim);font-size:12.5px;margin-top:2px;}
+.stamp{display:grid;grid-template-columns:repeat(4,auto);gap:0 22px;font-family:'IBM Plex Mono';font-size:10.5px;color:var(--ink-dim);}
+.stamp div b{display:block;color:var(--ink-faint);font-weight:500;font-size:9px;letter-spacing:.06em;text-transform:uppercase;}
+.stamp div span{color:var(--trace);font-weight:600;font-size:12px;}
+
+.top-disclaimer{max-width:1480px;margin:14px auto 0;padding:10px 16px;border:1px solid var(--warn);background:rgba(227,168,59,.07);border-radius:var(--radius);font-size:11.5px;color:var(--ink-dim);line-height:1.6;}
+.top-disclaimer b{color:var(--warn);}
+
+.app{display:grid;grid-template-columns:420px 1fr;gap:1px;background:var(--line);max-width:1560px;margin:0 auto;}
+@media (max-width:1000px){ .app{grid-template-columns:1fr;} }
+.steps{background:var(--bg2);padding:18px 16px 40px;display:flex;flex-direction:column;gap:14px;}
+.canvas-col{background:var(--line);display:flex;flex-direction:column;gap:1px;}
+.canvas-col > *{background:var(--bg2);}
+
+.step{border:1px solid var(--line-soft);border-radius:var(--radius);background:var(--panel-soft);overflow:hidden;}
+.step-head{display:flex;align-items:center;gap:10px;padding:11px 13px;background:var(--panel);cursor:pointer;user-select:none;border-bottom:1px solid var(--line-soft);}
+.step-num{font-family:'IBM Plex Mono';font-size:11px;font-weight:600;color:var(--bg);background:var(--trace);width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none;}
+.step.optional .step-num{background:var(--ink-faint);color:var(--bg2);}
+.step.optional.on .step-num{background:var(--gold);}
+.step-title{font-size:13px;font-weight:600;letter-spacing:.2px;flex:1;}
+.step-title small{display:block;font-weight:400;color:var(--ink-dim);font-size:10.5px;margin-top:1px;}
+.chev{color:var(--ink-faint);font-size:11px;transition:transform .15s;}
+.step.closed .chev{transform:rotate(-90deg);}
+.step-body{padding:13px;display:flex;flex-direction:column;gap:11px;}
+.step.closed .step-body{display:none;}
+
+label.field{display:flex;flex-direction:column;gap:5px;font-size:11.5px;color:var(--ink-dim);}
+label.field b{color:var(--ink);font-weight:500;font-size:12px;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;}
+input[type=number],input[type=text],select{background:var(--bg2);border:1px solid var(--line);color:var(--ink);font-family:'IBM Plex Mono';font-size:13px;padding:8px 9px;border-radius:var(--radius);width:100%;}
+select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238497b8'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:26px;}
+input:focus,select:focus{border-color:var(--trace);}
+
+.seg{display:flex;border:1px solid var(--line);border-radius:20px;overflow:hidden;width:max-content;flex-wrap:wrap;}
+.seg button{background:transparent;border:none;color:var(--ink-dim);font-family:'IBM Plex Mono';font-size:10.5px;padding:5px 12px;cursor:pointer;}
+.seg button.active{background:var(--trace);color:#04120f;font-weight:600;}
+
+.switch{position:relative;width:34px;height:19px;flex:none;}
+.switch input{opacity:0;width:0;height:0;position:absolute;}
+.switch .track{position:absolute;inset:0;background:var(--line);border-radius:20px;transition:.15s;}
+.switch .track:before{content:'';position:absolute;width:13px;height:13px;left:3px;top:3px;background:var(--ink-dim);border-radius:50%;transition:.15s;}
+.switch input:checked + .track{background:var(--trace-soft);border:1px solid var(--trace);}
+.switch input:checked + .track:before{transform:translateX(15px);background:var(--trace);}
+
+.hint{font-size:10.5px;color:var(--ink-faint);line-height:1.5;}
+.hint em{color:var(--ink-dim);font-style:normal;}
+.example-btn{align-self:flex-start;font-family:'IBM Plex Mono';font-size:11px;font-weight:600;color:#0a1220;background:var(--trace);border:1px solid var(--trace);padding:9px 16px;border-radius:20px;cursor:pointer;box-shadow:0 4px 12px -4px var(--trace-soft);}
+.example-btn:hover{filter:brightness(1.08);}
+.add-btn{font-family:'IBM Plex Mono';font-size:11.5px;font-weight:600;color:#0a1220;background:var(--gold);border:1px solid var(--gold);padding:8px 14px;border-radius:6px;cursor:pointer;align-self:flex-start;}
+.add-btn:hover{filter:brightness(1.06);}
+.item-row{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--panel);border:1px solid var(--line-soft);border-radius:var(--radius);font-size:11.5px;}
+.item-row .lbl{flex:1;color:var(--ink);}
+.item-row .lbl small{display:block;color:var(--ink-faint);font-size:9.5px;}
+.item-row button{background:transparent;border:none;color:var(--alarm);cursor:pointer;font-size:14px;padding:2px 6px;}
+.empty-note{font-size:11px;color:var(--ink-faint);font-style:italic;padding:8px 2px;}
+
+.panel{padding:16px;}
+.panel-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px;gap:10px;flex-wrap:wrap;}
+.panel-head h2{font-family:'IBM Plex Sans Condensed';font-size:13px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-dim);margin:0;font-weight:600;}
+.panel-head .tag{font-family:'IBM Plex Mono';font-size:10px;color:var(--ink-faint);}
+
+.result-grid{display:grid;grid-template-columns:220px 1fr;gap:16px;align-items:center;}
+@media (max-width:640px){ .result-grid{grid-template-columns:1fr;} }
+.gauge-box{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.gauge-num{font-family:'IBM Plex Mono';font-weight:700;font-size:26px;color:var(--gold);text-align:center;}
+.gauge-lbl{font-size:10px;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.1em;text-align:center;}
+.stat-list{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+@media (max-width:480px){ .stat-list{grid-template-columns:1fr;} }
+.stat{border:1px solid var(--line-soft);border-radius:var(--radius);padding:9px 11px;background:var(--panel-soft);}
+.stat .k{font-size:10px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.06em;}
+.stat .v{font-family:'IBM Plex Mono';font-size:15px;font-weight:600;margin-top:3px;}
+.stat.hot{border-color:var(--gold);background:linear-gradient(180deg,rgba(232,181,69,.08),transparent);}
+.stat.hot .v{color:var(--gold);}
+
+.risk-box{border-radius:var(--radius);padding:11px 13px;margin-top:12px;font-size:12px;line-height:1.6;border:1px solid;}
+.risk-ok{border-color:var(--trace);background:rgba(59, 158, 255,.06);color:var(--ink-dim);}
+.risk-warn{border-color:var(--warn);background:rgba(227,168,59,.08);color:var(--ink-dim);}
+.risk-alarm{border-color:var(--alarm);background:rgba(255,93,119,.08);color:var(--ink-dim);}
+.risk-box b{color:var(--ink);}
+
+.ref-table{width:100%;border-collapse:collapse;font-size:11px;}
+.ref-table th,.ref-table td{padding:5px 7px;border-bottom:1px solid var(--line-soft);text-align:left;}
+.ref-table th{color:var(--ink-faint);font-weight:500;text-transform:uppercase;font-size:9px;letter-spacing:.06em;}
+.ref-table td{color:var(--ink-dim);font-family:'IBM Plex Mono';}
+.ref-table tr.bad td{color:var(--alarm);font-weight:600;}
+.ref-table input{background:var(--bg2);border:1px solid var(--line);color:var(--ink);font-family:'IBM Plex Mono';font-size:11px;padding:3px 5px;width:64px;border-radius:2px;}
+
+.ledger{display:flex;flex-direction:column;}
+.lstep{padding:13px 16px;border-bottom:1px solid var(--line-soft);display:grid;grid-template-columns:26px 1fr;gap:12px;}
+.lstep:last-child{border-bottom:none;}
+.lstep .ln{font-family:'IBM Plex Mono';color:var(--ink-faint);font-size:11px;padding-top:2px;}
+.lstep h3{margin:0 0 5px;font-size:12.5px;font-weight:600;color:var(--ink);}
+.lstep .formula{font-family:'IBM Plex Mono';font-size:12px;color:var(--trace);background:rgba(59, 158, 255,.06);padding:8px 10px;border-radius:var(--radius);border:1px solid var(--trace-soft);margin:6px 0;overflow-x:auto;white-space:pre;}
+.cite{font-size:9.5px;color:var(--ink-faint);margin-top:6px;line-height:1.5;border-left:2px solid var(--line);padding-left:8px;}
+.cite b{color:var(--ink-dim);font-weight:500;}
+.clause{font-family:'IBM Plex Mono';font-size:9.5px;color:var(--gold);background:rgba(232,181,69,.08);border:1px solid rgba(232,181,69,.25);border-radius:3px;padding:1px 5px;margin-right:4px;white-space:nowrap;}
+
+.spectrum-wrap{overflow-x:auto;}
+#spectrumChart{display:block;min-width:640px;}
+
+footer.note{max-width:1560px;margin:22px auto 60px;padding:0 16px;font-size:10.5px;color:var(--ink-faint);line-height:1.7;}
+footer.note b{color:var(--ink-dim);}
+</style>
+</head>
+<body>
+<a href="index.html" class="no-print" style="position:fixed;top:10px;left:12px;z-index:9999;font-family:monospace;font-size:11px;color:#8fa8c2;background:rgba(10,23,40,0.85);border:1px solid #234261;border-radius:14px;padding:5px 12px;text-decoration:none;">← OhmZone</a>
+<div class="lang-switch no-print">
+  <button type="button" id="btn-en" class="active" onclick="setLang('en')">EN</button>
+  <button type="button" id="btn-fr" onclick="setLang('fr')">FR</button>
+</div>
+
+<div class="titleblock">
+  <div class="brand">
+    <div class="mark">THD</div>
+    <div>
+      <h1 id="titleH1">Harmonic Emission Assessment</h1>
+      <div class="sub" id="titleSub">Screening-level harmonic current emission &amp; PCC voltage distortion — CSA C61000-3-6 / Hydro-Québec C.25-01</div>
+    </div>
+  </div>
+  <div class="stamp">
+    <div><b id="lblDwg">Dwg No.</b><span>THD-001</span></div>
+    <div><b id="lblScale">Scale</b><span>NTS</span></div>
+    <div><b id="lblMethod">Method</b><span>CSA C61000-3-6</span></div>
+    <div><b id="lblRev">Rev</b><span id="revTag">—</span></div>
+  </div>
+</div>
+
+<div class="top-disclaimer no-print">
+  <b id="topDiscB">Screening-level assessment only.</b> <span id="topDiscTxt">This tool performs a simplified, single-frequency-per-order emission and voltage-distortion estimate using the CSA C61000-3-6 harmonic summation law and a linear (X = hX₁) system impedance model. It is not a substitute for the network harmonic impedance data, background distortion measurements, and detailed frequency-scan study that Hydro-Québec requires for an actual compliance submission — and it does not replace the specific per-harmonic limit tables that HQ or the applicable CSA standard provides for your point of connection. Default limit values shown are commonly published representative figures and must be replaced with the actual values issued for your project before this is used for compliance purposes.</span>
+</div>
+
+<div class="app">
+  <div class="steps">
+
+    <button class="example-btn" id="loadExample">▸ <span id="loadExampleTxt">Load example</span></button>
+
+    <!-- STEP 1: PROJECT & PCC -->
+    <div class="step" id="step1">
+      <div class="step-head" data-toggle="step1">
+        <div class="step-num">1</div>
+        <div class="step-title" id="step1Title">Project &amp; Point of Evaluation<small id="step1Small">Tag, governing standard, PCC voltage, short-circuit capacity</small></div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="step-body">
+        <label class="field"><b id="lblTag">Project / equipment tag</b>
+          <input type="text" id="eqTag" placeholder="e.g. PCC-1, PROJ-2026-014">
+        </label>
+        <label class="field"><b id="lblStandard">Governing standard</b>
+          <select id="stdSel">
+            <option value="hq_dist" selected>Hydro-Québec Distribution (C.25-01)</option>
+            <option value="hq_trans">Hydro-Québec Transmission (emission limits)</option>
+            <option value="csa">CSA C61000-3-6 (general method)</option>
+            <option value="ieee519">IEEE 519 (reference, non-HQ jurisdictions)</option>
+          </select>
+        </label>
+        <div class="hint" id="hintStandard"></div>
+        <div class="row2">
+          <label class="field"><b id="lblPccV">PCC voltage (V, line-to-line)</b>
+            <input type="number" id="pccV" value="25000" min="1">
+          </label>
+          <label class="field"><b id="lblVoltClass">Voltage class</b>
+            <div class="seg" id="voltClassSeg">
+              <button data-v="lv">LV</button>
+              <button data-v="mv" class="active">MV</button>
+              <button data-v="hv">HV</button>
+            </div>
+          </label>
+        </div>
+        <div class="row2">
+          <label class="field"><b id="lblSccGen">Short-circuit capacity, general (MVA)</b>
+            <input type="number" id="sccGen" value="150" min="0.1" step="0.1">
+          </label>
+          <label class="field"><b id="lblSccMin">Short-circuit capacity, minimum (MVA)</b>
+            <input type="number" id="sccMin" value="110" min="0.1" step="0.1">
+          </label>
+        </div>
+        <label class="field"><b id="lblSr">Installation rated power, S<sub>r</sub> (kVA)</b>
+          <input type="number" id="sr" value="2000" min="1">
+        </label>
+        <div class="hint" id="hintStep1"></div>
+      </div>
+    </div>
+
+    <!-- STEP 2: HARMONIC SOURCES -->
+    <div class="step" id="step2">
+      <div class="step-head" data-toggle="step2">
+        <div class="step-num">2</div>
+        <div class="step-title" id="step2Title">Harmonic Source Devices<small id="step2Small">Non-linear loads and their current spectra</small></div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="step-body">
+        <label class="field"><b id="lblDevPreset">Device spectrum preset</b>
+          <select id="devPreset"></select>
+        </label>
+        <div class="row3">
+          <label class="field"><b id="lblDevName">Label</b>
+            <input type="text" id="devName" placeholder="e.g. VFD-1">
+          </label>
+          <label class="field"><b id="lblDevI1">Fundamental current, I₁ (A)</b>
+            <input type="number" id="devI1" value="50" min="0.1" step="0.1">
+          </label>
+          <label class="field"><b id="lblDevQty">Qty (identical units)</b>
+            <input type="number" id="devQty" value="1" min="1" step="1">
+          </label>
+        </div>
+        <button class="add-btn" id="addDeviceBtn">+ <span id="addDeviceTxt">Add device</span></button>
+        <div id="deviceList" style="display:flex;flex-direction:column;gap:6px;"></div>
+        <div class="hint" id="hintStep2"></div>
+      </div>
+    </div>
+
+    <!-- STEP 3: OPERATING CONDITION -->
+    <div class="step" id="step3">
+      <div class="step-head" data-toggle="step3">
+        <div class="step-num">3</div>
+        <div class="step-title" id="step3Title">Operating Condition<small id="step3Small">General vs. occasional, background distortion</small></div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="step-body">
+        <label class="field"><b id="lblCondition">Condition</b>
+          <div class="seg" id="conditionSeg">
+            <button data-v="general" class="active">General</button>
+            <button data-v="occasional">Occasional (≤1% of time)</button>
+          </div>
+        </label>
+        <div class="hint" id="hintCondition"></div>
+        <label class="field"><b id="lblBackgroundThdu">Background voltage THD at PCC, if known (%)</b>
+          <input type="number" id="backgroundThdu" value="0" min="0" max="20" step="0.1">
+        </label>
+        <div class="hint" id="hintStep3"></div>
+      </div>
+    </div>
+
+    <!-- STEP 4: CAPACITOR / RESONANCE (optional) -->
+    <div class="step optional" id="step4">
+      <div class="step-head" data-toggle="step4">
+        <div class="step-num">4</div>
+        <div class="step-title" id="step4Title">Capacitor Bank / Resonance Check <span style="color:var(--ink-faint)" id="optionalTag4">(optional)</span><small id="step4Small">Power-factor correction capacitors can shift the resonance point</small></div>
+        <label class="switch" onclick="event.stopPropagation()">
+          <input type="checkbox" id="capOn"><span class="track"></span>
+        </label>
+      </div>
+      <div class="step-body">
+        <label class="field"><b id="lblQc">Capacitor bank rating (kVAR)</b>
+          <input type="number" id="qc" value="500" min="0" step="10">
+        </label>
+        <div class="hint" id="hintStep4"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="canvas-col">
+    <div class="panel">
+      <div class="panel-head"><h2 id="resultTitle">Result — Emission &amp; Distortion Summary</h2></div>
+      <div class="result-grid">
+        <div class="gauge-box">
+          <div class="gauge-num" id="gaugeNum">—</div>
+          <div class="gauge-lbl" id="gaugeLbl">THD<sub>I</sub> at PCC</div>
+        </div>
+        <div class="stat-list">
+          <div class="stat hot"><div class="k" id="lblStatThdiLimit">THD<sub>I</sub> limit (this condition)</div><div class="v" id="statThdiLimit">—</div></div>
+          <div class="stat"><div class="k" id="lblStatSccRatio">S<sub>cc</sub>/S<sub>r</sub> ratio</div><div class="v" id="statSccRatio">—</div></div>
+          <div class="stat"><div class="k" id="lblStatThdu">THD<sub>U</sub> at PCC (estimated)</div><div class="v" id="statThdu">—</div></div>
+          <div class="stat"><div class="k" id="lblStatThduLimit">THD<sub>U</sub> compatibility level</div><div class="v" id="statThduLimit">—</div></div>
+          <div class="stat"><div class="k" id="lblStatWorstOrder">Worst-case harmonic order</div><div class="v" id="statWorstOrder">—</div></div>
+          <div class="stat"><div class="k" id="lblStatResonance">Estimated resonance order</div><div class="v" id="statResonance">—</div></div>
+        </div>
+      </div>
+      <div id="verdictBox"></div>
+      <div id="resonanceBox"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2 id="spectrumTitle">Harmonic Spectrum vs. Limit</h2><span class="tag" id="spectrumTag">calculated I<sub>h</sub> at PCC compared to the limit table</span></div>
+      <div class="spectrum-wrap"><svg id="spectrumChart" viewBox="0 0 900 260" xmlns="http://www.w3.org/2000/svg"></svg></div>
+    </div>
+
+    <div class="panel no-print" style="border:none;background:transparent;">
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px;font-size:11.5px;color:var(--ink-dim);">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+          <input type="checkbox" id="includeLedger" checked style="width:auto;">
+          <span id="lblIncludeLedger">Include Calculation Ledger in report</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+          <input type="checkbox" id="includeSizesTable" checked style="width:auto;">
+          <span id="lblIncludeSizes">Include Harmonic Spectrum table in report</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+          <input type="checkbox" id="includeLogo" checked style="width:auto;">
+          <span id="lblIncludeLogo">Include OhmZone brand mark in report</span>
+        </label>
+      </div>
+      <div class="btn-row" style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button id="printBtn" style="padding:9px 16px;border-radius:8px;border:1px solid #2f5678;background:#0f2036;color:#c8d8e8;cursor:pointer;font-family:inherit;">🖨 Print / Save as PDF</button>
+        <button id="exportWordBtn" style="padding:9px 16px;border-radius:8px;border:1px solid #2f5678;background:#0f2036;color:#c8d8e8;cursor:pointer;font-family:inherit;">📄 Export study (Word)</button>
+        <button id="exportExcelBtn" style="padding:9px 16px;border-radius:8px;border:1px solid #2f5678;background:#0f2036;color:#c8d8e8;cursor:pointer;font-family:inherit;">📊 Export study (Excel)</button>
+      </div>
+      <div style="border-top:1px dashed var(--line);margin-top:14px;padding-top:12px;">
+        <label class="field"><b id="lblUploadTemplate">Report template (.docx, optional)</b>
+          <input type="file" id="templateFile" accept=".docx">
+        </label>
+        <div id="templateStatus" style="font-size:11px;color:var(--trace);margin-top:4px;"></div>
+        <div class="hint" id="hintUploadTemplate" style="margin-top:6px;"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2 id="ledgerTitle">Calculation Ledger</h2><span class="tag" id="ledgerTag">clause-by-clause</span></div>
+      <div class="ledger" id="ledger"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2 id="limitTableTitle">Harmonic Current Limit Table (editable)</h2><span class="tag" id="limitTableTag">replace with the actual HQ / CSA table for this project</span></div>
+      <div style="overflow-x:auto;">
+        <table class="ref-table">
+          <thead><tr><th id="thOrder">Order h</th><th id="thIh">Calculated I<sub>h</sub> (A)</th><th id="thPctI1">% of I<sub>r</sub></th><th id="thLimit">Limit (% of I<sub>r</sub>)</th><th id="thOk">OK?</th></tr></thead>
+          <tbody id="limitTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="note" id="footerNote"></footer>
+
+<script>
+const $ = id => document.getElementById(id);
+function fmt(n,d=2){ if(n===undefined||n===null||isNaN(n)) return "—"; return Number(n).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d}); }
+
+/* ===================== reference data ===================== */
+const HARMONIC_ORDERS = [2,3,5,7,9,11,13,15,17,19,21,23,25];
+
+/* Representative device current-spectra presets (% of fundamental I1), commonly
+   published approximate values for typical drive/converter topologies — always
+   replace with the actual nameplate/datasheet spectrum for the device used. */
+const DEVICE_PRESETS = {
+  vfd6: {name:"6-pulse VFD (no reactor)", spectrum:{5:38,7:15,11:9,13:6,17:4,19:3,23:2,25:1.5}},
+  vfd6r: {name:"6-pulse VFD (with line reactor/DC choke)", spectrum:{5:28,7:10,11:6,13:4,17:2.5,19:2,23:1.2,25:1}},
+  vfd12: {name:"12-pulse converter", spectrum:{5:2,7:1.5,11:8,13:5,17:1,19:0.8,23:1,25:0.8}},
+  ups: {name:"UPS / switch-mode rectifier", spectrum:{3:20,5:12,7:6,9:4,11:3,13:2}},
+  led: {name:"LED/electronic lighting (aggregate)", spectrum:{3:25,5:18,7:12,9:8,11:5,13:3}},
+  custom: {name:"Custom (enter spectrum manually)", spectrum:{}}
+};
+
+const STD_LIMITS_META = {
+  hq_dist: {name:"Hydro-Québec Distribution (C.25-01)", thduCompat:{lv:8,mv:6.5,hv:3}, thdiBase:15},
+  hq_trans:{name:"Hydro-Québec Transmission", thduCompat:{lv:8,mv:6.5,hv:2.5}, thdiBase:12},
+  csa:     {name:"CSA C61000-3-6 (general method)", thduCompat:{lv:8,mv:6.5,hv:3}, thdiBase:15},
+  ieee519: {name:"IEEE 519", thduCompat:{lv:5,mv:5,hv:1.5}, thdiBase:15}
+};
+/* Representative individual-harmonic current limit table, expressed as % of the
+   installation's reference/rated current, scaled by the Scc/Sr ratio banding
+   commonly used in IEC 61000-3-6-style assessments. These are placeholder
+   defaults for screening use only — Hydro-Québec issues project-specific limit
+   values (often in A, not %) that must replace this table for an actual
+   compliance submission. */
+function defaultLimitPct(sccRatio){
+  // banding loosely modeled on published IEC 61000-3-6 style tables: higher
+  // Scc/Sr ratio (stiffer system relative to load) permits higher % emission.
+  let band;
+  if(sccRatio < 33) band = 0.6;
+  else if(sccRatio < 66) band = 0.8;
+  else if(sccRatio < 120) band = 1.0;
+  else if(sccRatio < 250) band = 1.5;
+  else band = 2.0;
+  const base = {2:2.0,3:3.0,5:6.0,7:5.0,9:1.5,11:3.0,13:2.5,15:0.5,17:1.5,19:1.0,21:0.3,23:0.7,25:0.5};
+  const out = {};
+  HARMONIC_ORDERS.forEach(h=>{ out[h] = Math.round((base[h]||0.3)*band*100)/100; });
+  return out;
+}
+
+let currentLang = 'en';
+let state = { voltClass:"mv", condition:"general", devices:[], limits:{} };
+let devSeq = 1;
+
+document.querySelectorAll(".step-head").forEach(h=>{
+  h.addEventListener("click", ()=>{ $(h.dataset.toggle).classList.toggle("closed"); });
+});
+function wireOptionalToggle(stepId, checkboxId){
+  const cb = $(checkboxId), step = $(stepId);
+  const sync = ()=> step.classList.toggle("on", cb.checked);
+  cb.addEventListener("change", ()=>{ sync(); recalc(); });
+  sync();
+}
+wireOptionalToggle("step4","capOn");
+
+function wireSeg(segId, stateKey){
+  $(segId).addEventListener("click", e=>{
+    const b = e.target.closest("button"); if(!b) return;
+    document.querySelectorAll("#"+segId+" button").forEach(x=>x.classList.remove("active"));
+    b.classList.add("active");
+    state[stateKey] = b.dataset.v;
+    recalc();
+  });
+}
+wireSeg("voltClassSeg","voltClass");
+wireSeg("conditionSeg","condition");
+
+function populateDevicePresets(){
+  $("devPreset").innerHTML = Object.keys(DEVICE_PRESETS).map(k=>`<option value="${k}">${DEVICE_PRESETS[k].name}</option>`).join("");
+}
+
+$("addDeviceBtn").addEventListener("click", ()=>{
+  const presetKey = $("devPreset").value;
+  const preset = DEVICE_PRESETS[presetKey];
+  const name = $("devName").value.trim() || preset.name;
+  const I1 = parseFloat($("devI1").value)||0;
+  const qty = Math.max(1, parseInt($("devQty").value)||1);
+  if(I1<=0) return;
+  state.devices.push({ id:"d"+(devSeq++), name, I1, qty, spectrum: Object.assign({}, preset.spectrum) });
+  renderDeviceList();
+  recalc();
+});
+function removeDevice(id){
+  state.devices = state.devices.filter(d=>d.id!==id);
+  renderDeviceList();
+  recalc();
+}
+function renderDeviceList(){
+  const L = UI[currentLang];
+  const list = $("deviceList");
+  if(state.devices.length===0){
+    list.innerHTML = `<div class="empty-note">${L.noDevices}</div>`;
+    return;
+  }
+  list.innerHTML = state.devices.map(d=>`<div class="item-row">
+    <span class="lbl">${d.name} — I₁=${fmt(d.I1,1)} A × ${d.qty}
+    <small>h5=${d.spectrum[5]||0}% h7=${d.spectrum[7]||0}% h11=${d.spectrum[11]||0}% h13=${d.spectrum[13]||0}%</small></span>
+    <button onclick="removeDevice('${d.id}')">✕</button>
+  </div>`).join("");
+}
+
+["pccV","sccGen","sccMin","sr","backgroundThdu","qc","eqTag","stdSel"].forEach(id=>{
+  $(id).addEventListener("input", recalc);
+  $(id).addEventListener("change", recalc);
+});
+
+$("loadExample").addEventListener("click", ()=>{
+  $("eqTag").value = "PCC-1"; $("stdSel").value = "hq_dist";
+  $("pccV").value = 25000; state.voltClass="mv";
+  document.querySelectorAll("#voltClassSeg button").forEach(x=>x.classList.toggle("active", x.dataset.v==="mv"));
+  $("sccGen").value = 150; $("sccMin").value = 110; $("sr").value = 2000;
+  state.condition="general";
+  document.querySelectorAll("#conditionSeg button").forEach(x=>x.classList.toggle("active", x.dataset.v==="general"));
+  $("backgroundThdu").value = 1.5;
+  $("capOn").checked = true; $("qc").value = 500;
+  wireOptionalToggle("step4","capOn");
+  state.devices = []; devSeq=1;
+  state.devices.push({id:"d"+(devSeq++), name:"VFD-1 (6-pulse)", I1:80, qty:2, spectrum: Object.assign({}, DEVICE_PRESETS.vfd6.spectrum)});
+  state.devices.push({id:"d"+(devSeq++), name:"UPS-1", I1:30, qty:1, spectrum: Object.assign({}, DEVICE_PRESETS.ups.spectrum)});
+  renderDeviceList();
+  recalc();
+});
+
+/* ===== core calc ===== */
+function combineHarmonic(values, h){
+  if(values.length===0) return 0;
+  const alpha = h<5 ? 1 : (h<=10 ? 1.4 : 2);
+  const sum = values.reduce((s,v)=>s+Math.pow(v,alpha),0);
+  return Math.pow(sum, 1/alpha);
+}
+
+function calcAll(){
+  const std = $("stdSel").value;
+  const pccV = parseFloat($("pccV").value)||1;
+  const sccGen = parseFloat($("sccGen").value)||1;
+  const sccMin = parseFloat($("sccMin").value)||sccGen;
+  const sr = parseFloat($("sr").value)||1;
+  const backgroundThdu = parseFloat($("backgroundThdu").value)||0;
+  const capOn = $("capOn").checked;
+  const qc = parseFloat($("qc").value)||0;
+
+  const sccRatio = (sccGen*1000)/sr; // both in kVA basis: sccGen MVA*1000 = kVA
+  const limitPct = defaultLimitPct(sccRatio);
+  Object.keys(limitPct).forEach(h=>{ if(state.limits[h]===undefined) state.limits[h]=limitPct[h]; });
+
+  // reference current Ir from Sr (assume 3-phase)
+  const Ir = (sr*1000)/(Math.sqrt(3)*pccV);
+
+  // per-harmonic aggregated current from all devices
+  const Ih = {};
+  HARMONIC_ORDERS.forEach(h=>{
+    const contributions = [];
+    state.devices.forEach(d=>{
+      const pct = d.spectrum[h] || 0;
+      if(pct>0) contributions.push((pct/100)*d.I1*d.qty);
+    });
+    Ih[h] = combineHarmonic(contributions, h);
+  });
+
+  const sumSq = HARMONIC_ORDERS.reduce((s,h)=>s+Ih[h]*Ih[h],0);
+  const I1total = state.devices.reduce((s,d)=>s + d.I1*d.qty, 0) || 1;
+  const thdi = Math.sqrt(sumSq)/I1total*100;
+
+  const meta = STD_LIMITS_META[std];
+  const occasionalMult = state.condition==="occasional" ? 1.5 : 1.0;
+  const thdiLimit = meta.thdiBase * occasionalMult;
+
+  // simplified linear system impedance model: Z1 = V^2/Scc (base reactance at
+  // fundamental), Zh = h * Z1 -- a standard simplification for screening only.
+  const Z1 = (pccV*pccV)/(sccGen*1e6);
+  const Uh = {};
+  HARMONIC_ORDERS.forEach(h=>{
+    const Zh = h*Z1;
+    Uh[h] = Ih[h]*Zh; // volts
+  });
+  const sumUsq = HARMONIC_ORDERS.reduce((s,h)=>s+Uh[h]*Uh[h],0);
+  const phaseV = pccV; // treat as phase quantity consistently for screening ratio
+  const thduContribution = Math.sqrt(sumUsq)/phaseV*100;
+  const thdu = Math.sqrt(thduContribution*thduContribution + backgroundThdu*backgroundThdu);
+  const thduLimit = meta.thduCompat[state.voltClass];
+
+  // resonance estimate if capacitor bank present
+  let resonanceOrder = null, resonanceWarn = false;
+  if(capOn && qc>0){
+    resonanceOrder = Math.sqrt((sccGen*1000)/qc);
+    resonanceWarn = HARMONIC_ORDERS.some(h=>Math.abs(h-resonanceOrder)<=0.7 && (Ih[h]/Ir*100) > 0.5);
+  }
+
+  // worst-case order = highest ratio of calculated% vs limit%
+  let worstOrder = null, worstRatio = -1;
+  HARMONIC_ORDERS.forEach(h=>{
+    const pctOfIr = Ih[h]/Ir*100;
+    const lim = state.limits[h]*occasionalMult;
+    const ratio = lim>0 ? pctOfIr/lim : 0;
+    if(ratio>worstRatio){ worstRatio=ratio; worstOrder=h; }
+  });
+
+  const rows = HARMONIC_ORDERS.map(h=>{
+    const pctOfIr = Ih[h]/Ir*100;
+    const lim = state.limits[h]*occasionalMult;
+    return {h, Ih:Ih[h], pctOfIr, limit: state.limits[h], limitApplied: lim, ok: pctOfIr <= lim};
+  });
+  const anyFail = rows.some(r=>!r.ok) || thdi>thdiLimit || thdu>thduLimit;
+
+  return {std, stdName: meta.name, pccV, sccGen, sccMin, sr, sccRatio, Ir, backgroundThdu,
+    condition: state.condition, occasionalMult, voltClass: state.voltClass,
+    Ih, rows, thdi, thdiLimit, thdu, thduLimit, thduContribution,
+    capOn, qc, resonanceOrder, resonanceWarn, worstOrder, worstRatio, anyFail,
+    tag: $("eqTag").value.trim(), devices: state.devices.slice()};
+}
+
+function recalc(){
+  const L = UI[currentLang];
+  const d = calcAll();
+
+  $("gaugeNum").textContent = fmt(d.thdi,1)+"%";
+  $("statThdiLimit").textContent = fmt(d.thdiLimit,1)+"%";
+  $("statSccRatio").textContent = fmt(d.sccRatio,0);
+  $("statThdu").textContent = fmt(d.thdu,2)+"%";
+  $("statThduLimit").textContent = fmt(d.thduLimit,1)+"%";
+  $("statWorstOrder").textContent = d.worstOrder ? "h="+d.worstOrder : "—";
+  $("statResonance").textContent = d.resonanceOrder ? "h≈"+fmt(d.resonanceOrder,1) : "—";
+  $("revTag").textContent = new Date().toISOString().slice(0,10);
+
+  const verdictBox = $("verdictBox");
+  if(state.devices.length===0){
+    verdictBox.innerHTML = `<div class="risk-box risk-warn"><b>${L.noDevTitle}</b> ${L.noDevBody}</div>`;
+  } else if(d.anyFail){
+    verdictBox.innerHTML = `<div class="risk-box risk-alarm"><b>${L.failTitle}</b> ${L.failBody.replace('{h}',d.worstOrder)}</div>`;
+  } else {
+    verdictBox.innerHTML = `<div class="risk-box risk-ok"><b>${L.passTitle}</b> ${L.passBody}</div>`;
+  }
+
+  const resBox = $("resonanceBox");
+  if(d.capOn && d.qc>0){
+    if(d.resonanceWarn){
+      resBox.innerHTML = `<div class="risk-box risk-alarm"><b>${L.resWarnTitle}</b> ${L.resWarnBody.replace('{h}',fmt(d.resonanceOrder,1))}</div>`;
+    } else {
+      resBox.innerHTML = `<div class="risk-box risk-ok"><b>${L.resOkTitle}</b> ${L.resOkBody.replace('{h}',fmt(d.resonanceOrder,1))}</div>`;
+    }
+  } else { resBox.innerHTML = ""; }
+
+  renderLimitTable(d);
+  renderSpectrumChart(d);
+  renderLedger(d);
+  window._lastResults = d;
+}
+
+function renderLimitTable(d){
+  const L = UI[currentLang];
+  $("limitTableBody").innerHTML = d.rows.map(r=>`<tr class="${r.ok?'':'bad'}">
+    <td>h${r.h}</td>
+    <td>${fmt(r.Ih,2)}</td>
+    <td>${fmt(r.pctOfIr,2)}%</td>
+    <td><input type="number" step="0.1" min="0" value="${r.limit}" onchange="updateLimit(${r.h}, this.value)"></td>
+    <td>${r.ok ? '✓ '+L.yes : '✗ '+L.no}</td>
+  </tr>`).join("");
+}
+function updateLimit(h, val){
+  state.limits[h] = parseFloat(val)||0;
+  recalc();
+}
+
+function renderSpectrumChart(d){
+  const svg = $("spectrumChart");
+  const W=900, H=260, padL=40, padB=30, padT=16, padR=10;
+  const plotW = W-padL-padR, plotH = H-padT-padB;
+  const n = HARMONIC_ORDERS.length;
+  const bw = plotW/n*0.32;
+  const maxVal = Math.max(1, ...d.rows.map(r=>Math.max(r.pctOfIr, r.limitApplied)));
+  const y = v => padT + plotH - (v/maxVal)*plotH;
+  let s = `<line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT+plotH}" stroke="#516085" stroke-width="1"/>`;
+  s += `<line x1="${padL}" y1="${padT+plotH}" x2="${W-padR}" y2="${padT+plotH}" stroke="#516085" stroke-width="1"/>`;
+  d.rows.forEach((r,i)=>{
+    const cx = padL + plotW*(i+0.5)/n;
+    const barIh = y(r.pctOfIr), barLim = y(r.limitApplied);
+    const color = r.ok ? "#3b9eff" : "#ff5d77";
+    s += `<rect x="${cx-bw}" y="${barIh}" width="${bw}" height="${(padT+plotH)-barIh}" fill="${color}" fill-opacity="0.85"/>`;
+    s += `<line x1="${cx-bw-2}" y1="${barLim}" x2="${cx+bw+2}" y2="${barLim}" stroke="#e8b545" stroke-width="1.6" stroke-dasharray="3 2"/>`;
+    s += `<text x="${cx}" y="${padT+plotH+16}" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#8497b8">h${r.h}</text>`;
+  });
+  s += `<text x="${padL}" y="${padT-3}" font-family="IBM Plex Mono" font-size="8.5" fill="#516085">% of Ir</text>`;
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  svg.innerHTML = s;
+}
+
+/* ===== ledger ===== */
+function buildLedgerSteps(d){
+  const L = UI[currentLang];
+  const steps = [];
+  const devLines = d.devices.map(dv=>`${dv.name}: I1=${fmt(dv.I1,1)} A × ${dv.qty}`).join("\n") || L.noDevicesShort;
+
+  steps.push({num:1, title:L.ls1Title, clause:"—", note:L.ls1Note, formula:
+`Sr = ${fmt(d.sr,0)} kVA
+Ir = Sr×1000 / (√3 × V) = ${fmt(d.sr,0)}×1000 / (1.732×${fmt(d.pccV,0)}) = ${fmt(d.Ir,2)} A
+Scc(general) = ${fmt(d.sccGen,1)} MVA,  Scc/Sr = ${fmt(d.sccRatio,0)}`});
+
+  steps.push({num:2, title:L.ls2Title, clause:"CSA C61000-3-6 §5 (summation law)", note:L.ls2Note, formula:
+`Ih = (Σ Ih,i^α)^(1/α),  α = 1 (h&lt;5), 1.4 (5≤h≤10), 2 (h&gt;10)
+${devLines}`});
+
+  steps.push({num:3, title:L.ls3Title, clause:"—", note:L.ls3Note, formula:
+`THDI = √(Σ Ih²) / I1,total × 100 = ${fmt(d.thdi,2)}%
+${L.limitLbl} = ${fmt(d.thdiLimit,1)}% (${d.condition==='occasional'?L.occasionalNote:L.generalNote})`});
+
+  steps.push({num:4, title:L.ls4Title, clause:"IEC 61000-4-7 / simplified linear model", note:L.ls4Note, formula:
+`Z1 = V² / Scc = ${fmt(d.pccV,0)}² / (${fmt(d.sccGen,1)}×10⁶) = ${fmt((d.pccV*d.pccV)/(d.sccGen*1e6),4)} Ω
+Zh = h × Z1
+Uh = Ih × Zh   (summed as √ΣUh²)
+${L.thduContribLbl} = ${fmt(d.thduContribution,2)}%
+${L.backgroundLbl} = ${fmt(d.backgroundThdu,2)}%
+THDU = √(contribution² + background²) = ${fmt(d.thdu,2)}%`});
+
+  steps.push({num:5, title:L.ls5Title, clause: d.std==="hq_dist"?"HQ C.25-01":(d.std==="hq_trans"?"HQ Transmission emission limits":(d.std==="ieee519"?"IEEE 519":"CSA C61000-3-6")), note:L.ls5Note, formula:
+`${L.thduLimitLbl} (${d.voltClass.toUpperCase()}) = ${fmt(d.thduLimit,1)}%
+${L.resultLbl}: ${d.thdu<=d.thduLimit ? L.resultPass : L.resultFail}`});
+
+  if(d.capOn && d.qc>0){
+    steps.push({num:6, title:L.ls6Title, clause:"—", note:L.ls6Note, formula:
+`hr ≈ √(Scc / Qc) = √(${fmt(d.sccGen*1000,0)} kVA / ${fmt(d.qc,0)} kVAR) = ${fmt(d.resonanceOrder,2)}
+${d.resonanceWarn ? L.resFlagged : L.resClear}`});
+  }
+  return steps;
+}
+function renderLedger(d){
+  const steps = buildLedgerSteps(d);
+  $("ledger").innerHTML = steps.map(s=>`<div class="lstep"><div class="ln">${String(s.num).padStart(2,'0')}</div><div>
+    <h3><span class="clause">${s.clause}</span>${s.title}</h3><div class="formula">${s.formula}</div><div class="cite">${s.note}</div></div></div>`).join("");
+}
+
+/* ===== report ===== */
+function buildReportPageHTML(d, includeLedger, includeSpectrum, includeLogo){
+  const L = UI[currentLang];
+  const today = new Date().toLocaleDateString(currentLang==='fr'?'fr-CA':'en-CA');
+  const cell = (k,v)=>`<td style="padding:2.5pt 6pt 2.5pt 0;color:#333;font-size:9.5pt;white-space:nowrap;">${k}</td><td style="padding:2.5pt 14pt 2.5pt 0;font-weight:600;font-size:9.5pt;border-bottom:0.5pt solid #ddd;">${v}</td>`;
+  const gridRows = (pairs)=>{
+    let html = "";
+    for(let i=0;i<pairs.length;i+=2){
+      const a = pairs[i], b = pairs[i+1];
+      html += `<tr>${cell(a[0],a[1])}${b?cell(b[0],b[1]):'<td></td><td></td>'}</tr>`;
+    }
+    return html;
+  };
+  const sectionHead = (t)=>`<div style="font-size:9.5pt;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;border-bottom:1pt solid #1a1a1a;padding-bottom:2pt;margin:12pt 0 5pt;">${t}</div>`;
+
+  const inputPairs = [
+    [L.lblStandard, d.stdName], [L.lblPccV, fmt(d.pccV,0)+" V"],
+    [L.lblVoltClass, d.voltClass.toUpperCase()], [L.lblSccGen, fmt(d.sccGen,1)+" MVA"],
+    [L.lblSccMin, fmt(d.sccMin,1)+" MVA"], [L.lblSr, fmt(d.sr,0)+" kVA"],
+    [L.lblCondition, d.condition==='occasional'?L.occasionalShort:L.generalShort], [L.lblBackgroundThdu, fmt(d.backgroundThdu,2)+"%"]
+  ];
+  const resultPairs = [
+    [L.gaugeLbl, fmt(d.thdi,1)+"%"], [L.lblStatThdiLimit, fmt(d.thdiLimit,1)+"%"],
+    [L.lblStatThdu, fmt(d.thdu,2)+"%"], [L.lblStatThduLimit, fmt(d.thduLimit,1)+"%"],
+    [L.lblStatSccRatio, fmt(d.sccRatio,0)], [L.lblStatWorstOrder, d.worstOrder?("h="+d.worstOrder):"—"],
+    [L.lblStatResonance, d.resonanceOrder?("h≈"+fmt(d.resonanceOrder,1)):"—"], ["", ""]
+  ];
+
+  let spectrumHtml = "";
+  if(includeSpectrum){
+    const rows = d.rows.map(r=>`<tr style="${r.ok?'':'background:#fdeceb;'}">
+      <td style="padding:3pt 8pt;border-bottom:0.5pt solid #e5e5e5;font-size:8.5pt;">h${r.h}</td>
+      <td style="padding:3pt 8pt;border-bottom:0.5pt solid #e5e5e5;font-size:8.5pt;">${fmt(r.Ih,2)} A</td>
+      <td style="padding:3pt 8pt;border-bottom:0.5pt solid #e5e5e5;font-size:8.5pt;">${fmt(r.pctOfIr,2)}%</td>
+      <td style="padding:3pt 8pt;border-bottom:0.5pt solid #e5e5e5;font-size:8.5pt;">${fmt(r.limitApplied,2)}%</td>
+      <td style="padding:3pt 8pt;border-bottom:0.5pt solid #e5e5e5;font-size:8.5pt;">${r.ok?'✓':'✗'}</td></tr>`).join("");
+    spectrumHtml = sectionHead(L.limitTableTitle) + `<table style="width:100%;border-collapse:collapse;">
+      <tr>
+        <td style="padding:4pt 8pt;font-size:7.5pt;font-weight:700;text-transform:uppercase;color:#666;border-bottom:1pt solid #999;">${L.thOrder}</td>
+        <td style="padding:4pt 8pt;font-size:7.5pt;font-weight:700;text-transform:uppercase;color:#666;border-bottom:1pt solid #999;">${L.thIh}</td>
+        <td style="padding:4pt 8pt;font-size:7.5pt;font-weight:700;text-transform:uppercase;color:#666;border-bottom:1pt solid #999;">${L.thPctI1}</td>
+        <td style="padding:4pt 8pt;font-size:7.5pt;font-weight:700;text-transform:uppercase;color:#666;border-bottom:1pt solid #999;">${L.thLimit}</td>
+        <td style="padding:4pt 8pt;font-size:7.5pt;font-weight:700;text-transform:uppercase;color:#666;border-bottom:1pt solid #999;">${L.thOk}</td>
+      </tr>${rows}</table>`;
+  }
+
+  let ledgerHtml = "";
+  if(includeLedger){
+    const steps = buildLedgerSteps(d);
+    ledgerHtml = sectionHead(L.ledgerTitle) + `<table style="width:100%;border-collapse:collapse;">` +
+      steps.map(s=>`<tr>
+        <td style="padding:5pt 8pt 5pt 0;border-bottom:0.5pt solid #e5e5e5;font-size:8.5pt;font-weight:700;vertical-align:top;">${String(s.num).padStart(2,'0')}</td>
+        <td style="padding:5pt 8pt;border-bottom:0.5pt solid #e5e5e5;vertical-align:top;">
+          <div style="font-size:8.5pt;font-weight:700;margin-bottom:2pt;"><span style="color:#b8860b;font-family:'Courier New',monospace;font-size:7.5pt;margin-right:5pt;">${s.clause}</span>${s.title}</div>
+          <div style="font-family:'Courier New',monospace;font-size:8pt;color:#333;line-height:1.5;">${s.formula.split("\n").map(l=>l===""?"&nbsp;":l).join("<br>")}</div>
+          <div style="font-size:7.5pt;color:#888;margin-top:3pt;">${s.note}</div>
+        </td></tr>`).join("") + `</table>`;
+  }
+
+  return `
+  <div style="font-family:Arial,Helvetica,sans-serif;color:#1a1a1a;background:#fff;padding:4pt 2pt;font-size:9.5pt;line-height:1.4;">
+    <table style="width:100%;border-collapse:collapse;border-bottom:1.5pt solid #1a1a1a;padding-bottom:6pt;margin-bottom:4pt;">
+      <tr><td style="font-size:13pt;font-weight:700;padding-bottom:6pt;">${L.titleH1}</td>
+      <td style="text-align:right;font-size:8.5pt;color:#555;padding-bottom:6pt;">${includeLogo?'Ω OHMZONE':''}</td></tr>
+      <tr><td style="font-size:9pt;color:#333;"><b>${L.lblTag}:</b> ${d.tag || L.untitledTag} &nbsp;&nbsp; <b>${L.lblMethod}:</b> ${d.stdName}</td>
+      <td style="text-align:right;font-size:8.5pt;color:#555;">${today}</td></tr>
+    </table>
+    ${sectionHead(L.repInputData)}
+    <table style="width:100%;border-collapse:collapse;">${gridRows(inputPairs)}</table>
+    ${sectionHead(L.repResults)}
+    <table style="width:100%;border-collapse:collapse;">${gridRows(resultPairs)}</table>
+    ${spectrumHtml}
+    ${ledgerHtml}
+    <p style="font-size:7.5pt;color:#888;margin-top:14pt;border-top:0.5pt solid #ddd;padding-top:6pt;">${L.disclaimerBody}</p>
+  </div>`;
+}
+
+function downloadBlob(content, mime, filename){
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 2000);
+}
+
+$("printBtn").addEventListener("click", ()=>{
+  const d = window._lastResults;
+  if(!d) return;
+  const html = buildReportPageHTML(d, $("includeLedger").checked, $("includeSizesTable").checked, $("includeLogo").checked);
+  const w = window.open("", "_blank");
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${$('titleH1').textContent}</title>
+  <style>body{margin:0;padding:18px;} @media print{body{padding:0;}}</style></head>
+  <body>${html}<script>window.onload=()=>window.print();<\/script></body></html>`);
+  w.document.close();
+});
+
+/* ===== report template upload ===== */
+let uploadedTemplateBuffer = null, uploadedTemplateName = "";
+$("templateFile").addEventListener("change", (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev)=>{ uploadedTemplateBuffer = ev.target.result; uploadedTemplateName = file.name; inspectTemplate(file.name); };
+  reader.readAsArrayBuffer(file);
+});
+function templateTagValues(d){
+  const L = UI[currentLang];
+  const today = new Date().toLocaleDateString(currentLang==='fr'?'fr-CA':'en-CA');
+  return {
+    tag: d.tag || L.untitledTag, standard: d.stdName, date: today,
+    pccV: fmt(d.pccV,0)+" V", voltClass: d.voltClass.toUpperCase(),
+    sccGen: fmt(d.sccGen,1)+" MVA", sr: fmt(d.sr,0)+" kVA",
+    condition: d.condition==='occasional'?L.occasionalShort:L.generalShort,
+    thdi: fmt(d.thdi,1)+"%", thdiLimit: fmt(d.thdiLimit,1)+"%",
+    thdu: fmt(d.thdu,2)+"%", thduLimit: fmt(d.thduLimit,1)+"%",
+    sccRatio: fmt(d.sccRatio,0), worstOrder: d.worstOrder?("h="+d.worstOrder):"—",
+    resonanceOrder: d.resonanceOrder?fmt(d.resonanceOrder,1):"—",
+    result: d.anyFail ? L.failWord : L.passWord
+  };
+}
+function showTemplateStatus(msg, color){ const el=$("templateStatus"); if(el){ el.textContent=msg; el.style.color=color||"var(--trace)"; } }
+function inspectTemplate(fileName){
+  const L = UI[currentLang];
+  const known = Object.keys(templateTagValues(window._lastResults || calcAll()));
+  try{
+    const zip = new PizZip(uploadedTemplateBuffer);
+    let xml = "";
+    Object.keys(zip.files).forEach(name=>{
+      if(/^word\/(document|header\d*|footer\d*)\.xml$/.test(name)) xml += zip.files[name].asText();
+    });
+    const plain = xml.replace(/<[^>]+>/g, "");
+    const found = known.filter(k => plain.includes("{"+k+"}"));
+    const missing = known.filter(k => !found.includes(k));
+    const allTags = [...plain.matchAll(/\{([a-zA-Z0-9_]+)\}/g)].map(m=>m[1]);
+    const unknown = [...new Set(allTags.filter(t => !known.includes(t)))];
+    let msg = L.templateLoadedMsg.replace("{name}", fileName) + " — ";
+    let color = "var(--trace)";
+    if(found.length === 0){ msg += L.templateNoTagsFound; color = "var(--alarm)"; }
+    else {
+      msg += L.templateTagsFound.replace("{n}", found.length).replace("{total}", known.length);
+      if(missing.length) msg += " " + L.templateTagsMissing.replace("{list}", missing.join(", "));
+      if(unknown.length){ msg += " " + L.templateTagsUnknown.replace("{list}", unknown.join(", ")); color = "var(--warn)"; }
+      if(missing.length && !unknown.length) color = "var(--warn)";
+    }
+    showTemplateStatus(msg, color);
+  } catch(err){
+    console.error(err);
+    showTemplateStatus(L.templateErrorMsg + " " + (err.message||""), "var(--alarm)");
+  }
+}
+function exportWithTemplate(d){
+  const L = UI[currentLang];
+  try{
+    const zip = new PizZip(uploadedTemplateBuffer);
+    const docx = new window.docxtemplater(zip, { paragraphLoop:true, linebreaks:true, nullGetter:p=>"«"+(p.value||"?")+"»" });
+    docx.render(templateTagValues(d));
+    const out = docx.getZip().generate({ type:"blob", mimeType:"application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+    const url = URL.createObjectURL(out);
+    const a = document.createElement("a"); a.href=url; a.download="harmonic_emission_assessment.docx";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url), 2000);
+    showTemplateStatus(L.templateExportOk, "var(--trace)");
+  } catch(err){
+    console.error(err);
+    let detail = err.message || String(err);
+    if(err.properties && err.properties.errors && err.properties.errors.length){
+      detail = err.properties.errors.map(e=>(e.properties&&e.properties.explanation?e.properties.explanation:e.message)).join(" · ");
+    }
+    showTemplateStatus(L.templateErrorMsg+" "+detail, "var(--alarm)");
+    alert(L.templateErrorMsg+"\n\n"+detail);
+    exportWithBuiltInLayout(d);
+  }
+}
+function exportWithBuiltInLayout(d){
+  const html = buildReportPageHTML(d, $("includeLedger").checked, $("includeSizesTable").checked, $("includeLogo").checked);
+  const doc = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+  <head><meta charset="utf-8"><title>Harmonic Emission Assessment</title>
+  <!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View></w:WordDocument></xml><![endif]--></head><body>${html}</body></html>`;
+  downloadBlob(doc, "application/msword", "harmonic_emission_assessment.doc");
+}
+$("exportWordBtn").addEventListener("click", ()=>{
+  const d = window._lastResults;
+  if(!d) return;
+  if(uploadedTemplateBuffer) exportWithTemplate(d); else exportWithBuiltInLayout(d);
+});
+
+$("exportExcelBtn").addEventListener("click", ()=>{
+  const d = window._lastResults;
+  if(!d) return;
+  const L = UI[currentLang];
+  const wb = XLSX.utils.book_new();
+  const main = [
+    [L.repInputData,""],
+    [L.lblTag, d.tag || L.untitledTag], [L.lblStandard, d.stdName],
+    [L.lblPccV, fmt(d.pccV,0)], [L.lblVoltClass, d.voltClass.toUpperCase()],
+    [L.lblSccGen, fmt(d.sccGen,1)], [L.lblSccMin, fmt(d.sccMin,1)], [L.lblSr, fmt(d.sr,0)],
+    [L.lblCondition, d.condition], [L.lblBackgroundThdu, fmt(d.backgroundThdu,2)],
+    ["",""], [L.repResults,""],
+    [L.gaugeLbl, fmt(d.thdi,1)], [L.lblStatThdiLimit, fmt(d.thdiLimit,1)],
+    [L.lblStatThdu, fmt(d.thdu,2)], [L.lblStatThduLimit, fmt(d.thduLimit,1)],
+    [L.lblStatSccRatio, fmt(d.sccRatio,0)], [L.lblStatWorstOrder, d.worstOrder||"—"],
+    [L.lblStatResonance, d.resonanceOrder?fmt(d.resonanceOrder,1):"—"],
+    ["",""], [L.disclaimerLbl, L.disclaimerBody]
+  ];
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(main), "Harmonic Assessment");
+
+  if($("includeSizesTable").checked){
+    const spec = [[L.thOrder, L.thIh, L.thPctI1, L.thLimit, L.thOk]];
+    d.rows.forEach(r=>spec.push(["h"+r.h, fmt(r.Ih,2), fmt(r.pctOfIr,2), fmt(r.limitApplied,2), r.ok?L.yes:L.no]));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(spec), "Spectrum vs Limit");
+  }
+  const devs = [["Device","I1 (A)","Qty"].concat(HARMONIC_ORDERS.map(h=>"h"+h+" %"))];
+  d.devices.forEach(dv=>{
+    devs.push([dv.name, fmt(dv.I1,1), dv.qty].concat(HARMONIC_ORDERS.map(h=>dv.spectrum[h]||0)));
+  });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(devs), "Device Spectra");
+
+  if($("includeLedger").checked){
+    const led = [["Clause","Formula","Note"]];
+    buildLedgerSteps(d).forEach(s=>{
+      led.push([s.clause+" — "+s.title,"",""]);
+      s.formula.split("\n").forEach(l=>{ if(l.trim()!=="") led.push(["", l, ""]); });
+      led.push(["","",s.note]); led.push(["","",""]);
+    });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(led), "Calculation Ledger");
+  }
+  XLSX.writeFile(wb, "harmonic_emission_assessment.xlsx");
+});
+
+/* ===================== i18n ===================== */
+const UI = {
+  en: {
+    titleH1:"Harmonic Emission Assessment", titleSub:"Screening-level harmonic current emission &amp; PCC voltage distortion — CSA C61000-3-6 / Hydro-Québec C.25-01",
+    lblDwg:"Dwg No.", lblScale:"Scale", lblMethod:"Method", lblRev:"Rev",
+    topDiscB:"Screening-level assessment only.",
+    topDiscTxt:"This tool performs a simplified, single-frequency-per-order emission and voltage-distortion estimate using the CSA C61000-3-6 harmonic summation law and a linear (X = hX₁) system impedance model. It is not a substitute for the network harmonic impedance data, background distortion measurements, and detailed frequency-scan study that Hydro-Québec requires for an actual compliance submission — and it does not replace the specific per-harmonic limit tables that HQ or the applicable CSA standard provides for your point of connection. Default limit values shown are commonly published representative figures and must be replaced with the actual values issued for your project before this is used for compliance purposes.",
+    loadExampleTxt:"Load example",
+    step1Title:"Project &amp; Point of Evaluation", step1Small:"Tag, governing standard, PCC voltage, short-circuit capacity",
+    lblTag:"Project / equipment tag", lblStandard:"Governing standard",
+    hintStandard:"CSA C61000-3-6 and Hydro-Québec's own documents (C.25-01 for distribution, the transmission emission-limits document for HV) are closely related methodologies — HQ typically issues project-specific limit values and impedance data that take precedence over the generic tables in this tool.",
+    lblPccV:"PCC voltage (V, line-to-line)", lblVoltClass:"Voltage class",
+    lblSccGen:"Short-circuit capacity, general (MVA)", lblSccMin:"Short-circuit capacity, minimum (MVA)",
+    lblSr:"Installation rated power, S<sub>r</sub> (kVA)",
+    hintStep1:"Scc/Sr is the key ratio that sets the permitted emission level under CSA C61000-3-6 — a stiffer system (higher Scc relative to the installation) permits a higher percentage emission from the load. Use the general (typical operating) short-circuit level for the main assessment, and the minimum level to check the worst case.",
+    step2Title:"Harmonic Source Devices", step2Small:"Non-linear loads and their current spectra",
+    lblDevPreset:"Device spectrum preset", lblDevName:"Label", lblDevI1:"Fundamental current, I₁ (A)", lblDevQty:"Qty (identical units)", addDeviceTxt:"Add device",
+    hintStep2:"Presets are representative/typical spectra for common converter topologies — always replace with the actual manufacturer datasheet spectrum for a real compliance submission. Multiple devices are combined per harmonic order using the CSA C61000-3-6 summation law (arithmetic for h&lt;5, exponent 1.4 for 5–10, RMS for h&gt;10).",
+    noDevices:"No devices added yet — pick a preset, enter I₁, then click Add device.", noDevicesShort:"(no source devices entered)",
+    step3Title:"Operating Condition", step3Small:"General vs. occasional, background distortion",
+    lblCondition:"Condition",
+    hintCondition:"\"General\" conditions apply for the majority of operating time. \"Occasional\" conditions (present ≤1% of the time per typical HQ/CSA practice) are permitted a higher emission level — commonly ×1.5 the general limit.",
+    lblBackgroundThdu:"Background voltage THD at PCC, if known (%)",
+    hintStep3:"Background distortion (from other customers/sources already on the system) adds to your installation's contribution at the PCC — HQ measurement data is the authoritative source; leave at 0 if unknown, but note this understates the true THDU.",
+    step4Title:"Capacitor Bank / Resonance Check", optionalTag4:"(optional)", step4Small:"Power-factor correction capacitors can shift the resonance point",
+    lblQc:"Capacitor bank rating (kVAR)",
+    hintStep4:"A capacitor bank forms a parallel resonant circuit with the system's inductive reactance at hr ≈ √(Scc/Qc). If a significant harmonic current is present near that order, the resulting voltage magnification can be severe — this is a first-pass screening check only.",
+    resultTitle:"Result — Emission &amp; Distortion Summary", gaugeLbl:"THD<sub>I</sub> at PCC",
+    lblStatThdiLimit:"THD<sub>I</sub> limit (this condition)", lblStatSccRatio:"S<sub>cc</sub>/S<sub>r</sub> ratio",
+    lblStatThdu:"THD<sub>U</sub> at PCC (estimated)", lblStatThduLimit:"THD<sub>U</sub> compatibility level",
+    lblStatWorstOrder:"Worst-case harmonic order", lblStatResonance:"Estimated resonance order",
+    noDevTitle:"No source devices entered.", noDevBody:"Add at least one harmonic source device in Step 2 to run the assessment.",
+    passTitle:"Within all limits checked.", passBody:"THDI, THDU and every individual harmonic order shown are within the limits/table entered — this is a screening-level result only.",
+    failTitle:"One or more limits exceeded.", failBody:"The worst-case order is h={h} — review the spectrum table below and consider mitigation (filtering, multi-pulse conversion, line reactors, or operating restrictions).",
+    resWarnTitle:"Resonance risk flagged.", resWarnBody:"Estimated resonance order h≈{h} coincides with a harmonic order carrying meaningful current — this combination can produce significant voltage magnification. A detuned reactor or reactor-capacitor retuning should be evaluated.",
+    resOkTitle:"Estimated resonance point clear of significant harmonics.", resOkBody:"Estimated resonance order h≈{h}. This is a simplified single-frequency estimate — a full impedance scan is recommended for final confirmation.",
+    spectrumTitle:"Harmonic Spectrum vs. Limit", spectrumTag:"calculated I<sub>h</sub> at PCC compared to the limit table",
+    lblIncludeLedger:"Include Calculation Ledger in report", lblIncludeSizes:"Include Harmonic Spectrum table in report", lblIncludeLogo:"Include OhmZone brand mark in report",
+    printBtnLabel:"🖨 Print / Save as PDF", exportWordLabel:"📄 Export study (Word)", exportBtnLabel:"📊 Export study (Excel)",
+    lblUploadTemplate:"Report template (.docx, optional)",
+    hintUploadTemplate:"Upload your firm's Word template to brand exports with it. The template must contain plain-text placeholders exactly as shown: {tag} {standard} {date} {pccV} {voltClass} {sccGen} {sr} {condition} {thdi} {thdiLimit} {thdu} {thduLimit} {sccRatio} {worstOrder} {resonanceOrder} {result}. Type each tag in one uninterrupted go — Word's autocorrect/spellcheck can split a tag across internal runs.",
+    templateLoadedMsg:"Template loaded: {name}", templateErrorMsg:"Could not read this file as a Word template — using the built-in layout instead.",
+    templateNoTagsFound:"no OhmZone placeholders found in this document.", templateTagsFound:"{n} of {total} placeholders found.",
+    templateTagsMissing:"Not present (will be left out): {list}.", templateTagsUnknown:"Unrecognised tags that will render as «name»: {list}.", templateExportOk:"Template export completed.",
+    ledgerTitle:"Calculation Ledger", ledgerTag:"clause-by-clause",
+    ls1Title:"Reference current &amp; Scc/Sr ratio", ls1Note:"The reference current sets the base for expressing harmonic limits as a percentage; the Scc/Sr ratio is the key parameter setting which emission-limit band applies under CSA C61000-3-6-style methodology.",
+    ls2Title:"Per-harmonic current aggregation", ls2Note:"CSA C61000-3-6's summation law reflects that low-order harmonics from multiple sources tend to add roughly in phase (arithmetic sum), while higher-order harmonics are increasingly uncorrelated in phase (approaching RMS combination).",
+    ls3Title:"Total current distortion (THD<sub>I</sub>)", ls3Note:"THDI is the RMS of all individual harmonic currents divided by the total fundamental current, expressed as a percentage.",
+    limitLbl:"Limit", occasionalNote:"occasional condition, ×1.5 applied", generalNote:"general condition",
+    ls4Title:"PCC voltage distortion estimate", ls4Note:"This uses a simplified linear system reactance model (X scales directly with harmonic order from the fundamental short-circuit reactance) — a real assessment requires the network's actual harmonic impedance data, which Hydro-Québec typically provides for the PCC.",
+    thduContribLbl:"Installation's THDU contribution", backgroundLbl:"Background THDU",
+    ls5Title:"Compliance check against compatibility level", ls5Note:"The calculated PCC voltage distortion is compared against the compatibility level for the voltage class — this represents the level below which equipment on the system is expected to operate compatibly per CSA C61000-2-2/2-12.",
+    thduLimitLbl:"THDU compatibility level", resultLbl:"Result", resultPass:"within limit", resultFail:"exceeds limit",
+    ls6Title:"Capacitor bank resonance screening", ls6Note:"A simplified parallel-resonance estimate — treats the system as a single inductive source impedance and the capacitor bank as the only capacitive element. Confirm against a full frequency scan if a resonance risk is flagged.",
+    resFlagged:"⚠ Resonance order coincides with meaningful harmonic current — flagged for further review.",
+    resClear:"No coincidence with a significant harmonic current order at this screening level.",
+    thOrder:"Order h", thIh:"Calculated I<sub>h</sub> (A)", thPctI1:"% of I<sub>r</sub>", thLimit:"Limit (% of I<sub>r</sub>)", thOk:"OK?",
+    limitTableTitle:"Harmonic Current Limit Table (editable)", limitTableTag:"replace with the actual HQ / CSA table for this project",
+    repInputData:"Input Data", repResults:"Results", untitledTag:"(untitled)",
+    occasionalShort:"Occasional", generalShort:"General", yes:"Yes", no:"No", passWord:"PASS", failWord:"FAIL",
+    disclaimerLbl:"Disclaimer",
+    disclaimerBody:"Screening-level assessment only, using the CSA C61000-3-6 summation law and a simplified linear system impedance model. Default harmonic limit values and compatibility levels shown are representative placeholders and must be replaced with the actual project-specific values issued by Hydro-Québec (or the applicable CSA table) before use for compliance purposes. Does not replace a full frequency-domain network study, measured background distortion data, or Hydro-Québec's own harmonic impedance data for the point of connection. Final submission must be reviewed by a qualified electrical engineer.",
+    footerHtml:`<b>Method &amp; data notes.</b> This tool performs a preliminary, screening-level harmonic emission and voltage-distortion estimate loosely following the structure of <b>CSA C61000-3-6</b> (assessment of emission limits for distorting installations connected to MV/HV/EHV systems) and referencing <b>Hydro-Québec's C.25-01</b> (distribution customer installations) and transmission emission-limits documentation for the Québec-specific framework. <b>Harmonic current summation</b> across multiple devices uses the standard exponential summation law (Ih = (ΣIh,i^α)^(1/α), α=1 for h&lt;5, α=1.4 for 5≤h≤10, α=2 for h&gt;10), a well-documented approach reflecting decreasing phase correlation between sources at higher harmonic orders. <b>Device current spectra</b> (6-pulse/12-pulse VFD, UPS, LED presets) are commonly published representative/typical values for illustration and screening only — the actual manufacturer datasheet spectrum for the specific equipment must be used for a real submission. <b>PCC voltage distortion</b> is estimated using a simplified linear system impedance model (Zh = h × V²/Scc), which assumes a purely inductive, frequency-linear system reactance — this is a standard simplification for screening purposes but does not capture real network resonances, transformer/cable capacitive effects, or the actual harmonic impedance versus frequency data that Hydro-Québec normally supplies for a specific PCC. <b>Default harmonic current limits</b> shown in the editable table are representative figures loosely modeled on the Scc/Sr-banding structure common to IEC/CSA 61000-3-6-style tables — they are placeholders only; Hydro-Québec issues project- and point-specific limit values (often in absolute amperes) that must replace these defaults before the tool is used for an actual compliance submission. <b>THDU compatibility levels</b> shown by voltage class are representative figures consistent with commonly published CSA C61000-2-2/2-12 ranges and must be confirmed against the current edition. The capacitor-bank <b>resonance screening</b> is a first-pass single-frequency estimate (hr ≈ √(Scc/Qc)) and does not replace a full impedance-frequency scan. This tool does not perform time-domain analysis, does not model interharmonics, and does not compute telephone influence factor (I·T product) sometimes required for HQ transmission-level submissions. Preliminary planning aid only — final compliance documentation must be prepared using Hydro-Québec's actual issued impedance data and limit tables, and reviewed by a qualified electrical engineer.`
+  },
+  fr: {
+    titleH1:"Évaluation des émissions harmoniques", titleSub:"Évaluation préliminaire des émissions de courant harmonique et de la distorsion de tension au PCC — CSA C61000-3-6 / Hydro-Québec C.25-01",
+    lblDwg:"N° dessin", lblScale:"Échelle", lblMethod:"Méthode", lblRev:"Rév.",
+    topDiscB:"Évaluation préliminaire seulement.",
+    topDiscTxt:"Cet outil effectue une estimation simplifiée, à fréquence unique par rang, des émissions et de la distorsion de tension en utilisant la loi de sommation harmonique de la CSA C61000-3-6 et un modèle d'impédance système linéaire (X = hX₁). Il ne remplace pas les données d'impédance harmonique du réseau, les mesures de distorsion de fond, ni l'étude détaillée de balayage fréquentiel qu'Hydro-Québec exige pour une soumission de conformité réelle — et ne remplace pas les tableaux de limites par rang harmonique spécifiques qu'HQ ou la norme CSA applicable fournit pour votre point de raccordement. Les valeurs limites par défaut affichées sont des chiffres représentatifs couramment publiés et doivent être remplacées par les valeurs réelles émises pour votre projet avant toute utilisation à des fins de conformité.",
+    loadExampleTxt:"Charger l'exemple",
+    step1Title:"Projet et point d'évaluation", step1Small:"Repère, norme applicable, tension PCC, puissance de court-circuit",
+    lblTag:"Repère du projet / de l'équipement", lblStandard:"Norme applicable",
+    hintStandard:"La CSA C61000-3-6 et les documents propres à Hydro-Québec (C.25-01 pour la distribution, le document de limites d'émission pour le transport en HT) sont des méthodologies étroitement liées — HQ émet généralement des valeurs limites et des données d'impédance propres au projet qui priment sur les tableaux génériques de cet outil.",
+    lblPccV:"Tension PCC (V, ligne à ligne)", lblVoltClass:"Classe de tension",
+    lblSccGen:"Puissance de court-circuit, générale (MVA)", lblSccMin:"Puissance de court-circuit, minimale (MVA)",
+    lblSr:"Puissance nominale de l'installation, S<sub>r</sub> (kVA)",
+    hintStep1:"Scc/Sr est le rapport clé qui détermine le niveau d'émission permis selon la CSA C61000-3-6 — un système plus rigide (Scc élevé par rapport à l'installation) permet un pourcentage d'émission plus élevé de la charge. Utilisez le niveau de court-circuit général (fonctionnement typique) pour l'évaluation principale, et le niveau minimal pour vérifier le pire cas.",
+    step2Title:"Dispositifs sources d'harmoniques", step2Small:"Charges non linéaires et leurs spectres de courant",
+    lblDevPreset:"Préréglage de spectre de dispositif", lblDevName:"Repère", lblDevI1:"Courant fondamental, I₁ (A)", lblDevQty:"Qté (unités identiques)", addDeviceTxt:"Ajouter le dispositif",
+    hintStep2:"Les préréglages sont des spectres représentatifs/typiques pour les topologies de convertisseur courantes — remplacez toujours par le spectre réel de la fiche technique du fabricant pour une soumission de conformité réelle. Plusieurs dispositifs sont combinés par rang harmonique selon la loi de sommation de la CSA C61000-3-6 (arithmétique pour h&lt;5, exposant 1,4 pour 5–10, RMS pour h&gt;10).",
+    noDevices:"Aucun dispositif ajouté — choisissez un préréglage, entrez I₁, puis cliquez sur Ajouter le dispositif.", noDevicesShort:"(aucun dispositif source saisi)",
+    step3Title:"Condition d'exploitation", step3Small:"Générale vs occasionnelle, distorsion de fond",
+    lblCondition:"Condition",
+    hintCondition:"Les conditions « générales » s'appliquent la majorité du temps d'exploitation. Les conditions « occasionnelles » (présentes ≤1 % du temps selon la pratique HQ/CSA typique) sont permises à un niveau d'émission plus élevé — généralement ×1,5 la limite générale.",
+    lblBackgroundThdu:"THD de tension de fond au PCC, si connu (%)",
+    hintStep3:"La distorsion de fond (provenant d'autres clients/sources déjà sur le réseau) s'ajoute à la contribution de votre installation au PCC — les données de mesure d'HQ font autorité; laissez à 0 si inconnu, mais notez que cela sous-estime le THDU réel.",
+    step4Title:"Banc de condensateurs / vérification de résonance", optionalTag4:"(facultatif)", step4Small:"Les condensateurs de correction du facteur de puissance peuvent déplacer le point de résonance",
+    lblQc:"Calibre du banc de condensateurs (kVAR)",
+    hintStep4:"Un banc de condensateurs forme un circuit résonant parallèle avec la réactance inductive du système à hr ≈ √(Scc/Qc). Si un courant harmonique significatif est présent près de ce rang, l'amplification de tension résultante peut être sévère — ceci est une vérification préliminaire seulement.",
+    resultTitle:"Résultat — Sommaire des émissions et de la distorsion", gaugeLbl:"THD<sub>I</sub> au PCC",
+    lblStatThdiLimit:"Limite THD<sub>I</sub> (cette condition)", lblStatSccRatio:"Rapport S<sub>cc</sub>/S<sub>r</sub>",
+    lblStatThdu:"THD<sub>U</sub> au PCC (estimé)", lblStatThduLimit:"Niveau de compatibilité THD<sub>U</sub>",
+    lblStatWorstOrder:"Rang harmonique le plus défavorable", lblStatResonance:"Rang de résonance estimé",
+    noDevTitle:"Aucun dispositif source saisi.", noDevBody:"Ajoutez au moins un dispositif source d'harmoniques à l'étape 2 pour exécuter l'évaluation.",
+    passTitle:"Conforme à toutes les limites vérifiées.", passBody:"Le THDI, le THDU et chaque rang harmonique individuel affiché sont conformes aux limites/tableau saisis — ceci est un résultat préliminaire seulement.",
+    failTitle:"Une ou plusieurs limites dépassées.", failBody:"Le rang le plus défavorable est h={h} — examinez le tableau du spectre ci-dessous et envisagez des mesures d'atténuation (filtrage, conversion multi-impulsions, réactances de ligne, ou restrictions d'exploitation).",
+    resWarnTitle:"Risque de résonance signalé.", resWarnBody:"Le rang de résonance estimé h≈{h} coïncide avec un rang harmonique portant un courant significatif — cette combinaison peut produire une amplification de tension importante. Une réactance déclassée ou un réaccordage réactance-condensateur devrait être évalué.",
+    resOkTitle:"Le point de résonance estimé est éloigné des harmoniques significatifs.", resOkBody:"Rang de résonance estimé h≈{h}. Il s'agit d'une estimation simplifiée à fréquence unique — un balayage d'impédance complet est recommandé pour confirmation finale.",
+    spectrumTitle:"Spectre harmonique vs limite", spectrumTag:"I<sub>h</sub> calculé au PCC comparé au tableau de limites",
+    lblIncludeLedger:"Inclure le registre de calcul dans le rapport", lblIncludeSizes:"Inclure le tableau du spectre harmonique dans le rapport", lblIncludeLogo:"Inclure la marque OhmZone dans le rapport",
+    printBtnLabel:"🖨 Imprimer / Enregistrer en PDF", exportWordLabel:"📄 Exporter l'étude (Word)", exportBtnLabel:"📊 Exporter l'étude (Excel)",
+    lblUploadTemplate:"Modèle de rapport (.docx, facultatif)",
+    hintUploadTemplate:"Téléversez le modèle Word de votre entreprise pour habiller les exports. Le modèle doit contenir des espaces réservés en texte brut exactement comme indiqué : {tag} {standard} {date} {pccV} {voltClass} {sccGen} {sr} {condition} {thdi} {thdiLimit} {thdu} {thduLimit} {sccRatio} {worstOrder} {resonanceOrder} {result}. Saisissez chaque balise d'un seul coup — le correcteur/la vérification orthographique de Word peut diviser une balise.",
+    templateLoadedMsg:"Modèle chargé : {name}", templateErrorMsg:"Impossible de lire ce fichier comme modèle Word — utilisation de la mise en page intégrée à la place.",
+    templateNoTagsFound:"aucun espace réservé OhmZone trouvé dans ce document.", templateTagsFound:"{n} espaces réservés sur {total} trouvés.",
+    templateTagsMissing:"Absents (seront omis) : {list}.", templateTagsUnknown:"Balises non reconnues qui s'afficheront comme «nom» : {list}.", templateExportOk:"Export du modèle terminé.",
+    ledgerTitle:"Registre de calcul", ledgerTag:"article par article",
+    ls1Title:"Courant de référence et rapport Scc/Sr", ls1Note:"Le courant de référence établit la base pour exprimer les limites harmoniques en pourcentage; le rapport Scc/Sr est le paramètre clé déterminant quelle bande de limite d'émission s'applique selon la méthodologie de type CSA C61000-3-6.",
+    ls2Title:"Agrégation du courant par rang harmonique", ls2Note:"La loi de sommation de la CSA C61000-3-6 reflète que les harmoniques de rang inférieur provenant de sources multiples ont tendance à s'additionner à peu près en phase (somme arithmétique), tandis que les harmoniques de rang supérieur sont de plus en plus décorrélées en phase (se rapprochant d'une combinaison RMS).",
+    ls3Title:"Distorsion totale de courant (THD<sub>I</sub>)", ls3Note:"Le THDI est la valeur RMS de tous les courants harmoniques individuels divisée par le courant fondamental total, exprimée en pourcentage.",
+    limitLbl:"Limite", occasionalNote:"condition occasionnelle, ×1,5 appliqué", generalNote:"condition générale",
+    ls4Title:"Estimation de la distorsion de tension au PCC", ls4Note:"Ceci utilise un modèle de réactance système linéaire simplifié (X varie directement avec le rang harmonique à partir de la réactance de court-circuit fondamentale) — une évaluation réelle nécessite les données d'impédance harmonique réelles du réseau, qu'Hydro-Québec fournit généralement pour le PCC.",
+    thduContribLbl:"Contribution THDU de l'installation", backgroundLbl:"THDU de fond",
+    ls5Title:"Vérification de conformité par rapport au niveau de compatibilité", ls5Note:"La distorsion de tension calculée au PCC est comparée au niveau de compatibilité pour la classe de tension — cela représente le niveau en dessous duquel l'équipement sur le réseau est censé fonctionner de façon compatible selon la CSA C61000-2-2/2-12.",
+    thduLimitLbl:"Niveau de compatibilité THDU", resultLbl:"Résultat", resultPass:"sous la limite", resultFail:"dépasse la limite",
+    ls6Title:"Vérification préliminaire de résonance du banc de condensateurs", ls6Note:"Une estimation simplifiée de résonance parallèle — traite le système comme une seule impédance de source inductive et le banc de condensateurs comme le seul élément capacitif. Confirmez auprès d'un balayage d'impédance complet si un risque de résonance est signalé.",
+    resFlagged:"⚠ Le rang de résonance coïncide avec un courant harmonique significatif — signalé pour examen approfondi.",
+    resClear:"Aucune coïncidence avec un rang de courant harmonique significatif à ce niveau d'évaluation préliminaire.",
+    thOrder:"Rang h", thIh:"I<sub>h</sub> calculé (A)", thPctI1:"% de I<sub>r</sub>", thLimit:"Limite (% de I<sub>r</sub>)", thOk:"Conforme?",
+    limitTableTitle:"Tableau des limites de courant harmonique (modifiable)", limitTableTag:"remplacez par le tableau HQ / CSA réel pour ce projet",
+    repInputData:"Données d'entrée", repResults:"Résultats", untitledTag:"(sans titre)",
+    occasionalShort:"Occasionnelle", generalShort:"Générale", yes:"Oui", no:"Non", passWord:"CONFORME", failWord:"NON CONFORME",
+    disclaimerLbl:"Avis",
+    disclaimerBody:"Évaluation préliminaire seulement, utilisant la loi de sommation de la CSA C61000-3-6 et un modèle d'impédance système linéaire simplifié. Les valeurs limites harmoniques et niveaux de compatibilité par défaut affichés sont des espaces réservés représentatifs et doivent être remplacés par les valeurs réelles propres au projet émises par Hydro-Québec (ou le tableau CSA applicable) avant toute utilisation à des fins de conformité. Ne remplace pas une étude complète du réseau dans le domaine fréquentiel, des données de distorsion de fond mesurées, ni les données d'impédance harmonique propres d'Hydro-Québec pour le point de raccordement. La soumission finale doit être revue par un ingénieur électricien qualifié.",
+    footerHtml:`<b>Notes sur la méthode et les données.</b> Cet outil effectue une estimation préliminaire, de niveau évaluation, des émissions harmoniques et de la distorsion de tension, suivant approximativement la structure de la <b>CSA C61000-3-6</b> (évaluation des limites d'émission pour les installations perturbatrices raccordées aux réseaux MT/HT/THT) et faisant référence au <b>C.25-01 d'Hydro-Québec</b> (installations de clients de distribution) et à la documentation des limites d'émission pour le transport, pour le cadre propre au Québec. La <b>sommation du courant harmonique</b> à travers plusieurs dispositifs utilise la loi de sommation exponentielle standard (Ih = (ΣIh,i^α)^(1/α), α=1 pour h&lt;5, α=1,4 pour 5≤h≤10, α=2 pour h&gt;10), une approche bien documentée reflétant la corrélation de phase décroissante entre les sources aux rangs harmoniques supérieurs. Les <b>spectres de courant des dispositifs</b> (préréglages VFD 6/12 impulsions, ASI, DEL) sont des valeurs représentatives/typiques couramment publiées à des fins d'illustration et d'évaluation seulement — le spectre réel de la fiche technique du fabricant pour l'équipement spécifique doit être utilisé pour une soumission réelle. La <b>distorsion de tension au PCC</b> est estimée à l'aide d'un modèle d'impédance système linéaire simplifié (Zh = h × V²/Scc), qui suppose une réactance système purement inductive et linéaire en fréquence — ceci est une simplification standard à des fins d'évaluation mais ne capture pas les résonances réelles du réseau, les effets capacitifs des transformateurs/câbles, ni les données réelles d'impédance harmonique en fonction de la fréquence qu'Hydro-Québec fournit normalement pour un PCC spécifique. Les <b>limites de courant harmonique par défaut</b> affichées dans le tableau modifiable sont des chiffres représentatifs modélisés approximativement sur la structure de bandes Scc/Sr courante dans les tableaux de type CEI/CSA 61000-3-6 — ce sont des espaces réservés seulement; Hydro-Québec émet des valeurs limites propres au projet et au point (souvent en ampères absolus) qui doivent remplacer ces valeurs par défaut avant que l'outil soit utilisé pour une soumission de conformité réelle. Les <b>niveaux de compatibilité THDU</b> affichés par classe de tension sont des chiffres représentatifs conformes aux plages couramment publiées de la CSA C61000-2-2/2-12 et doivent être confirmés auprès de l'édition en vigueur. La <b>vérification préliminaire de résonance</b> du banc de condensateurs est une estimation à fréquence unique de première approche (hr ≈ √(Scc/Qc)) et ne remplace pas un balayage complet impédance-fréquence. Cet outil n'effectue pas d'analyse dans le domaine temporel, ne modélise pas les interharmoniques, et ne calcule pas le facteur d'influence téléphonique (produit I·T) parfois requis pour les soumissions au niveau transport d'HQ. Aide à la planification préliminaire seulement — la documentation de conformité finale doit être préparée à l'aide des données d'impédance et des tableaux de limites réellement émis par Hydro-Québec, et revue par un ingénieur électricien qualifié.`
+  }
+};
+
+function applyStaticI18n(){
+  const L = UI[currentLang];
+  $('titleH1').innerHTML=L.titleH1; $('titleSub').innerHTML=L.titleSub;
+  $('lblDwg').textContent=L.lblDwg; $('lblScale').textContent=L.lblScale; $('lblMethod').textContent=L.lblMethod; $('lblRev').textContent=L.lblRev;
+  $('topDiscB').textContent=L.topDiscB; $('topDiscTxt').textContent=L.topDiscTxt;
+  $('loadExampleTxt').textContent=L.loadExampleTxt;
+  $('step1Title').childNodes[0].innerHTML=L.step1Title+' '; $('step1Small').textContent=L.step1Small;
+  $('lblTag').textContent=L.lblTag; $('lblStandard').textContent=L.lblStandard; $('hintStandard').textContent=L.hintStandard;
+  $('lblPccV').textContent=L.lblPccV; $('lblVoltClass').textContent=L.lblVoltClass;
+  $('lblSccGen').innerHTML=L.lblSccGen; $('lblSccMin').innerHTML=L.lblSccMin; $('lblSr').innerHTML=L.lblSr; $('hintStep1').textContent=L.hintStep1;
+  $('step2Title').childNodes[0].textContent=L.step2Title+' '; $('step2Small').textContent=L.step2Small;
+  $('lblDevPreset').textContent=L.lblDevPreset; $('lblDevName').textContent=L.lblDevName; $('lblDevI1').innerHTML=L.lblDevI1;
+  $('lblDevQty').textContent=L.lblDevQty; $('addDeviceTxt').textContent=L.addDeviceTxt; $('hintStep2').innerHTML=L.hintStep2;
+  $('step3Title').childNodes[0].textContent=L.step3Title+' '; $('step3Small').textContent=L.step3Small;
+  $('lblCondition').textContent=L.lblCondition; $('hintCondition').innerHTML=L.hintCondition;
+  $('lblBackgroundThdu').textContent=L.lblBackgroundThdu; $('hintStep3').textContent=L.hintStep3;
+  $('step4Title').childNodes[0].textContent=L.step4Title+' '; $('optionalTag4').textContent=L.optionalTag4; $('step4Small').textContent=L.step4Small;
+  $('lblQc').textContent=L.lblQc; $('hintStep4').innerHTML=L.hintStep4;
+  $('resultTitle').innerHTML=L.resultTitle; $('gaugeLbl').innerHTML=L.gaugeLbl;
+  $('lblStatThdiLimit').innerHTML=L.lblStatThdiLimit; $('lblStatSccRatio').innerHTML=L.lblStatSccRatio;
+  $('lblStatThdu').innerHTML=L.lblStatThdu; $('lblStatThduLimit').innerHTML=L.lblStatThduLimit;
+  $('lblStatWorstOrder').textContent=L.lblStatWorstOrder; $('lblStatResonance').textContent=L.lblStatResonance;
+  $('spectrumTitle').textContent=L.spectrumTitle; $('spectrumTag').innerHTML=L.spectrumTag;
+  $('lblIncludeLedger').textContent=L.lblIncludeLedger; $('lblIncludeSizes').textContent=L.lblIncludeSizes; $('lblIncludeLogo').textContent=L.lblIncludeLogo;
+  $('printBtn').textContent=L.printBtnLabel; $('exportWordBtn').textContent=L.exportWordLabel; $('exportExcelBtn').textContent=L.exportBtnLabel;
+  $('lblUploadTemplate').textContent=L.lblUploadTemplate; $('hintUploadTemplate').textContent=L.hintUploadTemplate;
+  $('ledgerTitle').textContent=L.ledgerTitle; $('ledgerTag').textContent=L.ledgerTag;
+  $('limitTableTitle').textContent=L.limitTableTitle; $('limitTableTag').textContent=L.limitTableTag;
+  $('thOrder').innerHTML=L.thOrder; $('thIh').innerHTML=L.thIh; $('thPctI1').innerHTML=L.thPctI1; $('thLimit').innerHTML=L.thLimit; $('thOk').textContent=L.thOk;
+  $('footerNote').innerHTML=L.footerHtml;
+  populateDevicePresets();
+  renderDeviceList();
+}
+
+function setLang(lang){
+  currentLang = lang;
+  $('btn-en').classList.toggle('active', lang==='en');
+  $('btn-fr').classList.toggle('active', lang==='fr');
+  document.documentElement.lang = lang;
+  try { localStorage.setItem('ohmzone-lang', lang); } catch(e) {}
+  applyStaticI18n();
+  recalc();
+}
+(function(){
+  let saved='en';
+  try{ saved=localStorage.getItem('ohmzone-lang')||'en'; }catch(e){}
+  setLang(saved);
+})();
+</script>
+<div style="position:fixed;bottom:6px;right:12px;z-index:9999;font-family:monospace;font-size:10px;color:#5c7592;opacity:0.75;">© 2026 OhmZone. All rights reserved.</div>
+</body>
+</html>
