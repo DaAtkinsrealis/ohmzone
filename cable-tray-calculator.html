@@ -226,6 +226,7 @@
       <div class="stats" id="statsRow"></div>
       <div id="fillBar" style="margin-bottom:16px;"></div>
       <div class="banner" id="banner"></div>
+      <div id="necCheck"></div>
       <div class="drawing-wrap" id="drawingWrap"></div>
       <div class="legend" id="legend"></div>
       <p class="footnote" id="footnoteText">
@@ -315,7 +316,7 @@ const TRAY_TYPES_I18N = {
 function TRAY_TYPES(){ return TRAY_TYPES_I18N[currentLang]; }
 const CIRCUIT_COLORS = ["#3b9eff","#5B8DEF","#4FAE7A","#C15FBE","#E2584F","#54C1C7","#B98B4E","#8B96A8"];
 
-let state = { trayWidth:450, trayDepth:100, trayType:"ladder", unit:(function(){ try{ return localStorage.getItem('ohmzone-unit')||'mm'; }catch(e){ return 'mm'; } })(), addMode:"motor", circuits:[] };
+let state = { trayWidth:450, trayDepth:100, trayType:"ladder", unit:(function(){ try{ const u=localStorage.getItem('ohmzone-unit'); return (u==='mm'||u==='in')?u:'mm'; }catch(e){ return 'mm'; } })(), addMode:"motor", circuits:[] };
 
 function fmt(n,d=1){ return Number(n).toFixed(d).replace(/\.0+$/,"").replace(/(\.\d*[1-9])0+$/,"$1"); }
 /* AWG vs kcmil depends on the size itself, not the material — copper conductors
@@ -462,6 +463,49 @@ function recommendTrayWidth(circuits, currentWidth, currentDepth, unit){
     if(l.areaFillPct<=40 && l.fitsDepth && l.widthOk) return w;
   }
   return null;
+}
+
+/* ---------------- NEC Table 392.22(A) fill check (NFPA 70) ----------------
+   Allowable fill area for multiconductor cables < 4/0 AWG, in², by tray type and inside width.
+   Table 392.22(A) Col. 1 (ladder / ventilated trough): 6"→7.0, 9"→10.5, 12"→14.0, 18"→21.0,
+   24"→28.0, 30"→35.0, 36"→42.0 in². Col. 3 (solid bottom): 5.5, 8.0, 11.0, 16.5, 22.0, 27.5, 33.0 in².
+   Both columns are exactly linear in width (Col. 1 = 7/6 in² per inch, Col. 3 = 5.5/6 in² per inch),
+   so the per-inch rate reproduces every listed row and interpolates between listed widths.
+   Mixed trays: the small-cable allowance is reduced by 1.2 in² (ladder/ventilated) or 1.0 in²
+   (solid bottom) per inch of total diameter of cables 4/0 AWG and larger (Sd).
+   Cables 4/0 AWG and larger must be installed in a single layer: sum of diameters ≤ tray
+   width (ladder/ventilated) or ≤ 90% of width (solid bottom). */
+const NEC39222A = {
+  ladder: { rate: 7/6, mixedDeduction: 1.2, diaLimitFactor: 1.0 },
+  solid:  { rate: 5.5/6, mixedDeduction: 1.0, diaLimitFactor: 0.9 }
+};
+/* a cable is "4/0 AWG and larger" per 392.22(A) if it is 4/0 AWG or any kcmil size (250+) */
+function isLargeCable39222(awg){
+  const s = String(awg).trim();
+  if(s === "4/0") return true;
+  if(s.indexOf("/") !== -1) return false; // 1/0, 2/0, 3/0
+  const n = parseFloat(s);
+  return !isNaN(n) && n >= 250;
+}
+function nec39222Check(circuits, trayWidthMm, trayType){
+  const widthIn = trayWidthMm / 25.4;
+  const isSolid = trayType === "solid";
+  const rule = isSolid ? NEC39222A.solid : NEC39222A.ladder;
+  let smallAreaIn2 = 0, smallCount = 0, largeDiaIn = 0, largeCount = 0;
+  circuits.forEach(c=>{
+    const n = c.spec.count * c.qty;
+    const diaIn = c.spec.dia / 25.4;
+    if(isLargeCable39222(c.spec.awg)){ largeDiaIn += diaIn * n; largeCount += n; }
+    else { smallAreaIn2 += Math.PI * Math.pow(diaIn/2, 2) * n; smallCount += n; }
+  });
+  const baseAllowIn2 = widthIn * rule.rate;
+  const allowSmallIn2 = Math.max(baseAllowIn2 - rule.mixedDeduction * largeDiaIn, 0);
+  const diaLimitIn = widthIn * rule.diaLimitFactor;
+  const areaPass = smallCount === 0 ? null : smallAreaIn2 <= allowSmallIn2 + 1e-9;
+  const diaPass = largeCount === 0 ? null : largeDiaIn <= diaLimitIn + 1e-9;
+  const pass = (areaPass !== false) && (diaPass !== false);
+  return { widthIn, isSolid, smallAreaIn2, smallCount, baseAllowIn2, allowSmallIn2, areaPass,
+           largeDiaIn, largeCount, diaLimitIn, diaPass, pass };
 }
 
 /* total installed weight (kg/m of tray run) for the current circuit list, where cable weight data is available */
@@ -689,6 +733,23 @@ function render(){
   const banner = document.getElementById("banner");
   banner.style.background = color+"15"; banner.style.border = `1px solid ${color}55`;
   banner.innerHTML = `<span style="color:${color}">${bad?"\u26a0":"\u2713"}</span><span>${msg}</span>`;
+
+  // NEC Table 392.22(A) code check (separate from the 40% design guideline above)
+  const nec = nec39222Check(state.circuits, state.trayWidth, state.trayType);
+  const necEl = document.getElementById("necCheck");
+  if(necEl){
+    const necColor = nec.pass ? "#4FAE7A" : "#E2584F";
+    const areaRow = nec.smallCount === 0
+      ? `<div>${L.necSmallNone}</div>`
+      : `<div>${L.necSmallArea}: <b>${fmt(nec.smallAreaIn2,2)} in²</b> / ${fmt(nec.allowSmallIn2,2)} in² — <b style="color:${nec.areaPass?"#4FAE7A":"#E2584F"}">${nec.areaPass?L.necPassShort:L.necFailShort}</b>${nec.largeCount?` <span style="color:var(--muted)">(${L.necMixedNote})</span>`:""}</div>`;
+    const diaRow = nec.largeCount === 0
+      ? `<div>${L.necLargeNone}</div>`
+      : `<div>${L.necLargeDia}: <b>${fmt(nec.largeDiaIn,2)} in</b> / ${fmt(nec.diaLimitIn,2)} in — <b style="color:${nec.diaPass?"#4FAE7A":"#E2584F"}">${nec.diaPass?L.necPassShort:L.necFailShort}</b></div>`;
+    necEl.style.background = necColor+"12"; necEl.style.border = `1px solid ${necColor}55`;
+    necEl.style.borderRadius = "6px"; necEl.style.padding = "10px 12px"; necEl.style.marginBottom = "16px";
+    necEl.style.fontSize = "12.5px"; necEl.style.lineHeight = "1.7";
+    necEl.innerHTML = `<div style="font-weight:700;color:${necColor}">${nec.pass?"\u2713":"\u26a0"} ${L.necTitle} — ${nec.pass?L.necPass:L.necFail}</div>${areaRow}${diaRow}<div style="font-size:11px;color:var(--muted)">${L.necNote}</div>`;
+  }
 
   const dWrap = document.getElementById("drawingWrap");
   dWrap.innerHTML = "";
@@ -992,6 +1053,7 @@ async function exportWord(){
 
 function exportExcel(){
   const layout = window._lastLayout || layoutCables(state.circuits, state.trayWidth, state.trayDepth);
+  const nec = nec39222Check(state.circuits, state.trayWidth, state.trayType);
   const projNo = document.getElementById("fieldProjectNo").value || "";
   const el = document.getElementById("fieldElement").value || "";
   const task = document.getElementById("fieldTask").value || "";
@@ -1025,6 +1087,9 @@ function exportExcel(){
     <tr><td>${L.repTrayDepth}</td><td>${lenStr(state.trayDepth,2)}</td></tr>
     <tr><td>${L.repTrayType}</td><td>${typeLabel}</td></tr>
     <tr><td>${L.xlsAreaFillPct}</td><td>${fmt(layout.areaFillPct,1)}</td></tr>
+    <tr><td>${L.necTitle}</td><td>${nec.pass?L.necPass:L.necFail}</td></tr>
+    <tr><td>${L.necSmallArea} (in²)</td><td>${nec.smallCount? fmt(nec.smallAreaIn2,2)+" / "+fmt(nec.allowSmallIn2,2) : "—"}</td></tr>
+    <tr><td>${L.necLargeDia} (in)</td><td>${nec.largeCount? fmt(nec.largeDiaIn,2)+" / "+fmt(nec.diaLimitIn,2) : "—"}</td></tr>
     <tr><td>${L.statHeightUsed}</td><td>${lenStr(layout.totalHeightUsed,2)}</td></tr>
     <tr><td>${L.repWeight} (kg/m)</td><td>${fmt(totalCircuitWeight(state.circuits).total,1)}</td></tr>
     <tr><td>${L.repWeight} (lb/ft)</td><td>${fmt(totalCircuitWeight(state.circuits).total*0.671969,1)}</td></tr>
@@ -1097,6 +1162,7 @@ function buildReport(){
   const typeLabel = TRAY_TYPES().find(t=>t.id===state.trayType).label;
   const colorFlag = f => f==="ok" ? "#2E8B57" : f==="warn" ? "#B8860B" : "#C0392B";
   const L = UI[currentLang];
+  const nec = nec39222Check(state.circuits, state.trayWidth, state.trayType);
 
   let rowsHtml = state.circuits.map(c=>{
     const sizeLabel = `${c.spec.awg} ${sizeUnitLabel(c.spec.awg)}`;
@@ -1191,6 +1257,14 @@ function buildReport(){
       </div>
     </div>
 
+    <div style="font-family:Oswald,sans-serif; font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:.5px; border-bottom:1px solid #ccc; padding-bottom:4px; margin-bottom:8px">${L.necTitle}</div>
+    <table style="width:100%; border-collapse:collapse; font-size:11.5px; margin-bottom:18px">
+      <tr><td style="padding:4px 8px; color:#666; font-weight:600; width:45%">${L.necSmallArea}</td><td style="padding:4px 8px">${nec.smallCount ? `${fmt(nec.smallAreaIn2,2)} in² / ${fmt(nec.allowSmallIn2,2)} in² — ${nec.areaPass?L.necPass:L.necFail}` : L.necSmallNone}</td></tr>
+      <tr><td style="padding:4px 8px; color:#666; font-weight:600">${L.necLargeDia}</td><td style="padding:4px 8px">${nec.largeCount ? `${fmt(nec.largeDiaIn,2)} in / ${fmt(nec.diaLimitIn,2)} in — ${nec.diaPass?L.necPass:L.necFail}` : L.necLargeNone}</td></tr>
+      <tr><td style="padding:4px 8px; color:#666; font-weight:600">${L.necTitle}</td><td style="padding:4px 8px; font-weight:700; color:${nec.pass?"#2E8B57":"#C0392B"}">${nec.pass?L.necPass:L.necFail}</td></tr>
+    </table>
+    <p style="font-size:9.5px; color:#777; line-height:1.6; margin:0 0 18px 0">${L.necNote}</p>
+
     <div style="font-family:Oswald,sans-serif; font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:.5px; border-bottom:1px solid #ccc; padding-bottom:4px; margin-bottom:10px">${L.repCrossSection}</div>
     <div id="printDrawingWrap" style="border:1px solid #ccc; padding:12px; margin-bottom:12px"></div>
 
@@ -1211,7 +1285,7 @@ const UI = {
     lblCablesPerCircuit: "Cables per circuit", optCt1: "1 (single 3C cable)", optCt2: "2 (2× parallel)", optCt3: "3 (3× parallel)",
     lblQty: "Qty (number of circuits)", lblTitleBlock: "Design brief / title block", lblCompany: "Company / logo text",
     lblDate: "Date", hintExport: "PDF opens your browser's print dialog. Word/Excel download directly and open in Microsoft Office. All three share the same title block, methodology &amp; results.",
-    footnoteText: "Cables requiring maintained spacing (25% / 100% of Ø) are arranged in a single layer resting on the tray floor — they are never stacked, since stacking would block the free-air clearance the spacing exists to provide. Cables with no spacing requirement (0%, bundled) are grouped in their own zone beside — not on top of — the spaced cables, and may stack among themselves. Where a spaced cable sits at the edge of the bundled group, the required clearance is still maintained on that side. Area fill is checked against a conservative 40% design guideline. Note: NEC 392.22 does not set a flat percentage for ladder/ventilated trays — it sets fill areas by tray width in Table 392.22(A) (40% applies to solid-bottom trays). This tool is a design aid — final tray sizing should be verified by a licensed electrical engineer against the applicable code edition and AHJ requirements.",
+    footnoteText: "Cables requiring maintained spacing (25% / 100% of Ø) are arranged in a single layer resting on the tray floor — they are never stacked, since stacking would block the free-air clearance the spacing exists to provide. Cables with no spacing requirement (0%, bundled) are grouped in their own zone beside — not on top of — the spaced cables, and may stack among themselves. Where a spaced cable sits at the edge of the bundled group, the required clearance is still maintained on that side. Area fill is checked against a conservative 40% design guideline. The NEC 392.22(A) panel below applies Table 392.22(A) directly — fill area by tray width, with the single-layer diameter rule for cables 4/0 AWG and larger. Note: NEC 392.22 does not set a flat percentage for ladder/ventilated trays — it sets fill areas by tray width in Table 392.22(A) (40% applies to solid-bottom trays). This tool is a design aid — final tray sizing should be verified by a licensed electrical engineer against the applicable code edition and AHJ requirements.",
     statAreaFill: "Area fill", statCables: "Cables", statHeightUsed: "Height used", statSpacedLayer: "Spaced layer", oneRowFixed: "1 row (fixed)",
     msgSpacedOverflow: "Spaced cables alone exceed the tray width — since they must stay in a single layer, choose a wider tray or reduce spaced circuits.",
     msgBundleOverflow: "The bundled (0%) cable group doesn't fit beside the spaced layer — choose a wider tray.",
@@ -1219,6 +1293,14 @@ const UI = {
     msgFillExceeds: "Area fill exceeds the common 40% guideline — consider a larger tray.",
     msgWithinLimits: "Layout is within depth, width, and the 40% fill guideline.",
     msgApproachingLimit: "Approaching the fill limit — review spacing and heat-dissipation requirements.",
+    necTitle: "NEC Table 392.22(A) check",
+    necPass: "PASS", necFail: "FAIL", necPassShort: "PASS", necFailShort: "FAIL",
+    necSmallArea: "Cables < 4/0 AWG — area used / allowed",
+    necSmallNone: "No cables smaller than 4/0 AWG — area check not applicable.",
+    necLargeDia: "Cables ≥ 4/0 AWG (single layer) — sum of diameters / limit",
+    necLargeNone: "No cables 4/0 AWG or larger — single-layer diameter check not applicable.",
+    necMixedNote: "allowance reduced for large cables",
+    necNote: "Ladder / ventilated trough: Table 392.22(A) Col. 1 (7.0 in² per 6 in of width); solid bottom: Col. 3 (5.5 in² per 6 in). Mixed trays: small-cable allowance reduced by 1.2 in² (ladder) / 1.0 in² (solid) per inch of large-cable diameter. Large cables in a single layer: ΣØ ≤ tray width (90% for solid bottom).",
     circuitsAdded: "Circuits added", noCablesYet: "No cables yet — add one above.",
     spacedTag: "(spaced)", bundledTag: "(bundled)",
     byMotor: "By motor (HP)", byCableSpec: "By cable spec",
@@ -1275,7 +1357,7 @@ const UI = {
     lblCablesPerCircuit: "Câbles par circuit", optCt1: "1 (câble 3C simple)", optCt2: "2 (2× en parallèle)", optCt3: "3 (3× en parallèle)",
     lblQty: "Qté (nombre de circuits)", lblTitleBlock: "Fiche de calcul / cartouche", lblCompany: "Nom de l'entreprise / logo",
     lblDate: "Date", hintExport: "Le PDF ouvre la boîte de dialogue d'impression du navigateur. Word/Excel se téléchargent directement et s'ouvrent dans Microsoft Office. Les trois partagent le même cartouche, la même méthodologie et les mêmes résultats.",
-    footnoteText: "Les câbles nécessitant un espacement maintenu (25 % / 100 % de Ø) sont disposés en une seule couche reposant sur le fond du chemin de câbles — ils ne sont jamais empilés, car l'empilement bloquerait le dégagement d'air libre que l'espacement vise à assurer. Les câbles sans exigence d'espacement (0 %, groupés) sont regroupés dans leur propre zone à côté — et non au-dessus — des câbles espacés, et peuvent s'empiler entre eux. Lorsqu'un câble espacé se trouve en bordure du groupe de câbles groupés, le dégagement requis est tout de même maintenu de ce côté. Le taux de remplissage de la section est vérifié par rapport à un repère de conception prudent de 40 %. Note : la norme NEC 392.22 ne fixe pas un pourcentage unique pour les chemins en échelle ou ventilés — elle fixe des sections de remplissage selon la largeur dans le tableau 392.22(A) (40 % s'applique aux chemins à fond plein). Cet outil est une aide à la conception — le dimensionnement final du chemin de câbles doit être vérifié par un ingénieur électricien agréé selon l'édition du code applicable et les exigences de l'autorité compétente.",
+    footnoteText: "Les câbles nécessitant un espacement maintenu (25 % / 100 % de Ø) sont disposés en une seule couche reposant sur le fond du chemin de câbles — ils ne sont jamais empilés, car l'empilement bloquerait le dégagement d'air libre que l'espacement vise à assurer. Les câbles sans exigence d'espacement (0 %, groupés) sont regroupés dans leur propre zone à côté — et non au-dessus — des câbles espacés, et peuvent s'empiler entre eux. Lorsqu'un câble espacé se trouve en bordure du groupe de câbles groupés, le dégagement requis est tout de même maintenu de ce côté. Le taux de remplissage de la section est vérifié par rapport à un repère de conception prudent de 40 %. Le panneau NEC 392.22(A) ci-dessous applique directement le tableau 392.22(A) — section de remplissage selon la largeur, avec la règle de diamètre en couche unique pour les câbles de 4/0 AWG et plus. Note : la norme NEC 392.22 ne fixe pas un pourcentage unique pour les chemins en échelle ou ventilés — elle fixe des sections de remplissage selon la largeur dans le tableau 392.22(A) (40 % s'applique aux chemins à fond plein). Cet outil est une aide à la conception — le dimensionnement final du chemin de câbles doit être vérifié par un ingénieur électricien agréé selon l'édition du code applicable et les exigences de l'autorité compétente.",
     statAreaFill: "Remplissage", statCables: "Câbles", statHeightUsed: "Hauteur utilisée", statSpacedLayer: "Couche espacée", oneRowFixed: "1 rangée (fixe)",
     msgSpacedOverflow: "Les câbles espacés seuls dépassent la largeur du chemin de câbles — comme ils doivent rester en une seule couche, choisissez un chemin plus large ou réduisez le nombre de circuits espacés.",
     msgBundleOverflow: "Le groupe de câbles groupés (0 %) ne tient pas à côté de la couche espacée — choisissez un chemin plus large.",
@@ -1283,6 +1365,14 @@ const UI = {
     msgFillExceeds: "Le taux de remplissage dépasse le repère courant de 40 % — envisagez un chemin plus grand.",
     msgWithinLimits: "La disposition respecte la profondeur, la largeur et le repère de remplissage de 40 %.",
     msgApproachingLimit: "Approche de la limite de remplissage — vérifiez l'espacement et les exigences de dissipation thermique.",
+    necTitle: "Vérification NEC tableau 392.22(A)",
+    necPass: "CONFORME", necFail: "NON CONFORME", necPassShort: "CONFORME", necFailShort: "NON CONFORME",
+    necSmallArea: "Câbles < 4/0 AWG — section utilisée / admise",
+    necSmallNone: "Aucun câble inférieur à 4/0 AWG — vérification de section sans objet.",
+    necLargeDia: "Câbles ≥ 4/0 AWG (une seule couche) — somme des diamètres / limite",
+    necLargeNone: "Aucun câble de 4/0 AWG ou plus — vérification de diamètre sans objet.",
+    necMixedNote: "allocation réduite pour les gros câbles",
+    necNote: "Échelle / auge ventilée : tableau 392.22(A) col. 1 (7,0 po² par 6 po de largeur); fond plein : col. 3 (5,5 po² par 6 po). Chemins mixtes : l'allocation des petits câbles est réduite de 1,2 po² (échelle) / 1,0 po² (fond plein) par pouce de diamètre total des gros câbles. Gros câbles en une seule couche : ΣØ ≤ largeur du chemin (90 % pour fond plein).",
     circuitsAdded: "Circuits ajoutés", noCablesYet: "Aucun câble pour l'instant — ajoutez-en un ci-dessus.",
     spacedTag: "(espacé)", bundledTag: "(groupé)",
     byMotor: "Par moteur (HP)", byCableSpec: "Par spec. de câble",

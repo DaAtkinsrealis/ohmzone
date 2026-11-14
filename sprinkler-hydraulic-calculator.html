@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sprinkler Hydraulics — NFPA 13 (Simplified) — OhmZone</title>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3887318872951674" crossorigin="anonymous"></script>
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icon-16.png">
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="OhmZone">
+<meta name="theme-color" content="#0a1728">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --navy-950:#0B1F33;
+    --blue:#3b9eff;
+    --blue-soft:#1a3a5c;
+    --navy-900:#0F2942;
+    --navy-800:#173A5C;
+    --navy-700:#254C74;
+    --paper:#0a1120;
+    --paper-card:#111a2a;
+    --line:#233350;
+    --ink:#e7edf7;
+    --ink-soft:#8fa8c2;
+    --copper:#d9853a;
+    --copper-soft:#e8b57d;
+    --copper-tint:#2e2015;
+    --aluminum:#a8b4c4;
+    --good:#43c17e;
+    --warn:#e3a83b;
+    --bad:#ff5d77;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    font-size:15px;
+    line-height:1.5;
+  }
+  h1,h2,h3,h4{font-family:'Space Grotesk',sans-serif;margin:0 0 8px 0;color:var(--ink);letter-spacing:-0.01em;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  .app{display:flex;min-height:100vh;}
+
+  /* ---- Sidebar ---- */
+  .sidebar{
+    width:250px;flex-shrink:0;background:var(--navy-950);color:#DCE6F0;
+    padding:28px 20px;display:flex;flex-direction:column;gap:26px;
+  }
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand-mark{
+    width:34px;height:34px;border-radius:8px;
+    background:linear-gradient(135deg,var(--copper),var(--copper-soft));
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Space Grotesk';font-weight:700;color:var(--ink);font-size:15px;
+  }
+  .brand-text{font-family:'Space Grotesk';font-weight:600;font-size:15px;color:#fff;line-height:1.2;}
+  .brand-text span{display:block;font-family:'IBM Plex Mono';font-weight:400;font-size:10.5px;color:#8FA6BF;letter-spacing:.06em;margin-top:2px;}
+
+  .steps{display:flex;flex-direction:column;gap:2px;}
+  .step-btn{
+    display:flex;align-items:flex-start;gap:12px;padding:11px 10px;border-radius:8px;
+    cursor:pointer;border:none;background:transparent;color:#B7C6D8;text-align:left;
+    font-family:'Inter';font-size:13.5px;transition:background .15s ease;
+  }
+  .step-btn:hover{background:var(--navy-900);}
+  .step-btn.active{background:var(--blue);color:#04101c;}
+  .step-btn.done .step-num{background:var(--blue);color:#04101c;}
+  .step-num{
+    width:22px;height:22px;border-radius:50%;background:var(--navy-800);color:#B7C6D8;
+    display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono';font-size:11px;flex-shrink:0;margin-top:1px;
+  }
+  .step-btn.active .step-num{background:var(--blue);color:#04101c;}
+  .step-label b{display:block;font-weight:600;}
+  .step-label small{display:block;color:#7C90A8;font-size:11.5px;margin-top:1px;}
+  .step-btn.active .step-label small{color:#B7C6D8;}
+
+  .sidebar-foot{margin-top:auto;font-size:11px;color:#5C7189;font-family:'IBM Plex Mono';line-height:1.6;border-top:1px solid var(--navy-800);padding-top:14px;}
+
+  /* ---- Main ---- */
+  .main{flex:1;padding:36px 44px 80px;max-width:980px;}
+  .panel{display:none;}
+  .panel.active{display:block;animation:fade .25s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+
+  .eyebrow{font-family:'IBM Plex Mono';font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--copper);margin-bottom:6px;font-weight:600;}
+  .panel-head{margin-bottom:28px;}
+  .panel-head p{color:var(--ink-soft);max-width:640px;margin-top:6px;}
+
+  .card{background:var(--paper-card);border:1px solid var(--line);border-radius:var(--radius);padding:22px 24px;margin-bottom:18px;}
+  .card h3{font-size:15.5px;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+
+  label.field{display:flex;flex-direction:column;gap:6px;font-size:12.5px;color:var(--ink-soft);font-weight:600;margin-bottom:14px;}
+  input,select{
+    font-family:'IBM Plex Mono';font-size:14px;color:var(--ink);
+    border:1px solid var(--line);border-radius:7px;padding:9px 11px;background:var(--paper-card);
+  }
+  input:focus,select:focus{outline:2px solid var(--copper-soft);outline-offset:1px;border-color:var(--copper);}
+  select{font-family:'Inter';}
+  .hint{font-size:11.5px;color:var(--ink-soft);font-weight:400;}
+
+  .btn{
+    font-family:'Inter';font-weight:600;font-size:13.5px;border-radius:8px;padding:11px 20px;
+    border:1.5px solid var(--blue);background:var(--blue);color:#04101c;cursor:pointer;
+  }
+  .btn.secondary{background:transparent;color:var(--ink);}
+  .btn.copper{background:var(--copper);border-color:var(--copper);}
+  .btn:disabled{opacity:.4;cursor:not-allowed;}
+  .btn-row{display:flex;gap:12px;margin-top:26px;}
+
+  table{width:100%;border-collapse:collapse;font-family:'IBM Plex Mono';font-size:12.5px;}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);}
+  th{color:var(--ink-soft);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.03em;}
+  tr.hl{background:var(--copper-tint);}
+  tr.hl td{font-weight:600;}
+  .table-wrap{max-height:340px;overflow:auto;border:1px solid var(--line);border-radius:8px;}
+
+  .callout{border-left:3px solid var(--copper);background:var(--copper-tint);padding:14px 16px;border-radius:0 8px 8px 0;font-size:13.5px;color:var(--ink);margin:16px 0;}
+  .callout.info{border-color:var(--navy-700);background:#E4EAF1;}
+  .callout.bad{border-color:var(--bad);background:#F6DEDA;}
+  .callout.good{border-color:var(--good);background:#DCF0E7;}
+
+  .result-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
+  .stat{background:var(--paper-card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;}
+  .stat span{font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;}
+  .stat b{display:block;font-family:'Space Grotesk';font-size:22px;margin-top:4px;color:var(--ink);}
+  .stat b.pass{color:var(--good);}
+  .stat b.fail{color:var(--bad);}
+  .stat b.warn{color:var(--warn);}
+
+  .export-row{display:flex;gap:12px;margin-top:22px;flex-wrap:wrap;}
+  .export-btn{
+    display:flex;align-items:center;gap:9px;border:1.5px solid var(--navy-950);border-radius:8px;
+    padding:11px 18px;background:var(--paper-card);cursor:pointer;font-weight:600;font-size:13.5px;color:var(--ink);
+  }
+  .export-btn:hover{background:var(--blue);color:#04101c;}
+
+  .report-preview{background:var(--paper-card);border:1px solid var(--line);border-radius:var(--radius);padding:34px;margin-top:22px;}
+  .report-preview h2{font-size:19px;border-bottom:2px solid var(--copper);padding-bottom:10px;margin-bottom:14px;}
+  .report-preview .sub{font-family:'IBM Plex Mono';font-size:11px;color:var(--ink-soft);margin-bottom:22px;}
+  .report-section{margin-bottom:26px;}
+  .report-section h4{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--copper);border-bottom:1px solid var(--line);padding-bottom:6px;margin-bottom:10px;}
+  .kv{display:grid;grid-template-columns:1fr 1fr;gap:6px 20px;font-size:13px;}
+  .kv div{display:flex;justify-content:space-between;border-bottom:1px dotted var(--line);padding:4px 0;}
+  .kv div span:last-child{font-family:'IBM Plex Mono';font-weight:600;color:var(--ink);}
+  .verdict{font-size:20px;font-weight:700;padding:16px 20px;border-radius:8px;margin:16px 0;}
+  .verdict.pass{background:#DCF0E7;color:#14532d;border:1px solid var(--good);}
+  .verdict.fail{background:#F6DEDA;color:#7f1d1d;border:1px solid var(--bad);}
+
+  .pill{font-family:'IBM Plex Mono';font-size:11px;background:var(--blue);color:#04101c;padding:4px 10px;border-radius:20px;}
+  .footer-note{font-size:12px;color:var(--ink-soft);line-height:1.6;margin-top:28px;border-top:1px solid var(--line);padding-top:16px;}
+
+  @media print{
+    .sidebar,.no-print{display:none !important;}
+    .main{padding:0;max-width:none;}
+    .panel{display:none !important;}
+    #printArea{display:block !important;}
+    .report-preview{border:none;padding:0;box-shadow:none;}
+    .report-page{page-break-after:always;}
+    html,body{background:#fff !important;}
+    .report-page, .report-preview, #printArea{background:#fff !important; color:#12233A !important;}
+    .report-page h1,.report-page h2,.report-page h3,.report-page h4{color:#0B1F33 !important;}
+    .report-page .kv div span:last-child{color:#0B1F33 !important;}
+    .report-page .callout{background:#F6E3CE !important; color:#0B1F33 !important;}
+    .report-page .sub{color:#4C6079 !important;}
+    .verdict.pass{background:#DCF0E7 !important;color:#14532d !important;}
+    .verdict.fail{background:#F6DEDA !important;color:#7f1d1d !important;}
+  }
+  #printArea{display:none;}
+
+  @media (max-width:780px){
+    .app{flex-direction:column;min-height:0;}
+    .sidebar{width:100%;flex-shrink:1;padding:16px 16px 14px;gap:14px;}
+    .steps{flex-direction:row;flex-wrap:wrap;gap:6px;}
+    .step-btn{flex:1 1 auto;padding:8px 9px;font-size:12px;gap:8px;}
+    .step-label small{display:none;}
+    .sidebar-foot{display:none;}
+    .main{padding:18px 14px 60px;max-width:none;}
+    .grid2,.grid3{grid-template-columns:1fr;gap:10px;}
+    .result-summary{grid-template-columns:repeat(2,1fr);gap:10px;}
+    .card{padding:16px;}
+    .kv{grid-template-columns:1fr;gap:4px 0;}
+  }
+
+  .lang-switch{display:flex;align-items:center;background:var(--navy-900);border:1px solid var(--navy-800);border-radius:16px;padding:3px;gap:2px;font-family:'IBM Plex Mono';font-size:11px;}
+  .lang-switch button{border:none;background:transparent;color:#B7C6D8;padding:5px 12px;border-radius:13px;cursor:pointer;font-family:inherit;font-size:inherit;}
+  .lang-switch button.active{background:var(--blue);color:#04101c;font-weight:700;}
+  .home-link{font-family:'IBM Plex Mono';font-size:11px;color:#7C90A8;text-decoration:none;border-bottom:1px dotted #7C90A8;}
+  .home-link:hover{color:var(--copper-soft);}
+  .brand-row{display:flex;align-items:center;justify-content:space-between;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar no-print">
+    <div class="brand-row">
+      <div class="brand">
+        <div class="brand-mark">Sp</div>
+        <div class="brand-text" id="brandText">Sprinkler Hydraulics — NFPA 13 (Simplified)
+          <span>NFPA 13 · Hazen-Williams</span>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+      <a class="home-link no-print" href="index.html">← OhmZone</a>
+      <div class="lang-switch no-print" role="group" aria-label="Language">
+        <button type="button" id="btn-en" class="active" onclick="setLang('en')">EN</button>
+        <button type="button" id="btn-fr" onclick="setLang('fr')">FR</button>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+      <span style="font-family:'IBM Plex Mono';font-size:11px;color:#7C90A8;" id="unitLabel">Units</span>
+      <div class="lang-switch no-print" role="group" aria-label="Units">
+        <button type="button" id="btn-us" class="active" onclick="setUnit('US')">US</button>
+        <button type="button" id="btn-si" onclick="setUnit('SI')">SI</button>
+      </div>
+    </div>
+    <div class="steps" id="stepNav"></div>
+    <div class="sidebar-foot" id="sidebarFoot">
+      Simplified screening calculation per NFPA 13 (2022). Not a full hydraulic program — final design by a qualified fire-protection engineer, approved by the authority having jurisdiction (AHJ).
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- STEP 1: REFERENCE -->
+    <div class="panel" id="panel-0">
+      <div class="panel-head">
+        <div class="eyebrow" id="p0-eyebrow">01 · Reference</div>
+        <h1 id="p0-h1">Sprinkler hydraulics under NFPA 13 (simplified)</h1>
+        <p id="p0-intro">This page opens every generated report. It sets out the density/area method, the sprinkler discharge equation and the Hazen-Williams friction formula this tool uses.</p>
+      </div>
+
+      <div class="card">
+        <h3 id="p0-h3a">Density / area design basis — NFPA 13 Table 19.2.3.1.1 / 19.2.3.1.2</h3>
+        <div class="table-wrap" style="max-height:none;">
+          <table>
+            <tr><th id="p0-th-haz">Hazard class</th><th id="p0-th-den">Design density</th><th id="p0-th-area">Remote area</th><th id="p0-th-hose">Hose stream allowance</th></tr>
+            <tr><td id="p0-r-lh">Light Hazard (LH)</td><td class="mono">0.10 gpm/ft²</td><td class="mono">1500 ft²</td><td class="mono">100 gpm</td></tr>
+            <tr><td id="p0-r-oh1">Ordinary Hazard Group 1 (OH1)</td><td class="mono">0.15 gpm/ft²</td><td class="mono">1500 ft²</td><td class="mono">250 gpm</td></tr>
+            <tr><td id="p0-r-oh2">Ordinary Hazard Group 2 (OH2)</td><td class="mono">0.20 gpm/ft²</td><td class="mono">1500 ft²</td><td class="mono">250 gpm</td></tr>
+            <tr><td id="p0-r-eh">Extra Hazard (EH)</td><td class="mono">0.30 gpm/ft²</td><td class="mono">2500 ft²</td><td class="mono">500 gpm</td></tr>
+          </table>
+        </div>
+        <p style="margin-top:12px;" id="p0-pa">The remote-area flow is <span class="mono">Q<sub>remote</sub> = density × area</span>. The number of heads operating is <span class="mono">N = ceil(area ÷ spacing area per head)</span>, and each head is assumed to flow uniformly at <span class="mono">Q<sub>head</sub> = density × area per head</span>. The system demand at the riser is <span class="mono">Q<sub>remote</sub> + Q<sub>hose</sub></span>.</p>
+      </div>
+
+      <div class="card">
+        <h3 id="p0-h3b">Formulas used</h3>
+        <div class="table-wrap" style="max-height:none;">
+          <table>
+            <tr><th id="p0-th-qty">Quantity</th><th id="p0-th-form">Formula</th></tr>
+            <tr><td id="p0-f1">Sprinkler discharge</td><td class="mono">Q = K·√P &nbsp;·&nbsp; P = (Q/K)²</td></tr>
+            <tr><td id="p0-f2">Hazen-Williams friction (US)</td><td class="mono">p = 4.52·Q^1.85 / (C^1.85 · d^4.87) psi/ft &nbsp;·&nbsp; ΔP = p·L</td></tr>
+            <tr><td id="p0-f3">Hazen-Williams friction (SI)</td><td class="mono">p = 6.05·Q^1.85 / (C^1.85 · d^4.87) bar/m &nbsp;·&nbsp; ΔP = p·L</td></tr>
+            <tr><td id="p0-f4">Elevation pressure</td><td class="mono">ΔP = 0.433·Δz psi (Δz in ft) &nbsp;·&nbsp; ΔP = 0.0981·Δz bar (Δz in m)</td></tr>
+            <tr><td id="p0-f5">Velocity</td><td class="mono">V = 0.408·Q/d² ft/s &nbsp;·&nbsp; V = 21.22·Q/d² m/s</td></tr>
+          </table>
+        </div>
+        <p style="margin-top:12px;" id="p0-pb">US units: Q in gpm, P in psi, K in gpm/psi^0.5, d = actual internal pipe diameter in inches, L in ft. SI units: Q in L/min, P in bar, K in L/min/bar^0.5, d in mm, L in m. Minimum operating pressure at any sprinkler: <b>7 psi (0.5 bar)</b> per NFPA 13.</p>
+        <div class="callout" id="p0-callout"><b id="p0-callout-b">K-factors (US / metric):</b> <span id="p0-callout-rest">2.8 / 40 (residential ½ in), 5.6 / 80 (standard spray ½ in), 8.0 / 115, 11.2 / 160, 14.0 / 200, 25.2 / 360 (large orifice).</span></div>
+        <p id="p0-pc">Hazen-Williams C-factors (NFPA 13): unlined cast iron 100, black steel 120, galvanized steel 120, cement-lined ductile iron 140, copper / plastic / CPVC 150. Steel Schedule 40 internal diameters (in): 1 → 1.049, 1¼ → 1.380, 1½ → 1.610, 2 → 2.067, 2½ → 2.469, 3 → 3.068, 4 → 4.026, 6 → 6.065, 8 → 7.981 (ASTM A53 Sch 40; metric = inches × 25.4).</p>
+      </div>
+
+      <div class="callout bad" id="p0-simplify">
+        <b id="p0-simplify-b">Simplified screening calculation — read before use.</b>
+        <span id="p0-simplify-rest"> This tool models a single remote area with uniform per-head flow and ONE main pipe run from the riser to the remote area carrying the full remote-area flow, plus the head pressure at the most remote sprinkler. It does no branch-line balancing, no node-by-node network solution and no equivalent-length fitting calculation (enter fitting losses as device loss if needed). It is a screening check, not a full hydraulic program. Final design must be by a qualified fire-protection engineer and approved by the AHJ.</span>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn copper" id="p0-start-btn" onclick="goStep(1)">Start a calculation →</button>
+      </div>
+    </div>
+
+    <!-- STEP 2: DESIGN BASIS -->
+    <div class="panel" id="panel-1">
+      <div class="panel-head">
+        <div class="eyebrow" id="p1-eyebrow">02 · Design basis</div>
+        <h1 id="p1-h1">Design basis — hazard, sprinkler &amp; spacing</h1>
+        <p id="p1-intro">Choose the hazard class to load the NFPA 13 density, remote area and hose stream allowance, then set the sprinkler and its spacing. Density, area and hose values can be edited after the hazard is chosen.</p>
+      </div>
+
+      <div class="card">
+        <h3 id="p1-h3a">Hazard class</h3>
+        <label class="field" id="p1-haz-label">Hazard class (NFPA 13 Table 19.2.3.1.1)
+          <select id="in_hazard" onchange="onHazardChange()"></select>
+        </label>
+        <div class="grid3">
+          <label class="field"><span id="p1-den-label">Design density</span>
+            <input type="number" id="in_density" min="0.01" step="0.01">
+          </label>
+          <label class="field"><span id="p1-area-label">Remote area</span>
+            <input type="number" id="in_area" min="1" step="1">
+          </label>
+          <label class="field"><span id="p1-hose-label">Hose stream allowance</span>
+            <input type="number" id="in_hose" min="0" step="1">
+          </label>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <h3 id="p1-h3b">Sprinkler</h3>
+          <label class="field"><span id="p1-k-label">K-factor</span>
+            <select id="in_k"></select>
+          </label>
+          <p class="hint" id="p1-k-hint">Minimum operating pressure at any sprinkler: 7 psi (0.5 bar) per NFPA 13.</p>
+        </div>
+        <div class="card">
+          <h3 id="p1-h3c">Spacing</h3>
+          <div class="grid2">
+            <label class="field"><span id="p1-spar-label">Spacing — along branch line</span>
+              <input type="number" id="in_spar" min="0.1" step="0.1">
+            </label>
+            <label class="field"><span id="p1-sperp-label">Spacing — between branch lines</span>
+              <input type="number" id="in_sperp" min="0.1" step="0.1">
+            </label>
+          </div>
+          <p class="hint" id="p1-spacing-hint">Area per head = spacing × spacing. Heads operating N = ceil(remote area ÷ area per head).</p>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn secondary" id="p1-back-btn" onclick="goStep(0)">← Back</button>
+        <button class="btn copper" id="toStep2" onclick="goStep(2)">Pipe run &amp; water supply →</button>
+      </div>
+    </div>
+
+    <!-- STEP 3: PIPE RUN + SUPPLY -->
+    <div class="panel" id="panel-2">
+      <div class="panel-head">
+        <div class="eyebrow" id="p2-eyebrow">03 · Pipe run &amp; water supply</div>
+        <h1 id="p2-h1">Pipe run from riser to remote area</h1>
+        <p id="p2-intro">Each segment carries the full remote-area flow in this simplified model. Elevation is positive upward (a rise costs pressure). Add device losses such as a backflow preventer as a single lumped value.</p>
+      </div>
+
+      <div class="card">
+        <h3 id="p2-h3a">Pipe segments (riser → most remote sprinkler)</h3>
+        <div class="table-wrap" style="max-height:none;">
+          <table id="segTable"></table>
+        </div>
+        <div class="btn-row" style="margin-top:14px;">
+          <button class="btn secondary" id="addSegBtn" onclick="addSegment()">+ Add segment</button>
+        </div>
+        <p class="hint" id="p2-seg-note" style="margin-top:10px;">Simplification: one main run carrying the full remote-area flow Q_remote. Branch-line balancing is not modelled.</p>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <h3 id="p2-h3b">Device losses</h3>
+          <label class="field"><span id="p2-dev-label">Device losses (backflow preventer, alarm valve, etc.)</span>
+            <input type="number" id="in_device" min="0" step="0.1">
+          </label>
+        </div>
+        <div class="card">
+          <h3 id="p2-h3c">Available water supply</h3>
+          <label class="field"><span id="p2-supply-label">Available supply pressure at the riser</span>
+            <input type="number" id="in_supply" min="0" step="0.1">
+          </label>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn secondary" id="p2-back-btn" onclick="goStep(1)">← Back</button>
+        <button class="btn copper" id="p2-calc-btn" onclick="runCalculation()">Calculate →</button>
+      </div>
+    </div>
+
+    <!-- STEP 4: RESULTS -->
+    <div class="panel" id="panel-3">
+      <div class="panel-head">
+        <div class="eyebrow" id="p3-eyebrow">04 · Results &amp; report</div>
+        <h1 id="p3-h1">Results</h1>
+      </div>
+
+      <div id="resultsArea"></div>
+
+      <div class="card no-print">
+        <h3 id="p3-h3a">Export report</h3>
+        <p style="color:var(--ink-soft);font-size:13px;" id="p3-exportnote">The report opens with the NFPA 13 reference page from Step 1, followed by your design basis, pipe run and results.</p>
+        <div class="export-row">
+          <button class="export-btn" onclick="printReport()" id="p3-print-btn">🖨 Print / Save as PDF</button>
+          <button class="export-btn" onclick="exportExcel()" id="p3-excel-btn">📊 Download Excel (.xlsx)</button>
+        </div>
+      </div>
+
+      <div class="report-preview" id="reportPreview"></div>
+
+      <div class="btn-row no-print">
+        <button class="btn secondary" id="p3-back-btn" onclick="goStep(2)">← Adjust inputs</button>
+      </div>
+
+      <div class="footer-note" id="footerNote">
+        Sources: NFPA 13 (2022) §19.2.3 density/area (Tables 19.2.3.1.1 / 19.2.3.1.2), §27.2 / §28.2 K-factor and Hazen-Williams. Simplified screening calculation — single remote area, uniform per-head flow, no branch-line balancing — not a full hydraulic program. Final design by a qualified fire-protection engineer, approved by the AHJ.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="printArea"></div>
+
+<script>
+/* =====================================================================
+   PURE CALCULATION ENGINE — no DOM access in this section.
+   Canonical internal units are US: psi, gpm, ft, in.
+   SI display is a conversion of the US result (formulas are equivalent).
+===================================================================== */
+const HAZARDS = {
+  LH:  {density:0.10, area:1500, hose:100},
+  OH1: {density:0.15, area:1500, hose:250},
+  OH2: {density:0.20, area:1500, hose:250},
+  EH:  {density:0.30, area:2500, hose:500}
+};
+/* K-factor pairs: US K (gpm/psi^0.5) / metric K (L/min/bar^0.5) */
+const K_OPTIONS = [
+  {us:2.8,  si:40,  desc:'residential 1/2 in'},
+  {us:5.6,  si:80,  desc:'standard spray 1/2 in'},
+  {us:8.0,  si:115, desc:'standard spray'},
+  {us:11.2, si:160, desc:'large orifice'},
+  {us:14.0, si:200, desc:'large orifice'},
+  {us:25.2, si:360, desc:'large orifice'}
+];
+/* Steel Schedule 40 actual internal diameters, inches (ASTM A53 Sch 40) */
+const PIPE_ID_IN = {
+  '1':1.049, '1-1/4':1.380, '1-1/2':1.610, '2':2.067,
+  '2-1/2':2.469, '3':3.068, '4':4.026, '6':6.065, '8':7.981
+};
+const C_FACTORS = [
+  {v:100, label:'Unlined cast iron'},
+  {v:120, label:'Black steel'},
+  {v:120, label:'Galvanized steel'},
+  {v:140, label:'Cement-lined ductile iron'},
+  {v:150, label:'Copper / plastic / CPVC'}
+];
+const MIN_HEAD_PSI = 7;
+const VEL_CAUTION_FPS = 20;
+
+/* Sprinkler discharge: Q = K*sqrt(P); P = (Q/K)^2 */
+function headPressurePsi(qHeadGpm, kUs){ return Math.pow(qHeadGpm / kUs, 2); }
+/* Hazen-Williams friction gradient, psi per ft (US formula) */
+function frictionPsiPerFt(qGpm, cFactor, dIn){
+  return 4.52 * Math.pow(qGpm, 1.85) / (Math.pow(cFactor, 1.85) * Math.pow(dIn, 4.87));
+}
+/* Elevation pressure loss, psi (positive upward = loss) */
+function elevationPsi(dzFt){ return 0.433 * dzFt; }
+/* Velocity, ft/s */
+function velocityFps(qGpm, dIn){ return 0.408 * qGpm / (dIn * dIn); }
+
+/* Full simplified calculation. All inputs/outputs canonical US units.
+   segments: [{diam:'3', length:ft, C:120, elev:ft}] — each carries Q_remote. */
+function computeSprinkler(inp){
+  const density = inp.density, area = inp.area, hose = inp.hose, K = inp.K;
+  const qRemote = density * area;
+  const areaHead = inp.sPar * inp.sPerp;
+  const nHeads = Math.ceil(area / areaHead);
+  const qHead = density * areaHead;
+  const pHead = headPressurePsi(qHead, K);
+  const headOk = pHead >= MIN_HEAD_PSI - 1e-9;
+  const qDemand = qRemote + hose;
+  let totFriction = 0, totElevation = 0;
+  const segs = inp.segments.map(function(s){
+    const d = PIPE_ID_IN[s.diam];
+    const pPerFt = frictionPsiPerFt(qRemote, s.C, d);
+    const dP = pPerFt * s.length;
+    const elevP = elevationPsi(s.elev);
+    const vel = velocityFps(qRemote, d);
+    totFriction += dP;
+    totElevation += elevP;
+    return {diam:s.diam, dIn:d, length:s.length, C:s.C, elev:s.elev,
+      pPerFt:pPerFt, dP:dP, elevP:elevP, vel:vel, velCaution: vel > VEL_CAUTION_FPS};
+  });
+  const required = pHead + totFriction + totElevation + inp.deviceLoss;
+  const margin = inp.supply - required;
+  const pass = margin >= 0 && headOk;
+  return {
+    density:density, area:area, hose:hose, K:K,
+    qRemote:qRemote, areaHead:areaHead, nHeads:nHeads,
+    qHead:qHead, pHead:pHead, headOk:headOk,
+    qDemand:qDemand, segments:segs,
+    totFriction:totFriction, totElevation:totElevation,
+    deviceLoss:inp.deviceLoss, required:required,
+    supply:inp.supply, margin:margin, pass:pass
+  };
+}
+/* __UI_START__ */
+
+/* ===================== STATE ===================== */
+const state = {
+  step:0,
+  hazard:'OH1',
+  density:0.15, area:1500, hose:250, K:5.6,
+  sPar:12, sPerp:12,               /* ft, canonical */
+  segments:[
+    {diam:'3', length:100, C:120, elev:10},
+    {diam:'2', length:50,  C:120, elev:0}
+  ],
+  deviceLoss:0, supply:60,        /* psi, canonical */
+  result:null
+};
+
+let currentLang = 'en';
+let currentUnit = 'US';           /* 'US' | 'SI' */
+
+/* ---- unit conversions (canonical US <-> display) ---- */
+const PSI_PER_BAR = 0.0689476;
+const GPM_PER_LPM = 1/3.78541;
+const FT_PER_M = 1/0.3048;
+function dispPressure(psi){ return currentUnit==='US' ? psi : psi * PSI_PER_BAR; }
+function canonPressure(v){ return currentUnit==='US' ? v : v / PSI_PER_BAR; }
+function dispFlow(gpm){ return currentUnit==='US' ? gpm : gpm * 3.78541; }
+function dispLength(ft){ return currentUnit==='US' ? ft : ft * 0.3048; }
+function canonLength(v){ return currentUnit==='US' ? v : v / 0.3048; }
+function dispDensity(d){ return currentUnit==='US' ? d : d * 40.746; }
+function canonDensity(v){ return currentUnit==='US' ? v : v / 40.746; }
+function dispArea(a){ return currentUnit==='US' ? a : a * 0.092903; }
+function canonArea(v){ return currentUnit==='US' ? v : v / 0.092903; }
+function dispDiamIn(dIn){ return currentUnit==='US' ? dIn : dIn * 25.4; }
+function dispVel(fps){ return currentUnit==='US' ? fps : fps * 0.3048; }
+function unitPressure(){ return currentUnit==='US' ? 'psi' : 'bar'; }
+function unitFlow(){ return currentUnit==='US' ? 'gpm' : 'L/min'; }
+function unitLength(){ return currentUnit==='US' ? 'ft' : 'm'; }
+function unitDiam(){ return currentUnit==='US' ? 'in' : 'mm'; }
+function unitVel(){ return currentUnit==='US' ? 'ft/s' : 'm/s'; }
+function unitDensity(){ return currentUnit==='US' ? 'gpm/ft²' : 'L/min/m²'; }
+function unitArea(){ return currentUnit==='US' ? 'ft²' : 'm²'; }
+function round2(v){ return Math.round(v*100)/100; }
+function fmt(v, dp){ return (dp===undefined?2:dp)===0 ? String(Math.round(v)) : v.toFixed(dp===undefined?2:dp); }
+
+const STEPS_I18N = {
+  en: [
+    {label:"NFPA 13 Reference", sub:"Density/area · formulas"},
+    {label:"Design Basis", sub:"Hazard · K-factor · spacing"},
+    {label:"Pipe Run & Supply", sub:"Segments · elevation · supply"},
+    {label:"Results & Report", sub:"Export PDF / Excel"},
+  ],
+  fr: [
+    {label:"Référence NFPA 13", sub:"Densité/surface · formules"},
+    {label:"Base de conception", sub:"Risque · facteur K · espacement"},
+    {label:"Canalisation et alimentation", sub:"Tronçons · élévation · alimentation"},
+    {label:"Résultats et rapport", sub:"Export PDF / Excel"},
+  ]
+};
+function STEPS(){ return STEPS_I18N[currentLang]; }
+
+/* ===================== I18N ===================== */
+const UI = {
+  en: {
+    brandLine1:"Sprinkler Hydraulics — NFPA 13 (Simplified)", brandLine2:"NFPA 13 · Hazen-Williams",
+    sidebarFoot:"Simplified screening calculation per NFPA 13 (2022). Not a full hydraulic program — final design by a qualified fire-protection engineer, approved by the authority having jurisdiction (AHJ).",
+    unitLabel:"Units",
+    p0eyebrow:"01 · Reference", p0h1:"Sprinkler hydraulics under NFPA 13 (simplified)",
+    p0intro:"This page opens every generated report. It sets out the density/area method, the sprinkler discharge equation and the Hazen-Williams friction formula this tool uses.",
+    p0h3a:"Density / area design basis — NFPA 13 Table 19.2.3.1.1 / 19.2.3.1.2",
+    p0thHaz:"Hazard class", p0thDen:"Design density", p0thArea:"Remote area", p0thHose:"Hose stream allowance",
+    p0rLh:"Light Hazard (LH)", p0rOh1:"Ordinary Hazard Group 1 (OH1)", p0rOh2:"Ordinary Hazard Group 2 (OH2)", p0rEh:"Extra Hazard (EH)",
+    p0pa:"The remote-area flow is Q_remote = density × area. The number of heads operating is N = ceil(area ÷ spacing area per head), and each head is assumed to flow uniformly at Q_head = density × area per head. The system demand at the riser is Q_remote + Q_hose.",
+    p0h3b:"Formulas used",
+    p0thQty:"Quantity", p0thForm:"Formula",
+    p0f1:"Sprinkler discharge", p0f2:"Hazen-Williams friction (US)", p0f3:"Hazen-Williams friction (SI)", p0f4:"Elevation pressure", p0f5:"Velocity",
+    p0pb:"US units: Q in gpm, P in psi, K in gpm/psi^0.5, d = actual internal pipe diameter in inches, L in ft. SI units: Q in L/min, P in bar, K in L/min/bar^0.5, d in mm, L in m. Minimum operating pressure at any sprinkler: 7 psi (0.5 bar) per NFPA 13.",
+    p0calloutB:"K-factors (US / metric):",
+    p0calloutRest:"2.8 / 40 (residential ½ in), 5.6 / 80 (standard spray ½ in), 8.0 / 115, 11.2 / 160, 14.0 / 200, 25.2 / 360 (large orifice).",
+    p0pc:"Hazen-Williams C-factors (NFPA 13): unlined cast iron 100, black steel 120, galvanized steel 120, cement-lined ductile iron 140, copper / plastic / CPVC 150. Steel Schedule 40 internal diameters (in): 1 → 1.049, 1¼ → 1.380, 1½ → 1.610, 2 → 2.067, 2½ → 2.469, 3 → 3.068, 4 → 4.026, 6 → 6.065, 8 → 7.981 (ASTM A53 Sch 40; metric = inches × 25.4).",
+    p0simplifyB:"Simplified screening calculation — read before use.",
+    p0simplifyRest:" This tool models a single remote area with uniform per-head flow and ONE main pipe run from the riser to the remote area carrying the full remote-area flow, plus the head pressure at the most remote sprinkler. It does no branch-line balancing, no node-by-node network solution and no equivalent-length fitting calculation (enter fitting losses as device loss if needed). It is a screening check, not a full hydraulic program. Final design must be by a qualified fire-protection engineer and approved by the AHJ.",
+    p0startBtn:"Start a calculation →",
+    p1eyebrow:"02 · Design basis", p1h1:"Design basis — hazard, sprinkler & spacing",
+    p1intro:"Choose the hazard class to load the NFPA 13 density, remote area and hose stream allowance, then set the sprinkler and its spacing. Density, area and hose values can be edited after the hazard is chosen.",
+    p1h3a:"Hazard class", p1hazLabel:"Hazard class (NFPA 13 Table 19.2.3.1.1)",
+    p1denLabel:"Design density", p1areaLabel:"Remote area", p1hoseLabel:"Hose stream allowance",
+    p1h3b:"Sprinkler", p1kLabel:"K-factor",
+    p1kHint:"Minimum operating pressure at any sprinkler: 7 psi (0.5 bar) per NFPA 13.",
+    p1h3c:"Spacing", p1sparLabel:"Spacing — along branch line", p1sperpLabel:"Spacing — between branch lines",
+    p1spacingHint:"Area per head = spacing × spacing. Heads operating N = ceil(remote area ÷ area per head).",
+    backBtn:"← Back", toStep2Btn:"Pipe run & water supply →",
+    p2eyebrow:"03 · Pipe run & water supply", p2h1:"Pipe run from riser to remote area",
+    p2intro:"Each segment carries the full remote-area flow in this simplified model. Elevation is positive upward (a rise costs pressure). Add device losses such as a backflow preventer as a single lumped value.",
+    p2h3a:"Pipe segments (riser → most remote sprinkler)",
+    p2segNote:"Simplification: one main run carrying the full remote-area flow Q_remote. Branch-line balancing is not modelled.",
+    addSegBtn:"+ Add segment",
+    p2h3b:"Device losses", p2devLabel:"Device losses (backflow preventer, alarm valve, etc.)",
+    p2h3c:"Available water supply", p2supplyLabel:"Available supply pressure at the riser",
+    calcBtn:"Calculate →",
+    p3eyebrow:"04 · Results & report", p3h1:"Results", p3h3a:"Export report",
+    p3exportnote:"The report opens with the NFPA 13 reference page from Step 1, followed by your design basis, pipe run and results.",
+    printBtn:"🖨 Print / Save as PDF", excelBtn:"📊 Download Excel (.xlsx)",
+    adjustBtn:"← Adjust inputs",
+    thSeg:"#", thDiam:"Diameter", thLen:"Length", thC:"C-factor", thElev:"Elevation Δz", thRemove:"",
+    thFric:"Friction / unit length", thFricLoss:"Friction loss", thElevLoss:"Elevation loss", thVel:"Velocity",
+    stDensity:"Design density", stArea:"Remote area", stHeads:"Heads operating", stQremote:"Remote-area flow",
+    stQhead:"Flow per head", stPhead:"Pressure at most remote head", stQdemand:"System demand at riser",
+    stFriction:"Total friction loss", stElevation:"Total elevation loss", stRequired:"Required pressure at riser",
+    stSupply:"Available supply", stMargin:"Margin (supply − required)",
+    passVerdict:"PASS — available supply meets the required riser pressure.",
+    failVerdict:"FAIL — required riser pressure exceeds the available supply.",
+    headFail:"Most remote head pressure is below the 7 psi (0.5 bar) minimum required by NFPA 13 — increase the K-factor, the density or the spacing area per head, or reduce the number of heads per area.",
+    headOk:"Most remote head pressure meets the NFPA 13 minimum of 7 psi (0.5 bar).",
+    velWarn:"Velocity above 20 ft/s (6 m/s) in one or more segments. NFPA 13 sets no maximum velocity — this is a common project-specification caution, not a code failure. Review with the project specification before proceeding.",
+    velOk:"Velocities are within the common 20 ft/s (6 m/s) project-specification caution threshold.",
+    segTableTitle:"Pipe segment results — each segment carries the full remote-area flow",
+    demandTitle:"Demand summary",
+    checksTitle:"Checks",
+    alertInputs:"Check the inputs: density, area, K-factor, spacing and supply pressure must all be greater than 0, and at least one pipe segment is required.",
+    repTitle1:"Sprinkler Hydraulics Reference — NFPA 13 (Simplified)", repGenerated:"Generated",
+    repWhyChecked:"Design basis (NFPA 13 §19.2.3)",
+    repWhyBody:"Density/area design per NFPA 13 Table 19.2.3.1.1, hose stream allowance per Table 19.2.3.1.2, sprinkler discharge Q = K·√P and Hazen-Williams friction per §27.2 / §28.2. Minimum operating pressure at any sprinkler: 7 psi (0.5 bar).",
+    repFormulaUsed:"Formulas used",
+    repFormulaLine:"Q = K·√P · P = (Q/K)² | US friction: p = 4.52·Q^1.85/(C^1.85·d^4.87) psi/ft | Elevation: ΔP = 0.433·Δz psi | Velocity: V = 0.408·Q/d² ft/s",
+    repTitle2:"Design Basis & Pipe Run", repTitle3:"Calculation Result",
+    repDisclaimer:"Disclaimer & sources",
+    repDisclaimerBody:"Sources: NFPA 13 (2022) §19.2.3 density/area (Tables 19.2.3.1.1 / 19.2.3.1.2), §27.2 / §28.2 K-factor and Hazen-Williams. Simplified screening calculation — single remote area, uniform per-head flow, no branch-line balancing — not a full hydraulic program. Final design by a qualified fire-protection engineer, approved by the AHJ.",
+    repHazard:"Hazard class", repDensity:"Design density", repArea:"Remote area", repHose:"Hose stream allowance",
+    repK:"K-factor", repSpacing:"Spacing (along × between)", repDevice:"Device losses", repSupply:"Available supply pressure",
+    xlsCalculation:"Calculation", xlsSegments:"Segments", xlsReference:"Reference",
+    xlsParam:"Parameter", xlsValue:"Value",
+    footerNote:"Sources: NFPA 13 (2022) §19.2.3 density/area (Tables 19.2.3.1.1 / 19.2.3.1.2), §27.2 / §28.2 K-factor and Hazen-Williams. Simplified screening calculation — single remote area, uniform per-head flow, no branch-line balancing — not a full hydraulic program. Final design by a qualified fire-protection engineer, approved by the AHJ.",
+    hazLH:"Light Hazard (LH)", hazOH1:"Ordinary Hazard Group 1 (OH1)", hazOH2:"Ordinary Hazard Group 2 (OH2)", hazEH:"Extra Hazard (EH)"
+  },
+  fr: {
+    brandLine1:"Hydraulique des gicleurs — NFPA 13 (simplifiée)", brandLine2:"NFPA 13 · Hazen-Williams",
+    sidebarFoot:"Calcul de présélection simplifié selon la norme NFPA 13 (2022). Ce n'est pas un programme hydraulique complet — la conception finale doit être réalisée par un ingénieur qualifié en protection incendie et approuvée par l'autorité compétente (AHJ).",
+    unitLabel:"Unités",
+    p0eyebrow:"01 · Référence", p0h1:"Hydraulique des gicleurs selon la norme NFPA 13 (simplifiée)",
+    p0intro:"Cette page ouvre chaque rapport généré. Elle présente la méthode densité/surface, l'équation de débit du gicleur et la formule de perte de charge de Hazen-Williams utilisées par cet outil.",
+    p0h3a:"Base de conception densité / surface — NFPA 13, tableaux 19.2.3.1.1 / 19.2.3.1.2",
+    p0thHaz:"Classe de risque", p0thDen:"Densité de conception", p0thArea:"Surface éloignée", p0thHose:"Débit des lances",
+    p0rLh:"Risque léger (LH)", p0rOh1:"Risque ordinaire groupe 1 (OH1)", p0rOh2:"Risque ordinaire groupe 2 (OH2)", p0rEh:"Risque aggravé (EH)",
+    p0pa:"Le débit de la surface éloignée est Q_éloignée = densité × surface. Le nombre de têtes en fonctionnement est N = ceil(surface ÷ surface par tête), et chaque tête est supposée débiter uniformément Q_tête = densité × surface par tête. La demande du système à la colonne montante est Q_éloignée + Q_lances.",
+    p0h3b:"Formules utilisées",
+    p0thQty:"Grandeur", p0thForm:"Formule",
+    p0f1:"Débit du gicleur", p0f2:"Perte de charge Hazen-Williams (US)", p0f3:"Perte de charge Hazen-Williams (SI)", p0f4:"Pression d'élévation", p0f5:"Vitesse",
+    p0pb:"Unités US : Q en gpm, P en psi, K en gpm/psi^0,5, d = diamètre intérieur réel de la tuyauterie en pouces, L en pi. Unités SI : Q en L/min, P en bar, K en L/min/bar^0,5, d en mm, L en m. Pression minimale de fonctionnement à tout gicleur : 7 psi (0,5 bar) selon la norme NFPA 13.",
+    p0calloutB:"Facteurs K (US / métrique) :",
+    p0calloutRest:"2,8 / 40 (résidentiel ½ po), 5,6 / 80 (pulvérisation standard ½ po), 8,0 / 115, 11,2 / 160, 14,0 / 200, 25,2 / 360 (grand orifice).",
+    p0pc:"Facteurs C de Hazen-Williams (NFPA 13) : fonte non revêtue 100, acier noir 120, acier galvanisé 120, fonte ductile revêtue de ciment 140, cuivre / plastique / CPVC 150. Diamètres intérieurs de l'acier céd. 40 (po) : 1 → 1,049, 1¼ → 1,380, 1½ → 1,610, 2 → 2,067, 2½ → 2,469, 3 → 3,068, 4 → 4,026, 6 → 6,065, 8 → 7,981 (ASTM A53 céd. 40; métrique = pouces × 25,4).",
+    p0simplifyB:"Calcul de présélection simplifié — à lire avant utilisation.",
+    p0simplifyRest:" Cet outil modélise une seule surface éloignée avec un débit uniforme par tête et UNE seule conduite principale de la colonne montante jusqu'à la surface éloignée, transportant tout le débit de la surface éloignée, plus la pression à la tête la plus éloignée. Il ne fait aucun équilibrage des ramifications, aucune résolution nodale du réseau et aucun calcul de longueur équivalente des raccords (inscrivez les pertes des raccords dans les pertes d'appareils au besoin). Il s'agit d'un contrôle de présélection, et non d'un programme hydraulique complet. La conception finale doit être réalisée par un ingénieur qualifié en protection incendie et approuvée par l'AHJ.",
+    p0startBtn:"Commencer un calcul →",
+    p1eyebrow:"02 · Base de conception", p1h1:"Base de conception — risque, gicleur et espacement",
+    p1intro:"Choisissez la classe de risque pour charger la densité, la surface éloignée et le débit des lances de la norme NFPA 13, puis définissez le gicleur et son espacement. La densité, la surface et le débit des lances peuvent être modifiés après le choix du risque.",
+    p1h3a:"Classe de risque", p1hazLabel:"Classe de risque (NFPA 13, tableau 19.2.3.1.1)",
+    p1denLabel:"Densité de conception", p1areaLabel:"Surface éloignée", p1hoseLabel:"Débit des lances",
+    p1h3b:"Gicleur", p1kLabel:"Facteur K",
+    p1kHint:"Pression minimale de fonctionnement à tout gicleur : 7 psi (0,5 bar) selon la norme NFPA 13.",
+    p1h3c:"Espacement", p1sparLabel:"Espacement — le long de la ramification", p1sperpLabel:"Espacement — entre les ramifications",
+    p1spacingHint:"Surface par tête = espacement × espacement. Têtes en fonctionnement N = ceil(surface éloignée ÷ surface par tête).",
+    backBtn:"← Retour", toStep2Btn:"Canalisation et alimentation →",
+    p2eyebrow:"03 · Canalisation et alimentation", p2h1:"Canalisation de la colonne montante à la surface éloignée",
+    p2intro:"Chaque tronçon transporte tout le débit de la surface éloignée dans ce modèle simplifié. L'élévation est positive vers le haut (une montée coûte de la pression). Ajoutez les pertes d'appareils, comme un clapet anti-retour, en une seule valeur globale.",
+    p2h3a:"Tronçons de tuyauterie (colonne montante → gicleur le plus éloigné)",
+    p2segNote:"Simplification : une seule conduite principale transportant tout le débit de la surface éloignée Q_éloignée. L'équilibrage des ramifications n'est pas modélisé.",
+    addSegBtn:"+ Ajouter un tronçon",
+    p2h3b:"Pertes d'appareils", p2devLabel:"Pertes d'appareils (clapet anti-retour, clapet d'alarme, etc.)",
+    p2h3c:"Alimentation en eau disponible", p2supplyLabel:"Pression d'alimentation disponible à la colonne montante",
+    calcBtn:"Calculer →",
+    p3eyebrow:"04 · Résultats et rapport", p3h1:"Résultats", p3h3a:"Exporter le rapport",
+    p3exportnote:"Le rapport s'ouvre avec la page de référence NFPA 13 de l'étape 1, suivie de votre base de conception, de votre canalisation et des résultats.",
+    printBtn:"🖨 Imprimer / Enregistrer en PDF", excelBtn:"📊 Télécharger en Excel (.xlsx)",
+    adjustBtn:"← Ajuster les données",
+    thSeg:"N°", thDiam:"Diamètre", thLen:"Longueur", thC:"Facteur C", thElev:"Élévation Δz", thRemove:"",
+    thFric:"Perte de charge / longueur", thFricLoss:"Perte de charge", thElevLoss:"Perte d'élévation", thVel:"Vitesse",
+    stDensity:"Densité de conception", stArea:"Surface éloignée", stHeads:"Têtes en fonctionnement", stQremote:"Débit de la surface éloignée",
+    stQhead:"Débit par tête", stPhead:"Pression à la tête la plus éloignée", stQdemand:"Demande du système à la colonne montante",
+    stFriction:"Perte de charge totale", stElevation:"Perte d'élévation totale", stRequired:"Pression requise à la colonne montante",
+    stSupply:"Alimentation disponible", stMargin:"Marge (alimentation − requise)",
+    passVerdict:"CONFORME — l'alimentation disponible satisfait la pression requise à la colonne montante.",
+    failVerdict:"NON CONFORME — la pression requise à la colonne montante dépasse l'alimentation disponible.",
+    headFail:"La pression à la tête la plus éloignée est inférieure au minimum de 7 psi (0,5 bar) exigé par la norme NFPA 13 — augmentez le facteur K, la densité ou la surface par tête, ou réduisez le nombre de têtes par surface.",
+    headOk:"La pression à la tête la plus éloignée respecte le minimum de 7 psi (0,5 bar) de la norme NFPA 13.",
+    velWarn:"Vitesse supérieure à 20 pi/s (6 m/s) dans un ou plusieurs tronçons. La norme NFPA 13 ne fixe aucune vitesse maximale — il s'agit d'une mise en garde courante du devis de projet, et non d'un échec au code. Vérifiez le devis du projet avant de poursuivre.",
+    velOk:"Les vitesses respectent le seuil de prudence courant de 20 pi/s (6 m/s) du devis de projet.",
+    segTableTitle:"Résultats par tronçon — chaque tronçon transporte tout le débit de la surface éloignée",
+    demandTitle:"Sommaire de la demande",
+    checksTitle:"Vérifications",
+    alertInputs:"Vérifiez les données : la densité, la surface, le facteur K, l'espacement et la pression d'alimentation doivent tous être supérieurs à 0, et au moins un tronçon de tuyauterie est requis.",
+    repTitle1:"Référence hydraulique des gicleurs — NFPA 13 (simplifiée)", repGenerated:"Généré le",
+    repWhyChecked:"Base de conception (NFPA 13 §19.2.3)",
+    repWhyBody:"Conception densité/surface selon le tableau 19.2.3.1.1 de la NFPA 13, débit des lances selon le tableau 19.2.3.1.2, débit du gicleur Q = K·√P et perte de charge de Hazen-Williams selon §27.2 / §28.2. Pression minimale de fonctionnement à tout gicleur : 7 psi (0,5 bar).",
+    repFormulaUsed:"Formules utilisées",
+    repFormulaLine:"Q = K·√P · P = (Q/K)² | Perte de charge US : p = 4,52·Q^1,85/(C^1,85·d^4,87) psi/pi | Élévation : ΔP = 0,433·Δz psi | Vitesse : V = 0,408·Q/d² pi/s",
+    repTitle2:"Base de conception et canalisation", repTitle3:"Résultat du calcul",
+    repDisclaimer:"Avis et sources",
+    repDisclaimerBody:"Sources : NFPA 13 (2022) §19.2.3 densité/surface (tableaux 19.2.3.1.1 / 19.2.3.1.2), §27.2 / §28.2 facteur K et Hazen-Williams. Calcul de présélection simplifié — une seule surface éloignée, débit uniforme par tête, aucun équilibrage des ramifications — et non un programme hydraulique complet. Conception finale par un ingénieur qualifié en protection incendie, approuvée par l'AHJ.",
+    repHazard:"Classe de risque", repDensity:"Densité de conception", repArea:"Surface éloignée", repHose:"Débit des lances",
+    repK:"Facteur K", repSpacing:"Espacement (le long × entre)", repDevice:"Pertes d'appareils", repSupply:"Pression d'alimentation disponible",
+    xlsCalculation:"Calcul", xlsSegments:"Tronçons", xlsReference:"Référence",
+    xlsParam:"Paramètre", xlsValue:"Valeur",
+    footerNote:"Sources : NFPA 13 (2022) §19.2.3 densité/surface (tableaux 19.2.3.1.1 / 19.2.3.1.2), §27.2 / §28.2 facteur K et Hazen-Williams. Calcul de présélection simplifié — une seule surface éloignée, débit uniforme par tête, aucun équilibrage des ramifications — et non un programme hydraulique complet. Conception finale par un ingénieur qualifié en protection incendie, approuvée par l'AHJ.",
+    hazLH:"Risque léger (LH)", hazOH1:"Risque ordinaire groupe 1 (OH1)", hazOH2:"Risque ordinaire groupe 2 (OH2)", hazEH:"Risque aggravé (EH)"
+  }
+};
+
+/* ===================== RENDER: SIDEBAR ===================== */
+function renderStepNav(){
+  const el = document.getElementById('stepNav');
+  el.innerHTML = STEPS().map(function(s,i){
+    const cls = i===state.step?'active':(i<state.step?'done':'');
+    return '<button class="step-btn '+cls+'" onclick="tryGoStep('+i+')">' +
+      '<span class="step-num">'+(i+1)+'</span>' +
+      '<span class="step-label"><b>'+s.label+'</b><small>'+s.sub+'</small></span></button>';
+  }).join('');
+}
+function tryGoStep(i){ if(i<=state.step) goStep(i); }
+function goStep(i){
+  if(i===3 && !state.result) return;
+  readInputsIntoState();
+  state.step = i;
+  document.querySelectorAll('.panel').forEach(function(p){ p.classList.remove('active'); });
+  document.getElementById('panel-'+i).classList.add('active');
+  renderStepNav();
+  if(i===1) renderDesignBasis();
+  if(i===2) renderPipeRun();
+  if(i===3) renderResults();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ===================== INPUT CAPTURE / RENDER ===================== */
+function readInputsIntoState(){
+  const g = function(id){ const el=document.getElementById(id); return el?el.value:null; };
+  const num = function(id){ const v=parseFloat(g(id)); return isNaN(v)?null:v; };
+  if(document.getElementById('in_density')){
+    const d=num('in_density'); if(d!==null && d>0) state.density = canonDensity(d);
+    const a=num('in_area'); if(a!==null && a>0) state.area = canonArea(a);
+    const h=num('in_hose'); if(h!==null && h>=0) state.hose = dispFlow(h) ? h*(currentUnit==='US'?1:1/3.78541) : h;
+    /* hose is a flow: display L/min -> gpm */
+    if(h!==null && h>=0) state.hose = currentUnit==='US' ? h : h/3.78541;
+    const k=g('in_k'); if(k) state.K = parseFloat(k);
+    const sp=num('in_spar'); if(sp!==null && sp>0) state.sPar = canonLength(sp);
+    const sq=num('in_sperp'); if(sq!==null && sq>0) state.sPerp = canonLength(sq);
+    const hz=g('in_hazard'); if(hz) state.hazard = hz;
+  }
+  if(document.getElementById('segTable')){
+    const rows = document.querySelectorAll('#segTable tbody tr');
+    const segs = [];
+    rows.forEach(function(row){
+      const diam = row.querySelector('.seg-diam').value;
+      const len = parseFloat(row.querySelector('.seg-len').value);
+      const C = parseFloat(row.querySelector('.seg-c').value);
+      const el = parseFloat(row.querySelector('.seg-elev').value);
+      if(diam && !isNaN(len) && !isNaN(C) && !isNaN(el)){
+        segs.push({diam:diam, length:canonLength(len), C:C, elev:canonLength(el)});
+      }
+    });
+    if(segs.length) state.segments = segs;
+    const dv=num('in_device'); if(dv!==null && dv>=0) state.deviceLoss = canonPressure(dv);
+    const sp2=num('in_supply'); if(sp2!==null && sp2>=0) state.supply = canonPressure(sp2);
+  }
+}
+
+function hazardOptions(){
+  const L = UI[currentLang];
+  return [['LH',L.hazLH],['OH1',L.hazOH1],['OH2',L.hazOH2],['EH',L.hazEH]]
+    .map(function(h){ return '<option value="'+h[0]+'"'+(state.hazard===h[0]?' selected':'')+'>'+h[1]+'</option>'; }).join('');
+}
+function kOptions(){
+  return K_OPTIONS.map(function(k){
+    const shown = currentUnit==='US' ? k.us : k.si;
+    const unit = currentUnit==='US' ? 'gpm/psi^0.5' : 'L/min/bar^0.5';
+    return '<option value="'+k.us+'"'+(state.K===k.us?' selected':'')+'>'+shown+' '+unit+' — '+k.desc+'</option>';
+  }).join('');
+}
+function renderDesignBasis(){
+  const L = UI[currentLang];
+  document.getElementById('in_hazard').innerHTML = hazardOptions();
+  document.getElementById('in_k').innerHTML = kOptions();
+  document.getElementById('in_density').value = fmt(dispDensity(state.density),2);
+  document.getElementById('in_area').value = fmt(dispArea(state.area),0);
+  document.getElementById('in_hose').value = fmt(dispFlow(state.hose),0);
+  document.getElementById('in_spar').value = fmt(dispLength(state.sPar),1);
+  document.getElementById('in_sperp').value = fmt(dispLength(state.sPerp),1);
+  document.getElementById('in_density').placeholder = unitDensity();
+  document.getElementById('in_area').placeholder = unitArea();
+  document.getElementById('in_hose').placeholder = unitFlow();
+  document.getElementById('in_spar').placeholder = unitLength();
+  document.getElementById('in_sperp').placeholder = unitLength();
+  /* unit suffixes on labels */
+  document.getElementById('p1-den-label').textContent = L.p1denLabel+' ('+unitDensity()+')';
+  document.getElementById('p1-area-label').textContent = L.p1areaLabel+' ('+unitArea()+')';
+  document.getElementById('p1-hose-label').textContent = L.p1hoseLabel+' ('+unitFlow()+')';
+  document.getElementById('p1-spar-label').textContent = L.p1sparLabel+' ('+unitLength()+')';
+  document.getElementById('p1-sperp-label').textContent = L.p1sperpLabel+' ('+unitLength()+')';
+}
+function onHazardChange(){
+  const hz = document.getElementById('in_hazard').value;
+  state.hazard = hz;
+  const h = HAZARDS[hz];
+  state.density = h.density; state.area = h.area; state.hose = h.hose;
+  renderDesignBasis();
+}
+
+function renderPipeRun(){
+  const L = UI[currentLang];
+  const diamOpts = Object.keys(PIPE_ID_IN).map(function(nom){
+    const id = PIPE_ID_IN[nom];
+    return '<option value="'+nom+'">'+nom+' '+unitDiam()+' ('+fmt(dispDiamIn(id), currentUnit==='US'?3:1)+' '+unitDiam()+' ID)</option>';
+  }).join('');
+  const cOpts = C_FACTORS.map(function(c){
+    return '<option value="'+c.v+'">'+c.v+' — '+c.label+'</option>';
+  }).join('');
+  let rows = state.segments.map(function(s,i){
+    return '<tr><td>'+(i+1)+'</td>' +
+      '<td><select class="seg-diam">'+diamOpts.replace('value="'+s.diam+'"', 'value="'+s.diam+'" selected')+'</select></td>' +
+      '<td><input type="number" class="seg-len" value="'+fmt(dispLength(s.length),1)+'" min="0" step="0.1" style="width:90px;"> '+unitLength()+'</td>' +
+      '<td><select class="seg-c">'+cOpts.replace('value="'+s.C+'"', 'value="'+s.C+'" selected')+'</select></td>' +
+      '<td><input type="number" class="seg-elev" value="'+fmt(dispLength(s.elev),1)+'" step="0.1" style="width:90px;"> '+unitLength()+'</td>' +
+      '<td><button type="button" class="export-btn" style="padding:6px 10px;" onclick="removeSegment('+i+')" '+(state.segments.length<=1?'disabled':'')+'>✕</button></td></tr>';
+  }).join('');
+  document.getElementById('segTable').innerHTML =
+    '<thead><tr><th>'+L.thSeg+'</th><th>'+L.thDiam+'</th><th>'+L.thLen+'</th><th>'+L.thC+'</th><th>'+L.thElev+'</th><th>'+L.thRemove+'</th></tr></thead><tbody>'+rows+'</tbody>';
+  document.getElementById('in_device').value = fmt(dispPressure(state.deviceLoss),2);
+  document.getElementById('in_supply').value = fmt(dispPressure(state.supply),2);
+  document.getElementById('p2-dev-label').textContent = L.p2devLabel+' ('+unitPressure()+')';
+  document.getElementById('p2-supply-label').textContent = L.p2supplyLabel+' ('+unitPressure()+')';
+}
+function addSegment(){
+  readInputsIntoState();
+  state.segments.push({diam:'2', length:canonLength(50), C:120, elev:0});
+  renderPipeRun();
+}
+function removeSegment(i){
+  readInputsIntoState();
+  if(state.segments.length>1) state.segments.splice(i,1);
+  renderPipeRun();
+}
+
+/* ===================== CALCULATION ===================== */
+function runCalculation(){
+  readInputsIntoState();
+  if(!state.density || !state.area || !state.K || !state.sPar || !state.sPerp ||
+     state.density<=0 || state.area<=0 || state.K<=0 || state.sPar<=0 || state.sPerp<=0 ||
+     !state.segments.length){
+    alert(UI[currentLang].alertInputs); return;
+  }
+  state.result = computeSprinkler({
+    density:state.density, area:state.area, hose:state.hose, K:state.K,
+    sPar:state.sPar, sPerp:state.sPerp,
+    segments:state.segments, deviceLoss:state.deviceLoss, supply:state.supply
+  });
+  goStep(3);
+}
+
+/* ===================== RENDER: RESULTS ===================== */
+function renderResults(){
+  const r = state.result;
+  if(!r) return;
+  const L = UI[currentLang];
+  const anyVel = r.segments.some(function(s){ return s.velCaution; });
+  const html =
+    '<div class="verdict '+(r.pass?'pass':'fail')+'">'+(r.pass?L.passVerdict:L.failVerdict)+'</div>' +
+    '<div class="result-summary">' +
+      '<div class="stat"><span>'+L.stQremote+'</span><b>'+fmt(dispFlow(r.qRemote),0)+' '+unitFlow()+'</b></div>' +
+      '<div class="stat"><span>'+L.stHeads+'</span><b>'+r.nHeads+'</b></div>' +
+      '<div class="stat"><span>'+L.stQhead+'</span><b>'+fmt(dispFlow(r.qHead),1)+' '+unitFlow()+'</b></div>' +
+      '<div class="stat"><span>'+L.stPhead+'</span><b class="'+(r.headOk?'pass':'fail')+'">'+fmt(dispPressure(r.pHead),2)+' '+unitPressure()+'</b></div>' +
+      '<div class="stat"><span>'+L.stQdemand+'</span><b>'+fmt(dispFlow(r.qDemand),0)+' '+unitFlow()+'</b></div>' +
+      '<div class="stat"><span>'+L.stFriction+'</span><b>'+fmt(dispPressure(r.totFriction),2)+' '+unitPressure()+'</b></div>' +
+      '<div class="stat"><span>'+L.stRequired+'</span><b>'+fmt(dispPressure(r.required),2)+' '+unitPressure()+'</b></div>' +
+      '<div class="stat"><span>'+L.stMargin+'</span><b class="'+(r.margin>=0?'pass':'fail')+'">'+fmt(dispPressure(r.margin),2)+' '+unitPressure()+'</b></div>' +
+    '</div>' +
+    '<div class="card"><h3>'+L.segTableTitle+'</h3><div class="table-wrap"><table>' +
+      '<tr><th>'+L.thSeg+'</th><th>'+L.thDiam+'</th><th>'+L.thLen+'</th><th>'+L.thFric+'</th><th>'+L.thFricLoss+'</th><th>'+L.thElevLoss+'</th><th>'+L.thVel+'</th></tr>' +
+      r.segments.map(function(s,i){
+        const pUnit = currentUnit==='US' ? 'psi/ft' : 'bar/m';
+        return '<tr'+(s.velCaution?' class="hl"':'')+'><td>'+(i+1)+'</td><td>'+s.diam+' '+unitDiam()+' ('+fmt(dispDiamIn(s.dIn), currentUnit==='US'?3:1)+' '+unitDiam()+' ID)</td>' +
+        '<td>'+fmt(dispLength(s.length),1)+' '+unitLength()+'</td>' +
+        '<td>'+fmt(currentUnit==='US'?s.pPerFt:s.pPerFt*PSI_PER_BAR/0.3048,4)+' '+pUnit+'</td>' +
+        '<td>'+fmt(dispPressure(s.dP),2)+' '+unitPressure()+'</td>' +
+        '<td>'+fmt(dispPressure(s.elevP),2)+' '+unitPressure()+'</td>' +
+        '<td>'+fmt(dispVel(s.vel),2)+' '+unitVel()+(s.velCaution?' ⚠':'')+'</td></tr>';
+      }).join('') +
+    '</table></div></div>' +
+    '<div class="card"><h3>'+L.checksTitle+'</h3>' +
+      '<div class="callout '+(r.headOk?'good':'bad')+'">'+(r.headOk?L.headOk:L.headFail)+'</div>' +
+      '<div class="callout '+(anyVel?'bad':'good')+'">'+(anyVel?L.velWarn:L.velOk)+'</div>' +
+      '<div class="callout '+(r.pass?'good':'bad')+'">'+(r.pass?L.passVerdict:L.failVerdict)+'</div>' +
+    '</div>';
+  document.getElementById('resultsArea').innerHTML = html;
+  document.getElementById('reportPreview').innerHTML = buildReportHTML();
+}
+
+function buildReportHTML(){
+  const r = state.result;
+  const L = UI[currentLang];
+  const today = new Date().toLocaleDateString(currentLang==='fr'?'fr-CA':'en-CA');
+  const anyVel = r.segments.some(function(s){ return s.velCaution; });
+  const segRows = r.segments.map(function(s,i){
+    const pUnit = currentUnit==='US' ? 'psi/ft' : 'bar/m';
+    return '<tr><td>'+(i+1)+'</td><td>'+s.diam+' '+unitDiam()+'</td><td>'+fmt(dispLength(s.length),1)+' '+unitLength()+'</td><td>'+s.C+'</td><td>'+fmt(dispLength(s.elev),1)+' '+unitLength()+'</td><td>'+fmt(currentUnit==='US'?s.pPerFt:s.pPerFt*PSI_PER_BAR/0.3048,4)+' '+pUnit+'</td><td>'+fmt(dispPressure(s.dP),2)+' '+unitPressure()+'</td><td>'+fmt(dispPressure(s.elevP),2)+' '+unitPressure()+'</td><td>'+fmt(dispVel(s.vel),2)+' '+unitVel()+'</td></tr>';
+  }).join('');
+  return '' +
+  '<div class="report-page">' +
+    '<h2>'+L.repTitle1+'</h2>' +
+    '<div class="sub">'+L.repGenerated+' '+today+' · OhmZone · SPR-20</div>' +
+    '<div class="report-section"><h4>'+L.repWhyChecked+'</h4>' +
+      '<p style="font-size:13.5px;">'+L.repWhyBody+'</p>' +
+      '<h4 style="margin-top:18px;">'+L.repFormulaUsed+'</h4>' +
+      '<p style="font-size:13.5px;" class="mono">'+L.repFormulaLine+'</p>' +
+    '</div>' +
+  '</div>' +
+  '<div class="report-page">' +
+    '<h2>'+L.repTitle2+'</h2>' +
+    '<div class="report-section"><div class="kv">' +
+      '<div><span>'+L.repHazard+'</span><span>'+state.hazard+'</span></div>' +
+      '<div><span>'+L.repDensity+'</span><span>'+fmt(dispDensity(r.density),2)+' '+unitDensity()+'</span></div>' +
+      '<div><span>'+L.repArea+'</span><span>'+fmt(dispArea(r.area),0)+' '+unitArea()+'</span></div>' +
+      '<div><span>'+L.repHose+'</span><span>'+fmt(dispFlow(r.hose),0)+' '+unitFlow()+'</span></div>' +
+      '<div><span>'+L.repK+'</span><span>'+(currentUnit==='US'?r.K:(K_OPTIONS.find(function(k){return k.us===r.K;})||{si:r.K}).si)+' '+(currentUnit==='US'?'gpm/psi^0.5':'L/min/bar^0.5')+'</span></div>' +
+      '<div><span>'+L.repSpacing+'</span><span>'+fmt(dispLength(state.sPar),1)+' × '+fmt(dispLength(state.sPerp),1)+' '+unitLength()+'</span></div>' +
+      '<div><span>'+L.repDevice+'</span><span>'+fmt(dispPressure(r.deviceLoss),2)+' '+unitPressure()+'</span></div>' +
+      '<div><span>'+L.repSupply+'</span><span>'+fmt(dispPressure(r.supply),2)+' '+unitPressure()+'</span></div>' +
+    '</div></div>' +
+    '<div class="report-section"><h4>'+L.segTableTitle+'</h4>' +
+      '<div class="table-wrap" style="max-height:none;"><table>' +
+      '<tr><th>'+L.thSeg+'</th><th>'+L.thDiam+'</th><th>'+L.thLen+'</th><th>'+L.thC+'</th><th>'+L.thElev+'</th><th>'+L.thFric+'</th><th>'+L.thFricLoss+'</th><th>'+L.thElevLoss+'</th><th>'+L.thVel+'</th></tr>' +
+      segRows + '</table></div></div>' +
+  '</div>' +
+  '<div class="report-page">' +
+    '<h2>'+L.repTitle3+'</h2>' +
+    '<div class="verdict '+(r.pass?'pass':'fail')+'">'+(r.pass?L.passVerdict:L.failVerdict)+'</div>' +
+    '<div class="report-section"><div class="kv">' +
+      '<div><span>'+L.stQremote+'</span><span>'+fmt(dispFlow(r.qRemote),1)+' '+unitFlow()+'</span></div>' +
+      '<div><span>'+L.stHeads+'</span><span>'+r.nHeads+'</span></div>' +
+      '<div><span>'+L.stQhead+'</span><span>'+fmt(dispFlow(r.qHead),2)+' '+unitFlow()+'</span></div>' +
+      '<div><span>'+L.stPhead+'</span><span>'+fmt(dispPressure(r.pHead),2)+' '+unitPressure()+'</span></div>' +
+      '<div><span>'+L.stQdemand+'</span><span>'+fmt(dispFlow(r.qDemand),1)+' '+unitFlow()+'</span></div>' +
+      '<div><span>'+L.stFriction+'</span><span>'+fmt(dispPressure(r.totFriction),2)+' '+unitPressure()+'</span></div>' +
+      '<div><span>'+L.stElevation+'</span><span>'+fmt(dispPressure(r.totElevation),2)+' '+unitPressure()+'</span></div>' +
+      '<div><span>'+L.stRequired+'</span><span>'+fmt(dispPressure(r.required),2)+' '+unitPressure()+'</span></div>' +
+      '<div><span>'+L.stSupply+'</span><span>'+fmt(dispPressure(r.supply),2)+' '+unitPressure()+'</span></div>' +
+      '<div><span>'+L.stMargin+'</span><span>'+fmt(dispPressure(r.margin),2)+' '+unitPressure()+'</span></div>' +
+    '</div></div>' +
+    '<div class="report-section"><h4>'+L.checksTitle+'</h4>' +
+      '<p style="font-size:13px;">'+(r.headOk?L.headOk:L.headFail)+'</p>' +
+      '<p style="font-size:13px;">'+(anyVel?L.velWarn:L.velOk)+'</p>' +
+    '</div>' +
+    '<div class="report-section"><h4>'+L.repDisclaimer+'</h4>' +
+      '<p style="font-size:12px;color:var(--ink-soft);">'+L.repDisclaimerBody+'</p>' +
+    '</div>' +
+  '</div>';
+}
+
+/* ===================== EXPORTS ===================== */
+function printReport(){
+  if(state.result) document.getElementById('printArea').innerHTML = buildReportHTML();
+  window.print();
+}
+function exportExcel(){
+  const L = UI[currentLang];
+  const r = state.result;
+  if(!r) return;
+  const wb = XLSX.utils.book_new();
+  const resRows = [[L.xlsParam, L.xlsValue],
+    [L.repHazard, state.hazard],
+    [L.repDensity+' ('+unitDensity()+')', round2(dispDensity(r.density))],
+    [L.repArea+' ('+unitArea()+')', round2(dispArea(r.area))],
+    [L.repHose+' ('+unitFlow()+')', round2(dispFlow(r.hose))],
+    [L.repK, currentUnit==='US'?r.K:(K_OPTIONS.find(function(k){return k.us===r.K;})||{si:r.K}).si],
+    [L.repSpacing+' ('+unitLength()+')', fmt(dispLength(state.sPar),1)+' x '+fmt(dispLength(state.sPerp),1)],
+    [L.stHeads, r.nHeads],
+    [L.stQremote+' ('+unitFlow()+')', round2(dispFlow(r.qRemote))],
+    [L.stQhead+' ('+unitFlow()+')', round2(dispFlow(r.qHead))],
+    [L.stPhead+' ('+unitPressure()+')', round2(dispPressure(r.pHead))],
+    [L.stQdemand+' ('+unitFlow()+')', round2(dispFlow(r.qDemand))],
+    [L.stFriction+' ('+unitPressure()+')', round2(dispPressure(r.totFriction))],
+    [L.stElevation+' ('+unitPressure()+')', round2(dispPressure(r.totElevation))],
+    [L.repDevice+' ('+unitPressure()+')', round2(dispPressure(r.deviceLoss))],
+    [L.stRequired+' ('+unitPressure()+')', round2(dispPressure(r.required))],
+    [L.stSupply+' ('+unitPressure()+')', round2(dispPressure(r.supply))],
+    [L.stMargin+' ('+unitPressure()+')', round2(dispPressure(r.margin))],
+    ['PASS/FAIL', r.pass?'PASS':'FAIL']];
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(resRows), L.xlsCalculation);
+  const segRows = [[L.thSeg, L.thDiam+' ('+unitDiam()+')', 'ID ('+unitDiam()+')', L.thLen+' ('+unitLength()+')', L.thC, L.thElev+' ('+unitLength()+')', L.thFric, L.thFricLoss+' ('+unitPressure()+')', L.thElevLoss+' ('+unitPressure()+')', L.thVel+' ('+unitVel()+')']];
+  r.segments.forEach(function(s,i){
+    segRows.push([i+1, s.diam, round2(dispDiamIn(s.dIn)), round2(dispLength(s.length)), s.C, round2(dispLength(s.elev)),
+      round2(currentUnit==='US'?s.pPerFt:s.pPerFt*PSI_PER_BAR/0.3048),
+      round2(dispPressure(s.dP)), round2(dispPressure(s.elevP)), round2(dispVel(s.vel))]);
+  });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(segRows), L.xlsSegments);
+  const refRows = [[L.xlsParam, L.xlsValue],
+    ['NFPA 13 (2022) §19.2.3', 'Density/area — Tables 19.2.3.1.1 / 19.2.3.1.2'],
+    ['NFPA 13 §27.2 / §28.2', 'K-factor and Hazen-Williams'],
+    ['LH', '0.10 gpm/ft² / 1500 ft² / hose 100 gpm'],
+    ['OH1', '0.15 gpm/ft² / 1500 ft² / hose 250 gpm'],
+    ['OH2', '0.20 gpm/ft² / 1500 ft² / hose 250 gpm'],
+    ['EH', '0.30 gpm/ft² / 2500 ft² / hose 500 gpm'],
+    ['Note', L.repDisclaimerBody]];
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(refRows), L.xlsReference);
+  XLSX.writeFile(wb, 'sprinkler_hydraulics_report.xlsx');
+}
+
+/* ===================== I18N APPLY ===================== */
+function applyStaticI18n(){
+  const L = UI[currentLang];
+  document.getElementById('brandText').innerHTML = L.brandLine1 + '<span>' + L.brandLine2 + '</span>';
+  document.getElementById('sidebarFoot').textContent = L.sidebarFoot;
+  document.getElementById('unitLabel').textContent = L.unitLabel;
+  const set = function(id, txt){ const el=document.getElementById(id); if(el) el.textContent = txt; };
+  const setHtml = function(id, txt){ const el=document.getElementById(id); if(el) el.innerHTML = txt; };
+  set('p0-eyebrow', L.p0eyebrow); set('p0-h1', L.p0h1); set('p0-intro', L.p0intro);
+  set('p0-h3a', L.p0h3a); set('p0-th-haz', L.p0thHaz); set('p0-th-den', L.p0thDen); set('p0-th-area', L.p0thArea); set('p0-th-hose', L.p0thHose);
+  set('p0-r-lh', L.p0rLh); set('p0-r-oh1', L.p0rOh1); set('p0-r-oh2', L.p0rOh2); set('p0-r-eh', L.p0rEh);
+  setHtml('p0-pa', L.p0pa);
+  set('p0-h3b', L.p0h3b); set('p0-th-qty', L.p0thQty); set('p0-th-form', L.p0thForm);
+  set('p0-f1', L.p0f1); set('p0-f2', L.p0f2); set('p0-f3', L.p0f3); set('p0-f4', L.p0f4); set('p0-f5', L.p0f5);
+  setHtml('p0-pb', L.p0pb);
+  set('p0-callout-b', L.p0calloutB); set('p0-callout-rest', L.p0calloutRest);
+  set('p0-pc', L.p0pc);
+  set('p0-simplify-b', L.p0simplifyB); set('p0-simplify-rest', L.p0simplifyRest);
+  set('p0-start-btn', L.p0startBtn);
+  set('p1-eyebrow', L.p1eyebrow); set('p1-h1', L.p1h1); set('p1-intro', L.p1intro);
+  set('p1-h3a', L.p1h3a); set('p1-haz-label', L.p1hazLabel);
+  set('p1-h3b', L.p1h3b); set('p1-k-label', L.p1kLabel); set('p1-k-hint', L.p1kHint);
+  set('p1-h3c', L.p1h3c); set('p1-spacing-hint', L.p1spacingHint);
+  set('p1-back-btn', L.backBtn); set('toStep2', L.toStep2Btn);
+  set('p2-eyebrow', L.p2eyebrow); set('p2-h1', L.p2h1); set('p2-intro', L.p2intro);
+  set('p2-h3a', L.p2h3a); set('p2-seg-note', L.p2segNote); set('addSegBtn', L.addSegBtn);
+  set('p2-h3b', L.p2h3b); set('p2-h3c', L.p2h3c);
+  set('p2-back-btn', L.backBtn); set('p2-calc-btn', L.calcBtn);
+  set('p3-eyebrow', L.p3eyebrow); set('p3-h1', L.p3h1); set('p3-h3a', L.p3h3a);
+  set('p3-exportnote', L.p3exportnote);
+  set('p3-print-btn', L.printBtn); set('p3-excel-btn', L.excelBtn);
+  set('p3-back-btn', L.adjustBtn);
+  set('footerNote', L.footerNote);
+}
+
+function setLang(lang){
+  readInputsIntoState();
+  currentLang = lang;
+  document.getElementById('btn-en').classList.toggle('active', lang==='en');
+  document.getElementById('btn-fr').classList.toggle('active', lang==='fr');
+  document.documentElement.lang = lang;
+  try { localStorage.setItem('ohmzone-lang', lang); } catch(e) {}
+  applyStaticI18n();
+  renderStepNav();
+  if(state.step===1) renderDesignBasis();
+  if(state.step===2) renderPipeRun();
+  if(state.step===3 && state.result) renderResults();
+}
+function setUnit(u){
+  readInputsIntoState();
+  currentUnit = u;
+  document.getElementById('btn-us').classList.toggle('active', u==='US');
+  document.getElementById('btn-si').classList.toggle('active', u==='SI');
+  try { localStorage.setItem('ohmzone-unit', u); } catch(e) {}
+  if(state.step===1) renderDesignBasis();
+  if(state.step===2) renderPipeRun();
+  if(state.step===3 && state.result) renderResults();
+}
+
+/* ===================== INIT ===================== */
+renderStepNav();
+goStep(0);
+(function(){
+  let savedLang = 'en', savedUnit = 'US';
+  try {
+    savedLang = localStorage.getItem('ohmzone-lang') || 'en';
+    savedUnit = localStorage.getItem('ohmzone-unit') || 'US';
+  } catch(e) {}
+  currentUnit = (savedUnit==='SI') ? 'SI' : 'US';
+  document.getElementById('btn-us').classList.toggle('active', currentUnit==='US');
+  document.getElementById('btn-si').classList.toggle('active', currentUnit==='SI');
+  setLang(savedLang);
+  renderDesignBasis();
+  renderPipeRun();
+})();
+</script>
+</body>
+</html>

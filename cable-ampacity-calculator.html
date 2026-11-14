@@ -1,0 +1,1225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cable Ampacity Calculator — CSA C22.1 Tables 1–4</title>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3887318872951674" crossorigin="anonymous"></script>
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icon-16.png">
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="OhmZone">
+<meta name="theme-color" content="#0a1728">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --navy-950:#0B1F33;
+    --blue:#3b9eff;
+    --blue-soft:#1a3a5c;
+    --navy-900:#0F2942;
+    --navy-800:#173A5C;
+    --navy-700:#254C74;
+    --paper:#0a1120;
+    --paper-card:#111a2a;
+    --line:#233350;
+    --ink:#e7edf7;
+    --ink-soft:#8fa8c2;
+    --copper:#d9853a;
+    --copper-soft:#e8b57d;
+    --copper-tint:#2e2015;
+    --aluminum:#a8b4c4;
+    --good:#43c17e;
+    --warn:#e3a83b;
+    --bad:#ff5d77;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    font-size:15px;
+    line-height:1.5;
+  }
+  h1,h2,h3,h4{font-family:'Space Grotesk',sans-serif;margin:0 0 8px 0;color:var(--ink);letter-spacing:-0.01em;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  .app{display:flex;min-height:100vh;}
+
+  /* ---- Sidebar ---- */
+  .sidebar{
+    width:250px;flex-shrink:0;background:var(--navy-950);color:#DCE6F0;
+    padding:28px 20px;display:flex;flex-direction:column;gap:26px;
+  }
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand-mark{
+    width:34px;height:34px;border-radius:8px;
+    background:linear-gradient(135deg,var(--copper),var(--copper-soft));
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Space Grotesk';font-weight:700;color:var(--ink);font-size:15px;
+  }
+  .brand-text{font-family:'Space Grotesk';font-weight:600;font-size:15px;color:#fff;line-height:1.2;}
+  .brand-text span{display:block;font-family:'IBM Plex Mono';font-weight:400;font-size:10.5px;color:#8FA6BF;letter-spacing:.06em;margin-top:2px;}
+
+  .steps{display:flex;flex-direction:column;gap:2px;}
+  .step-btn{
+    display:flex;align-items:flex-start;gap:12px;padding:11px 10px;border-radius:8px;
+    cursor:pointer;border:none;background:transparent;color:#B7C6D8;text-align:left;
+    font-family:'Inter';font-size:13.5px;transition:background .15s ease;
+  }
+  .step-btn:hover{background:var(--navy-900);}
+  .step-btn.active{background:var(--blue);color:#04101c;}
+  .step-btn.done .step-num{background:var(--blue);color:#04101c;}
+  .step-num{
+    width:22px;height:22px;border-radius:50%;background:var(--navy-800);color:#B7C6D8;
+    display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono';font-size:11px;flex-shrink:0;margin-top:1px;
+  }
+  .step-btn.active .step-num{background:var(--blue);color:#04101c;}
+  .step-label b{display:block;font-weight:600;}
+  .step-label small{display:block;color:#7C90A8;font-size:11.5px;margin-top:1px;}
+  .step-btn.active .step-label small{color:#B7C6D8;}
+
+  .sidebar-foot{margin-top:auto;font-size:11px;color:#5C7189;font-family:'IBM Plex Mono';line-height:1.6;border-top:1px solid var(--navy-800);padding-top:14px;}
+
+  /* ---- Main ---- */
+  .main{flex:1;padding:36px 44px 80px;max-width:980px;}
+  .panel{display:none;}
+  .panel.active{display:block;animation:fade .25s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+
+  .eyebrow{font-family:'IBM Plex Mono';font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--copper);margin-bottom:6px;font-weight:600;}
+  .panel-head{margin-bottom:28px;}
+  .panel-head p{color:var(--ink-soft);max-width:640px;margin-top:6px;}
+
+  .card{background:var(--paper-card);border:1px solid var(--line);border-radius:var(--radius);padding:22px 24px;margin-bottom:18px;}
+  .card h3{font-size:15.5px;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+
+  label.field{display:flex;flex-direction:column;gap:6px;font-size:12.5px;color:var(--ink-soft);font-weight:600;margin-bottom:14px;}
+  input,select{
+    font-family:'IBM Plex Mono';font-size:14px;color:var(--ink);
+    border:1px solid var(--line);border-radius:7px;padding:9px 11px;background:var(--paper-card);
+  }
+  input:focus,select:focus{outline:2px solid var(--copper-soft);outline-offset:1px;border-color:var(--copper);}
+  select{font-family:'Inter';}
+  .field-hint{font-size:11px;color:var(--ink-soft);font-weight:400;margin-top:2px;}
+
+  .choice-row{display:flex;gap:10px;flex-wrap:wrap;}
+  .choice{
+    border:1.5px solid var(--line);border-radius:8px;padding:10px 16px;cursor:pointer;
+    font-size:13.5px;font-weight:600;color:var(--ink-soft);background:var(--paper-card);transition:.15s;
+  }
+  .choice:hover{border-color:var(--copper-soft);}
+  .choice.selected{border-color:var(--blue);background:var(--blue-soft);color:var(--ink);}
+
+  .btn{
+    font-family:'Inter';font-weight:600;font-size:13.5px;border-radius:8px;padding:11px 20px;
+    border:1.5px solid var(--blue);background:var(--blue);color:#04101c;cursor:pointer;
+  }
+  .btn.secondary{background:transparent;color:var(--ink);}
+  .btn.copper{background:var(--copper);border-color:var(--copper);}
+  .btn:disabled{opacity:.4;cursor:not-allowed;}
+  .btn-row{display:flex;gap:12px;margin-top:26px;}
+
+  table{width:100%;border-collapse:collapse;font-family:'IBM Plex Mono';font-size:12.5px;}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);}
+  th{color:var(--ink-soft);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.03em;}
+  tr.hl{background:var(--copper-tint);}
+  tr.hl td{font-weight:600;}
+  .table-wrap{max-height:340px;overflow:auto;border:1px solid var(--line);border-radius:8px;}
+
+  .callout{border-left:3px solid var(--copper);background:var(--copper-tint);padding:14px 16px;border-radius:0 8px 8px 0;font-size:13.5px;color:var(--ink);margin:16px 0;}
+  .callout.info{border-color:var(--navy-700);background:#E4EAF1;}
+  .callout.bad{border-color:var(--bad);background:#F6DEDA;}
+  .callout.good{border-color:var(--good);background:#DCF0E7;}
+
+  .result-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
+  .stat{background:var(--paper-card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;}
+  .stat span{font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;}
+  .stat b{display:block;font-family:'Space Grotesk';font-size:22px;margin-top:4px;color:var(--ink);}
+  .stat b.pass{color:var(--good);}
+  .stat b.fail{color:var(--bad);}
+  .verdict{font-family:'Space Grotesk';font-size:26px;font-weight:700;padding:16px 20px;border-radius:var(--radius);margin-bottom:18px;text-align:center;}
+  .verdict.pass{background:#DCF0E7;color:#14532d;border:1px solid var(--good);}
+  .verdict.fail{background:#F6DEDA;color:#7f1d1d;border:1px solid var(--bad);}
+  .warn-list{margin:8px 0 0 0;padding-left:18px;}
+  .warn-list li{margin-bottom:6px;}
+
+  .export-row{display:flex;gap:12px;margin-top:22px;flex-wrap:wrap;}
+  .export-btn{
+    display:flex;align-items:center;gap:9px;border:1.5px solid var(--navy-950);border-radius:8px;
+    padding:11px 18px;background:var(--paper-card);cursor:pointer;font-weight:600;font-size:13.5px;color:var(--ink);
+  }
+  .export-btn:hover{background:var(--blue);color:#04101c;}
+
+  .report-preview{background:var(--paper-card);border:1px solid var(--line);border-radius:var(--radius);padding:34px;margin-top:22px;}
+  .report-preview h2{font-size:19px;border-bottom:2px solid var(--copper);padding-bottom:10px;margin-bottom:14px;}
+  .report-preview .sub{font-family:'IBM Plex Mono';font-size:11px;color:var(--ink-soft);margin-bottom:22px;}
+  .report-section{margin-bottom:26px;}
+  .report-section h4{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--copper);border-bottom:1px solid var(--line);padding-bottom:6px;margin-bottom:10px;}
+  .kv{display:grid;grid-template-columns:1fr 1fr;gap:6px 20px;font-size:13px;}
+  .kv div{display:flex;justify-content:space-between;border-bottom:1px dotted var(--line);padding:4px 0;}
+  .kv div span:last-child{font-family:'IBM Plex Mono';font-weight:600;color:var(--ink);}
+
+  .pill{font-family:'IBM Plex Mono';font-size:11px;background:var(--blue);color:#04101c;padding:4px 10px;border-radius:20px;}
+
+  @media print{
+    .sidebar,.no-print{display:none !important;}
+    .main{padding:0;max-width:none;}
+    .panel{display:none !important;}
+    #printArea{display:block !important;}
+    .report-preview{border:none;padding:0;box-shadow:none;}
+    .report-page{page-break-after:always;}
+    html,body{background:#fff !important;}
+    .report-page, .report-preview, #printArea{background:#fff !important; color:#12233A !important;}
+    .report-page h1,.report-page h2,.report-page h3,.report-page h4{color:#0B1F33 !important;}
+    .report-page .kv div span:last-child{color:#0B1F33 !important;}
+    .report-page .callout{background:#F6E3CE !important; color:#0B1F33 !important;}
+    .report-page .sub{color:#4C6079 !important;}
+  }
+  #printArea{display:none;}
+
+  @media (max-width:780px){
+    .app{flex-direction:column;min-height:0;}
+    .sidebar{width:100%;flex-shrink:1;padding:16px 16px 14px;gap:14px;}
+    .steps{flex-direction:row;flex-wrap:wrap;gap:6px;}
+    .step-btn{flex:1 1 auto;padding:8px 9px;font-size:12px;gap:8px;}
+    .step-label small{display:none;}
+    .sidebar-foot{display:none;}
+    .main{padding:18px 14px 60px;max-width:none;}
+    .grid2,.grid3{grid-template-columns:1fr;gap:10px;}
+    .result-summary{grid-template-columns:repeat(2,1fr);gap:10px;}
+    .card{padding:16px;}
+    .kv{grid-template-columns:1fr;gap:4px 0;}
+  }
+
+  .lang-switch{display:flex;align-items:center;background:var(--navy-900);border:1px solid var(--navy-800);border-radius:16px;padding:3px;gap:2px;font-family:'IBM Plex Mono';font-size:11px;}
+  .lang-switch button{border:none;background:transparent;color:#B7C6D8;padding:5px 12px;border-radius:13px;cursor:pointer;font-family:inherit;font-size:inherit;}
+  .lang-switch button.active{background:var(--blue);color:#04101c;font-weight:700;}
+  .home-link{font-family:'IBM Plex Mono';font-size:11px;color:#7C90A8;text-decoration:none;border-bottom:1px dotted #7C90A8;}
+  .home-link:hover{color:var(--copper-soft);}
+  .brand-row{display:flex;align-items:center;justify-content:space-between;}
+  .unit-toggle{display:flex;gap:6px;}
+  .unit-toggle .choice{padding:8px 14px;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar no-print">
+    <div class="brand-row">
+      <div class="brand">
+        <div class="brand-mark">Amp</div>
+        <div class="brand-text" id="brandText">Cable Ampacity
+          <span>CSA C22.1 · TABLES 1–4</span>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+      <a class="home-link no-print" href="index.html">← OhmZone</a>
+      <div class="lang-switch no-print" role="group" aria-label="Language">
+        <button type="button" id="btn-en" class="active" onclick="setLang('en')">EN</button>
+        <button type="button" id="btn-fr" onclick="setLang('fr')">FR</button>
+      </div>
+    </div>
+    <div class="steps" id="stepNav"></div>
+    <div class="sidebar-foot" id="sidebarFoot">
+      Screening tool — verify against the current CSA C22.1 edition before final design.
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- STEP 1: REFERENCE -->
+    <div class="panel" id="panel-0">
+      <div class="panel-head">
+        <div class="eyebrow" id="p0-eyebrow">01 · Reference</div>
+        <h1 id="p0-h1">Cable Ampacity — Lookup &amp; Correction</h1>
+        <p id="p0-intro">Look up the base ampacity of a conductor from CSA C22.1 Tables 1–4, then correct it for ambient temperature (Table 5A) and the number of current-carrying conductors (Table 5C).</p>
+      </div>
+
+      <div class="card">
+        <h3 id="p0-h3a">Base ampacity tables (30 °C ambient, Rules 4-004 / 4-006)</h3>
+        <p id="p0-pa">Tables 2 (copper) and 4 (aluminum) give the ampacity of insulated conductors rated 0–2000 V in a raceway or cable, with not more than three current-carrying conductors, at 30 °C ambient. Tables 1 (copper) and 3 (aluminum) give the ampacity of a single conductor in free air.</p>
+        <p id="p0-pb">This tool includes the full Table 2 and Table 4 values (60 / 75 / 90 °C columns) and the Table 1 copper 90 °C column only. The Table 1 60 °C and 75 °C columns and all of Table 3 (aluminum, free air) are shown as “—” (not available) — no verified source was found for them.</p>
+        <div class="callout" id="p0-callout"><b id="p0-callout-b">Rule 4-006 — termination temperature:</b> <span id="p0-callout-rest">the governing column is the lower of the insulation rating and the termination rating. Derating may start from the 90 °C column, but the derated result must not exceed the ampacity of the termination-temperature column.</span></div>
+        <p id="p0-pc">This tool applies Rule 4-006 by taking the base ampacity and the Table 5A factor from the governing (lower) temperature column, and then capping the corrected result at the termination-column ampacity.</p>
+      </div>
+
+      <div class="card">
+        <h3 id="p0-h3b">Correction factors</h3>
+        <p id="p0-pd">Corrected ampacity = base ampacity × Table 5A factor × Table 5C factor. With parallel sets, the total ampacity is the per-set corrected ampacity × the number of sets.</p>
+        <div class="table-wrap" style="max-height:none;">
+          <table>
+            <tr><th id="p0-th1">Table 5A — ambient °C</th><th>60 °C</th><th>75 °C</th><th>90 °C</th></tr>
+            <tr><td>21–25</td><td>1.08</td><td>1.05</td><td>1.04</td></tr>
+            <tr><td>26–30</td><td>1.00</td><td>1.00</td><td>1.00</td></tr>
+            <tr><td>31–35</td><td>0.91</td><td>0.94</td><td>0.96</td></tr>
+            <tr><td>36–40</td><td>0.82</td><td>0.88</td><td>0.91</td></tr>
+            <tr><td>41–45</td><td>0.71</td><td>0.82</td><td>0.87</td></tr>
+            <tr><td>46–50</td><td>0.58</td><td>0.75</td><td>0.82</td></tr>
+            <tr><td>51–55</td><td>0.41</td><td>0.67</td><td>0.76</td></tr>
+            <tr><td>56–60</td><td>—</td><td>0.58</td><td>0.71</td></tr>
+            <tr><td>61–70</td><td>—</td><td>0.33</td><td>0.58</td></tr>
+          </table>
+        </div>
+        <p style="margin-top:12px;" id="p0-pe">The factor is taken from the band containing the ambient temperature, using the band's upper temperature (e.g. 47 °C uses the 46–50 °C row). “—” means the conductor cannot be used at that ambient temperature with that insulation rating.</p>
+        <div class="table-wrap" style="max-height:none;margin-top:14px;">
+          <table>
+            <tr><th id="p0-th2">Table 5C — current-carrying conductors</th><th id="p0-th3">Factor</th></tr>
+            <tr><td>1–3</td><td>1.00</td></tr>
+            <tr><td>4–6</td><td>0.80</td></tr>
+            <tr><td>7–24</td><td>0.70</td></tr>
+            <tr><td>25–42</td><td>0.60</td></tr>
+            <tr><td>43+</td><td>0.50</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 id="p0-h3c">Rules applied by this tool</h3>
+        <div class="table-wrap" style="max-height:none;">
+          <table>
+            <tr><th id="p0-th4">Rule</th><th id="p0-th5">What it does here</th></tr>
+            <tr><td class="mono">4-004</td><td id="p0-r4004">Base ampacity tables are for 30 °C ambient and not more than 3 current-carrying conductors.</td></tr>
+            <tr><td class="mono">4-006</td><td id="p0-r4006">Governing column = min(insulation rating, termination rating); corrected ampacity is capped at the termination-column ampacity.</td></tr>
+            <tr><td class="mono">4-028(2)</td><td id="p0-r4028">On a 3-phase 4-wire system with non-linear loads, the neutral counts as a current-carrying conductor (triplen harmonics) — the tool adds 1 to the Table 5C conductor count.</td></tr>
+            <tr><td class="mono">8-104</td><td id="p0-r8104">Continuous loads are assessed at 125% of the load current: required ampacity = load × 1.25.</td></tr>
+            <tr><td class="mono">14-104</td><td id="p0-r14104">Overcurrent protection for small copper conductors is capped at 15 A (14 AWG), 20 A (12 AWG) and 30 A (10 AWG).</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn copper" id="p0-start-btn" onclick="goStep(1)">Start a calculation →</button>
+      </div>
+    </div>
+
+    <!-- STEP 2: CONDUCTOR & INSTALLATION -->
+    <div class="panel" id="panel-1">
+      <div class="panel-head">
+        <div class="eyebrow" id="p1-eyebrow">02 · Conductor &amp; installation</div>
+        <h1 id="p1-h1">Choose the conductor</h1>
+        <p id="p1-intro">Material, installation method, size and temperature ratings set the base ampacity from Tables 1, 2 or 4.</p>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <h3 id="p1-h3a">Conductor material</h3>
+          <div class="choice-row" id="materialRow"></div>
+        </div>
+        <div class="card">
+          <h3 id="p1-h3b">Installation</h3>
+          <div class="choice-row" id="installRow"></div>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <h3 id="p1-h3c">Conductor size</h3>
+          <label class="field" id="p1-size-label">Size
+            <select id="in_size"></select>
+          </label>
+          <div class="field-hint" id="p1-size-hint">AWG sizes up to 4/0, then kcmil.</div>
+        </div>
+        <div class="card">
+          <h3 id="p1-h3d">Load</h3>
+          <label class="field" id="p1-load-label">Load current (A)
+            <input type="number" id="in_load" value="150" min="0" step="0.1">
+          </label>
+          <label class="field" id="p1-cont-label">Continuous load? (Rule 8-104 — × 1.25)
+            <div class="choice-row" id="continuousRow"></div>
+          </label>
+          <label class="field" id="p1-sets-label">Parallel sets per phase
+            <input type="number" id="in_sets" value="1" min="1" max="8" step="1">
+            <span class="field-hint" id="p1-sets-hint">Total ampacity = per-set ampacity × number of sets.</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <h3 id="p1-h3e">Insulation temperature rating</h3>
+          <div class="choice-row" id="insulRow"></div>
+        </div>
+        <div class="card">
+          <h3 id="p1-h3f">Termination temperature rating</h3>
+          <div class="choice-row" id="termRow"></div>
+          <div class="field-hint" id="p1-term-hint">Rule 4-006: the governing column is the lower of these two ratings.</div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn secondary" id="p1-back-btn" onclick="goStep(0)">← Back</button>
+        <button class="btn copper" id="toStep2" onclick="goStep(2)">Correction factors →</button>
+      </div>
+    </div>
+
+    <!-- STEP 3: CORRECTION FACTORS -->
+    <div class="panel" id="panel-2">
+      <div class="panel-head">
+        <div class="eyebrow" id="p2-eyebrow">03 · Correction factors</div>
+        <h1 id="p2-h1">Ambient temperature &amp; grouping</h1>
+        <p id="p2-intro">Table 5A (ambient temperature) and Table 5C (number of current-carrying conductors) derate the base ampacity.</p>
+      </div>
+
+      <div class="card">
+        <h3 id="p2-h3a">Ambient temperature (Table 5A)</h3>
+        <div class="grid2">
+          <label class="field" id="p2-amb-label">Ambient temperature
+            <input type="number" id="in_ambient" value="40" step="0.5">
+          </label>
+          <div>
+            <label class="field" id="p2-unit-label">Units</label>
+            <div class="unit-toggle" id="unitRow"></div>
+            <div class="field-hint" id="p2-unit-hint">Tables are °C-based; a °F entry is converted to °C before lookup.</div>
+          </div>
+        </div>
+        <div class="field-hint" id="p2-amb-hint">The factor is taken from the band containing the ambient temperature, using the band's upper temperature (e.g. 47 °C uses the 46–50 °C row).</div>
+      </div>
+
+      <div class="card">
+        <h3 id="p2-h3b">Current-carrying conductors (Table 5C)</h3>
+        <div class="grid2">
+          <label class="field" id="p2-ccc-label">Number of current-carrying conductors
+            <input type="number" id="in_ccc" value="6" min="1" max="100" step="1">
+          </label>
+          <div>
+            <label class="field" id="p2-sys-label">System</label>
+            <div class="choice-row" id="systemRow"></div>
+          </div>
+        </div>
+        <label class="field" id="p2-loadtype-label" style="margin-top:14px;">Load type (Rule 4-028(2))
+          <div class="choice-row" id="loadTypeRow"></div>
+          <span class="field-hint" id="p2-loadtype-hint">Non-linear loads on a 3-phase 4-wire system: the neutral counts as a current-carrying conductor, so 1 is added to the Table 5C count. This assumes a 3-phase 4-wire system with a neutral carrying triplen harmonics.</span>
+        </label>
+      </div>
+
+      <div class="card">
+        <h3 id="p2-h3c">Factors preview</h3>
+        <div class="kv" id="factorPreview"></div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn secondary" id="p2-back-btn" onclick="goStep(1)">← Back</button>
+        <button class="btn copper" id="p2-calc-btn" onclick="runCalculation()">Calculate →</button>
+      </div>
+    </div>
+
+    <!-- STEP 4: RESULTS -->
+    <div class="panel" id="panel-3">
+      <div class="panel-head">
+        <div class="eyebrow" id="p3-eyebrow">04 · Results &amp; report</div>
+        <h1 id="p3-h1">Results</h1>
+      </div>
+
+      <div id="resultsArea"></div>
+
+      <div class="card">
+        <h3 id="p3-h3a">Full lookup table — <span id="lookupTitle"></span></h3>
+        <p style="color:var(--ink-soft);font-size:13px;margin-top:-4px;" id="p3-lookup-note">Base ampacities (A) at 30 °C ambient, ≤ 3 current-carrying conductors. “—” means no verified value is included for that cell. The selected conductor row is highlighted.</p>
+        <div class="table-wrap">
+          <table id="lookupTable"></table>
+        </div>
+      </div>
+
+      <div class="card no-print">
+        <h3 id="p3-h3b">Export report</h3>
+        <p style="color:var(--ink-soft);font-size:13px;" id="p3-exportnote">The report opens with the CSA reference page from Step 1, followed by your inputs, correction factors and results.</p>
+        <div class="export-row">
+          <button class="export-btn" onclick="window.print()" id="p3-print-btn">🖨 Print / Save as PDF</button>
+          <button class="export-btn" onclick="exportExcel()" id="p3-excel-btn">📊 Download Excel (.xlsx)</button>
+        </div>
+      </div>
+
+      <div class="report-preview" id="reportPreview"></div>
+
+      <div class="btn-row no-print">
+        <button class="btn secondary" id="p3-back-btn" onclick="goStep(1)">← Adjust inputs</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="printArea"></div>
+
+<footer class="note" id="footerNote" style="max-width:980px;margin:0 auto;padding:0 44px 40px;color:#5C7189;font-size:12px;line-height:1.6;">
+  <span id="footerText">Sources: CSA C22.1 Tables 2 (copper) and 4 (aluminum) — raceway/cable, ≤ 3 current-carrying conductors, 30 °C ambient; Table 1 copper, single conductor in free air, 90 °C column only; Table 5A ambient-temperature correction factors; Table 5C number-of-conductors factors. Table 1 (60/75 °C) and Table 3 values pending verification against the current CSA C22.1 edition. Free-air Table 1 values differ across published secondary sources and code editions (e.g. older manufacturer datasheets list lower values); verify against the CSA C22.1 edition enforced by your AHJ. This is a screening tool; verify against the current CSA C22.1 edition.</span>
+</footer>
+
+<script>
+/* =====================================================================
+   CEC / CSA C22.1 AMPACITY DATA — VERIFIED VALUES ONLY
+   Table 2 (copper) and Table 4 (aluminum): raceway/cable, <=3 CCC, 30 C
+   ambient. Copied exactly from the verified T2_CU / T4_AL tables in
+   lv-cable-selection-calculator.html.
+   Table 1 (copper, single conductor in free air): 90 C column ONLY
+   (source: OpenExamPrep CEC ampacity guide 2026, whose Table 2/4 columns
+   were verified to match the tables above exactly). The 60 C / 75 C
+   columns of Table 1 and ALL of Table 3 (aluminum, free air) are NOT
+   included — no verified source was found. Missing cells are null and
+   are displayed as "—", never guessed.
+===================================================================== */
+const SIZES = ["14","12","10","8","6","4","3","2","1","1/0","2/0","3/0","4/0","250","300","350","400","500","600","700","750"];
+
+const T2_CU = { // CEC Table 2 — copper, raceway/cable (60 / 75 / 90 C)
+  "14":{60:15,75:20,90:25}, "12":{60:20,75:25,90:30}, "10":{60:30,75:35,90:40},
+  "8":{60:40,75:50,90:55}, "6":{60:55,75:65,90:75}, "4":{60:70,75:85,90:95},
+  "3":{60:85,75:100,90:110}, "2":{60:95,75:115,90:130}, "1":{60:110,75:130,90:145},
+  "1/0":{60:125,75:150,90:170}, "2/0":{60:145,75:175,90:195}, "3/0":{60:165,75:200,90:225},
+  "4/0":{60:195,75:230,90:260}, "250":{60:215,75:255,90:290}, "300":{60:240,75:285,90:320},
+  "350":{60:260,75:310,90:350}, "400":{60:280,75:335,90:380}, "500":{60:320,75:380,90:430},
+  "600":{60:350,75:420,90:475}, "700":{60:385,75:460,90:520}, "750":{60:400,75:475,90:535}
+};
+const T4_AL = { // CEC Table 4 — aluminum, raceway/cable (60 / 75 / 90 C)
+  "12":{60:15,75:20,90:25}, "10":{60:25,75:30,90:35}, "8":{60:30,75:40,90:45},
+  "6":{60:40,75:50,90:55}, "4":{60:55,75:65,90:75}, "3":{60:65,75:75,90:85},
+  "2":{60:75,75:90,90:100}, "1":{60:85,75:100,90:115}, "1/0":{60:100,75:120,90:135},
+  "2/0":{60:115,75:135,90:150}, "3/0":{60:130,75:155,90:175}, "4/0":{60:150,75:180,90:205},
+  "250":{60:170,75:205,90:230}, "300":{60:195,75:230,90:260}, "350":{60:210,75:250,90:280},
+  "400":{60:225,75:270,90:305}, "500":{60:260,75:310,90:350}, "600":{60:285,75:340,90:385},
+  "700":{60:315,75:375,90:425}, "750":{60:320,75:385,90:435}
+};
+// CEC Table 1 — copper, single conductor in free air, 90 C column ONLY.
+const T1_CU_90 = {
+  "14":35, "12":45, "10":60, "8":85, "6":120, "4":160, "2":215,
+  "1/0":280, "2/0":325, "4/0":435, "250":490, "500":740
+};
+// CEC Table 5A — ambient-temperature correction factors.
+// Bands by ambient C; the factor is taken from the band containing the
+// ambient temperature, using the band's upper temperature.
+const T5A_BANDS = [
+  {max:25, f:{60:1.08,75:1.05,90:1.04}},
+  {max:30, f:{60:1.00,75:1.00,90:1.00}},
+  {max:35, f:{60:0.91,75:0.94,90:0.96}},
+  {max:40, f:{60:0.82,75:0.88,90:0.91}},
+  {max:45, f:{60:0.71,75:0.82,90:0.87}},
+  {max:50, f:{60:0.58,75:0.75,90:0.82}},
+  {max:55, f:{60:0.41,75:0.67,90:0.76}},
+  {max:60, f:{60:null,75:0.58,90:0.71}},
+  {max:70, f:{60:null,75:0.33,90:0.58}}
+];
+const T5A_BAND_LABELS = ["21–25","26–30","31–35","36–40","41–45","46–50","51–55","56–60","61–70"];
+// CEC Table 5C — number-of-conductors factors.
+function factor5C(n){
+  if(n<=3) return 1.00;
+  if(n<=6) return 0.80;
+  if(n<=24) return 0.70;
+  if(n<=42) return 0.60;
+  return 0.50;
+}
+// Rule 14-104 — overcurrent cap for small copper conductors (A).
+const CAP_14_104 = {"14":15, "12":20, "10":30};
+
+function sizeLabel(size){
+  return ["250","300","350","400","500","600","700","750"].indexOf(size)>=0 ? size+" kcmil" : size+" AWG";
+}
+
+/* Base ampacity lookup. Returns amps, or null when no verified value
+   exists for that material / installation / size / column. */
+function baseAmpacity(mat, install, size, col){
+  if(install==="freeair"){
+    if(mat!=="Cu") return null;              // Table 3 — not included
+    if(col!==90) return null;                // Table 1 60/75 C — not included
+    const v = T1_CU_90[size];
+    return (v===undefined) ? null : v;
+  }
+  const table = (mat==="Cu") ? T2_CU : T4_AL;
+  const row = table[size];
+  if(!row) return null;
+  const v = row[col];
+  return (v===undefined) ? null : v;
+}
+
+/* Table 5A lookup. Returns the factor, or null when the conductor cannot
+   be used at that ambient temperature with that insulation rating ("—"). */
+function factor5A(insulCol, ambientC){
+  if(ambientC>70) return null;
+  for(let i=0;i<T5A_BANDS.length;i++){
+    if(ambientC<=T5A_BANDS[i].max){
+      const v = T5A_BANDS[i].f[insulCol];
+      return (v===undefined||v===null) ? null : v;
+    }
+  }
+  return null;
+}
+function bandLabelFor(ambientC){
+  if(ambientC>70) return null;
+  for(let i=0;i<T5A_BANDS.length;i++){
+    if(ambientC<=T5A_BANDS[i].max) return T5A_BAND_LABELS[i];
+  }
+  return null;
+}
+
+/* ===================== PURE CALCULATION =====================
+   opts: {mat, install, size, insul, term, load, continuous, sets,
+          ambientC, ccc, system3p4w, nonlinear}
+   Governing (effective) column = min(insulation, termination) — Rule 4-006.
+   The base ampacity and the Table 5A factor are both taken from that
+   governing column; the corrected result is then capped at the
+   termination-column ampacity. Rule 14-104 caps the usable ampacity of
+   small copper conductors. Required = load x 1.25 when continuous
+   (Rule 8-104). */
+function computeAmpacity(o){
+  const effCol = Math.min(o.insul, o.term);
+  const base = baseAmpacity(o.mat, o.install, o.size, effCol);
+  const termCap = baseAmpacity(o.mat, o.install, o.size, o.term);
+  const f5a = factor5A(effCol, o.ambientC);
+  const effCcc = o.ccc + ((o.nonlinear && o.system3p4w) ? 1 : 0);
+  const f5c = factor5C(effCcc);
+  const required = o.load * (o.continuous ? 1.25 : 1);
+  const sets = Math.max(1, o.sets || 1);
+  const cap104 = (o.mat==="Cu") ? (CAP_14_104[o.size] || null) : null;
+
+  let correctedRaw = null, corrected = null, capApplies = false;
+  if(base!==null && f5a!==null){
+    correctedRaw = base * f5a * f5c;
+    corrected = correctedRaw;
+    if(termCap!==null && correctedRaw > termCap){ corrected = termCap; capApplies = true; }
+  }
+  const usablePerSet = (corrected===null) ? null : (cap104!==null ? Math.min(corrected, cap104) : corrected);
+  const total = (usablePerSet===null) ? null : usablePerSet * sets;
+  const pass = (total!==null) && (total >= required);
+  return {
+    effCol: effCol, base: base, termCap: termCap, f5a: f5a, f5c: f5c,
+    band: bandLabelFor(o.ambientC), effCcc: effCcc, cccAdded: ((o.nonlinear && o.system3p4w) ? 1 : 0),
+    correctedRaw: correctedRaw, corrected: corrected, capApplies: capApplies,
+    cap104: cap104, cap104Limits: (cap104!==null && corrected!==null && corrected > cap104),
+    usablePerSet: usablePerSet, total: total, required: required, pass: pass,
+    sets: sets
+  };
+}
+
+/* ===================== STATE ===================== */
+const state = {
+  step:0,
+  material:"Cu",
+  install:"raceway",
+  size:"3/0",
+  insul:90,
+  term:75,
+  load:150,
+  continuous:true,
+  sets:1,
+  ambientUnit:"C",
+  ambient:40,
+  ccc:6,
+  system3p4w:true,
+  nonlinear:false,
+  result:null,
+  inputs:null
+};
+
+let currentLang = "en";
+
+const STEPS_I18N = {
+  en: [
+    {label:"Reference", sub:"Tables 1–5 & rules"},
+    {label:"Conductor & Installation", sub:"Material · size · ratings"},
+    {label:"Correction Factors", sub:"Table 5A · Table 5C"},
+    {label:"Results & Report", sub:"Export PDF / Excel"}
+  ],
+  fr: [
+    {label:"Référence", sub:"Tableaux 1 à 5 et règles"},
+    {label:"Conducteur et installation", sub:"Matériau · section · températures"},
+    {label:"Facteurs de correction", sub:"Tableau 5A · Tableau 5C"},
+    {label:"Résultats et rapport", sub:"Export PDF / Excel"}
+  ]
+};
+function STEPS(){ return STEPS_I18N[currentLang]; }
+
+const MATERIALS_I18N = {
+  en: [{k:"Cu",l:"Copper"},{k:"Al",l:"Aluminum"}],
+  fr: [{k:"Cu",l:"Cuivre"},{k:"Al",l:"Aluminium"}]
+};
+function MATERIALS(){ return MATERIALS_I18N[currentLang]; }
+const INSTALLS_I18N = {
+  en: [{k:"raceway",l:"Raceway / cable (Tables 2 & 4)"},{k:"freeair",l:"Single conductor, free air (Tables 1 & 3)"}],
+  fr: [{k:"raceway",l:"Canalisation / câble (tableaux 2 et 4)"},{k:"freeair",l:"Conducteur unique, à l'air libre (tableaux 1 et 3)"}]
+};
+function INSTALLS(){ return INSTALLS_I18N[currentLang]; }
+const TEMPS = [{k:60,l:"60 °C"},{k:75,l:"75 °C"},{k:90,l:"90 °C"}];
+const YESNO_I18N = {
+  en: [{k:true,l:"Yes — continuous"},{k:false,l:"No — non-continuous"}],
+  fr: [{k:true,l:"Oui — continue"},{k:false,l:"Non — non continue"}]
+};
+function YESNO(){ return YESNO_I18N[currentLang]; }
+const SYSTEMS_I18N = {
+  en: [{k:true,l:"3-phase 4-wire (with neutral)"},{k:false,l:"Other (1-phase / 3-phase 3-wire)"}],
+  fr: [{k:true,l:"Triphasé 4 fils (avec neutre)"},{k:false,l:"Autre (monophasé / triphasé 3 fils)"}]
+};
+function SYSTEMS(){ return SYSTEMS_I18N[currentLang]; }
+const LOADTYPES_I18N = {
+  en: [{k:false,l:"Linear loads"},{k:true,l:"Non-linear loads (harmonics)"}],
+  fr: [{k:false,l:"Charges linéaires"},{k:true,l:"Charges non linéaires (harmoniques)"}]
+};
+function LOADTYPES(){ return LOADTYPES_I18N[currentLang]; }
+
+/* ===================== RENDER: SIDEBAR ===================== */
+function renderStepNav(){
+  const el = document.getElementById("stepNav");
+  el.innerHTML = STEPS().map((s,i)=>{
+    const cls = i===state.step ? "active" : (i<state.step ? "done" : "");
+    return '<button class="step-btn '+cls+'" onclick="tryGoStep('+i+')">'
+      + '<span class="step-num">'+(i+1)+'</span>'
+      + '<span class="step-label"><b>'+s.label+'</b><small>'+s.sub+'</small></span></button>';
+  }).join("");
+}
+function tryGoStep(i){ if(i<=state.step) goStep(i); }
+function goStep(i){
+  state.step = i;
+  document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
+  document.getElementById("panel-"+i).classList.add("active");
+  renderStepNav();
+  if(i===1){ renderStep1(); }
+  if(i===2){ renderStep2(); }
+  if(i===3){ renderResults(); }
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+/* ===================== RENDER: CHOICE ROWS ===================== */
+function renderChoiceRow(containerId, items, currentKey, onPick){
+  const el = document.getElementById(containerId);
+  el.innerHTML = items.map(it=>{
+    const key = it.k;
+    const label = it.l;
+    const sel = (currentKey===key) ? "selected" : "";
+    const keyArg = (typeof key==="string") ? "'"+key+"'" : String(key);
+    return '<div class="choice '+sel+'" onclick="('+onPick+')('+keyArg+')">'+label+'</div>';
+  }).join("");
+}
+function pickMaterial(k){ state.material=k; if(k==="Al" && state.size==="14") state.size="12"; renderStep1(); }
+function pickInstall(k){ state.install=k; renderStep1(); }
+function pickInsul(k){ state.insul=k; renderStep1(); }
+function pickTerm(k){ state.term=k; renderStep1(); }
+function pickContinuous(k){ state.continuous=k; renderStep1(); }
+function pickSystem(k){ state.system3p4w=k; renderStep2(); }
+function pickLoadType(k){ state.nonlinear=k; renderStep2(); }
+function pickUnit(u){
+  const inp = document.getElementById("in_ambient");
+  const v = parseFloat(inp.value);
+  if(!isNaN(v)){
+    if(state.ambientUnit==="C" && u==="F") inp.value = Math.round((v*9/5+32)*10)/10;
+    if(state.ambientUnit==="F" && u==="C") inp.value = Math.round(((v-32)*5/9)*10)/10;
+  }
+  state.ambientUnit=u;
+  renderStep2();
+}
+
+function renderSizeOptions(){
+  const sel = document.getElementById("in_size");
+  const sizes = (state.material==="Al") ? SIZES.filter(s=>s!=="14") : SIZES.slice();
+  sel.innerHTML = sizes.map(s=>'<option value="'+s+'">'+sizeLabel(s)+'</option>').join("");
+  if(sizes.indexOf(state.size)<0) state.size = sizes[0];
+  sel.value = state.size;
+}
+function renderStep1(){
+  renderChoiceRow("materialRow", MATERIALS(), state.material, "pickMaterial");
+  renderChoiceRow("installRow", INSTALLS(), state.install, "pickInstall");
+  renderSizeOptions();
+  renderChoiceRow("insulRow", TEMPS, state.insul, "pickInsul");
+  renderChoiceRow("termRow", TEMPS, state.term, "pickTerm");
+  renderChoiceRow("continuousRow", YESNO(), state.continuous, "pickContinuous");
+}
+function renderStep2(){
+  renderChoiceRow("unitRow", [{k:"C",l:"°C"},{k:"F",l:"°F"}], state.ambientUnit, "pickUnit");
+  renderChoiceRow("systemRow", SYSTEMS(), state.system3p4w, "pickSystem");
+  renderChoiceRow("loadTypeRow", LOADTYPES(), state.nonlinear, "pickLoadType");
+  renderFactorPreview();
+}
+function readInputs(){
+  state.size = document.getElementById("in_size").value;
+  state.load = parseFloat(document.getElementById("in_load").value);
+  state.sets = Math.max(1, parseInt(document.getElementById("in_sets").value) || 1);
+  state.ambient = parseFloat(document.getElementById("in_ambient").value);
+  state.ccc = Math.max(1, parseInt(document.getElementById("in_ccc").value) || 1);
+}
+function ambientC(){
+  const v = state.ambient;
+  if(isNaN(v)) return NaN;
+  return (state.ambientUnit==="F") ? (v-32)*5/9 : v;
+}
+function renderFactorPreview(){
+  const L = UI[currentLang];
+  readInputs();
+  const aC = ambientC();
+  const effCol = Math.min(state.insul, state.term);
+  const f5a = isNaN(aC) ? null : factor5A(effCol, aC);
+  const effCcc = state.ccc + ((state.nonlinear && state.system3p4w) ? 1 : 0);
+  const f5c = factor5C(effCcc);
+  const base = baseAmpacity(state.material, state.install, state.size, effCol);
+  document.getElementById("factorPreview").innerHTML =
+    '<div><span>'+L.pvGovCol+'</span><span>'+effCol+' °C</span></div>'
+    + '<div><span>'+L.pvBase+'</span><span>'+(base===null ? "—" : base+" A")+'</span></div>'
+    + '<div><span>'+L.pvAmbC+'</span><span>'+(isNaN(aC) ? "—" : aC.toFixed(1)+" °C")+'</span></div>'
+    + '<div><span>'+L.pvF5a+'</span><span>'+(f5a===null ? "—" : f5a.toFixed(2))+'</span></div>'
+    + '<div><span>'+L.pvEffCcc+'</span><span>'+effCcc+'</span></div>'
+    + '<div><span>'+L.pvF5c+'</span><span>'+f5c.toFixed(2)+'</span></div>';
+}
+
+/* ===================== CALCULATION ===================== */
+function runCalculation(){
+  readInputs();
+  const L = UI[currentLang];
+  if(!state.load || state.load<=0){ alert(L.alertLoad); return; }
+  if(isNaN(state.ambient)){ alert(L.alertAmbient); return; }
+  state.inputs = {
+    mat: state.material, install: state.install, size: state.size,
+    insul: state.insul, term: state.term, load: state.load,
+    continuous: state.continuous, sets: state.sets,
+    ambientC: ambientC(), ambientDisplay: state.ambient, ambientUnit: state.ambientUnit,
+    ccc: state.ccc, system3p4w: state.system3p4w, nonlinear: state.nonlinear
+  };
+  state.result = computeAmpacity(state.inputs);
+  goStep(3);
+}
+
+/* ===================== RENDER: RESULTS ===================== */
+function fmtA(v){ return (v===null||v===undefined||isNaN(v)) ? "—" : (Math.round(v*100)/100)+" A"; }
+function fmtN(v,d){ if(v===null||v===undefined||isNaN(v)) return "—"; return v.toFixed(d===undefined?2:d); }
+
+function renderResults(){
+  const r = state.result;
+  const inp = state.inputs;
+  const L = UI[currentLang];
+  if(!r || !inp){ document.getElementById("resultsArea").innerHTML = ""; return; }
+
+  let html = "";
+  const verdictClass = r.pass ? "pass" : "fail";
+  const verdictText = r.pass ? L.verdictPass : L.verdictFail;
+  html += '<div class="verdict '+verdictClass+'">'+verdictText+'</div>';
+
+  html += '<div class="result-summary">'
+    + '<div class="stat"><span>'+L.stBase+'</span><b>'+fmtA(r.base)+'</b></div>'
+    + '<div class="stat"><span>'+L.stCorrected+'</span><b class="'+(r.corrected===null?"fail":"")+'">'+fmtA(r.corrected)+'</b></div>'
+    + '<div class="stat"><span>'+L.stTotal+'</span><b class="'+(r.total===null?"fail":(r.pass?"pass":"fail"))+'">'+fmtA(r.total)+'</b></div>'
+    + '<div class="stat"><span>'+L.stRequired+'</span><b>'+fmtA(r.required)+'</b></div>'
+    + '</div>';
+
+  html += '<div class="card"><h3>'+L.factorsTitle+'</h3><div class="table-wrap" style="max-height:none;"><table>'
+    + '<tr><th>'+L.thStep+'</th><th>'+L.thValue+'</th><th>'+L.thNote+'</th></tr>'
+    + '<tr><td>'+L.fBase+'</td><td>'+fmtA(r.base)+'</td><td>'+L.fBaseNote.replace("{col}", r.effCol).replace("{table}", inp.install==="freeair" ? L.tblFreeAir : (inp.mat==="Cu" ? L.tbl2 : L.tbl4))+'</td></tr>'
+    + '<tr><td>'+L.f5a+'</td><td>'+(r.f5a===null ? "—" : r.f5a.toFixed(2))+'</td><td>'+L.f5aNote.replace("{band}", r.band===null ? "—" : r.band+" °C").replace("{col}", r.effCol)+'</td></tr>'
+    + '<tr><td>'+L.f5c+'</td><td>'+r.f5c.toFixed(2)+'</td><td>'+L.f5cNote.replace("{n}", r.effCcc)+'</td></tr>'
+    + '<tr><td>'+L.fSets+'</td><td>× '+r.sets+'</td><td>'+L.fSetsNote+'</td></tr>'
+    + '<tr><td>'+L.fCorrected+'</td><td>'+fmtA(r.corrected)+'</td><td>'+L.fCorrectedNote+'</td></tr>'
+    + '<tr><td>'+L.fRequired+'</td><td>'+fmtA(r.required)+'</td><td>'+(inp.continuous ? L.fRequiredNoteCont : L.fRequiredNoteNonCont)+'</td></tr>'
+    + '</table></div></div>';
+
+  const warnings = [];
+  if(r.base===null){
+    warnings.push({cls:"bad", text: (inp.install==="freeair")
+      ? L.warnFreeAir.replace("{size}", sizeLabel(inp.size)).replace("{mat}", inp.mat==="Cu" ? L.copper : L.aluminum)
+      : L.warnNoBase.replace("{size}", sizeLabel(inp.size))});
+  }
+  if(r.base!==null && r.f5a===null){
+    warnings.push({cls:"bad", text: L.warnNotPermitted.replace("{col}", r.effCol).replace("{amb}", fmtN(inp.ambientC,1))});
+  }
+  if(r.capApplies){
+    warnings.push({cls:"bad", text: L.warnTermCap.replace("{raw}", fmtA(r.correctedRaw)).replace("{cap}", fmtA(r.termCap))});
+  }
+  if(r.cap104Limits){
+    warnings.push({cls:"bad", text: L.warnCap104.replace("{cap}", r.cap104).replace("{size}", sizeLabel(inp.size))});
+  }
+  if(r.base!==null && r.f5a!==null && !r.pass){
+    warnings.push({cls:"bad", text: L.warnFail8104.replace("{total}", fmtA(r.total)).replace("{req}", fmtA(r.required))});
+  }
+  if(r.cccAdded>0){
+    warnings.push({cls:"info", text: L.noteNeutral});
+  }
+  if(warnings.length){
+    html += '<div class="card"><h3>'+L.warningsTitle+'</h3>'
+      + warnings.map(w=>'<div class="callout '+w.cls+'">'+w.text+'</div>').join("") + '</div>';
+  } else if(r.pass){
+    html += '<div class="callout good">'+L.calloutPass+'</div>';
+  }
+
+  document.getElementById("resultsArea").innerHTML = html;
+  renderLookupTable();
+  document.getElementById("reportPreview").innerHTML = buildReportHTML();
+  document.getElementById("printArea").innerHTML = document.getElementById("reportPreview").innerHTML;
+}
+
+function renderLookupTable(){
+  const inp = state.inputs || {mat: state.material, install: state.install, size: state.size};
+  const L = UI[currentLang];
+  const title = (inp.mat==="Cu" ? L.copper : L.aluminum) + " — "
+    + (inp.install==="freeair" ? L.tblFreeAir : (inp.mat==="Cu" ? L.tbl2 : L.tbl4));
+  document.getElementById("lookupTitle").textContent = title;
+  const sizes = (inp.mat==="Al" && inp.install==="raceway") ? SIZES.filter(s=>s!=="14") : SIZES;
+  const rows = sizes.map(s=>{
+    const v60 = baseAmpacity(inp.mat, inp.install, s, 60);
+    const v75 = baseAmpacity(inp.mat, inp.install, s, 75);
+    const v90 = baseAmpacity(inp.mat, inp.install, s, 90);
+    const cell = v => (v===null ? "—" : v+" A");
+    const hl = (s===inp.size) ? ' class="hl"' : "";
+    return '<tr'+hl+'><td>'+sizeLabel(s)+'</td><td>'+cell(v60)+'</td><td>'+cell(v75)+'</td><td>'+cell(v90)+'</td></tr>';
+  }).join("");
+  document.getElementById("lookupTable").innerHTML =
+    '<tr><th>'+L.thSize+'</th><th>60 °C</th><th>75 °C</th><th>90 °C</th></tr>' + rows;
+}
+
+function buildReportHTML(){
+  const r = state.result;
+  const inp = state.inputs;
+  const L = UI[currentLang];
+  const today = new Date().toLocaleDateString(currentLang==="fr" ? "fr-CA" : "en-CA");
+  const warnItems = [];
+  if(r.base===null) warnItems.push(L.warnFreeAirShort);
+  if(r.base!==null && r.f5a===null) warnItems.push(L.warnNotPermittedShort);
+  if(r.capApplies) warnItems.push(L.warnTermCapShort);
+  if(r.cap104Limits) warnItems.push(L.warnCap104Short);
+  if(r.base!==null && r.f5a!==null && !r.pass) warnItems.push(L.warnFail8104Short);
+  return '<div class="report-page">'
+    + '<h2>'+L.repTitle1+'</h2>'
+    + '<div class="sub">'+L.repGenerated+' '+today+'</div>'
+    + '<div class="report-section"><h4>'+L.repRules+'</h4>'
+    + '<p style="font-size:13.5px;">'+L.repRulesBody+'</p></div>'
+    + '<div class="report-section"><h4>'+L.repFormula+'</h4>'
+    + '<p style="font-size:13.5px;" class="mono">'+L.repFormulaLine+'</p></div>'
+    + '</div>'
+    + '<div class="report-page">'
+    + '<h2>'+L.repTitle2+'</h2>'
+    + '<div class="report-section"><div class="kv">'
+    + '<div><span>'+L.repMaterial+'</span><span>'+(inp.mat==="Cu" ? L.copper : L.aluminum)+'</span></div>'
+    + '<div><span>'+L.repInstall+'</span><span>'+(inp.install==="freeair" ? L.tblFreeAir : (inp.mat==="Cu" ? L.tbl2 : L.tbl4))+'</span></div>'
+    + '<div><span>'+L.repSize+'</span><span>'+sizeLabel(inp.size)+'</span></div>'
+    + '<div><span>'+L.repInsul+'</span><span>'+inp.insul+' °C</span></div>'
+    + '<div><span>'+L.repTerm+'</span><span>'+inp.term+' °C</span></div>'
+    + '<div><span>'+L.repGovCol+'</span><span>'+r.effCol+' °C</span></div>'
+    + '<div><span>'+L.repLoad+'</span><span>'+inp.load+' A</span></div>'
+    + '<div><span>'+L.repContinuous+'</span><span>'+(inp.continuous ? L.yes : L.no)+'</span></div>'
+    + '<div><span>'+L.repSets+'</span><span>'+r.sets+'</span></div>'
+    + '<div><span>'+L.repAmbient+'</span><span>'+fmtN(inp.ambientC,1)+' °C</span></div>'
+    + '<div><span>'+L.repCcc+'</span><span>'+r.effCcc+'</span></div>'
+    + '<div><span>'+L.repLoadType+'</span><span>'+(inp.nonlinear ? L.nonlinear : L.linear)+'</span></div>'
+    + '</div></div></div>'
+    + '<div class="report-page">'
+    + '<h2>'+L.repTitle3+'</h2>'
+    + '<div class="report-section"><div class="kv">'
+    + '<div><span>'+L.stBase+'</span><span>'+fmtA(r.base)+'</span></div>'
+    + '<div><span>'+L.f5a+'</span><span>'+(r.f5a===null ? "—" : r.f5a.toFixed(2))+'</span></div>'
+    + '<div><span>'+L.f5c+'</span><span>'+r.f5c.toFixed(2)+'</span></div>'
+    + '<div><span>'+L.stCorrected+'</span><span>'+fmtA(r.corrected)+'</span></div>'
+    + '<div><span>'+L.stTotal+'</span><span>'+fmtA(r.total)+'</span></div>'
+    + '<div><span>'+L.stRequired+'</span><span>'+fmtA(r.required)+'</span></div>'
+    + '<div><span>'+L.repVerdict+'</span><span>'+(r.pass ? L.verdictPass : L.verdictFail)+'</span></div>'
+    + '</div></div>'
+    + (warnItems.length ? '<div class="report-section"><h4>'+L.warningsTitle+'</h4><p style="font-size:13px;">'+warnItems.join("<br>")+'</p></div>' : "")
+    + '<div class="report-section"><h4>'+L.repDisclaimer+'</h4>'
+    + '<p style="font-size:12px;color:var(--ink-soft);">'+L.repDisclaimerBody+'</p></div>'
+    + '</div>';
+}
+
+/* ===================== EXPORTS ===================== */
+function exportExcel(){
+  const r = state.result;
+  const inp = state.inputs;
+  const L = UI[currentLang];
+  if(!r || !inp) return;
+  const wb = XLSX.utils.book_new();
+
+  const calcRows = [[L.xlsParam, L.xlsValue],
+    [L.repMaterial, inp.mat==="Cu" ? L.copper : L.aluminum],
+    [L.repInstall, inp.install==="freeair" ? L.tblFreeAir : (inp.mat==="Cu" ? L.tbl2 : L.tbl4)],
+    [L.repSize, sizeLabel(inp.size)],
+    [L.repInsul+" (°C)", inp.insul],
+    [L.repTerm+" (°C)", inp.term],
+    [L.repGovCol+" (°C)", r.effCol],
+    [L.repLoad+" (A)", inp.load],
+    [L.repContinuous, inp.continuous ? L.yes : L.no],
+    [L.repSets, r.sets],
+    [L.repAmbient+" (°C)", Math.round(inp.ambientC*10)/10],
+    [L.repCcc, r.effCcc],
+    [L.stBase+" (A)", r.base===null ? "—" : r.base],
+    [L.f5a, r.f5a===null ? "—" : r.f5a],
+    [L.f5c, r.f5c],
+    [L.stCorrected+" (A)", r.corrected===null ? "—" : Math.round(r.corrected*100)/100],
+    [L.stTotal+" (A)", r.total===null ? "—" : Math.round(r.total*100)/100],
+    [L.stRequired+" (A)", Math.round(r.required*100)/100],
+    [L.repVerdict, r.pass ? L.verdictPass : L.verdictFail]
+  ];
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(calcRows), L.xlsCalculation);
+
+  const sizes = (inp.mat==="Al" && inp.install==="raceway") ? SIZES.filter(s=>s!=="14") : SIZES;
+  const lkRows = [[L.thSize, "60 °C (A)", "75 °C (A)", "90 °C (A)"]];
+  sizes.forEach(s=>{
+    const c = v => (v===null ? "—" : v);
+    lkRows.push([sizeLabel(s), c(baseAmpacity(inp.mat, inp.install, s, 60)), c(baseAmpacity(inp.mat, inp.install, s, 75)), c(baseAmpacity(inp.mat, inp.install, s, 90))]);
+  });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(lkRows), L.xlsLookup);
+
+  const fRows = [[L.xlsFactorTable, "60 °C", "75 °C", "90 °C"]];
+  T5A_BANDS.forEach((b,i)=>fRows.push([L.xlsBand+" "+T5A_BAND_LABELS[i]+" °C", b.f[60]===null?"—":b.f[60], b.f[75]===null?"—":b.f[75], b.f[90]===null?"—":b.f[90]]));
+  fRows.push([]);
+  fRows.push([L.xlsCccBand, L.xlsFactor]);
+  fRows.push(["1–3", 1.00]); fRows.push(["4–6", 0.80]); fRows.push(["7–24", 0.70]); fRows.push(["25–42", 0.60]); fRows.push(["43+", 0.50]);
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(fRows), L.xlsFactors);
+
+  XLSX.writeFile(wb, "cable_ampacity_report.xlsx");
+}
+
+/* ===================== I18N ===================== */
+const UI = {
+  en: {
+    brandLine1:"Cable Ampacity", brandLine2:"CSA C22.1 · TABLES 1–4",
+    sidebarFoot:"Screening tool — verify against the current CSA C22.1 edition before final design.",
+    p0eyebrow:"01 · Reference", p0h1:"Cable Ampacity — Lookup & Correction",
+    p0intro:"Look up the base ampacity of a conductor from CSA C22.1 Tables 1–4, then correct it for ambient temperature (Table 5A) and the number of current-carrying conductors (Table 5C).",
+    p0h3a:"Base ampacity tables (30 °C ambient, Rules 4-004 / 4-006)",
+    p0pa:"Tables 2 (copper) and 4 (aluminum) give the ampacity of insulated conductors rated 0–2000 V in a raceway or cable, with not more than three current-carrying conductors, at 30 °C ambient. Tables 1 (copper) and 3 (aluminum) give the ampacity of a single conductor in free air.",
+    p0pb:"This tool includes the full Table 2 and Table 4 values (60 / 75 / 90 °C columns) and the Table 1 copper 90 °C column only. The Table 1 60 °C and 75 °C columns and all of Table 3 (aluminum, free air) are shown as “—” (not available) — no verified source was found for them.",
+    p0calloutb:"Rule 4-006 — termination temperature:",
+    p0calloutrest:"the governing column is the lower of the insulation rating and the termination rating. Derating may start from the 90 °C column, but the derated result must not exceed the ampacity of the termination-temperature column.",
+    p0pc:"This tool applies Rule 4-006 by taking the base ampacity and the Table 5A factor from the governing (lower) temperature column, and then capping the corrected result at the termination-column ampacity.",
+    p0h3b:"Correction factors",
+    p0pd:"Corrected ampacity = base ampacity × Table 5A factor × Table 5C factor. With parallel sets, the total ampacity is the per-set corrected ampacity × the number of sets.",
+    p0th1:"Table 5A — ambient °C", p0th2:"Table 5C — current-carrying conductors", p0th3:"Factor",
+    p0pe:"The factor is taken from the band containing the ambient temperature, using the band's upper temperature (e.g. 47 °C uses the 46–50 °C row). “—” means the conductor cannot be used at that ambient temperature with that insulation rating.",
+    p0h3c:"Rules applied by this tool", p0th4:"Rule", p0th5:"What it does here",
+    p0r4004:"Base ampacity tables are for 30 °C ambient and not more than 3 current-carrying conductors.",
+    p0r4006:"Governing column = min(insulation rating, termination rating); corrected ampacity is capped at the termination-column ampacity.",
+    p0r4028:"On a 3-phase 4-wire system with non-linear loads, the neutral counts as a current-carrying conductor (triplen harmonics) — the tool adds 1 to the Table 5C conductor count.",
+    p0r8104:"Continuous loads are assessed at 125% of the load current: required ampacity = load × 1.25.",
+    p0r14104:"Overcurrent protection for small copper conductors is capped at 15 A (14 AWG), 20 A (12 AWG) and 30 A (10 AWG).",
+    p0startBtn:"Start a calculation →",
+    p1eyebrow:"02 · Conductor & installation", p1h1:"Choose the conductor",
+    p1intro:"Material, installation method, size and temperature ratings set the base ampacity from Tables 1, 2 or 4.",
+    p1h3a:"Conductor material", p1h3b:"Installation", p1h3c:"Conductor size",
+    p1sizeLabel:"Size", p1sizeHint:"AWG sizes up to 4/0, then kcmil.",
+    p1h3d:"Load", p1loadLabel:"Load current (A)",
+    p1contLabel:"Continuous load? (Rule 8-104 — × 1.25)",
+    p1setsLabel:"Parallel sets per phase", p1setsHint:"Total ampacity = per-set ampacity × number of sets.",
+    p1h3e:"Insulation temperature rating", p1h3f:"Termination temperature rating",
+    p1termHint:"Rule 4-006: the governing column is the lower of these two ratings.",
+    backBtn:"← Back", toStep2Btn:"Correction factors →",
+    p2eyebrow:"03 · Correction factors", p2h1:"Ambient temperature & grouping",
+    p2intro:"Table 5A (ambient temperature) and Table 5C (number of current-carrying conductors) derate the base ampacity.",
+    p2h3a:"Ambient temperature (Table 5A)", p2ambLabel:"Ambient temperature",
+    p2unitLabel:"Units", p2unitHint:"Tables are °C-based; a °F entry is converted to °C before lookup.",
+    p2ambHint:"The factor is taken from the band containing the ambient temperature, using the band's upper temperature (e.g. 47 °C uses the 46–50 °C row).",
+    p2h3b:"Current-carrying conductors (Table 5C)", p2cccLabel:"Number of current-carrying conductors",
+    p2sysLabel:"System", p2loadtypeLabel:"Load type (Rule 4-028(2))",
+    p2loadtypeHint:"Non-linear loads on a 3-phase 4-wire system: the neutral counts as a current-carrying conductor, so 1 is added to the Table 5C count. This assumes a 3-phase 4-wire system with a neutral carrying triplen harmonics.",
+    p2h3c:"Factors preview",
+    pvGovCol:"Governing column", pvBase:"Base ampacity", pvAmbC:"Ambient (°C)", pvF5a:"Table 5A factor", pvEffCcc:"Effective CCC count", pvF5c:"Table 5C factor",
+    p2calcBtn:"Calculate →",
+    p3eyebrow:"04 · Results & report", p3h1:"Results",
+    p3h3a:"Full lookup table — ", p3lookupNote:"Base ampacities (A) at 30 °C ambient, ≤ 3 current-carrying conductors. “—” means no verified value is included for that cell. The selected conductor row is highlighted.",
+    p3h3b:"Export report",
+    p3exportnote:"The report opens with the CSA reference page from Step 1, followed by your inputs, correction factors and results.",
+    printBtn:"🖨 Print / Save as PDF", excelBtn:"📊 Download Excel (.xlsx)",
+    adjustBtn:"← Adjust inputs",
+    copper:"Copper", aluminum:"Aluminum",
+    tbl2:"Table 2 — Cu, raceway/cable", tbl4:"Table 4 — Al, raceway/cable", tblFreeAir:"Free air — Tables 1 & 3",
+    thSize:"Size", thStep:"Step", thValue:"Value", thNote:"Note",
+    alertLoad:"Enter a load current greater than 0.", alertAmbient:"Enter a valid ambient temperature.",
+    verdictPass:"✓ PASS — corrected ampacity meets the required ampacity",
+    verdictFail:"✗ FAIL — corrected ampacity is below the required ampacity",
+    stBase:"Base ampacity", stCorrected:"Corrected ampacity", stTotal:"Total ampacity (all sets)", stRequired:"Required ampacity",
+    factorsTitle:"Calculation breakdown", warningsTitle:"Warnings & notes",
+    fBase:"Base ampacity", fBaseNote:"{table}, {col} °C column (governing column)",
+    f5a:"Table 5A factor", f5aNote:"Ambient band {band}, {col} °C column",
+    f5c:"Table 5C factor", f5cNote:"{n} current-carrying conductors",
+    fSets:"Parallel sets", fSetsNote:"Total = per-set ampacity × sets",
+    fCorrected:"Corrected ampacity (per set)", fCorrectedNote:"Base × Table 5A × Table 5C, capped at the termination-column ampacity (Rule 4-006)",
+    fRequired:"Required ampacity", fRequiredNoteCont:"Load × 1.25 (continuous, Rule 8-104)",
+    fRequiredNoteNonCont:"Load current (non-continuous)",
+    warnFreeAir:"No verified free-air ampacity is available for {size} {mat} — Table 1 (60/75 °C) and Table 3 values are pending verification against the current CSA C22.1 edition, so this conductor cannot be assessed in free air here.",
+    warnFreeAirShort:"No verified free-air ampacity available for the selected size/material.",
+    warnNoBase:"No verified base ampacity is available for {size} in this table.",
+    warnNotPermitted:"This conductor cannot be used at {amb} °C ambient with a {col} °C insulation rating — Table 5A has no factor for that combination (“—”).",
+    warnNotPermittedShort:"Table 5A: conductor not permitted at this ambient temperature.",
+    warnTermCap:"Rule 4-006 — terminal-temperature cap applies: the derated ampacity ({raw}) exceeds the termination-column ampacity, so the corrected ampacity is capped at {cap}.",
+    warnTermCapShort:"Rule 4-006 terminal-temperature cap applies.",
+    warnCap104:"Rule 14-104 — small-conductor overcurrent cap: {size} copper is limited to {cap} A of overcurrent protection, so the usable ampacity is capped at {cap} A per set.",
+    warnCap104Short:"Rule 14-104 small-conductor overcurrent cap applies.",
+    warnFail8104:"Rule 8-104 — the total corrected ampacity ({total}) is below the required ampacity ({req}). Increase the conductor size, add parallel sets, or reduce the load.",
+    warnFail8104Short:"Rule 8-104: corrected ampacity below required ampacity.",
+    noteNeutral:"Rule 4-028(2): 1 was added to the Table 5C conductor count because the load is non-linear on a 3-phase 4-wire system (neutral counts as current-carrying).",
+    calloutPass:"The corrected ampacity meets the required ampacity. This is a screening check — verify the selected conductor against the current CSA C22.1 edition and the manufacturer's data before final design.",
+    yes:"Yes", no:"No", linear:"Linear", nonlinear:"Non-linear",
+    repTitle1:"Cable Ampacity Reference — CSA C22.1 Tables 1–4", repGenerated:"Generated",
+    repRules:"Rules applied", repRulesBody:"Rule 4-004: base tables are for 30 °C ambient and ≤ 3 current-carrying conductors. Rule 4-006: governing column = min(insulation, termination); corrected ampacity capped at the termination-column ampacity. Rule 4-028(2): neutral counts as current-carrying with non-linear loads on a 3-phase 4-wire system. Rule 8-104: continuous load × 1.25. Rule 14-104: 15/20/30 A overcurrent cap for 14/12/10 AWG copper.",
+    repFormula:"Formula used", repFormulaLine:"Corrected = base × Table 5A × Table 5C (per set) · Total = corrected × sets · Required = load × 1.25 (continuous) or load (non-continuous)",
+    repTitle2:"Inputs", repTitle3:"Results",
+    repMaterial:"Conductor material", repInstall:"Installation / table", repSize:"Conductor size",
+    repInsul:"Insulation rating", repTerm:"Termination rating", repGovCol:"Governing column",
+    repLoad:"Load current", repContinuous:"Continuous load", repSets:"Parallel sets",
+    repAmbient:"Ambient temperature", repCcc:"Current-carrying conductors (effective)", repLoadType:"Load type",
+    repVerdict:"Verdict", repDisclaimer:"Disclaimer",
+    repDisclaimerBody:"Base ampacities are the verified CSA C22.1 Table 2 / Table 4 values and the Table 1 copper 90 °C column only. Table 1 (60/75 °C) and Table 3 values are pending verification against the current CSA C22.1 edition and are shown as “—”. Free-air Table 1 values differ across published secondary sources and code editions (e.g. older manufacturer datasheets list lower values); verify against the CSA C22.1 edition enforced by your AHJ. This is a screening tool; verify against the current CSA C22.1 edition.",
+    xlsParam:"Parameter", xlsValue:"Value", xlsCalculation:"Calculation", xlsLookup:"Lookup Table", xlsFactors:"Correction Factors",
+    xlsFactorTable:"Table 5A — ambient band", xlsBand:"Band", xlsCccBand:"Table 5C — CCC band", xlsFactor:"Factor",
+    footerText:"Sources: CSA C22.1 Tables 2 (copper) and 4 (aluminum) — raceway/cable, ≤ 3 current-carrying conductors, 30 °C ambient; Table 1 copper, single conductor in free air, 90 °C column only; Table 5A ambient-temperature correction factors; Table 5C number-of-conductors factors. Table 1 (60/75 °C) and Table 3 values pending verification against the current CSA C22.1 edition. Free-air Table 1 values differ across published secondary sources and code editions (e.g. older manufacturer datasheets list lower values); verify against the CSA C22.1 edition enforced by your AHJ. This is a screening tool; verify against the current CSA C22.1 edition."
+  },
+  fr: {
+    brandLine1:"Ampacité des câbles", brandLine2:"CSA C22.1 · TABLEAUX 1 À 4",
+    sidebarFoot:"Outil de présélection — vérifiez auprès de l'édition en vigueur de la CSA C22.1 avant la conception finale.",
+    p0eyebrow:"01 · Référence", p0h1:"Ampacité des câbles — Recherche et correction",
+    p0intro:"Recherchez l'ampacité de base d'un conducteur dans les tableaux 1 à 4 de la CSA C22.1, puis corrigez-la selon la température ambiante (tableau 5A) et le nombre de conducteurs porteurs de courant (tableau 5C).",
+    p0h3a:"Tableaux d'ampacité de base (ambiante 30 °C, règles 4-004 / 4-006)",
+    p0pa:"Les tableaux 2 (cuivre) et 4 (aluminium) donnent l'ampacité des conducteurs isolés de 0 à 2000 V en canalisation ou en câble, avec au plus trois conducteurs porteurs de courant, à une température ambiante de 30 °C. Les tableaux 1 (cuivre) et 3 (aluminium) donnent l'ampacité d'un conducteur unique à l'air libre.",
+    p0pb:"Cet outil comprend les valeurs complètes des tableaux 2 et 4 (colonnes 60 / 75 / 90 °C) et la colonne 90 °C du tableau 1 (cuivre) seulement. Les colonnes 60 °C et 75 °C du tableau 1 et tout le tableau 3 (aluminium, à l'air libre) sont indiqués par « — » (non disponible) — aucune source vérifiée n'a été trouvée pour ces valeurs.",
+    p0calloutb:"Règle 4-006 — température des bornes :",
+    p0calloutrest:"la colonne applicable est la plus basse entre la température nominale de l'isolation et celle des bornes. Le déclassement peut partir de la colonne 90 °C, mais le résultat déclassé ne doit pas dépasser l'ampacité de la colonne de température des bornes.",
+    p0pc:"Cet outil applique la règle 4-006 en prenant l'ampacité de base et le facteur du tableau 5A dans la colonne applicable (la plus basse), puis en plafonnant le résultat corrigé à l'ampacité de la colonne des bornes.",
+    p0h3b:"Facteurs de correction",
+    p0pd:"Ampacité corrigée = ampacité de base × facteur du tableau 5A × facteur du tableau 5C. Avec des ensembles en parallèle, l'ampacité totale est l'ampacité corrigée par ensemble × le nombre d'ensembles.",
+    p0th1:"Tableau 5A — température ambiante °C", p0th2:"Tableau 5C — conducteurs porteurs de courant", p0th3:"Facteur",
+    p0pe:"Le facteur est pris dans la plage contenant la température ambiante, en utilisant la température supérieure de la plage (p. ex. 47 °C utilise la rangée 46–50 °C). « — » signifie que le conducteur ne peut pas être utilisé à cette température ambiante avec cette température d'isolation.",
+    p0h3c:"Règles appliquées par cet outil", p0th4:"Règle", p0th5:"Ce qu'elle fait ici",
+    p0r4004:"Les tableaux d'ampacité de base s'appliquent à une température ambiante de 30 °C et à au plus 3 conducteurs porteurs de courant.",
+    p0r4006:"Colonne applicable = min(température d'isolation, température des bornes); l'ampacité corrigée est plafonnée à l'ampacité de la colonne des bornes.",
+    p0r4028:"Sur un réseau triphasé à 4 fils avec des charges non linéaires, le neutre compte comme conducteur porteur de courant (harmoniques de rang 3) — l'outil ajoute 1 au nombre de conducteurs du tableau 5C.",
+    p0r8104:"Les charges continues sont évaluées à 125 % du courant de charge : ampacité requise = charge × 1,25.",
+    p0r14104:"La protection contre les surintensités des petits conducteurs de cuivre est plafonnée à 15 A (14 AWG), 20 A (12 AWG) et 30 A (10 AWG).",
+    p0startBtn:"Commencer un calcul →",
+    p1eyebrow:"02 · Conducteur et installation", p1h1:"Choisir le conducteur",
+    p1intro:"Le matériau, la méthode d'installation, la section et les températures nominales déterminent l'ampacité de base selon les tableaux 1, 2 ou 4.",
+    p1h3a:"Matériau du conducteur", p1h3b:"Installation", p1h3c:"Section du conducteur",
+    p1sizeLabel:"Section", p1sizeHint:"Sections AWG jusqu'à 4/0, puis kcmil.",
+    p1h3d:"Charge", p1loadLabel:"Courant de charge (A)",
+    p1contLabel:"Charge continue? (règle 8-104 — × 1,25)",
+    p1setsLabel:"Ensembles en parallèle par phase", p1setsHint:"Ampacité totale = ampacité par ensemble × nombre d'ensembles.",
+    p1h3e:"Température nominale d'isolation", p1h3f:"Température nominale des bornes",
+    p1termHint:"Règle 4-006 : la colonne applicable est la plus basse de ces deux températures.",
+    backBtn:"← Retour", toStep2Btn:"Facteurs de correction →",
+    p2eyebrow:"03 · Facteurs de correction", p2h1:"Température ambiante et groupement",
+    p2intro:"Le tableau 5A (température ambiante) et le tableau 5C (nombre de conducteurs porteurs de courant) déclassent l'ampacité de base.",
+    p2h3a:"Température ambiante (tableau 5A)", p2ambLabel:"Température ambiante",
+    p2unitLabel:"Unités", p2unitHint:"Les tableaux sont en °C; une valeur en °F est convertie en °C avant la recherche.",
+    p2ambHint:"Le facteur est pris dans la plage contenant la température ambiante, en utilisant la température supérieure de la plage (p. ex. 47 °C utilise la rangée 46–50 °C).",
+    p2h3b:"Conducteurs porteurs de courant (tableau 5C)", p2cccLabel:"Nombre de conducteurs porteurs de courant",
+    p2sysLabel:"Réseau", p2loadtypeLabel:"Type de charge (règle 4-028(2))",
+    p2loadtypeHint:"Charges non linéaires sur un réseau triphasé à 4 fils : le neutre compte comme conducteur porteur de courant, donc 1 est ajouté au nombre du tableau 5C. Ceci suppose un réseau triphasé à 4 fils dont le neutre porte des harmoniques de rang 3.",
+    p2h3c:"Aperçu des facteurs",
+    pvGovCol:"Colonne applicable", pvBase:"Ampacité de base", pvAmbC:"Ambiante (°C)", pvF5a:"Facteur du tableau 5A", pvEffCcc:"Nombre effectif de conducteurs", pvF5c:"Facteur du tableau 5C",
+    p2calcBtn:"Calculer →",
+    p3eyebrow:"04 · Résultats et rapport", p3h1:"Résultats",
+    p3h3a:"Tableau de recherche complet — ", p3lookupNote:"Ampacités de base (A) à une température ambiante de 30 °C, ≤ 3 conducteurs porteurs de courant. « — » signifie qu'aucune valeur vérifiée n'est incluse pour cette case. La rangée du conducteur sélectionné est surlignée.",
+    p3h3b:"Exporter le rapport",
+    p3exportnote:"Le rapport s'ouvre avec la page de référence CSA de l'étape 1, suivie de vos données, des facteurs de correction et des résultats.",
+    printBtn:"🖨 Imprimer / Enregistrer en PDF", excelBtn:"📊 Télécharger en Excel (.xlsx)",
+    adjustBtn:"← Ajuster les données",
+    copper:"Cuivre", aluminum:"Aluminium",
+    tbl2:"Tableau 2 — Cu, canalisation/câble", tbl4:"Tableau 4 — Al, canalisation/câble", tblFreeAir:"À l'air libre — tableaux 1 et 3",
+    thSize:"Section", thStep:"Étape", thValue:"Valeur", thNote:"Note",
+    alertLoad:"Entrez un courant de charge supérieur à 0.", alertAmbient:"Entrez une température ambiante valide.",
+    verdictPass:"✓ CONFORME — l'ampacité corrigée atteint l'ampacité requise",
+    verdictFail:"✗ NON CONFORME — l'ampacité corrigée est inférieure à l'ampacité requise",
+    stBase:"Ampacité de base", stCorrected:"Ampacité corrigée", stTotal:"Ampacité totale (tous les ensembles)", stRequired:"Ampacité requise",
+    factorsTitle:"Détail du calcul", warningsTitle:"Avertissements et notes",
+    fBase:"Ampacité de base", fBaseNote:"{table}, colonne {col} °C (colonne applicable)",
+    f5a:"Facteur du tableau 5A", f5aNote:"Plage ambiante {band}, colonne {col} °C",
+    f5c:"Facteur du tableau 5C", f5cNote:"{n} conducteurs porteurs de courant",
+    fSets:"Ensembles en parallèle", fSetsNote:"Total = ampacité par ensemble × ensembles",
+    fCorrected:"Ampacité corrigée (par ensemble)", fCorrectedNote:"Base × tableau 5A × tableau 5C, plafonnée à l'ampacité de la colonne des bornes (règle 4-006)",
+    fRequired:"Ampacité requise", fRequiredNoteCont:"Charge × 1,25 (continue, règle 8-104)",
+    fRequiredNoteNonCont:"Courant de charge (non continue)",
+    warnFreeAir:"Aucune ampacité vérifiée à l'air libre n'est disponible pour le {size} en {mat} — les valeurs des tableaux 1 (60/75 °C) et 3 sont en attente de vérification auprès de l'édition en vigueur de la CSA C22.1, donc ce conducteur ne peut pas être évalué à l'air libre ici.",
+    warnFreeAirShort:"Aucune ampacité vérifiée à l'air libre pour la section / le matériau sélectionné.",
+    warnNoBase:"Aucune ampacité de base vérifiée n'est disponible pour le {size} dans ce tableau.",
+    warnNotPermitted:"Ce conducteur ne peut pas être utilisé à une température ambiante de {amb} °C avec une isolation de {col} °C — le tableau 5A ne prévoit aucun facteur pour cette combinaison (« — »).",
+    warnNotPermittedShort:"Tableau 5A : conducteur non permis à cette température ambiante.",
+    warnTermCap:"Règle 4-006 — le plafond de température des bornes s'applique : l'ampacité déclassée ({raw}) dépasse l'ampacité de la colonne des bornes, donc l'ampacité corrigée est plafonnée à {cap}.",
+    warnTermCapShort:"Le plafond de température des bornes de la règle 4-006 s'applique.",
+    warnCap104:"Règle 14-104 — plafond de surintensité pour petits conducteurs : le cuivre {size} est limité à {cap} A de protection contre les surintensités, donc l'ampacité utilisable est plafonnée à {cap} A par ensemble.",
+    warnCap104Short:"Le plafond de surintensité de la règle 14-104 pour petits conducteurs s'applique.",
+    warnFail8104:"Règle 8-104 — l'ampacité totale corrigée ({total}) est inférieure à l'ampacité requise ({req}). Augmentez la section du conducteur, ajoutez des ensembles en parallèle ou réduisez la charge.",
+    warnFail8104Short:"Règle 8-104 : ampacité corrigée inférieure à l'ampacité requise.",
+    noteNeutral:"Règle 4-028(2) : 1 a été ajouté au nombre de conducteurs du tableau 5C parce que la charge est non linéaire sur un réseau triphasé à 4 fils (le neutre compte comme conducteur porteur de courant).",
+    calloutPass:"L'ampacité corrigée atteint l'ampacité requise. Il s'agit d'une vérification de présélection — vérifiez le conducteur sélectionné auprès de l'édition en vigueur de la CSA C22.1 et des données du fabricant avant la conception finale.",
+    yes:"Oui", no:"Non", linear:"Linéaire", nonlinear:"Non linéaire",
+    repTitle1:"Référence — Ampacité des câbles CSA C22.1, tableaux 1 à 4", repGenerated:"Généré le",
+    repRules:"Règles appliquées", repRulesBody:"Règle 4-004 : les tableaux de base s'appliquent à une température ambiante de 30 °C et à ≤ 3 conducteurs porteurs de courant. Règle 4-006 : colonne applicable = min(isolation, bornes); ampacité corrigée plafonnée à l'ampacité de la colonne des bornes. Règle 4-028(2) : le neutre compte comme conducteur porteur de courant avec des charges non linéaires sur un réseau triphasé à 4 fils. Règle 8-104 : charge continue × 1,25. Règle 14-104 : plafond de surintensité de 15/20/30 A pour le cuivre 14/12/10 AWG.",
+    repFormula:"Formule utilisée", repFormulaLine:"Corrigée = base × tableau 5A × tableau 5C (par ensemble) · Total = corrigée × ensembles · Requise = charge × 1,25 (continue) ou charge (non continue)",
+    repTitle2:"Données", repTitle3:"Résultats",
+    repMaterial:"Matériau du conducteur", repInstall:"Installation / tableau", repSize:"Section du conducteur",
+    repInsul:"Température nominale d'isolation", repTerm:"Température nominale des bornes", repGovCol:"Colonne applicable",
+    repLoad:"Courant de charge", repContinuous:"Charge continue", repSets:"Ensembles en parallèle",
+    repAmbient:"Température ambiante", repCcc:"Conducteurs porteurs de courant (effectif)", repLoadType:"Type de charge",
+    repVerdict:"Verdict", repDisclaimer:"Avis",
+    repDisclaimerBody:"Les ampacités de base sont les valeurs vérifiées des tableaux 2 / 4 de la CSA C22.1 et la colonne 90 °C du tableau 1 (cuivre) seulement. Les valeurs des tableaux 1 (60/75 °C) et 3 sont en attente de vérification auprès de l'édition en vigueur de la CSA C22.1 et sont indiquées par « — ». Les valeurs du tableau 1 à l'air libre diffèrent selon les sources secondaires publiées et les éditions du Code (p. ex. d'anciennes fiches techniques de fabricants indiquent des valeurs plus basses); vérifiez auprès de l'édition de la CSA C22.1 appliquée par votre autorité compétente. Il s'agit d'un outil de présélection; vérifiez auprès de l'édition en vigueur de la CSA C22.1.",
+    xlsParam:"Paramètre", xlsValue:"Valeur", xlsCalculation:"Calcul", xlsLookup:"Tableau de recherche", xlsFactors:"Facteurs de correction",
+    xlsFactorTable:"Tableau 5A — plage ambiante", xlsBand:"Plage", xlsCccBand:"Tableau 5C — plage de conducteurs", xlsFactor:"Facteur",
+    footerText:"Sources : tableaux 2 (cuivre) et 4 (aluminium) de la CSA C22.1 — canalisation/câble, ≤ 3 conducteurs porteurs de courant, température ambiante de 30 °C; tableau 1 cuivre, conducteur unique à l'air libre, colonne 90 °C seulement; facteurs de correction du tableau 5A selon la température ambiante; facteurs du tableau 5C selon le nombre de conducteurs. Les valeurs des tableaux 1 (60/75 °C) et 3 sont en attente de vérification auprès de l'édition en vigueur de la CSA C22.1. Les valeurs du tableau 1 à l'air libre diffèrent selon les sources secondaires publiées et les éditions du Code (p. ex. d'anciennes fiches techniques de fabricants indiquent des valeurs plus basses); vérifiez auprès de l'édition de la CSA C22.1 appliquée par votre autorité compétente. Il s'agit d'un outil de présélection; vérifiez auprès de l'édition en vigueur de la CSA C22.1."
+  }
+};
+
+function applyStaticI18n(){
+  const L = UI[currentLang];
+  document.getElementById("brandText").innerHTML = L.brandLine1 + "<span>" + L.brandLine2 + "</span>";
+  document.getElementById("sidebarFoot").textContent = L.sidebarFoot;
+  document.getElementById("footerText").textContent = L.footerText;
+  const set = (id, key, html) => { const el = document.getElementById(id); if(!el) return; if(html) el.innerHTML = L[key]; else el.textContent = L[key]; };
+  set("p0-eyebrow","p0eyebrow"); set("p0-h1","p0h1"); set("p0-intro","p0intro");
+  set("p0-h3a","p0h3a"); set("p0-pa","p0pa"); set("p0-pb","p0pb");
+  set("p0-callout-b","p0calloutb"); set("p0-callout-rest","p0calloutrest",true);
+  set("p0-pc","p0pc"); set("p0-h3b","p0h3b"); set("p0-pd","p0pd");
+  set("p0-th1","p0th1"); set("p0-th2","p0th2"); set("p0-th3","p0th3");
+  set("p0-pe","p0pe"); set("p0-h3c","p0h3c"); set("p0-th4","p0th4"); set("p0-th5","p0th5");
+  set("p0-r4004","p0r4004"); set("p0-r4006","p0r4006"); set("p0-r4028","p0r4028");
+  set("p0-r8104","p0r8104"); set("p0-r14104","p0r14104");
+  set("p0-start-btn","p0startBtn");
+  set("p1-eyebrow","p1eyebrow"); set("p1-h1","p1h1"); set("p1-intro","p1intro");
+  set("p1-h3a","p1h3a"); set("p1-h3b","p1h3b"); set("p1-h3c","p1h3c");
+  set("p1-size-hint","p1sizeHint");
+  set("p1-h3d","p1h3d");
+  set("p1-h3e","p1h3e"); set("p1-h3f","p1h3f"); set("p1-term-hint","p1termHint");
+  set("p1-back-btn","backBtn"); set("toStep2","toStep2Btn");
+  set("p2-eyebrow","p2eyebrow"); set("p2-h1","p2h1"); set("p2-intro","p2intro");
+  set("p2-h3a","p2h3a"); set("p2-unit-hint","p2unitHint"); set("p2-amb-hint","p2ambHint");
+  set("p2-h3b","p2h3b"); set("p2-loadtype-hint","p2loadtypeHint"); set("p2-h3c","p2h3c");
+  set("p2-back-btn","backBtn"); set("p2-calc-btn","p2calcBtn");
+  set("p3-eyebrow","p3eyebrow"); set("p3-h1","p3h1");
+  set("p3-lookup-note","p3lookupNote");
+  set("p3-h3b","p3h3b"); set("p3-exportnote","p3exportnote");
+  set("p3-print-btn","printBtn"); set("p3-excel-btn","excelBtn");
+  set("p3-back-btn","adjustBtn");
+  // Labels whose text node is the first child of a <label class="field">
+  const lab = (id, key) => { const el = document.getElementById(id); if(el && el.childNodes[0]) el.childNodes[0].textContent = L[key] + " "; };
+  lab("p1-size-label","p1sizeLabel"); lab("p1-load-label","p1loadLabel");
+  lab("p1-cont-label","p1contLabel"); lab("p1-sets-label","p1setsLabel");
+  lab("p2-amb-label","p2ambLabel"); lab("p2-unit-label","p2unitLabel");
+  lab("p2-ccc-label","p2cccLabel"); lab("p2-sys-label","p2sysLabel");
+  lab("p2-loadtype-label","p2loadtypeLabel");
+  const sh = document.getElementById("p1-sets-hint"); if(sh) sh.textContent = L.p1setsHint;
+  document.getElementById("p3-h3a").childNodes[0].textContent = L.p3h3a;
+}
+
+function setLang(lang){
+  currentLang = lang;
+  document.getElementById("btn-en").classList.toggle("active", lang==="en");
+  document.getElementById("btn-fr").classList.toggle("active", lang==="fr");
+  document.documentElement.lang = lang;
+  try { localStorage.setItem("ohmzone-lang", lang); } catch(e) {}
+  applyStaticI18n();
+  renderStepNav();
+  renderStep1();
+  renderStep2();
+  if(state.step===3 && state.result){ renderResults(); }
+}
+
+/* ===================== INIT ===================== */
+renderStepNav();
+renderStep1();
+renderStep2();
+goStep(0);
+(function(){
+  let saved = "en";
+  try { saved = localStorage.getItem("ohmzone-lang") || "en"; } catch(e) {}
+  setLang(saved);
+})();
+</script>
+</body>
+</html>

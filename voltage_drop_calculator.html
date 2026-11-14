@@ -210,6 +210,13 @@
     .card{padding:16px;}
     .kv{grid-template-columns:1fr;gap:4px 0;}
   }
+  @media (max-width:480px){
+    .result-summary{grid-template-columns:1fr;}
+    .report-preview{padding:18px;}
+    .export-btn{flex:1 1 100%;justify-content:center;}
+    .num-block b{font-size:22px;}
+    .gauge-wrap{gap:16px;}
+  }
 
   .lang-switch{display:flex;align-items:center;background:var(--navy-900);border:1px solid var(--navy-800);border-radius:16px;padding:3px;gap:2px;font-family:'IBM Plex Mono';font-size:11px;}
   .lang-switch button{border:none;background:transparent;color:#B7C6D8;padding:5px 12px;border-radius:13px;cursor:pointer;font-family:inherit;font-size:inherit;}
@@ -237,6 +244,13 @@
       <div class="lang-switch no-print" role="group" aria-label="Language">
         <button type="button" id="btn-en" class="active" onclick="setLang('en')">EN</button>
         <button type="button" id="btn-fr" onclick="setLang('fr')">FR</button>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;">
+      <span class="home-link no-print" style="border-bottom:none;cursor:default;" id="unitLabel">Length units</span>
+      <div class="lang-switch no-print" role="group" aria-label="Length units" id="unitToggle">
+        <button type="button" id="btn-m" class="active" onclick="setUnit('m')">m</button>
+        <button type="button" id="btn-ft" onclick="setUnit('ft')">ft</button>
       </div>
     </div>
     <div class="steps" id="stepNav"></div>
@@ -451,9 +465,38 @@ const state = {
   material:null,        // 'Cu' | 'Al'
   tempRating:null,      // 75 | 90
   mode:null,            // 'size' | 'distance' | 'percent'
+  unit:(function(){ try{ const u=localStorage.getItem('ohmzone-unit'); return (u==='m'||u==='ft')?u:'m'; }catch(e){ return 'm'; } })(),
   inputs:{},
   result:null,
 };
+
+/* Length unit: lengths are stored internally in metres; the m/ft toggle only
+   changes how they are entered and displayed. */
+const FT_PER_M = 3.28084;
+function lenDisplay(m){ return state.unit==='ft' ? m*FT_PER_M : m; }
+function lenToM(v){ return state.unit==='ft' ? v/FT_PER_M : v; }
+function lenStr(m, digits){ return lenDisplay(m).toFixed(digits===undefined?1:digits)+' '+state.unit; }
+function lenInputVal(){ const v = state.inputs.length; return (v===undefined||v===null||v==='') ? '' : lenDisplay(v).toFixed(1); }
+
+function setUnit(u){
+  if(u!=='m' && u!=='ft') return;
+  // snapshot any typed inputs first, converting the length from the old unit
+  const cur = document.getElementById('in_current'), pf = document.getElementById('in_pf'),
+        tgt = document.getElementById('in_target'), par = document.getElementById('in_parallel'),
+        len = document.getElementById('in_length');
+  if(cur && cur.value) state.inputs.current = parseFloat(cur.value);
+  if(pf && pf.value) state.inputs.pf = parseFloat(pf.value);
+  if(tgt && tgt.value) state.inputs.target = parseFloat(tgt.value);
+  if(par && par.value) state.inputs.parallel = parseInt(par.value)||1;
+  if(len && len.value) state.inputs.length = lenToM(parseFloat(len.value));
+  state.unit = u;
+  try { localStorage.setItem('ohmzone-unit', u); } catch(e) {}
+  const bm = document.getElementById('btn-m'), bf = document.getElementById('btn-ft');
+  if(bm) bm.classList.toggle('active', u==='m');
+  if(bf) bf.classList.toggle('active', u==='ft');
+  if(state.step===3) renderDynamicInputs();
+  if(state.step===4 && state.result) renderResults();
+}
 
 let currentLang = 'en';
 
@@ -608,8 +651,8 @@ function renderDynamicInputs(){
     </label>`;
 
   if(state.mode==='size'){
-    fields += `<label class="field">${L.lblLength}
-      <input type="number" id="in_length" value="${state.inputs.length||''}" min="1">
+    fields += `<label class="field">${L.lblLength} (${state.unit})
+      <input type="number" id="in_length" value="${lenInputVal()}" min="1">
     </label>`;
   } else if(state.mode==='distance'){
     fields += `<label class="field">${L.lblSize}
@@ -619,8 +662,8 @@ function renderDynamicInputs(){
     fields += `<label class="field">${L.lblSize}
       <select id="in_size">${sizeOptions}</select>
     </label>
-    <label class="field">${L.lblLength}
-      <input type="number" id="in_length" value="${state.inputs.length||''}" min="1">
+    <label class="field">${L.lblLength} (${state.unit})
+      <input type="number" id="in_length" value="${lenInputVal()}" min="1">
     </label>`;
   }
   document.getElementById('dynamicInputs').innerHTML = fields;
@@ -692,7 +735,7 @@ function runCalculation(){
   if(state.mode==='size'){
     const length = parseFloat(document.getElementById('in_length').value);
     if(!length||length<=0){ alert(UI[currentLang].alertLength); return; }
-    state.inputs.length=length;
+    state.inputs.length=lenToM(length);
     const Lkm = length/1000;
     const rows = CONDUCTORS.filter(c=> state.material==='Cu'?c.cuR!==null:c.alR!==null).map(c=>{
       const {R,X} = getRX(c.size, state.material);
@@ -726,7 +769,7 @@ function runCalculation(){
     const size = document.getElementById('in_size').value;
     const length = parseFloat(document.getElementById('in_length').value);
     if(!length||length<=0){ alert(UI[currentLang].alertLength); return; }
-    state.inputs.size=size; state.inputs.length=length;
+    state.inputs.size=size; state.inputs.length=lenToM(length);
     const Lkm = length/1000;
     const rxP = getRX(size, state.material);
     if(!rxP || rxP.R===null || rxP.X===null){ alert(UI[currentLang].alertNoData); return; }
@@ -843,7 +886,7 @@ function renderResults(){
   if(r.mode==='distance'){
     html += `<div class="result-summary">
       <div class="stat"><span>${L.stConductor}</span><b>${r.size}</b></div>
-      <div class="stat"><span>${L.stMaxLength}</span><b>${r.maxLm.toFixed(1)} m</b></div>
+      <div class="stat"><span>${L.stMaxLength}</span><b>${lenStr(r.maxLm,1)}</b></div>
       <div class="stat"><span>${L.stAmpCheck}</span><b class="${r.ampOk?'pass':'fail'}">${r.ampOk?L.ok:L.undersized}</b></div>
       <div class="stat"><span>${L.stTarget}</span><b>${target}%</b></div>
     </div>`;
@@ -888,14 +931,14 @@ function buildReportHTML(){
   } else if(r.mode==='distance'){
     resultBlock = `<div class="kv">
       <div><span>${L.repCondSize}</span><span>${r.size}</span></div>
-      <div><span>${L.repMaxLength}</span><span>${r.maxLm.toFixed(1)} m</span></div>
+      <div><span>${L.repMaxLength}</span><span>${lenStr(r.maxLm,1)}</span></div>
       <div><span>${L.repAmpCheck}</span><span>${r.ampOk?L.pass:L.undersizedLoad}</span></div>
       <div><span>${L.repTargetDrop}</span><span>${state.inputs.target}%</span></div>
     </div>`;
   } else {
     resultBlock = `<div class="kv">
       <div><span>${L.repCondSize}</span><span>${r.size}</span></div>
-      <div><span>${L.repRunLength}</span><span>${state.inputs.length} m</span></div>
+      <div><span>${L.repRunLength}</span><span>${lenStr(state.inputs.length,1)}</span></div>
       <div><span>${L.repVd}</span><span>${r.vd.toFixed(2)} V</span></div>
       <div><span>${L.repVdPct}</span><span>${r.pct.toFixed(2)}%</span></div>
       <div><span>${L.repAmpCheck}</span><span>${r.ampOk?L.pass:L.undersizedLoad}</span></div>
@@ -972,14 +1015,14 @@ function exportExcel(){
     [L.repPf, state.inputs.pf],
     [L.xlsMode, state.mode]];
   if(r.mode==='size'){
-    resRows.push([L.repTargetDrop+" (%)", state.inputs.target],[L.repRunLength+" (m)", state.inputs.length]);
+    resRows.push([L.repTargetDrop+" (%)", state.inputs.target],[L.repRunLength+" ("+state.unit+")", parseFloat(lenDisplay(state.inputs.length).toFixed(1))]);
     resRows.push([L.xlsRecSize, r.chosen?r.chosen.size:L.noneMet]);
     resRows.push([L.xlsResultingDrop+" (%)", r.chosen?r.chosen.pct.toFixed(2):"—"]);
   } else if(r.mode==='distance'){
     resRows.push([L.repTargetDrop+" (%)", state.inputs.target],[L.repCondSize, r.size]);
-    resRows.push([L.xlsMaxLength+" (m)", r.maxLm.toFixed(1)]);
+    resRows.push([L.xlsMaxLength+" ("+state.unit+")", parseFloat(lenDisplay(r.maxLm).toFixed(1))]);
   } else {
-    resRows.push([L.repCondSize, r.size],[L.repRunLength+" (m)", state.inputs.length]);
+    resRows.push([L.repCondSize, r.size],[L.repRunLength+" ("+state.unit+")", parseFloat(lenDisplay(state.inputs.length).toFixed(1))]);
     resRows.push([L.repVd+" (V)", r.vd.toFixed(2)],[L.repVdPct+" (%)", r.pct.toFixed(2)]);
   }
   const wsRes = XLSX.utils.aoa_to_sheet(resRows);
@@ -1000,6 +1043,7 @@ const UI = {
   en: {
     brandLine1:"Voltage Drop Studio", brandLine2:"CSA C22.1 · CEC PART I",
     sidebarFoot:"Reference values are compiled for engineering estimation. Confirm against the current CSA C22.1 tables and manufacturer datasheets before final design.",
+    unitLabel:"Length units",
     p0eyebrow:"01 · Reference", p0h1:"Voltage drop under CSA C22.1",
     p0intro:"This page opens every generated report. It sets out why voltage drop is checked, and the formula this tool uses.",
     p0h3a:"Why it's checked",
@@ -1027,7 +1071,7 @@ const UI = {
     printBtn:"🖨 Print / Save as PDF", wordBtn:"📄 Download Word (.doc)", excelBtn:"📊 Download Excel (.xlsx)",
     adjustBtn:"← Adjust inputs",
     lblCurrent:"Load current, I (A)", lblPf:"Power factor (cosθ)", lblTarget:"Target voltage drop (%)",
-    lblLength:"One-way run length (m)", lblSize:"Conductor size",
+    lblLength:"One-way run length", lblSize:"Conductor size",
     copper:"Copper", aluminum:"Aluminum", insulation:"insulation",
     thSize:"Size", thArea:"Area (mm²)", thAmpacity:"Base ampacity", thDrop:"Drop", thMeetsTarget:"Meets target?",
     alertCurrent:"Enter a load current greater than 0.", alertLength:"Enter a run length greater than 0.", alertNoData:"No resistance/reactance data for this size in aluminum — the conductor table has no 14 AWG aluminum. Choose copper or a larger size.",
@@ -1072,6 +1116,7 @@ const UI = {
   fr: {
     brandLine1:"Studio de chute de tension", brandLine2:"CSA C22.1 · CCE PARTIE I",
     sidebarFoot:"Les valeurs de référence sont compilées à des fins d'estimation technique. Vérifiez auprès des tableaux CSA C22.1 en vigueur et des fiches techniques du fabricant avant la conception finale.",
+    unitLabel:"Unités de longueur",
     p0eyebrow:"01 · Référence", p0h1:"Chute de tension selon la norme CSA C22.1",
     p0intro:"Cette page ouvre chaque rapport généré. Elle explique pourquoi la chute de tension est vérifiée et la formule utilisée par cet outil.",
     p0h3a:"Pourquoi elle est vérifiée",
@@ -1099,7 +1144,7 @@ const UI = {
     printBtn:"🖨 Imprimer / Enregistrer en PDF", wordBtn:"📄 Télécharger en Word (.doc)", excelBtn:"📊 Télécharger en Excel (.xlsx)",
     adjustBtn:"← Ajuster les données",
     lblCurrent:"Courant de charge, I (A)", lblPf:"Facteur de puissance (cosθ)", lblTarget:"Chute de tension cible (%)",
-    lblLength:"Longueur unidirectionnelle (m)", lblSize:"Section du conducteur",
+    lblLength:"Longueur unidirectionnelle", lblSize:"Section du conducteur",
     copper:"Cuivre", aluminum:"Aluminium", insulation:"isolation",
     thSize:"Section", thArea:"Aire (mm²)", thAmpacity:"Ampacité de base", thDrop:"Chute", thMeetsTarget:"Cible atteinte?",
     alertCurrent:"Entrez un courant de charge supérieur à 0.", alertLength:"Entrez une longueur de parcours supérieure à 0.", alertNoData:"Aucune donnée de résistance/réactance pour cette taille en aluminium — le tableau ne contient pas l'aluminium 14 AWG. Choisissez le cuivre ou une taille supérieure.",
@@ -1147,6 +1192,7 @@ function applyStaticI18n(){
   const L = UI[currentLang];
   document.getElementById('brandText').innerHTML = L.brandLine1 + '<span>' + L.brandLine2 + '</span>';
   document.getElementById('sidebarFoot').textContent = L.sidebarFoot;
+  document.getElementById('unitLabel').textContent = L.unitLabel;
   document.getElementById('p0-eyebrow').textContent = L.p0eyebrow;
   document.getElementById('p0-h1').textContent = L.p0h1;
   document.getElementById('p0-intro').textContent = L.p0intro;

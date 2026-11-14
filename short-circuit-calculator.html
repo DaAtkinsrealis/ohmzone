@@ -196,13 +196,13 @@ input[type=number]:focus, select:focus{border-color:var(--trace);}
 
 /* ===== gauge + summary ===== */
 .result-grid{display:grid; grid-template-columns:220px 1fr; gap:16px; align-items:center;}
-@media (max-width:640px){ .result-grid{grid-template-columns:1fr;} }
+@media (max-width:640px){ .result-grid{grid-template-columns:1fr;} .row3{grid-template-columns:1fr 1fr;} .stamp{grid-template-columns:repeat(2,auto);} .titleblock{padding:14px 16px;} }
 .gauge-box{display:flex; flex-direction:column; align-items:center; gap:4px;}
 .gauge-num{font-family:'IBM Plex Mono'; font-weight:700; font-size:30px; color:var(--gold); text-shadow:0 0 22px rgba(232,181,69,.35);}
 .gauge-lbl{font-size:10px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:.1em;}
 
 .stat-list{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
-@media (max-width:480px){ .stat-list{grid-template-columns:1fr;} }
+@media (max-width:480px){ .stat-list{grid-template-columns:1fr;} .row2,.row3{grid-template-columns:1fr;} }
 .stat{
   border:1px solid var(--line-soft); border-radius:var(--radius); padding:9px 11px; background:var(--panel-soft);
 }

@@ -121,7 +121,7 @@ input:focus, select:focus{border-color:var(--trace);}
 .panel-head .tag{font-family:'IBM Plex Mono'; font-size:10px; color:var(--ink-faint);}
 
 .result-grid{display:grid; grid-template-columns:220px 1fr; gap:16px; align-items:center;}
-@media (max-width:640px){ .result-grid{grid-template-columns:1fr;} }
+@media (max-width:640px){ .result-grid{grid-template-columns:1fr;} .row3{grid-template-columns:1fr 1fr;} .row4{grid-template-columns:1fr 1fr;} .stamp{grid-template-columns:repeat(2,auto);} .titleblock{padding:14px 16px;} }
 .sld-wrap{border:1px solid var(--line-soft); border-radius:var(--radius); overflow:hidden; background:
   repeating-linear-gradient(0deg, transparent, transparent 27px, var(--grid-line) 28px),
   repeating-linear-gradient(90deg, transparent, transparent 27px, var(--grid-line) 28px), var(--panel-soft);
@@ -147,7 +147,7 @@ input:focus, select:focus{border-color:var(--trace);}
 .fillbar .marker{position:absolute; top:-2px; bottom:-2px; width:2px; background:var(--warn);}
 
 .stat-list{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
-@media (max-width:480px){ .stat-list{grid-template-columns:1fr;} }
+@media (max-width:480px){ .stat-list{grid-template-columns:1fr;} .row2,.row3,.row4{grid-template-columns:1fr;} }
 .stat{border:1px solid var(--line-soft); border-radius:var(--radius); padding:9px 11px; background:var(--panel-soft);}
 .stat .k{font-size:10px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.06em;}
 .stat .v{font-family:'IBM Plex Mono'; font-size:16px; font-weight:600; margin-top:3px;}
@@ -226,9 +226,12 @@ footer.note b{color:var(--ink-dim);}
         <label class="field"><b id="lblConduitType">Conduit type</b>
           <select id="conduitType"></select>
         </label>
-        <label class="field"><b id="lblConduitSize">Trade size (metric designator)</b>
+        <label class="field"><b id="lblConduitSize">Trade size</b>
           <select id="conduitSize"></select>
         </label>
+        <div class="seg" id="sizeUnitSeg" style="align-self:flex-start;">
+          <button type="button" data-u="mm" class="active">mm</button><button type="button" data-u="in">in</button>
+        </div>
         <label class="field" style="flex-direction:row;align-items:center;gap:8px;">
           <input type="checkbox" id="isNipple" style="width:auto;">
           <span id="lblNipple">Nipple (raceway run ≤ 600 mm) — allows 60% fill</span>
@@ -771,7 +774,8 @@ const CABLE_DATA = [
 ];
 
 let currentLang = 'en';
-let state = { conduitType:"EMT", conduitSize:53, nipple:false, mode:"single", items:[] };
+let state = { conduitType:"EMT", conduitSize:53, nipple:false, mode:"single", items:[],
+  sizeUnit:(function(){ try{ const u=localStorage.getItem('ohmzone-unit'); return (u==='mm'||u==='in')?u:'mm'; }catch(e){ return 'mm'; } })() };
 let itemSeq = 1;
 
 /* ===== step collapse ===== */
@@ -785,6 +789,7 @@ function populateConduitControls(){
   const typeSel = $("conduitType");
   typeSel.innerHTML = Object.keys(CONDUIT_AREA).map(t=>`<option value="${t}">${L["conduit_"+t]}</option>`).join("");
   typeSel.value = state.conduitType;
+  document.querySelectorAll("#sizeUnitSeg button").forEach(b=>b.classList.toggle("active", b.dataset.u===state.sizeUnit));
   refreshConduitSizeOptions();
 }
 function refreshConduitSizeOptions(){
@@ -792,6 +797,8 @@ function refreshConduitSizeOptions(){
   const sizes = CONDUIT_TYPE_SIZES[state.conduitType];
   if(state.conduitType==="HDPE"){
     sizeSel.innerHTML = sizes.map(s=>`<option value="${s}">${s}" IPS (SDR11)</option>`).join("");
+  } else if(state.sizeUnit==="in"){
+    sizeSel.innerHTML = sizes.map(s=>`<option value="${s}">${imperialTag(s)} (${s} mm)</option>`).join("");
   } else {
     sizeSel.innerHTML = sizes.map(s=>`<option value="${s}">${s} mm (${imperialTag(s)})</option>`).join("");
   }
@@ -802,6 +809,22 @@ function imperialTag(mm){
   const map = {16:'½"',21:'¾"',27:'1"',35:'1¼"',41:'1½"',53:'2"',63:'2½"',78:'3"',91:'3½"',103:'4"',129:'5"',155:'6"'};
   return map[mm]||"";
 }
+/* display string for the selected trade size in the current unit system (HDPE is IPS inches) */
+function conduitSizeStr(v){
+  if(state.conduitType==="HDPE") return v+'" IPS';
+  const tag = imperialTag(v);
+  if(state.sizeUnit==="in") return tag ? tag+' ('+v+' mm)' : v+' mm';
+  return v+' mm'+(tag?' ('+tag+')':'');
+}
+function setSizeUnit(u){
+  if(u!=="mm" && u!=="in") return;
+  state.sizeUnit = u;
+  try { localStorage.setItem('ohmzone-unit', u); } catch(e) {}
+  document.querySelectorAll("#sizeUnitSeg button").forEach(b=>b.classList.toggle("active", b.dataset.u===u));
+  refreshConduitSizeOptions();
+  recalc();
+}
+document.querySelectorAll("#sizeUnitSeg button").forEach(b=>b.addEventListener("click", ()=>setSizeUnit(b.dataset.u)));
 $("conduitType").addEventListener("change", e=>{ state.conduitType=e.target.value; refreshConduitSizeOptions(); recalc(); });
 $("conduitSize").addEventListener("change", e=>{ state.conduitSize=Number(e.target.value); recalc(); });
 $("isNipple").addEventListener("change", e=>{ state.nipple=e.target.checked; recalc(); });
@@ -1234,7 +1257,7 @@ function recalc(){
       return (totalArea/a*100) <= maxPct;
     });
     if(next){
-      const sizeLabel = state.conduitType==="HDPE" ? (next+"\" IPS (SDR11)") : (next+" mm ("+imperialTag(next)+")");
+      const sizeLabel = state.conduitType==="HDPE" ? (next+"\" IPS (SDR11)") : conduitSizeStr(next);
       suggestBox.innerHTML = `<div class="risk-box risk-warn"><b>${L.suggestTitle}</b> ${L.suggestBody.replace('{size}',sizeLabel)}</div>`;
     } else {
       suggestBox.innerHTML = `<div class="risk-box risk-warn"><b>${L.suggestTitle}</b> ${L.suggestNone}</div>`;
@@ -1266,7 +1289,7 @@ ${L.totalAreaLbl} = ${fmt(d.totalArea,2)} mm²`, note:L.lstep2Note},
 `${state.nipple ? L.nippleRuleApplied : (d.totalCount<=1 ? L.rule1 : d.totalCount===2 ? L.rule2 : L.rule3plus)}
 ${L.maxFillLbl} = ${d.maxPct}%`, note:L.lstep3Note},
     {num:4, title:L.lstep4Title, formula:
-`${L.conduitAreaLbl} (${state.conduitType}, ${state.conduitSize} mm) = ${fmt(d.conduitArea,2)} mm²`, note:L.lstep4Note},
+`${L.conduitAreaLbl} (${state.conduitType}, ${conduitSizeStr(state.conduitSize)}) = ${fmt(d.conduitArea,2)} mm²`, note:L.lstep4Note},
     {num:5, title:L.lstep5Title, formula:
 `${L.actualFillLbl} = (${fmt(d.totalArea,2)} / ${fmt(d.conduitArea,2)}) × 100 = ${fmt(d.actualPct,2)}%
 ${d.pass ? L.resultPass : L.resultFail}`, note:L.lstep5Note}
@@ -1320,7 +1343,7 @@ function buildReportPageHTML(d, includeLedger, includeItems, includeLogo){
   const sectionHead = (t)=>`<div style="font-size:9.5pt;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;border-bottom:1pt solid #1a1a1a;padding-bottom:2pt;margin:12pt 0 5pt;">${t}</div>`;
 
   const inputPairs = [
-    [L.lblConduitType, d.conduitType], [L.lblConduitSize, d.conduitSize+" mm ("+imperialTag(d.conduitSize)+")"],
+    [L.lblConduitType, d.conduitType], [L.lblConduitSize, conduitSizeStr(d.conduitSize)],
     [L.lblNipple, d.nipple?L.yes:L.no], [L.statID_lbl, fmt(d.conduitID_mm,1)+" mm"],
     [L.statOD_lbl, d.conduitOD_mm?fmt(d.conduitOD_mm,1)+" mm":"—"], ["",""]
   ];
@@ -1411,7 +1434,7 @@ function templateTagValues(d){
   const today = new Date().toLocaleDateString(currentLang==='fr'?'fr-CA':'en-CA');
   return {
     tag: d.tag || L.untitledTag, standard: "CSA C22.1", date: today,
-    conduitType: d.conduitType, conduitSize: d.conduitSize+" mm ("+imperialTag(d.conduitSize)+")",
+    conduitType: d.conduitType, conduitSize: conduitSizeStr(d.conduitSize),
     nipple: d.nipple?L.yes:L.no, conduitID: fmt(d.conduitID_mm,1)+" mm", conduitOD: d.conduitOD_mm?fmt(d.conduitOD_mm,1)+" mm":"—",
     actualPct: fmt(d.actualPct,1)+"%", maxPct: d.maxPct+"%", count: String(d.totalCount),
     totalArea: fmt(d.totalArea,1)+" mm²", conduitArea: fmt(d.conduitArea,1)+" mm²",
@@ -1492,7 +1515,7 @@ document.getElementById('exportExcelBtn').addEventListener('click', () => {
   const main = [
     [L.repInputData,""],
     [L.lblTag, d.tag || L.untitledTag],
-    [L.lblConduitType, d.conduitType], [L.lblConduitSize, d.conduitSize+" mm ("+imperialTag(d.conduitSize)+")"],
+    [L.lblConduitType, d.conduitType], [L.lblConduitSize, conduitSizeStr(d.conduitSize)],
     [L.lblNipple, d.nipple?L.yes:L.no], [L.statID_lbl, fmt(d.conduitID_mm,1)], [L.statOD_lbl, d.conduitOD_mm?fmt(d.conduitOD_mm,1):"—"],
     ["",""], [L.repResults,""],
     [L.gaugeLbl, fmt(d.actualPct,1)], [L.lblStatAllowed, d.maxPct],
@@ -1537,7 +1560,7 @@ const UI = {
     topDiscTxt: "Conductor and conduit area values below are representative/typical figures for planning purposes. Always verify actual areas against the current edition of CSA C22.1 Tables 6, 8, 9 and 10 (or the manufacturer's data for the specific insulation/cable) before finalizing a design. Whole-cable entries are taken from a project-specific cable schedule and should be re-verified against that source.",
     loadExampleTxt: "Load example",
     step1Title: "Conduit", step1Small: "Type, trade size, nipple",
-    lblConduitType: "Conduit type", lblConduitSize: "Trade size (metric designator)",
+    lblConduitType: "Conduit type", lblConduitSize: "Trade size",
     lblNipple: "Nipple (raceway run ≤ 600 mm) — allows 60% fill",
     hintStep1: "Metric designators shown correspond to common imperial trade sizes: 16→½\", 21→¾\", 27→1\", 35→1¼\", 41→1½\", 53→2\", 63→2½\", 78→3\", 91→3½\", 103→4\", 129→5\", 155→6\".",
     step2Title: "Conductors &amp; Cables", step2Small: "Add individual conductors or whole multiconductor cables",
@@ -1624,7 +1647,7 @@ const UI = {
     topDiscTxt: "Les valeurs de surface des conducteurs et des conduits ci-dessous sont des chiffres représentatifs/typiques à des fins de planification. Vérifiez toujours les surfaces réelles auprès de l'édition en vigueur des tableaux 6, 8, 9 et 10 de la CSA C22.1 (ou des données du fabricant pour l'isolation/le câble précis) avant de finaliser une conception. Les entrées de câbles entiers proviennent d'une liste de câbles propre au projet et doivent être revérifiées auprès de cette source.",
     loadExampleTxt: "Charger l'exemple",
     step1Title: "Conduit", step1Small: "Type, taille commerciale, mamelon",
-    lblConduitType: "Type de conduit", lblConduitSize: "Taille commerciale (désignateur métrique)",
+    lblConduitType: "Type de conduit", lblConduitSize: "Taille commerciale",
     lblNipple: "Mamelon (parcours de canalisation ≤ 600 mm) — permet un remplissage de 60 %",
     hintStep1: "Les désignateurs métriques indiqués correspondent aux tailles commerciales impériales courantes : 16→½\", 21→¾\", 27→1\", 35→1¼\", 41→1½\", 53→2\", 63→2½\", 78→3\", 91→3½\", 103→4\", 129→5\", 155→6\".",
     step2Title: "Conducteurs et câbles", step2Small: "Ajoutez des conducteurs individuels ou des câbles multiconducteurs entiers",
