@@ -389,11 +389,17 @@ const DEVICE_PRESETS = {
   custom: {name:"Custom (enter spectrum manually)", spectrum:{}}
 };
 
+/* IEEE 519 voltage-distortion limits below are IEEE 519-2014 Table 1
+   (verified 2026-11-16 against the published table): V ≤ 1.0 kV → THD 8.0%
+   (individual 5.0%); 1 kV < V ≤ 69 kV → THD 5.0%; 69 kV < V ≤ 161 kV →
+   THD 2.5%; V > 161 kV → THD 1.5%. The tool's 3-band LV/MV/HV selector
+   maps HV to the >161 kV band (1.5%); the 69–161 kV band (2.5%) is not
+   separately modelled — users at 69–161 kV must confirm the limit. */
 const STD_LIMITS_META = {
   hq_dist: {name:"Hydro-Québec Distribution (C.25-01)", thduCompat:{lv:8,mv:6.5,hv:3}, thdiBase:15},
   hq_trans:{name:"Hydro-Québec Transmission", thduCompat:{lv:8,mv:6.5,hv:2.5}, thdiBase:12},
   csa:     {name:"CSA C61000-3-6 (general method)", thduCompat:{lv:8,mv:6.5,hv:3}, thdiBase:15},
-  ieee519: {name:"IEEE 519", thduCompat:{lv:5,mv:5,hv:1.5}, thdiBase:15}
+  ieee519: {name:"IEEE 519", thduCompat:{lv:8,mv:5,hv:1.5}, thdiBase:15}
 };
 /* Representative individual-harmonic current limit table, expressed as % of the
    installation's reference/rated current, scaled by the Scc/Sr ratio banding

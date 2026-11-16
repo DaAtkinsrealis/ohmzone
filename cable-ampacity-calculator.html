@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cable Ampacity Calculator — CSA C22.1 Tables 1–4</title>
+<title>Cable Ampacity Calculator — CSA C22.1 Tables 1–5</title>
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3887318872951674" crossorigin="anonymous"></script>
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
@@ -218,7 +218,7 @@
       <div class="brand">
         <div class="brand-mark">Amp</div>
         <div class="brand-text" id="brandText">Cable Ampacity
-          <span>CSA C22.1 · TABLES 1–4</span>
+          <span>CSA C22.1 · TABLES 1–5</span>
         </div>
       </div>
     </div>
@@ -243,7 +243,7 @@
       <div class="panel-head">
         <div class="eyebrow" id="p0-eyebrow">01 · Reference</div>
         <h1 id="p0-h1">Cable Ampacity — Lookup &amp; Correction</h1>
-        <p id="p0-intro">Look up the base ampacity of a conductor from CSA C22.1 Tables 1–4, then correct it for ambient temperature (Table 5A) and the number of current-carrying conductors (Table 5C).</p>
+        <p id="p0-intro">Look up the base ampacity of a conductor from CSA C22.1 Tables 1–5, then correct it for ambient temperature (Table 5A) and the number of current-carrying conductors (Table 5C).</p>
       </div>
 
       <div class="card">
@@ -971,10 +971,10 @@ function exportExcel(){
 /* ===================== I18N ===================== */
 const UI = {
   en: {
-    brandLine1:"Cable Ampacity", brandLine2:"CSA C22.1 · TABLES 1–4",
+    brandLine1:"Cable Ampacity", brandLine2:"CSA C22.1 · TABLES 1–5",
     sidebarFoot:"Screening tool — verify against the current CSA C22.1 edition before final design.",
     p0eyebrow:"01 · Reference", p0h1:"Cable Ampacity — Lookup & Correction",
-    p0intro:"Look up the base ampacity of a conductor from CSA C22.1 Tables 1–4, then correct it for ambient temperature (Table 5A) and the number of current-carrying conductors (Table 5C).",
+    p0intro:"Look up the base ampacity of a conductor from CSA C22.1 Tables 1–5, then correct it for ambient temperature (Table 5A) and the number of current-carrying conductors (Table 5C).",
     p0h3a:"Base ampacity tables (30 °C ambient, Rules 4-004 / 4-006)",
     p0pa:"Tables 2 (copper) and 4 (aluminum) give the ampacity of insulated conductors rated 0–2000 V in a raceway or cable, with not more than three current-carrying conductors, at 30 °C ambient. Tables 1 (copper) and 3 (aluminum) give the ampacity of a single conductor in free air.",
     p0pb:"This tool includes the full Table 2 and Table 4 values (60 / 75 / 90 °C columns) and the Table 1 copper 90 °C column only. The Table 1 60 °C and 75 °C columns and all of Table 3 (aluminum, free air) are shown as “—” (not available) — no verified source was found for them.",
@@ -1048,7 +1048,7 @@ const UI = {
     noteNeutral:"Rule 4-028(2): 1 was added to the Table 5C conductor count because the load is non-linear on a 3-phase 4-wire system (neutral counts as current-carrying).",
     calloutPass:"The corrected ampacity meets the required ampacity. This is a screening check — verify the selected conductor against the current CSA C22.1 edition and the manufacturer's data before final design.",
     yes:"Yes", no:"No", linear:"Linear", nonlinear:"Non-linear",
-    repTitle1:"Cable Ampacity Reference — CSA C22.1 Tables 1–4", repGenerated:"Generated",
+    repTitle1:"Cable Ampacity Reference — CSA C22.1 Tables 1–5", repGenerated:"Generated",
     repRules:"Rules applied", repRulesBody:"Rule 4-004: base tables are for 30 °C ambient and ≤ 3 current-carrying conductors. Rule 4-006: governing column = min(insulation, termination); corrected ampacity capped at the termination-column ampacity. Rule 4-028(2): neutral counts as current-carrying with non-linear loads on a 3-phase 4-wire system. Rule 8-104: continuous load × 1.25. Rule 14-104: 15/20/30 A overcurrent cap for 14/12/10 AWG copper.",
     repFormula:"Formula used", repFormulaLine:"Corrected = base × Table 5A × Table 5C (per set) · Total = corrected × sets · Required = load × 1.25 (continuous) or load (non-continuous)",
     repTitle2:"Inputs", repTitle3:"Results",
@@ -1066,7 +1066,7 @@ const UI = {
     brandLine1:"Ampacité des câbles", brandLine2:"CSA C22.1 · TABLEAUX 1 À 4",
     sidebarFoot:"Outil de présélection — vérifiez auprès de l'édition en vigueur de la CSA C22.1 avant la conception finale.",
     p0eyebrow:"01 · Référence", p0h1:"Ampacité des câbles — Recherche et correction",
-    p0intro:"Recherchez l'ampacité de base d'un conducteur dans les tableaux 1 à 4 de la CSA C22.1, puis corrigez-la selon la température ambiante (tableau 5A) et le nombre de conducteurs porteurs de courant (tableau 5C).",
+    p0intro:"Recherchez l'ampacité de base d'un conducteur dans les tableaux 1 à 5 de la CSA C22.1, puis corrigez-la selon la température ambiante (tableau 5A) et le nombre de conducteurs porteurs de courant (tableau 5C).",
     p0h3a:"Tableaux d'ampacité de base (ambiante 30 °C, règles 4-004 / 4-006)",
     p0pa:"Les tableaux 2 (cuivre) et 4 (aluminium) donnent l'ampacité des conducteurs isolés de 0 à 2000 V en canalisation ou en câble, avec au plus trois conducteurs porteurs de courant, à une température ambiante de 30 °C. Les tableaux 1 (cuivre) et 3 (aluminium) donnent l'ampacité d'un conducteur unique à l'air libre.",
     p0pb:"Cet outil comprend les valeurs complètes des tableaux 2 et 4 (colonnes 60 / 75 / 90 °C) et la colonne 90 °C du tableau 1 (cuivre) seulement. Les colonnes 60 °C et 75 °C du tableau 1 et tout le tableau 3 (aluminium, à l'air libre) sont indiqués par « — » (non disponible) — aucune source vérifiée n'a été trouvée pour ces valeurs.",
@@ -1140,7 +1140,7 @@ const UI = {
     noteNeutral:"Règle 4-028(2) : 1 a été ajouté au nombre de conducteurs du tableau 5C parce que la charge est non linéaire sur un réseau triphasé à 4 fils (le neutre compte comme conducteur porteur de courant).",
     calloutPass:"L'ampacité corrigée atteint l'ampacité requise. Il s'agit d'une vérification de présélection — vérifiez le conducteur sélectionné auprès de l'édition en vigueur de la CSA C22.1 et des données du fabricant avant la conception finale.",
     yes:"Oui", no:"Non", linear:"Linéaire", nonlinear:"Non linéaire",
-    repTitle1:"Référence — Ampacité des câbles CSA C22.1, tableaux 1 à 4", repGenerated:"Généré le",
+    repTitle1:"Référence — Ampacité des câbles CSA C22.1, tableaux 1 à 5", repGenerated:"Généré le",
     repRules:"Règles appliquées", repRulesBody:"Règle 4-004 : les tableaux de base s'appliquent à une température ambiante de 30 °C et à ≤ 3 conducteurs porteurs de courant. Règle 4-006 : colonne applicable = min(isolation, bornes); ampacité corrigée plafonnée à l'ampacité de la colonne des bornes. Règle 4-028(2) : le neutre compte comme conducteur porteur de courant avec des charges non linéaires sur un réseau triphasé à 4 fils. Règle 8-104 : charge continue × 1,25. Règle 14-104 : plafond de surintensité de 15/20/30 A pour le cuivre 14/12/10 AWG.",
     repFormula:"Formule utilisée", repFormulaLine:"Corrigée = base × tableau 5A × tableau 5C (par ensemble) · Total = corrigée × ensembles · Requise = charge × 1,25 (continue) ou charge (non continue)",
     repTitle2:"Données", repTitle3:"Résultats",
