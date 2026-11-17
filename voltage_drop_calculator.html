@@ -736,7 +736,7 @@ function runCalculation(){
     const length = parseFloat(document.getElementById('in_length').value);
     if(!length||length<=0){ alert(UI[currentLang].alertLength); return; }
     state.inputs.length=lenToM(length);
-    const Lkm = length/1000;
+    const Lkm = state.inputs.length/1000;
     const rows = CONDUCTORS.filter(c=> state.material==='Cu'?c.cuR!==null:c.alR!==null).map(c=>{
       const {R,X} = getRX(c.size, state.material);
       const Reff = R/parallel, Xeff = X/parallel;
@@ -770,7 +770,7 @@ function runCalculation(){
     const length = parseFloat(document.getElementById('in_length').value);
     if(!length||length<=0){ alert(UI[currentLang].alertLength); return; }
     state.inputs.size=size; state.inputs.length=lenToM(length);
-    const Lkm = length/1000;
+    const Lkm = state.inputs.length/1000;
     const rxP = getRX(size, state.material);
     if(!rxP || rxP.R===null || rxP.X===null){ alert(UI[currentLang].alertNoData); return; }
     const {R,X} = rxP;
