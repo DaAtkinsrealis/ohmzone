@@ -190,12 +190,7 @@ footer.note b{color:var(--ink-dim);}
           <input type="text" id="eqTag" placeholder="e.g. PCC-1, PROJ-2026-014">
         </label>
         <label class="field"><b id="lblStandard">Governing standard</b>
-          <select id="stdSel">
-            <option value="hq_dist" selected>Hydro-Québec Distribution (C.25-01)</option>
-            <option value="hq_trans">Hydro-Québec Transmission (emission limits)</option>
-            <option value="csa">CSA C61000-3-6 (general method)</option>
-            <option value="ieee519">IEEE 519 (reference, non-HQ jurisdictions)</option>
-          </select>
+          <select id="stdSel"></select>
         </label>
         <div class="hint" id="hintStandard"></div>
         <div class="row2">
@@ -381,12 +376,12 @@ const HARMONIC_ORDERS = [2,3,5,7,9,11,13,15,17,19,21,23,25];
    published approximate values for typical drive/converter topologies — always
    replace with the actual nameplate/datasheet spectrum for the device used. */
 const DEVICE_PRESETS = {
-  vfd6: {name:"6-pulse VFD (no reactor)", spectrum:{5:38,7:15,11:9,13:6,17:4,19:3,23:2,25:1.5}},
-  vfd6r: {name:"6-pulse VFD (with line reactor/DC choke)", spectrum:{5:28,7:10,11:6,13:4,17:2.5,19:2,23:1.2,25:1}},
-  vfd12: {name:"12-pulse converter", spectrum:{5:2,7:1.5,11:8,13:5,17:1,19:0.8,23:1,25:0.8}},
-  ups: {name:"UPS / switch-mode rectifier", spectrum:{3:20,5:12,7:6,9:4,11:3,13:2}},
-  led: {name:"LED/electronic lighting (aggregate)", spectrum:{3:25,5:18,7:12,9:8,11:5,13:3}},
-  custom: {name:"Custom (enter spectrum manually)", spectrum:{}}
+  vfd6: {name:"6-pulse VFD (no reactor)", nameFr:"Variateur 6 impulsions (sans réactance)", spectrum:{5:38,7:15,11:9,13:6,17:4,19:3,23:2,25:1.5}},
+  vfd6r: {name:"6-pulse VFD (with line reactor/DC choke)", nameFr:"Variateur 6 impulsions (avec réactance de ligne/bobine CC)", spectrum:{5:28,7:10,11:6,13:4,17:2.5,19:2,23:1.2,25:1}},
+  vfd12: {name:"12-pulse converter", nameFr:"Convertisseur 12 impulsions", spectrum:{5:2,7:1.5,11:8,13:5,17:1,19:0.8,23:1,25:0.8}},
+  ups: {name:"UPS / switch-mode rectifier", nameFr:"ASI/redresseur à découpage", spectrum:{3:20,5:12,7:6,9:4,11:3,13:2}},
+  led: {name:"LED/electronic lighting (aggregate)", nameFr:"Éclairage DEL/électronique (agrégé)", spectrum:{3:25,5:18,7:12,9:8,11:5,13:3}},
+  custom: {name:"Custom (enter spectrum manually)", nameFr:"Personnalisé (saisir le spectre manuellement)", spectrum:{}}
 };
 
 /* IEEE 519 voltage-distortion limits below are IEEE 519-2014 Table 1
@@ -396,10 +391,10 @@ const DEVICE_PRESETS = {
    maps HV to the >161 kV band (1.5%); the 69–161 kV band (2.5%) is not
    separately modelled — users at 69–161 kV must confirm the limit. */
 const STD_LIMITS_META = {
-  hq_dist: {name:"Hydro-Québec Distribution (C.25-01)", thduCompat:{lv:8,mv:6.5,hv:3}, thdiBase:15},
-  hq_trans:{name:"Hydro-Québec Transmission", thduCompat:{lv:8,mv:6.5,hv:2.5}, thdiBase:12},
-  csa:     {name:"CSA C61000-3-6 (general method)", thduCompat:{lv:8,mv:6.5,hv:3}, thdiBase:15},
-  ieee519: {name:"IEEE 519", thduCompat:{lv:8,mv:5,hv:1.5}, thdiBase:15}
+  hq_dist: {name:"Hydro-Québec Distribution (C.25-01)", nameFr:"Hydro-Québec Distribution (C.25-01)", thduCompat:{lv:8,mv:6.5,hv:3}, thdiBase:15},
+  hq_trans:{name:"Hydro-Québec Transmission", nameFr:"Transport d’Hydro-Québec (limites d’émission)", thduCompat:{lv:8,mv:6.5,hv:2.5}, thdiBase:12},
+  csa:     {name:"CSA C61000-3-6 (general method)", nameFr:"CSA C61000-3-6 (méthode générale)", thduCompat:{lv:8,mv:6.5,hv:3}, thdiBase:15},
+  ieee519: {name:"IEEE 519", nameFr:"IEEE 519 (référence, hors du territoire d’HQ)", thduCompat:{lv:8,mv:5,hv:1.5}, thdiBase:15}
 };
 /* Representative individual-harmonic current limit table, expressed as % of the
    installation's reference/rated current, scaled by the Scc/Sr ratio banding
@@ -449,14 +444,30 @@ function wireSeg(segId, stateKey){
 wireSeg("voltClassSeg","voltClass");
 wireSeg("conditionSeg","condition");
 
+function presetDisplayName(p){ return currentLang==='fr' ? (p.nameFr||p.name) : p.name; }
 function populateDevicePresets(){
-  $("devPreset").innerHTML = Object.keys(DEVICE_PRESETS).map(k=>`<option value="${k}">${DEVICE_PRESETS[k].name}</option>`).join("");
+  const sel = $("devPreset"); const cur = sel.value;
+  sel.innerHTML = Object.keys(DEVICE_PRESETS).map(k=>`<option value="${k}">${presetDisplayName(DEVICE_PRESETS[k])}</option>`).join("");
+  if(DEVICE_PRESETS[cur]) sel.value = cur;
+}
+// Voltage-class label: BT/MT/HT in French, LV/MV/HV in English.
+function vcLabel(v){ return currentLang==='fr' ? ({lv:"BT",mv:"MT",hv:"HT"}[v]||v.toUpperCase()) : v.toUpperCase(); }
+const STD_OPTIONS = [
+  {v:"hq_dist", name:"Hydro-Québec Distribution (C.25-01)", nameFr:"Hydro-Québec Distribution (C.25-01)"},
+  {v:"hq_trans", name:"Hydro-Québec Transmission (emission limits)", nameFr:"Transport d’Hydro-Québec (limites d’émission)"},
+  {v:"csa", name:"CSA C61000-3-6 (general method)", nameFr:"CSA C61000-3-6 (méthode générale)"},
+  {v:"ieee519", name:"IEEE 519 (reference, non-HQ jurisdictions)", nameFr:"IEEE 519 (référence, hors du territoire d’HQ)"}
+];
+function populateStdOptions(){
+  const sel = $("stdSel"); const cur = sel.value || "hq_dist";
+  sel.innerHTML = STD_OPTIONS.map(o=>`<option value="${o.v}">${currentLang==='fr'?o.nameFr:o.name}</option>`).join("");
+  sel.value = cur;
 }
 
 $("addDeviceBtn").addEventListener("click", ()=>{
   const presetKey = $("devPreset").value;
   const preset = DEVICE_PRESETS[presetKey];
-  const name = $("devName").value.trim() || preset.name;
+  const name = $("devName").value.trim() || presetDisplayName(preset);
   const I1 = parseFloat($("devI1").value)||0;
   const qty = Math.max(1, parseInt($("devQty").value)||1);
   if(I1<=0) return;
@@ -599,7 +610,7 @@ function calcAll(){
   });
   const anyFail = rows.some(r=>!r.ok) || thdi>thdiLimit || thdu>thduLimit || thduWorst>thduLimit;
 
-  return {std, stdName: meta.name, pccV, sccGen, sccMin, sccWorst, sr, sccRatio, Ir, backgroundThdu,
+  return {std, stdName: currentLang==='fr' ? (meta.nameFr||meta.name) : meta.name, pccV, sccGen, sccMin, sccWorst, sr, sccRatio, Ir, backgroundThdu,
     condition: state.condition, occasionalMult, voltClass: state.voltClass,
     Ih, rows, thdi, thdiLimit, thdu, thduLimit, thduContribution, thduWorst, thduContributionWorst,
     capOn, qc, resonanceOrder, resonanceWarn, worstOrder, worstRatio, anyFail,
@@ -715,8 +726,8 @@ ${L.backgroundLbl} = ${fmt(d.backgroundThdu,2)}%
 THDU = √(contribution² + background²) = ${fmt(d.thdu,2)}%
 ${L.thduWorstLbl} (${fmt(d.sccMin,1)} MVA) = ${fmt(d.thduWorst,2)}%`});
 
-  steps.push({num:5, title:L.ls5Title, clause: d.std==="hq_dist"?"HQ C.25-01":(d.std==="hq_trans"?"HQ Transmission emission limits":(d.std==="ieee519"?"IEEE 519":"CSA C61000-3-6")), note:L.ls5Note, formula:
-`${L.thduLimitLbl} (${d.voltClass.toUpperCase()}) = ${fmt(d.thduLimit,1)}%
+  steps.push({num:5, title:L.ls5Title, clause: d.std==="hq_dist"?"HQ C.25-01":(d.std==="hq_trans"?(currentLang==='fr'?"Limites d’émission du transport d’HQ":"HQ Transmission emission limits"):(d.std==="ieee519"?"IEEE 519":"CSA C61000-3-6")), note:L.ls5Note, formula:
+`${L.thduLimitLbl} (${vcLabel(d.voltClass)}) = ${fmt(d.thduLimit,1)}%
 ${L.resultLbl}: ${d.thduWorst<=d.thduLimit ? L.resultPass : L.resultFail} (${L.thduWorstLbl})`});
 
   if(d.capOn && d.qc>0){
@@ -749,7 +760,7 @@ function buildReportPageHTML(d, includeLedger, includeSpectrum, includeLogo){
 
   const inputPairs = [
     [L.lblStandard, d.stdName], [L.lblPccV, fmt(d.pccV,0)+" V"],
-    [L.lblVoltClass, d.voltClass.toUpperCase()], [L.lblSccGen, fmt(d.sccGen,1)+" MVA"],
+    [L.lblVoltClass, vcLabel(d.voltClass)], [L.lblSccGen, fmt(d.sccGen,1)+" MVA"],
     [L.lblSccMin, fmt(d.sccMin,1)+" MVA"], [L.lblSr, fmt(d.sr,0)+" kVA"],
     [L.lblCondition, d.condition==='occasional'?L.occasionalShort:L.generalShort], [L.lblBackgroundThdu, fmt(d.backgroundThdu,2)+"%"]
   ];
@@ -843,7 +854,7 @@ function templateTagValues(d){
   const today = new Date().toLocaleDateString(currentLang==='fr'?'fr-CA':'en-CA');
   return {
     tag: d.tag || L.untitledTag, standard: d.stdName, date: today,
-    pccV: fmt(d.pccV,0)+" V", voltClass: d.voltClass.toUpperCase(),
+    pccV: fmt(d.pccV,0)+" V", voltClass: vcLabel(d.voltClass),
     sccGen: fmt(d.sccGen,1)+" MVA", sr: fmt(d.sr,0)+" kVA",
     condition: d.condition==='occasional'?L.occasionalShort:L.generalShort,
     thdi: fmt(d.thdi,1)+"%", thdiLimit: fmt(d.thdiLimit,1)+"%",
@@ -927,7 +938,7 @@ $("exportExcelBtn").addEventListener("click", ()=>{
   const main = [
     [L.repInputData,""],
     [L.lblTag, d.tag || L.untitledTag], [L.lblStandard, d.stdName],
-    [L.lblPccV, fmt(d.pccV,0)], [L.lblVoltClass, d.voltClass.toUpperCase()],
+    [L.lblPccV, fmt(d.pccV,0)], [L.lblVoltClass, vcLabel(d.voltClass)],
     [L.lblSccGen, fmt(d.sccGen,1)], [L.lblSccMin, fmt(d.sccMin,1)], [L.lblSr, fmt(d.sr,0)],
     [L.lblCondition, d.condition], [L.lblBackgroundThdu, fmt(d.backgroundThdu,2)],
     ["",""], [L.repResults,""],
@@ -1129,6 +1140,9 @@ function applyStaticI18n(){
   $('thOrder').innerHTML=L.thOrder; $('thIh').innerHTML=L.thIh; $('thPctI1').innerHTML=L.thPctI1; $('thLimit').innerHTML=L.thLimit; $('thOk').textContent=L.thOk;
   $('footerNote').innerHTML=L.footerHtml;
   populateDevicePresets();
+  populateStdOptions();
+  document.querySelectorAll("#voltClassSeg button").forEach(b=>{ b.textContent = vcLabel(b.dataset.v); });
+  document.querySelectorAll("#conditionSeg button").forEach(b=>{ b.textContent = currentLang==='fr' ? (b.dataset.v==="general"?"Général":"Occasionnel (≤ 1 % du temps)") : (b.dataset.v==="general"?"General":"Occasional (≤1% of time)"); });
   renderDeviceList();
 }
 
