@@ -510,7 +510,7 @@ T_alarm = ${fmt(d.Tal*60,0)} min = ${fmt(d.Tal,4)} h`});
        = ${fmt(d.rawAh,3)} Ah
 ${d.marginPct>0 ? `+ ${d.marginPct}% margin → ${fmt(d.withMargin,3)} Ah` : L.noMargin}`});
 
-  steps.push({num:4, title:L.ls4Title, clause: d.codeEd==="post2022" ? "NFPA 72 §10.6.7.2.14 (2022+)" : "NFPA 72 (2019 & earlier)", note:L.ls4Note, formula:
+  steps.push({num:4, title:L.ls4Title, clause: d.codeEd==="post2022" ? "NFPA 72 §10.6.7.2.14 (2022+)" : "NFPA 72 ("+L.codeEdPre+")", note:L.ls4Note, formula:
 `Ah(required) = Ah(with margin) × ${fmt(d.factor,2)}
             = ${fmt(d.withMargin,3)} × ${fmt(d.factor,2)}
             = ${fmt(d.reqAh,3)} Ah`});
@@ -550,7 +550,7 @@ function buildReportPageHTML(d, includeLedger, includeLogo){
 
   const inputPairs = [
     [L.lblSysType, d.sysType==='standard'?L.sysStandard:(d.sysType==='voice'?L.sysVoice:L.sysMns)],
-    [L.lblCodeEd, d.codeEd==="post2022"?"2022+":"2019 & earlier"],
+    [L.lblCodeEd, d.codeEd==="post2022"?"2022+":L.codeEdPre],
     [L.lblGenOnShort, d.genOn?L.yes:L.no], [L.lblStatSbTime, d.Tsb+" h"],
     [L.lblStatAlTime, fmt(d.Tal*60,0)+" min"], [L.lblMarginShort, d.marginPct+"%"]
   ];
@@ -643,7 +643,7 @@ function templateTagValues(d){
   return {
     tag: d.tag || L.untitledTag, date: today,
     sysType: d.sysType==='standard'?L.sysStandard:(d.sysType==='voice'?L.sysVoice:L.sysMns),
-    codeEd: d.codeEd==="post2022"?"2022+":"2019 & earlier", factor: "×"+fmt(d.factor,2),
+    codeEd: d.codeEd==="post2022"?"2022+":L.codeEdPre, factor: "×"+fmt(d.factor,2),
     sbTime: d.Tsb+" h", alTime: fmt(d.Tal*60,0)+" min",
     sbTotal: fmt(d.totalSbA*1000,0)+" mA", alTotal: fmt(d.totalAlA*1000,0)+" mA",
     reqAh: fmt(d.reqAh,2)+" Ah", recAh: d.recAh+" Ah"
@@ -724,7 +724,7 @@ $("exportExcelBtn").addEventListener("click", ()=>{
     [L.repInputData,""],
     [L.lblTag, d.tag || L.untitledTag],
     [L.lblSysType, d.sysType==='standard'?L.sysStandard:(d.sysType==='voice'?L.sysVoice:L.sysMns)],
-    [L.lblCodeEd, d.codeEd==="post2022"?"2022+":"2019 & earlier"],
+    [L.lblCodeEd, d.codeEd==="post2022"?"2022+":L.codeEdPre],
     [L.lblGenOnShort, d.genOn?L.yes:L.no], [L.lblStatSbTime, d.Tsb],
     [L.lblStatAlTime, fmt(d.Tal*60,0)], [L.lblMarginShort, d.marginPct],
     ["",""], [L.repResults,""],
@@ -762,7 +762,7 @@ const UI = {
     step1Title:"System & Code Basis", step1Small:"Tag, system type, code edition, standby time",
     lblTag:"Project / panel tag", lblSysType:"System type",
     sysStandard:"Standard (24h standby + 5 min alarm)", sysVoice:"Voice/EVACS (24h standby + 15 min alarm)", sysMns:"Mass Notification (MNS) (24h standby + 15 min alarm)",
-    lblCodeEd:"Code edition", lblGenOn:"Qualified emergency generator present (standby time may reduce to 4h)", lblGenOnShort:"Emergency generator present",
+    lblCodeEd:"Code edition", codeEdPre:"2019 & earlier", codeEdPreBtn:"2019 & earlier (×1.20)", codeEdPostBtn:"2022 & later (×1.25)", lblGenOn:"Qualified emergency generator present (standby time may reduce to 4h)", lblGenOnShort:"Emergency generator present",
     hintStep1:"Per NFPA 72 §10.6.7.2.1, standard systems use 24h standby + 5 min alarm; voice/EVACS and mass notification systems (§10.6.7.2.1.2 / §10.6.7.2.3–2.4) use 24h standby + 15 min alarm. The correction factor changed from 1.20 to 1.25 starting with the 2022 edition (§10.6.7.2.14) — confirm which edition your AHJ has adopted. A qualified emergency generator meeting the applicable requirements may permit reducing standby time to 4h — verify this against the current edition and AHJ before relying on it.",
     step2Title:"Device Loads", step2Small:"Standby & alarm current per device group",
     lblDevName:"Label", lblDevQty:"Qty", lblDevSb:"Standby current, each (mA)", lblDevAl:"Alarm current, each (mA)", addDeviceTxt:"Add device group",
@@ -814,7 +814,7 @@ const UI = {
     step1Title:"Système et base normative", step1Small:"Repère, type de système, édition du code, temps de veille",
     lblTag:"Repère du projet / panneau", lblSysType:"Type de système",
     sysStandard:"Standard (veille 24h + alarme 5 min)", sysVoice:"Voix/EVACS (veille 24h + alarme 15 min)", sysMns:"Notification de masse (MNS) (veille 24h + alarme 15 min)",
-    lblCodeEd:"Édition du code", lblGenOn:"Génératrice d'urgence qualifiée présente (le temps de veille peut être réduit à 4h)", lblGenOnShort:"Génératrice d'urgence présente",
+    lblCodeEd:"Édition du code", codeEdPre:"2019 et antérieures", codeEdPreBtn:"2019 et antérieures (×1,20)", codeEdPostBtn:"2022 et ultérieures (×1,25)", lblGenOn:"Génératrice d'urgence qualifiée présente (le temps de veille peut être réduit à 4h)", lblGenOnShort:"Génératrice d'urgence présente",
     hintStep1:"Selon la NFPA 72 §10.6.7.2.1, les systèmes standards utilisent 24h de veille + 5 min d'alarme; les systèmes voix/EVACS et de notification de masse (§10.6.7.2.1.2 / §10.6.7.2.3–2.4) utilisent 24h de veille + 15 min d'alarme. Le facteur de correction est passé de 1,20 à 1,25 à partir de l'édition 2022 (§10.6.7.2.14) — confirmez quelle édition votre AHJ a adoptée. Une génératrice d'urgence qualifiée répondant aux exigences applicables peut permettre de réduire le temps de veille à 4h — vérifiez ceci auprès de l'édition en vigueur et de l'AHJ avant de vous y fier.",
     step2Title:"Charges des dispositifs", step2Small:"Courant de veille et d'alarme par groupe de dispositifs",
     lblDevName:"Repère", lblDevQty:"Qté", lblDevSb:"Courant de veille, chacun (mA)", lblDevAl:"Courant d'alarme, chacun (mA)", addDeviceTxt:"Ajouter un groupe de dispositifs",
@@ -868,7 +868,7 @@ function applyStaticI18n(){
   $('step1Title').childNodes[0].textContent=L.step1Title+' '; $('step1Small').textContent=L.step1Small;
   $('lblTag').textContent=L.lblTag; $('lblSysType').textContent=L.lblSysType;
   $('sysType').options[0].textContent=L.sysStandard; $('sysType').options[1].textContent=L.sysVoice; $('sysType').options[2].textContent=L.sysMns;
-  $('lblCodeEd').textContent=L.lblCodeEd; $('lblGenOn').textContent=L.lblGenOn; $('hintStep1').innerHTML=L.hintStep1;
+  $('lblCodeEd').textContent=L.lblCodeEd; document.querySelectorAll("#codeEdSeg button").forEach(b=>{ b.textContent = b.dataset.u==="pre2022" ? L.codeEdPreBtn : L.codeEdPostBtn; }); $('lblGenOn').textContent=L.lblGenOn; $('hintStep1').innerHTML=L.hintStep1;
   $('step2Title').childNodes[0].textContent=L.step2Title+' '; $('step2Small').textContent=L.step2Small;
   $('lblDevName').textContent=L.lblDevName; $('lblDevQty').textContent=L.lblDevQty;
   $('lblDevSb').textContent=L.lblDevSb; $('lblDevAl').textContent=L.lblDevAl; $('addDeviceTxt').textContent=L.addDeviceTxt; $('hintStep2').textContent=L.hintStep2;
