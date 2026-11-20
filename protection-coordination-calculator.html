@@ -1160,7 +1160,7 @@ const UI = {
     topDiscB:"Preliminary coordination screening only.",
     topDiscTxt:"This tool does not use a licensed manufacturer curve library like ETAP or EasyPower. Fuse-class and standard-breaker curves are now calibrated through real, cited UL 248 / UL 489 calibration test points (see the hint text under each device option for the exact clause) — these are regulatory minimums/maximums every listed manufacturer's device in that class must meet, not one specific manufacturer's exact published curve, which typically clears faster than the bare UL point used here. The transformer inrush point and through-fault withstand curve still use commonly published planning approximations (12×FLA/0.1s inrush; a simplified I²t withstand anchored at 25×FLA/2s) — not the exact IEEE C57.109 category curve. Use the \"Custom points\" device option to plot your actual manufacturer datasheet curve for a fully precise coordination check. Final coordination must be verified by a qualified protection engineer against manufacturer TCC data and the current IEEE/CSA/UL standards.",
     loadExampleTxt:"Load example",
-    step1Title:"Transformer &amp; System", step1Small:"Tag, rating, voltages, impedance",
+    step1Title:"Transformer & System", step1Small:"Tag, rating, voltages, impedance",
     lblTag:"Equipment tag", lblKva:"Transformer rating (kVA)", lblImped:"Impedance, %Z",
     lblPriV:"Primary voltage (V, L-L)", lblSecV:"Secondary voltage (V, L-L)",
     hintStep1:"Impedance and an assumed transformer X/R (by kVA band) are used to refer the POI fault current to the secondary bus — the same series-impedance method as the Short-Circuit Calculator.",
@@ -1290,14 +1290,14 @@ function applyStaticI18n(){
   $('lblDwg').textContent=L.lblDwg; $('lblScale').textContent=L.lblScale; $('lblMethod').textContent=L.lblMethod; $('lblRev').textContent=L.lblRev;
   $('topDiscB').textContent=L.topDiscB; $('topDiscTxt').textContent=L.topDiscTxt;
   $('loadExampleTxt').textContent=L.loadExampleTxt;
-  $('step1Title').childNodes[0].innerHTML=L.step1Title+' '; $('step1Small').textContent=L.step1Small;
+  $('step1Title').childNodes[0].textContent=L.step1Title+' '; $('step1Small').textContent=L.step1Small;
   $('lblTag').textContent=L.lblTag; $('lblKva').textContent=L.lblKva; $('lblImped').textContent=L.lblImped;
   $('lblPriV').textContent=L.lblPriV; $('lblSecV').textContent=L.lblSecV; $('hintStep1').textContent=L.hintStep1;
   $('step2Title').childNodes[0].textContent=L.step2Title+' '; $('step2Small').textContent=L.step2Small;
   $('lblIscMax').textContent=L.lblIscMax; $('lblIscMin').textContent=L.lblIscMin; $('lblSrcXR').textContent=L.lblSrcXR; $('hintStep2').textContent=L.hintStep2;
   $('step3Title').childNodes[0].textContent=L.step3Title+' '; $('step3Small').textContent=L.step3Small;
   $('lblInrushMult1').textContent=L.lblInrushMult1; $('lblInrushT1').textContent=L.lblInrushT1; $('lblInrush2On').textContent=L.lblInrush2On; $('hintStep3').textContent=L.hintStep3;
-  $('step4Title').childNodes[0].innerHTML=L.step4Title+' '; $('optionalTag4').textContent=L.optionalTag4; $('step4Small').textContent=L.step4Small;
+  $('step4Title').childNodes[0].textContent=L.step4Title+' '; $('optionalTag4').textContent=L.optionalTag4; $('step4Small').textContent=L.step4Small;
   $('lblWithstandMult').textContent=L.lblWithstandMult; $('lblWithstandT').textContent=L.lblWithstandT; $('hintStep4').textContent=L.hintStep4;
   $('step5Title').childNodes[0].textContent=L.step5Title+' '; $('optionalTag5').textContent=L.optionalTag5; $('step5Small').textContent=L.step5Small;
   $('lblDeviceType').textContent=L.lblDeviceType; $('lblFuseRating').textContent=L.lblFuseRating;

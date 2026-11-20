@@ -759,7 +759,7 @@ const UI = {
     topDiscB:"Preliminary sizing aid only.",
     topDiscTxt:"This tool applies the standard NFPA 72 §10.6.7.2 battery formula and the code-edition correction factor (1.20 pre-2022 / 1.25 for 2022 and later, per §10.6.7.2.14) that you select. It does not include a manufacturer device database — enter standby/alarm current per device from the actual datasheet. Final battery calculations must be documented and submitted per the AHJ's requirements and reviewed by a qualified fire alarm professional against the specific control panel/power supply manufacturer's own battery calculation worksheet.",
     loadExampleTxt:"Load example",
-    step1Title:"System &amp; Code Basis", step1Small:"Tag, system type, code edition, standby time",
+    step1Title:"System & Code Basis", step1Small:"Tag, system type, code edition, standby time",
     lblTag:"Project / panel tag", lblSysType:"System type",
     sysStandard:"Standard (24h standby + 5 min alarm)", sysVoice:"Voice/EVACS (24h standby + 15 min alarm)", sysMns:"Mass Notification (MNS) (24h standby + 15 min alarm)",
     lblCodeEd:"Code edition", lblGenOn:"Qualified emergency generator present (standby time may reduce to 4h)", lblGenOnShort:"Emergency generator present",
@@ -769,7 +769,7 @@ const UI = {
     hintStep2:"Only include loads that do not automatically disconnect when the system switches to secondary (battery) power. Use the actual standby and alarm current values from each device's listed datasheet, not a generic estimate, for a real submittal.",
     noDevices:"No device groups added yet — enter a label and currents above, then click Add device group.",
     defaultDeviceName:"Device group", standbyLbl:"Standby", alarmLbl:"Alarm", eachLbl:"each",
-    step3Title:"Margins &amp; Charger Check", optionalTag3:"(optional)", step3Small:"Extra derating and 48-hour recharge verification",
+    step3Title:"Margins & Charger Check", optionalTag3:"(optional)", step3Small:"Extra derating and 48-hour recharge verification",
     lblMargin:"Additional margin (%, aging/temperature)", lblMarginShort:"Additional margin", lblChargerA:"Charger rated recharge current (A)",
     hintStep3:"An additional margin can be added for battery aging or low-temperature derating beyond the standard 1.20/1.25 factor, if your design basis calls for it. The recharge check is an approximate screening calculation only (assumes ~80% charge-acceptance efficiency) — always verify actual recharge time against the specific charger/power-supply manufacturer's published recharge curve, since NFPA 72 requires the system to recharge a fully discharged battery to full capacity within 48 hours.",
     resultTitle:"Result — Required Battery", gaugeLbl:"Ah required",
@@ -865,14 +865,14 @@ function applyStaticI18n(){
   $('lblDwg').textContent=L.lblDwg; $('lblScale').textContent=L.lblScale; $('lblMethod').textContent=L.lblMethod; $('lblRev').textContent=L.lblRev;
   $('topDiscB').textContent=L.topDiscB; $('topDiscTxt').textContent=L.topDiscTxt;
   $('loadExampleTxt').textContent=L.loadExampleTxt;
-  $('step1Title').childNodes[0].innerHTML=L.step1Title+' '; $('step1Small').textContent=L.step1Small;
+  $('step1Title').childNodes[0].textContent=L.step1Title+' '; $('step1Small').textContent=L.step1Small;
   $('lblTag').textContent=L.lblTag; $('lblSysType').textContent=L.lblSysType;
   $('sysType').options[0].textContent=L.sysStandard; $('sysType').options[1].textContent=L.sysVoice; $('sysType').options[2].textContent=L.sysMns;
   $('lblCodeEd').textContent=L.lblCodeEd; $('lblGenOn').textContent=L.lblGenOn; $('hintStep1').innerHTML=L.hintStep1;
   $('step2Title').childNodes[0].textContent=L.step2Title+' '; $('step2Small').textContent=L.step2Small;
   $('lblDevName').textContent=L.lblDevName; $('lblDevQty').textContent=L.lblDevQty;
   $('lblDevSb').textContent=L.lblDevSb; $('lblDevAl').textContent=L.lblDevAl; $('addDeviceTxt').textContent=L.addDeviceTxt; $('hintStep2').textContent=L.hintStep2;
-  $('step3Title').childNodes[0].innerHTML=L.step3Title+' '; $('optionalTag3').textContent=L.optionalTag3; $('step3Small').textContent=L.step3Small;
+  $('step3Title').childNodes[0].textContent=L.step3Title+' '; $('optionalTag3').textContent=L.optionalTag3; $('step3Small').textContent=L.step3Small;
   $('lblMargin').textContent=L.lblMargin; $('lblChargerA').textContent=L.lblChargerA; $('hintStep3').innerHTML=L.hintStep3;
   $('resultTitle').textContent=L.resultTitle; $('gaugeLbl').textContent=L.gaugeLbl;
   $('lblStatRecAh').textContent=L.lblStatRecAh; $('lblStatFactor').textContent=L.lblStatFactor;

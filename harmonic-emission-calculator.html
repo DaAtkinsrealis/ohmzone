@@ -982,7 +982,7 @@ const UI = {
     topDiscB:"Screening-level assessment only.",
     topDiscTxt:"This tool performs a simplified, single-frequency-per-order emission and voltage-distortion estimate using the CSA C61000-3-6 harmonic summation law and a linear (X = hX₁) system impedance model. It is not a substitute for the network harmonic impedance data, background distortion measurements, and detailed frequency-scan study that Hydro-Québec requires for an actual compliance submission — and it does not replace the specific per-harmonic limit tables that HQ or the applicable CSA standard provides for your point of connection. Default limit values shown are commonly published representative figures and must be replaced with the actual values issued for your project before this is used for compliance purposes.",
     loadExampleTxt:"Load example",
-    step1Title:"Project &amp; Point of Evaluation", step1Small:"Tag, governing standard, PCC voltage, short-circuit capacity",
+    step1Title:"Project & Point of Evaluation", step1Small:"Tag, governing standard, PCC voltage, short-circuit capacity",
     lblTag:"Project / equipment tag", lblStandard:"Governing standard",
     hintStandard:"CSA C61000-3-6 and Hydro-Québec's own documents (C.25-01 for distribution, the transmission emission-limits document for HV) are closely related methodologies — HQ typically issues project-specific limit values and impedance data that take precedence over the generic tables in this tool.",
     lblPccV:"PCC voltage (V, line-to-line)", lblVoltClass:"Voltage class",
@@ -1114,7 +1114,7 @@ function applyStaticI18n(){
   $('lblDwg').textContent=L.lblDwg; $('lblScale').textContent=L.lblScale; $('lblMethod').textContent=L.lblMethod; $('lblRev').textContent=L.lblRev;
   $('topDiscB').textContent=L.topDiscB; $('topDiscTxt').textContent=L.topDiscTxt;
   $('loadExampleTxt').textContent=L.loadExampleTxt;
-  $('step1Title').childNodes[0].innerHTML=L.step1Title+' '; $('step1Small').textContent=L.step1Small;
+  $('step1Title').childNodes[0].textContent=L.step1Title+' '; $('step1Small').textContent=L.step1Small;
   $('lblTag').textContent=L.lblTag; $('lblStandard').textContent=L.lblStandard; $('hintStandard').textContent=L.hintStandard;
   $('lblPccV').textContent=L.lblPccV; $('lblVoltClass').textContent=L.lblVoltClass;
   $('lblSccGen').innerHTML=L.lblSccGen; $('lblSccMin').innerHTML=L.lblSccMin; $('lblSr').innerHTML=L.lblSr; $('hintStep1').textContent=L.hintStep1;

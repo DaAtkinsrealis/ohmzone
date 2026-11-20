@@ -735,7 +735,7 @@ const UI = {
     topDiscB:"Preliminary screening aid only.",
     topDiscTxt:"This tool applies the standard NFPA 72 Chapter 17 smooth-ceiling spacing rule (nominal listed spacing, 0.7x rule for maximum point-to-detector distance, \u226415 ft from a wall) using a simplified rectangular grid solver. It does not model beamed/sloped ceilings, high air-flow returns, or the Annex A adjustment figures in detail \u2014 rooms with those conditions, or ceilings above 40 ft not using a performance-based design, must be laid out by a qualified fire alarm professional per the current NFPA 72 edition and Annex A guidance.",
     loadExampleTxt:"Load example",
-    step1Title:"Detector Type &amp; Spacing", step1Small:"Tag, detector type, listed nominal spacing",
+    step1Title:"Detector Type & Spacing", step1Small:"Tag, detector type, listed nominal spacing",
     lblTag:"Room / area tag", lblDetType:"Detector type", detSmoke:"Smoke", detHeat:"Heat", lblNomSpacing:"Listed nominal spacing (ft)",
     hintStep1:"Smoke detectors on a smooth ceiling commonly use 30 ft nominal spacing (NFPA 72 \u00a717.7.4.2.3.1); heat detectors are listed for a specific spacing by the manufacturer (commonly 50 ft, but always confirm against the actual listing, including any ceiling-height derating). The 0.7\u00d7 rule requires every point on the ceiling to be within 0.7\u00d7 the nominal spacing of the nearest detector (30 ft \u2192 21 ft), and no detector may be more than half the nominal spacing (15 ft at 30 ft spacing) from a wall.",
     step2Title:"Room Geometry", step2Small:"Dimensions, ceiling height and type",
@@ -839,7 +839,7 @@ function applyStaticI18n(){
   $('lblDwg').textContent=L.lblDwg; $('lblScale').textContent=L.lblScale; $('lblMethod').textContent=L.lblMethod; $('lblRev').textContent=L.lblRev;
   $('topDiscB').textContent=L.topDiscB; $('topDiscTxt').textContent=L.topDiscTxt;
   $('loadExampleTxt').textContent=L.loadExampleTxt;
-  $('step1Title').childNodes[0].innerHTML=L.step1Title+' '; $('step1Small').textContent=L.step1Small;
+  $('step1Title').childNodes[0].textContent=L.step1Title+' '; $('step1Small').textContent=L.step1Small;
   $('lblTag').textContent=L.lblTag; $('lblDetType').textContent=L.lblDetType;
   $('lblNomSpacing').textContent=L.lblNomSpacing; $('hintStep1').innerHTML=L.hintStep1;
   $('step2Title').childNodes[0].textContent=L.step2Title+' '; $('step2Small').textContent=L.step2Small;

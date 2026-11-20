@@ -797,7 +797,7 @@ const UI = {
     step2Title:"Temperature Ratings", step2Small:"Conductor insulation vs. equipment terminals",
     lblInsulTemp:"Conductor insulation rating", lblTermTemp:"Equipment terminal rating",
     hintStep2:"Per CSA C22.1 Rule 4-006, if the conductor's insulation is rated higher than the equipment terminals it lands on, the LOWER of the two temperatures governs the ampacity column used — a 90°C-insulated conductor terminating on 75°C-rated equipment must be sized from the 75°C column.",
-    step3Title:"Material &amp; Installation", step3Small:"Copper/aluminum, raceway or free air",
+    step3Title:"Material & Installation", step3Small:"Copper/aluminum, raceway or free air",
     lblMat:"Conductor material", lblInstall:"Installation method",
     hintStep3:"Table 2 (copper) / Table 4 (aluminum) apply to 3 or fewer current-carrying conductors in a raceway or cable — the most common equipment feeder case. Table 1 / Table 3 apply to a single conductor in free air and generally allow a higher ampacity for the same size.",
     step4Title:"Overcurrent Device", step4Small:"80%-rated vs. 100%-rated breaker",
@@ -910,7 +910,7 @@ function applyStaticI18n(){
   $('hintStep1').innerHTML=L.hintStep1;
   $('step2Title').childNodes[0].textContent=L.step2Title+' '; $('step2Small').textContent=L.step2Small;
   $('lblInsulTemp').textContent=L.lblInsulTemp; $('lblTermTemp').textContent=L.lblTermTemp; $('hintStep2').innerHTML=L.hintStep2;
-  $('step3Title').childNodes[0].innerHTML=L.step3Title+' '; $('step3Small').textContent=L.step3Small;
+  $('step3Title').childNodes[0].textContent=L.step3Title+' '; $('step3Small').textContent=L.step3Small;
   $('lblMat').textContent=L.lblMat; $('lblInstall').textContent=L.lblInstall; $('hintStep3').textContent=L.hintStep3;
   $('step4Title').childNodes[0].textContent=L.step4Title+' '; $('step4Small').textContent=L.step4Small;
   $('lblBreakerType').textContent=L.lblBreakerType; $('hintStep4').textContent=L.hintStep4;

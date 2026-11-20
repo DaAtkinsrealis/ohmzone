@@ -743,7 +743,7 @@ const UI = {
     topDiscB:"Preliminary sizing aid only.",
     topDiscTxt:"This tool applies the standard NFPA 72 §18.3.7 end-of-line (EOL) voltage drop method with NEC Chapter 9 Table 8 conductor resistance values. It does not include a manufacturer device database — enter each device's worst-case current from the actual UL-listed datasheet. Final voltage drop and NAC loading calculations must be documented and submitted per the AHJ's requirements and reviewed by a qualified fire alarm professional against the specific control panel/power supply manufacturer's own worksheet.",
     loadExampleTxt:"Load example",
-    step1Title:"Circuit &amp; Wire", step1Small:"Tag, wire gauge, length, circuit class",
+    step1Title:"Circuit & Wire", step1Small:"Tag, wire gauge, length, circuit class",
     lblTag:"Circuit tag", lblAwg:"Wire gauge (AWG, copper)", lblLength:"One-way run length (ft)", lblCircuitClass:"Circuit class",
     hintStep1:"This tool uses the standard end-of-line (EOL) method, which assumes the worst-case condition where all connected current flows to the far end of the circuit — the conservative and most commonly used method. Point-to-point (PTP) analysis, which sums voltage drop segment by segment as devices tap off along the run, gives a less conservative result but requires the full device layout sequence; use Custom Points-style segment-by-segment hand calculation if PTP precision is required.",
     step2Title:"Devices on Circuit", step2Small:"NAC appliance current — worst-case from datasheet",
@@ -751,7 +751,7 @@ const UI = {
     hintStep2:"Use each device's worst-case UL-listed current draw (typically the value at minimum operating voltage, which is higher than at nominal voltage) — using the nominal-voltage current would understate the actual circuit loading.",
     noDevices:"No device groups added yet — enter a label and current above, then click Add device group.",
     defaultDeviceName:"Device group", eachLbl:"each",
-    step3Title:"Source &amp; Limits", step3Small:"Panel output, minimum device voltage, NAC rating",
+    step3Title:"Source & Limits", step3Small:"Panel output, minimum device voltage, NAC rating",
     lblVsource:"Source voltage, CUSTV (V)", lblVmin:"Minimum device voltage (V)", lblMva:"Module voltage adjustment (V, optional)", lblNacRating:"NAC circuit rated capacity (A)",
     hintStep3:"CUSTV (Control Unit Starting Terminal Voltage) is commonly taken as 85% of the nominal 24V battery voltage (20.4V) per UL 864 — this represents the panel's guaranteed minimum output at end-of-battery-life conditions, not the nominal 24V. Minimum device voltage is typically 16V per UL 464/UL 1638 appliance listings — always confirm against the specific device's actual listing. If addressable notification modules are used on this circuit, their voltage drop (module voltage adjustment, MVA) must be subtracted separately per the module manufacturer's data.",
     resultTitle:"Result — Voltage Drop &amp; NAC Load", gaugeLbl:"End-of-line voltage (V)",
@@ -843,13 +843,13 @@ function applyStaticI18n(){
   $('lblDwg').textContent=L.lblDwg; $('lblScale').textContent=L.lblScale; $('lblMethod').textContent=L.lblMethod; $('lblRev').textContent=L.lblRev;
   $('topDiscB').textContent=L.topDiscB; $('topDiscTxt').textContent=L.topDiscTxt;
   $('loadExampleTxt').textContent=L.loadExampleTxt;
-  $('step1Title').childNodes[0].innerHTML=L.step1Title+' '; $('step1Small').textContent=L.step1Small;
+  $('step1Title').childNodes[0].textContent=L.step1Title+' '; $('step1Small').textContent=L.step1Small;
   $('lblTag').textContent=L.lblTag; $('lblAwg').textContent=L.lblAwg; $('lblLength').textContent=L.lblLength;
   $('lblCircuitClass').textContent=L.lblCircuitClass; $('hintStep1').textContent=L.hintStep1;
   $('step2Title').childNodes[0].textContent=L.step2Title+' '; $('step2Small').textContent=L.step2Small;
   $('lblDevName').textContent=L.lblDevName; $('lblDevQty').textContent=L.lblDevQty;
   $('lblDevAmp').textContent=L.lblDevAmp; $('addDeviceTxt').textContent=L.addDeviceTxt; $('hintStep2').textContent=L.hintStep2;
-  $('step3Title').childNodes[0].innerHTML=L.step3Title+' '; $('step3Small').textContent=L.step3Small;
+  $('step3Title').childNodes[0].textContent=L.step3Title+' '; $('step3Small').textContent=L.step3Small;
   $('lblVsource').textContent=L.lblVsource; $('lblVmin').textContent=L.lblVmin;
   $('lblMva').textContent=L.lblMva; $('lblNacRating').textContent=L.lblNacRating; $('hintStep3').textContent=L.hintStep3;
   $('resultTitle').innerHTML=L.resultTitle; $('gaugeLbl').textContent=L.gaugeLbl;

@@ -715,7 +715,7 @@ const UI = {
     topDiscB:"Preliminary screening aid only.",
     topDiscTxt:"This tool applies the standard NFPA 72 Chapter 18 audibility targets (public/private/sleeping-area mode) using the inverse-square-law distance attenuation model and a representative wall-loss allowance, plus the standard end-of-line audio circuit voltage-loss method converted to dB. It does not include a manufacturer device database \u2014 enter each device's rated dBA at 10 ft from the actual datasheet. Final audibility and line-loss calculations must be documented and submitted per the AHJ's requirements and reviewed by a qualified fire alarm professional, ideally confirmed by field survey/commissioning measurement.",
     loadExampleTxt:"Load example",
-    step1Title:"Mode &amp; Ambient Sound", step1Small:"Tag, notification mode, measured ambient levels",
+    step1Title:"Mode & Ambient Sound", step1Small:"Tag, notification mode, measured ambient levels",
     lblTag:"Space / circuit tag", lblMode:"Notification mode", modePublic:"Public mode", modePrivate:"Private mode",
     lblSleepingOn:"Sleeping area (apply 75 dBA at pillow rule)", lblSleepingOnShort:"Sleeping area",
     lblAmbAvg:"Average ambient sound (dBA)", lblAmbMax:"Maximum ambient sound, \u226560s (dBA)",
@@ -815,14 +815,14 @@ function applyStaticI18n(){
   $('lblDwg').textContent=L.lblDwg; $('lblScale').textContent=L.lblScale; $('lblMethod').textContent=L.lblMethod; $('lblRev').textContent=L.lblRev;
   $('topDiscB').textContent=L.topDiscB; $('topDiscTxt').textContent=L.topDiscTxt;
   $('loadExampleTxt').textContent=L.loadExampleTxt;
-  $('step1Title').childNodes[0].innerHTML=L.step1Title+' '; $('step1Small').textContent=L.step1Small;
+  $('step1Title').childNodes[0].textContent=L.step1Title+' '; $('step1Small').textContent=L.step1Small;
   $('lblTag').textContent=L.lblTag; $('lblMode').textContent=L.lblMode;
   $('modeSel').options[0].textContent=L.modePublic; $('modeSel').options[1].textContent=L.modePrivate;
   $('lblSleepingOn').textContent=L.lblSleepingOn;
   $('lblAmbAvg').textContent=L.lblAmbAvg; $('lblAmbMax').textContent=L.lblAmbMax; $('hintStep1').textContent=L.hintStep1;
   $('step2Title').childNodes[0].textContent=L.step2Title+' '; $('step2Small').textContent=L.step2Small;
   $('lblDevDba').textContent=L.lblDevDba; $('lblDistance').textContent=L.lblDistance; $('lblWalls').textContent=L.lblWalls; $('hintStep2').textContent=L.hintStep2;
-  $('step3Title').childNodes[0].innerHTML=L.step3Title+' '; $('optionalTag3').textContent=L.optionalTag3; $('step3Small').textContent=L.step3Small;
+  $('step3Title').childNodes[0].textContent=L.step3Title+' '; $('optionalTag3').textContent=L.optionalTag3; $('step3Small').textContent=L.step3Small;
   $('lblAmpV').textContent=L.lblAmpV; $('lblTotalW').textContent=L.lblTotalW; $('lblAwgAudio').textContent=L.lblAwgAudio;
   $('lblAudioLength').textContent=L.lblAudioLength; $('lblTargetLoss').textContent=L.lblTargetLoss; $('hintStep3').textContent=L.hintStep3;
   $('resultTitle').innerHTML=L.resultTitle; $('gaugeLbl').textContent=L.gaugeLbl;
