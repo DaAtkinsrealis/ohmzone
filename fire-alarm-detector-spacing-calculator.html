@@ -573,7 +573,7 @@ L.roomLbl+" = "+lenStr(d.L)+" \u00d7 "+lenStr(d.W)+" = "+areaStr(d.area)+"\n"+
 
     steps.push({num:4, title:L.ls4Title, clause:"0.7\u00d7 rule", note:L.ls4Note, formula:
 "half-diagonal = \u221a((dx/2)\u00b2 + (dy/2)\u00b2)\n"+
-"             = \u221a(("+fmt(d.grid.dx/2,2)+")\u00b2 + ("+fmt(d.grid.dy/2,2)+")\u00b2)\n"+
+"             = \u221a(("+lenStr(d.grid.dx/2,2)+")\u00b2 + ("+lenStr(d.grid.dy/2,2)+")\u00b2)\n"+
 "             = "+lenStr(d.grid.halfDiag,3)+"\n"+
 L.limitLbl+" = "+lenStr(0.7*d.S,2)+" \u2192 "+(d.grid.halfDiag<=0.7*d.S?L.resultPass:L.resultFail)});
 
