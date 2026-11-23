@@ -351,6 +351,9 @@ function lenToFt(v){ return lenUnit === 'm' ? v * FT_PER_M : v; }
 function lenDisplay(ft){ return lenUnit === 'm' ? ft / FT_PER_M : ft; }
 function lenUnitLabel(){ return lenUnit === 'ft' ? (currentLang === 'fr' ? 'pi' : 'ft') : 'm'; }
 function lenStr(ft, d){ return fmt(lenDisplay(ft), d === undefined ? 0 : d) + ' ' + lenUnitLabel(); }
+/* wire resistance: NEC Table 8 values are ohm/1000 ft; in metric mode show
+   ohm/km (R x 3.28084, e.g. 14 AWG 2.525 -> 8.284 ohm/km) */
+function rStr(R, d){ return lenUnit === 'm' ? fmt(R*FT_PER_M, d===undefined?3:d)+" Ω/km" : fmt(R, d===undefined?3:d)+" Ω/1000ft"; }
 function lenLabel(){ return UI[currentLang].lblLength + ' (' + lenUnitLabel() + ')'; }
 function setRunLengthFt(ft){ $("runLength").value = lenUnit === 'm' ? Math.round(ft / FT_PER_M * 10) / 10 : Math.round(ft); $("runLength").step = lenUnit === 'm' ? '0.1' : '1'; }
 
@@ -487,7 +490,7 @@ function recalc(){
   $("statUtil").textContent = fmt(d.nacUtilPct,1)+"%";
   $("statTotalA").textContent = fmt(d.totalA,3)+" A";
   $("statMaxLen").textContent = d.maxLen!==null ? lenStr(d.maxLen, 0) : "—";
-  $("statRPerFt").textContent = fmt(d.R,3)+" Ω/1000ft";
+  $("statRPerFt").textContent = rStr(d.R,3);
   $("statClass").textContent = "Class "+d.circuitClass;
   $("revTag").textContent = new Date().toISOString().slice(0,10);
 
@@ -528,7 +531,7 @@ function buildLedgerSteps(d){
 ${L.totalALbl} = ${fmt(d.totalA,3)} A`});
 
   steps.push({num:2, title:L.ls2Title, clause:"NEC Ch.9 Table 8", note:L.ls2Note, formula:
-`${L.wireLbl}: ${d.awg} AWG, ${L.rLbl} = ${fmt(d.R,4)} Ω/1000ft
+`${L.wireLbl}: ${d.awg} AWG, ${L.rLbl} = ${rStr(d.R,4)}
 ${L.lengthLbl} = ${lenStr(d.L,0)} (${L.oneWayLbl}${lenUnit==='m' ? '; '+fmt(d.L,0)+' ft' : ''})
 ${L.circuitClassLbl}: Class ${d.circuitClass}`});
 

@@ -189,6 +189,12 @@ footer.note b{color:var(--ink-dim);}
             <button data-u="heat">Heat</button>
           </div>
         </label>
+        <label class="field"><b id="lblLenUnit">Length unit</b>
+          <div class="seg" id="lenUnitSeg">
+            <button data-u="ft" class="active">ft</button>
+            <button data-u="m">m</button>
+          </div>
+        </label>
         <label class="field"><b id="lblNomSpacing">Listed nominal spacing (ft)</b>
           <input type="number" id="nomSpacing" value="30" min="10" max="70" step="1">
         </label>
@@ -311,6 +317,46 @@ function fmt(n,d=2){ if(n===undefined||n===null||isNaN(n)) return "\u2014"; retu
 
 let currentLang = 'en';
 let state = { detType:"smoke" };
+/* Exact ft dimensions, held in JS state: input fields show rounded display
+   values, and the grid solver sits on exact boundaries (e.g. dx = S = 30 ft
+   for the default room), so the calc must not read the rounded display back.
+   Length unit: the ft/m toggle only changes the displayed/input unit.
+   Shared key 'ohmzone-unit' with the voltage-drop and fire-alarm
+   voltage-drop pages; validated here so a stale value from another page
+   cannot mislead this one. */
+const FT_PER_M = 3.28084;
+const FT2_PER_M2 = 10.7639; /* 1 m^2 = 10.7639 ft^2 */
+let dims = {S:30, L:60, W:40, H:12};
+let lenUnit = 'ft';
+try { const u = localStorage.getItem('ohmzone-unit'); if (u === 'm' || u === 'ft') lenUnit = u; } catch(e) {}
+function lenToFt(v){ return lenUnit === 'm' ? v * FT_PER_M : v; }
+function lenDisplay(ft){ return lenUnit === 'm' ? ft / FT_PER_M : ft; }
+function lenUnitLabel(){ return lenUnit === 'ft' ? (currentLang === 'fr' ? 'pi' : 'ft') : 'm'; }
+function lenStr(ft, d){ const dec = d === undefined ? (lenUnit === 'm' ? 1 : 0) : d; return fmt(lenDisplay(ft), dec) + ' ' + lenUnitLabel(); }
+function areaStr(ft2, d){ return lenUnit === 'm' ? fmt(ft2 / FT2_PER_M2, d === undefined ? 1 : d) + ' m\u00b2' : fmt(ft2, d === undefined ? 0 : d) + ' ft\u00b2'; }
+function areaUnitLabel(){ return lenUnit === 'm' ? 'm\u00b2' : 'ft\u00b2'; }
+function lenLabelOf(key){ return UI[currentLang][key] + ' (' + lenUnitLabel() + ')'; }
+function areaLabelOf(key){ return UI[currentLang][key] + ' (' + areaUnitLabel() + ')'; }
+/* display number for an input field: 1 decimal in m mode, dec decimals in ft */
+function dispLen(ft, dec){ if(lenUnit === 'm') return Math.round(ft / FT_PER_M * 10) / 10; const p = Math.pow(10, dec === undefined ? 0 : dec); return Math.round(ft * p) / p; }
+function setInputSteps(){
+  const st = lenUnit === 'm' ? '0.1' : '1';
+  ["nomSpacing","roomL","roomW"].forEach(id=>{ $(id).step = st; });
+  $("ceilH").step = lenUnit === 'm' ? '0.1' : '0.5';
+}
+function setInputsFromDims(){
+  $("nomSpacing").value = dispLen(dims.S);
+  $("roomL").value = dispLen(dims.L); $("roomW").value = dispLen(dims.W);
+  $("ceilH").value = dispLen(dims.H, 1);
+  setInputSteps();
+}
+function syncDimsFromInputs(){
+  const read = (id, fb)=>{ const v = parseFloat($(id).value); return isNaN(v) ? fb : lenToFt(v); };
+  dims.S = read("nomSpacing", dims.S);
+  dims.L = read("roomL", dims.L);
+  dims.W = read("roomW", dims.W);
+  dims.H = read("ceilH", dims.H);
+}
 
 document.querySelectorAll(".step-head").forEach(h=>{
   h.addEventListener("click", ()=>{ $(h.dataset.toggle).classList.toggle("closed"); });
@@ -328,13 +374,34 @@ $("detTypeSeg").addEventListener("click", e=>{
   document.querySelectorAll("#detTypeSeg button").forEach(x=>x.classList.remove("active"));
   b.classList.add("active");
   state.detType = b.dataset.u;
-  $("nomSpacing").value = state.detType==="smoke" ? 30 : 50;
+  dims.S = state.detType==="smoke" ? 30 : 50;
+  $("nomSpacing").value = dispLen(dims.S);
   recalc();
 });
 
-["eqTag","nomSpacing","roomL","roomW","ceilH","ceilTypeSel"].forEach(id=>{
+$("lenUnitSeg").addEventListener("click", e=>{
+  const b = e.target.closest("button"); if(!b) return;
+  const u = b.dataset.u; if(u === lenUnit) return;
+  document.querySelectorAll("#lenUnitSeg button").forEach(x=>x.classList.toggle("active", x.dataset.u===u));
+  lenUnit = u;
+  try { localStorage.setItem('ohmzone-unit', u); } catch(e) {}
+  setInputsFromDims();
+  applyStaticI18n();
+  recalc();
+});
+/* honour a stored unit preference on load (default HTML is ft: 30/60/40/12) */
+(function(){
+  document.querySelectorAll("#lenUnitSeg button").forEach(x=>x.classList.toggle("active", x.dataset.u===lenUnit));
+  if(lenUnit === 'm') setInputsFromDims(); else setInputSteps();
+})();
+
+["eqTag","ceilTypeSel"].forEach(id=>{
   $(id).addEventListener("input", recalc);
   $(id).addEventListener("change", recalc);
+});
+["nomSpacing","roomL","roomW","ceilH"].forEach(id=>{
+  $(id).addEventListener("input", ()=>{ syncDimsFromInputs(); recalc(); });
+  $(id).addEventListener("change", ()=>{ syncDimsFromInputs(); recalc(); });
 });
 $("perfDesignOn").addEventListener("change", recalc);
 
@@ -342,8 +409,8 @@ $("loadExample").addEventListener("click", ()=>{
   $("eqTag").value = "RM-101";
   state.detType = "smoke";
   document.querySelectorAll("#detTypeSeg button").forEach(x=>x.classList.toggle("active", x.dataset.u==="smoke"));
-  $("nomSpacing").value = 30;
-  $("roomL").value = 60; $("roomW").value = 40; $("ceilH").value = 12;
+  dims = {S:30, L:60, W:40, H:12};
+  setInputsFromDims();
   $("ceilTypeSel").value = "smooth";
   $("perfDesignOn").checked = false;
   $("corridorOn").checked = false;
@@ -390,10 +457,9 @@ function solveGrid(L, W, S, corridorMode){
 
 function calcAll(){
   const detType = state.detType;
-  const S = parseFloat($("nomSpacing").value)||30;
-  const L = parseFloat($("roomL").value)||1;
-  const W = parseFloat($("roomW").value)||1;
-  const ceilH = parseFloat($("ceilH").value)||10;
+  /* exact ft values from dims (see note at dims) — never read the rounded
+     display fields back, the solver sits on exact boundaries */
+  const S = dims.S, L = dims.L, W = dims.W, ceilH = dims.H;
   const ceilType = $("ceilTypeSel").value;
   const perfDesign = $("perfDesignOn").checked;
   const corridorMode = $("corridorOn").checked;
@@ -415,17 +481,17 @@ function recalc(){
 
   if(d.grid){
     $("gaugeNum").textContent = d.grid.count;
-    $("statWorstDist").textContent = fmt(d.grid.halfDiag,1)+" ft";
-    $("stat07").textContent = fmt(0.7*d.S,1)+" ft";
-    $("statGridSpacing").textContent = fmt(d.grid.dx,1)+" x "+fmt(d.grid.dy,1)+" ft";
-    $("statWallDist").textContent = fmt(d.grid.wallDist,1)+" ft";
-    $("statArea").textContent = fmt(d.area,0)+" ft\u00b2";
-    $("statAreaPer").textContent = fmt(d.areaPer,0)+" ft\u00b2";
+    $("statWorstDist").textContent = lenStr(d.grid.halfDiag,1);
+    $("stat07").textContent = lenStr(0.7*d.S,1);
+    $("statGridSpacing").textContent = fmt(lenDisplay(d.grid.dx),1)+" x "+fmt(lenDisplay(d.grid.dy),1)+" "+lenUnitLabel();
+    $("statWallDist").textContent = lenStr(d.grid.wallDist,1);
+    $("statArea").textContent = areaStr(d.area);
+    $("statAreaPer").textContent = areaStr(d.areaPer);
   } else {
     $("gaugeNum").textContent = "\u2014";
-    $("statWorstDist").textContent = "\u2014"; $("stat07").textContent = fmt(0.7*d.S,1)+" ft";
+    $("statWorstDist").textContent = "\u2014"; $("stat07").textContent = lenStr(0.7*d.S,1);
     $("statGridSpacing").textContent = "\u2014"; $("statWallDist").textContent = "\u2014";
-    $("statArea").textContent = fmt(d.area,0)+" ft\u00b2"; $("statAreaPer").textContent = "\u2014";
+    $("statArea").textContent = areaStr(d.area); $("statAreaPer").textContent = "\u2014";
   }
   $("revTag").textContent = new Date().toISOString().slice(0,10);
 
@@ -433,7 +499,7 @@ function recalc(){
   if(!d.grid){
     verdictBox.innerHTML = "<div class=\"risk-box risk-alarm\"><b>"+L.noSolutionTitle+"</b> "+L.noSolutionBody+"</div>";
   } else {
-    verdictBox.innerHTML = "<div class=\"risk-box risk-ok\"><b>"+L.solutionTitle+"</b> "+L.solutionBody.replace('{count}',d.grid.count).replace('{dist}',fmt(d.grid.halfDiag,1)).replace('{limit}',fmt(0.7*d.S,1))+"</div>";
+    verdictBox.innerHTML = "<div class=\"risk-box risk-ok\"><b>"+L.solutionTitle+"</b> "+L.solutionBody.replace('{count}',d.grid.count).replace('{dist}',fmt(lenDisplay(d.grid.halfDiag),1)).replace('{limit}',fmt(lenDisplay(0.7*d.S),1)).split(currentLang==='fr'?' pi':' ft').join(' '+lenUnitLabel())+"</div>";
   }
 
   const heightBox = $("heightBox");
@@ -479,8 +545,8 @@ function renderDiagram(d){
       s += "<circle cx=\""+cx+"\" cy=\""+cy+"\" r=\"4\" fill=\"#e8b545\" stroke=\"#0a0e18\" stroke-width=\"1\"/>";
     }
   }
-  s += "<text x=\""+(offX+roomW_px/2)+"\" y=\""+(offY+roomH_px+18)+"\" text-anchor=\"middle\" font-family=\"IBM Plex Mono\" font-size=\"11\" fill=\"#8497b8\">"+fmt(d.L,0)+" ft</text>";
-  s += "<text x=\""+(offX-8)+"\" y=\""+(offY+roomH_px/2)+"\" text-anchor=\"end\" font-family=\"IBM Plex Mono\" font-size=\"11\" fill=\"#8497b8\" transform=\"rotate(-90 "+(offX-8)+" "+(offY+roomH_px/2)+")\">"+fmt(d.W,0)+" ft</text>";
+  s += "<text x=\""+(offX+roomW_px/2)+"\" y=\""+(offY+roomH_px+18)+"\" text-anchor=\"middle\" font-family=\"IBM Plex Mono\" font-size=\"11\" fill=\"#8497b8\">"+lenStr(d.L)+"</text>";
+  s += "<text x=\""+(offX-8)+"\" y=\""+(offY+roomH_px/2)+"\" text-anchor=\"end\" font-family=\"IBM Plex Mono\" font-size=\"11\" fill=\"#8497b8\" transform=\"rotate(-90 "+(offX-8)+" "+(offY+roomH_px/2)+")\">"+lenStr(d.W)+"</text>";
   svg.setAttribute("viewBox","0 0 "+W_px+" "+H_px);
   svg.innerHTML = s;
 }
@@ -491,35 +557,35 @@ function buildLedgerSteps(d){
   const steps = [];
 
   steps.push({num:1, title:L.ls1Title, clause:"NFPA 72 \u00a717.7.4.2.3.1", note:L.ls1Note, formula:
-L.nomSpacingLbl+" = "+fmt(d.S,1)+" ft ("+(d.detType==="smoke"?L.detSmoke:L.detHeat)+")\n"+
-L.the07Lbl+" = 0.7 \u00d7 "+fmt(d.S,1)+" = "+fmt(0.7*d.S,2)+" ft\n"+
-L.wallMaxLbl+" = "+fmt(d.S,1)+"/2 = "+fmt(d.S/2,2)+" ft"});
+L.nomSpacingLbl+" = "+lenStr(d.S,1)+" ("+(d.detType==="smoke"?L.detSmoke:L.detHeat)+")\n"+
+L.the07Lbl+" = 0.7 \u00d7 "+lenStr(d.S,1)+" = "+lenStr(0.7*d.S,2)+"\n"+
+L.wallMaxLbl+" = "+lenStr(d.S,1)+"/2 = "+lenStr(d.S/2,2)});
 
   steps.push({num:2, title:L.ls2Title, clause:"\u2014", note:L.ls2Note, formula:
-L.roomLbl+" = "+fmt(d.L,0)+" \u00d7 "+fmt(d.W,0)+" ft = "+fmt(d.area,0)+" ft\u00b2\n"+
+L.roomLbl+" = "+lenStr(d.L)+" \u00d7 "+lenStr(d.W)+" = "+areaStr(d.area)+"\n"+
 (d.corridorMode ? L.corridorModeLbl : L.gridModeLbl)});
 
   if(d.grid){
     steps.push({num:3, title:L.ls3Title, clause:"\u2014", note:L.ls3Note, formula:
 "nx \u00d7 ny = "+d.grid.nx+" \u00d7 "+d.grid.ny+" = "+d.grid.count+" "+L.detectorsLbl+"\n"+
-"dx = L/nx = "+fmt(d.L,0)+"/"+d.grid.nx+" = "+fmt(d.grid.dx,2)+" ft\n"+
-"dy = W/ny = "+fmt(d.W,0)+"/"+d.grid.ny+" = "+fmt(d.grid.dy,2)+" ft"});
+"dx = L/nx = "+lenStr(d.L)+"/"+d.grid.nx+" = "+lenStr(d.grid.dx,2)+"\n"+
+"dy = W/ny = "+lenStr(d.W)+"/"+d.grid.ny+" = "+lenStr(d.grid.dy,2)});
 
     steps.push({num:4, title:L.ls4Title, clause:"0.7\u00d7 rule", note:L.ls4Note, formula:
 "half-diagonal = \u221a((dx/2)\u00b2 + (dy/2)\u00b2)\n"+
 "             = \u221a(("+fmt(d.grid.dx/2,2)+")\u00b2 + ("+fmt(d.grid.dy/2,2)+")\u00b2)\n"+
-"             = "+fmt(d.grid.halfDiag,3)+" ft\n"+
-L.limitLbl+" = "+fmt(0.7*d.S,2)+" ft \u2192 "+(d.grid.halfDiag<=0.7*d.S?L.resultPass:L.resultFail)});
+"             = "+lenStr(d.grid.halfDiag,3)+"\n"+
+L.limitLbl+" = "+lenStr(0.7*d.S,2)+" \u2192 "+(d.grid.halfDiag<=0.7*d.S?L.resultPass:L.resultFail)});
 
-    steps.push({num:5, title:L.ls5Title, clause:"\u226515 ft from wall", note:L.ls5Note, formula:
-L.wallDistLbl+" = max(dx/2, dy/2) = "+fmt(d.grid.wallDist,2)+" ft \u2192 "+(d.grid.wallDist<=d.S/2?L.resultPass:L.resultFail)});
+    steps.push({num:5, title:L.ls5Title, clause:(lenUnit==='m'?"\u22644.6 m from wall":"\u226415 ft from wall"), note:L.ls5Note, formula:
+L.wallDistLbl+" = max(dx/2, dy/2) = "+lenStr(d.grid.wallDist,2)+" \u2192 "+(d.grid.wallDist<=d.S/2?L.resultPass:L.resultFail)});
   } else {
     steps.push({num:3, title:L.ls3FailTitle, clause:"\u2014", note:L.ls3FailNote, formula:L.ls3FailFormula});
   }
 
   if(d.highCeiling){
-    steps.push({num:6, title:L.ls6Title, clause:">40 ft", note:L.ls6Note, formula:
-L.ceilHLbl+" = "+fmt(d.ceilH,1)+" ft > 40 ft\n"+
+    steps.push({num:6, title:L.ls6Title, clause:(lenUnit==='m'?">12.2 m":">40 ft"), note:L.ls6Note, formula:
+L.ceilHLbl+" = "+lenStr(d.ceilH,1)+" > "+lenStr(40,1)+"\n"+
 L.perfDesignLbl+": "+(d.perfDesign?L.yes:L.no)+" \u2192 "+(d.highCeilingOk?L.resultPass:L.resultFail)});
   }
   return steps;
@@ -546,14 +612,14 @@ function buildReportPageHTML(d, includeLedger, includeLogo){
   const sectionHead = function(t){ return "<div style=\"font-size:9.5pt;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;border-bottom:1pt solid #1a1a1a;padding-bottom:2pt;margin:12pt 0 5pt;\">"+t+"</div>"; };
 
   const inputPairs = [
-    [L.lblDetType, d.detType==="smoke"?L.detSmoke:L.detHeat], [L.lblNomSpacing, fmt(d.S,1)+" ft"],
-    [L.lblRoomL, fmt(d.L,0)+" ft"], [L.lblRoomW, fmt(d.W,0)+" ft"],
-    [L.lblCeilH, fmt(d.ceilH,1)+" ft"], [L.lblCeilType, d.ceilType]
+    [L.lblDetType, d.detType==="smoke"?L.detSmoke:L.detHeat], [lenLabelOf('lblNomSpacing'), lenStr(d.S,1)],
+    [lenLabelOf('lblRoomL'), lenStr(d.L)], [lenLabelOf('lblRoomW'), lenStr(d.W)],
+    [lenLabelOf('lblCeilH'), lenStr(d.ceilH,1)], [L.lblCeilType, d.ceilType]
   ];
   const resultPairs = d.grid ? [
-    [L.gaugeLbl, d.grid.count], [L.lblStatWorstDist, fmt(d.grid.halfDiag,1)+" ft"],
-    [L.lblStat07, fmt(0.7*d.S,1)+" ft"], [L.lblStatGridSpacing, fmt(d.grid.dx,1)+" x "+fmt(d.grid.dy,1)+" ft"],
-    [L.lblStatArea, fmt(d.area,0)+" ft\u00b2"], [L.xlsResult, L.passWord]
+    [L.gaugeLbl, d.grid.count], [L.lblStatWorstDist, lenStr(d.grid.halfDiag,1)],
+    [L.lblStat07, lenStr(0.7*d.S,1)], [L.lblStatGridSpacing, fmt(lenDisplay(d.grid.dx),1)+" x "+fmt(lenDisplay(d.grid.dy),1)+" "+lenUnitLabel()],
+    [areaLabelOf('lblStatArea'), areaStr(d.area)], [L.xlsResult, L.passWord]
   ] : [[L.gaugeLbl, "\u2014"]];
 
   let ledgerHtml = "";
@@ -620,9 +686,9 @@ function templateTagValues(d){
   const today = new Date().toLocaleDateString(currentLang==='fr'?'fr-CA':'en-CA');
   return {
     tag: d.tag || L.untitledTag, date: today,
-    detType: d.detType==="smoke"?L.detSmoke:L.detHeat, nomSpacing: fmt(d.S,1)+" ft",
-    roomL: fmt(d.L,0)+" ft", roomW: fmt(d.W,0)+" ft",
-    count: d.grid?String(d.grid.count):"\u2014", worstDist: d.grid?fmt(d.grid.halfDiag,1)+" ft":"\u2014",
+    detType: d.detType==="smoke"?L.detSmoke:L.detHeat, nomSpacing: lenStr(d.S,1),
+    roomL: lenStr(d.L), roomW: lenStr(d.W),
+    count: d.grid?String(d.grid.count):"\u2014", worstDist: d.grid?lenStr(d.grid.halfDiag,1):"\u2014",
     result: d.grid?L.passWord:L.failWord
   };
 }
@@ -699,17 +765,17 @@ $("exportExcelBtn").addEventListener("click", function(){
   const main = [
     [L.repInputData,""],
     [L.lblTag, d.tag || L.untitledTag],
-    [L.lblDetType, d.detType], [L.lblNomSpacing, fmt(d.S,1)],
-    [L.lblRoomL, fmt(d.L,0)], [L.lblRoomW, fmt(d.W,0)],
-    [L.lblCeilH, fmt(d.ceilH,1)], [L.lblCeilType, d.ceilType],
+    [L.lblDetType, d.detType], [lenLabelOf('lblNomSpacing'), fmt(lenDisplay(d.S),1)],
+    [lenLabelOf('lblRoomL'), fmt(lenDisplay(d.L), lenUnit==='m'?1:0)], [lenLabelOf('lblRoomW'), fmt(lenDisplay(d.W), lenUnit==='m'?1:0)],
+    [lenLabelOf('lblCeilH'), fmt(lenDisplay(d.ceilH),1)], [L.lblCeilType, d.ceilType],
     ["",""], [L.repResults,""]
   ];
   if(d.grid){
     main.push([L.gaugeLbl, d.grid.count]);
-    main.push([L.lblStatWorstDist, fmt(d.grid.halfDiag,1)]);
-    main.push([L.lblStat07, fmt(0.7*d.S,1)]);
-    main.push([L.lblStatGridSpacing, fmt(d.grid.dx,1)+" x "+fmt(d.grid.dy,1)]);
-    main.push([L.lblStatArea, fmt(d.area,0)]);
+    main.push([L.lblStatWorstDist, fmt(lenDisplay(d.grid.halfDiag),1)]);
+    main.push([L.lblStat07, fmt(lenDisplay(0.7*d.S),1)]);
+    main.push([L.lblStatGridSpacing, fmt(lenDisplay(d.grid.dx),1)+" x "+fmt(lenDisplay(d.grid.dy),1)]);
+    main.push([areaLabelOf('lblStatArea'), lenUnit==='m' ? fmt(d.area/FT2_PER_M2,1) : fmt(d.area,0)]);
   }
   main.push(["",""]); main.push([L.disclaimerLbl, L.disclaimerBody]);
   const wb = XLSX.utils.book_new();
@@ -736,10 +802,10 @@ const UI = {
     topDiscTxt:"This tool applies the standard NFPA 72 Chapter 17 smooth-ceiling spacing rule (nominal listed spacing, 0.7x rule for maximum point-to-detector distance, \u226415 ft from a wall) using a simplified rectangular grid solver. It does not model beamed/sloped ceilings, high air-flow returns, or the Annex A adjustment figures in detail \u2014 rooms with those conditions, or ceilings above 40 ft not using a performance-based design, must be laid out by a qualified fire alarm professional per the current NFPA 72 edition and Annex A guidance.",
     loadExampleTxt:"Load example",
     step1Title:"Detector Type & Spacing", step1Small:"Tag, detector type, listed nominal spacing",
-    lblTag:"Room / area tag", lblDetType:"Detector type", detSmoke:"Smoke", detHeat:"Heat", lblNomSpacing:"Listed nominal spacing (ft)",
+    lblTag:"Room / area tag", lblDetType:"Detector type", detSmoke:"Smoke", detHeat:"Heat", lblLenUnit:"Length unit", lblNomSpacing:"Listed nominal spacing",
     hintStep1:"Smoke detectors on a smooth ceiling commonly use 30 ft nominal spacing (NFPA 72 \u00a717.7.4.2.3.1); heat detectors are listed for a specific spacing by the manufacturer (commonly 50 ft, but always confirm against the actual listing, including any ceiling-height derating). The 0.7\u00d7 rule requires every point on the ceiling to be within 0.7\u00d7 the nominal spacing of the nearest detector (30 ft \u2192 21 ft), and no detector may be more than half the nominal spacing (15 ft at 30 ft spacing) from a wall.",
     step2Title:"Room Geometry", step2Small:"Dimensions, ceiling height and type",
-    lblRoomL:"Room length (ft)", lblRoomW:"Room width (ft)", lblCeilH:"Ceiling height (ft)", lblCeilType:"Ceiling type",
+    lblRoomL:"Room length", lblRoomW:"Room width", lblCeilH:"Ceiling height", lblCeilType:"Ceiling type",
     lblPerfDesignOn:"Performance-based design in use (required if ceiling &gt;40 ft)",
     hintStep2:"Rooms with a smooth, level ceiling can use the standard listed spacing directly. Beamed, obstructed, or sloped ceilings require the Annex A spacing adjustments (not modeled in detail by this tool) \u2014 a qualified professional should verify the specific layout. Ceilings above 40 ft generally require a performance-based (engineered) design rather than the standard listed spacing table, per current NFPA 72 guidance.",
     step3Title:"Corridor Mode", optionalTag3:"(optional)", step3Small:"Single-row centerline layout for narrow corridors",
@@ -787,10 +853,10 @@ const UI = {
     topDiscTxt:"Cet outil applique la r\u00e8gle standard d'espacement \u00e0 plafond lisse du chapitre 17 de la NFPA 72 (espacement nominal homologu\u00e9, r\u00e8gle de 0,7\u00d7 pour la distance maximale point-d\u00e9tecteur, \u226415 pi d'un mur) en utilisant un solveur de grille rectangulaire simplifi\u00e9. Il ne mod\u00e9lise pas en d\u00e9tail les plafonds \u00e0 poutres/en pente, les retours \u00e0 haut d\u00e9bit d'air, ni les figures d'ajustement de l'annexe A \u2014 les pi\u00e8ces avec ces conditions, ou les plafonds au-dessus de 40 pi sans conception bas\u00e9e sur la performance, doivent \u00eatre am\u00e9nag\u00e9s par un professionnel qualifi\u00e9 en alarme incendie selon l'\u00e9dition en vigueur de la NFPA 72 et les directives de l'annexe A.",
     loadExampleTxt:"Charger l'exemple",
     step1Title:"Type de d\u00e9tecteur et espacement", step1Small:"Rep\u00e8re, type de d\u00e9tecteur, espacement nominal homologu\u00e9",
-    lblTag:"Rep\u00e8re de la pi\u00e8ce / zone", lblDetType:"Type de d\u00e9tecteur", detSmoke:"Fum\u00e9e", detHeat:"Chaleur", lblNomSpacing:"Espacement nominal homologu\u00e9 (pi)",
+    lblTag:"Rep\u00e8re de la pi\u00e8ce / zone", lblDetType:"Type de d\u00e9tecteur", detSmoke:"Fum\u00e9e", detHeat:"Chaleur", lblLenUnit:"Unit\u00e9 de longueur", lblNomSpacing:"Espacement nominal homologu\u00e9",
     hintStep1:"Les d\u00e9tecteurs de fum\u00e9e sur un plafond lisse utilisent couramment un espacement nominal de 30 pi (NFPA 72 \u00a717.7.4.2.3.1); les d\u00e9tecteurs de chaleur sont homologu\u00e9s pour un espacement sp\u00e9cifique par le fabricant (couramment 50 pi, mais confirmez toujours aupr\u00e8s de l'homologation r\u00e9elle, incluant tout d\u00e9classement selon la hauteur du plafond). La r\u00e8gle de 0,7\u00d7 exige que chaque point du plafond soit \u00e0 moins de 0,7\u00d7 l'espacement nominal du d\u00e9tecteur le plus proche (30 pi \u2192 21 pi), et aucun d\u00e9tecteur ne doit \u00eatre \u00e0 plus de la moiti\u00e9 de l'espacement nominal (15 pi \u00e0 30 pi d'espacement) d'un mur.",
     step2Title:"G\u00e9om\u00e9trie de la pi\u00e8ce", step2Small:"Dimensions, hauteur et type de plafond",
-    lblRoomL:"Longueur de la pi\u00e8ce (pi)", lblRoomW:"Largeur de la pi\u00e8ce (pi)", lblCeilH:"Hauteur du plafond (pi)", lblCeilType:"Type de plafond",
+    lblRoomL:"Longueur de la pi\u00e8ce", lblRoomW:"Largeur de la pi\u00e8ce", lblCeilH:"Hauteur du plafond", lblCeilType:"Type de plafond",
     lblPerfDesignOn:"Conception bas\u00e9e sur la performance utilis\u00e9e (requise si plafond &gt;40 pi)",
     hintStep2:"Les pi\u00e8ces \u00e0 plafond lisse et de niveau peuvent utiliser directement l'espacement nominal homologu\u00e9. Les plafonds \u00e0 poutres, obstru\u00e9s ou en pente exigent les ajustements d'espacement de l'annexe A (non mod\u00e9lis\u00e9s en d\u00e9tail par cet outil) \u2014 un professionnel qualifi\u00e9 devrait v\u00e9rifier l'am\u00e9nagement sp\u00e9cifique. Les plafonds au-dessus de 40 pi exigent g\u00e9n\u00e9ralement une conception bas\u00e9e sur la performance (ing\u00e9nierie) plut\u00f4t que le tableau d'espacement homologu\u00e9 standard, selon les directives actuelles de la NFPA 72.",
     step3Title:"Mode corridor", optionalTag3:"(facultatif)", step3Small:"Am\u00e9nagement en une rang\u00e9e sur l'axe central pour corridors \u00e9troits",
@@ -841,10 +907,11 @@ function applyStaticI18n(){
   $('loadExampleTxt').textContent=L.loadExampleTxt;
   $('step1Title').childNodes[0].textContent=L.step1Title+' '; $('step1Small').textContent=L.step1Small;
   $('lblTag').textContent=L.lblTag; $('lblDetType').textContent=L.lblDetType;
-  $('lblNomSpacing').textContent=L.lblNomSpacing; $('hintStep1').innerHTML=L.hintStep1;
+  $('lblLenUnit').textContent=L.lblLenUnit;
+  $('lblNomSpacing').textContent=lenLabelOf('lblNomSpacing'); $('hintStep1').innerHTML=L.hintStep1;
   $('step2Title').childNodes[0].textContent=L.step2Title+' '; $('step2Small').textContent=L.step2Small;
-  $('lblRoomL').textContent=L.lblRoomL; $('lblRoomW').textContent=L.lblRoomW;
-  $('lblCeilH').textContent=L.lblCeilH; $('lblCeilType').textContent=L.lblCeilType;
+  $('lblRoomL').textContent=lenLabelOf('lblRoomL'); $('lblRoomW').textContent=lenLabelOf('lblRoomW');
+  $('lblCeilH').textContent=lenLabelOf('lblCeilH'); $('lblCeilType').textContent=L.lblCeilType;
   $('lblPerfDesignOn').innerHTML=L.lblPerfDesignOn; $('hintStep2').innerHTML=L.hintStep2;
   $('step3Title').childNodes[0].textContent=L.step3Title+' '; $('optionalTag3').textContent=L.optionalTag3; $('step3Small').textContent=L.step3Small;
   $('hintStep3').textContent=L.hintStep3;
