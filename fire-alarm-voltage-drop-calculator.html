@@ -197,6 +197,12 @@ footer.note b{color:var(--ink-dim);}
             <input type="number" id="runLength" value="250" min="1" step="1">
           </label>
         </div>
+        <label class="field"><b id="lblLenUnit">Length unit</b>
+          <div class="seg" id="lenUnitSeg">
+            <button data-u="ft" class="active">ft</button>
+            <button data-u="m">m</button>
+          </div>
+        </label>
         <label class="field"><b id="lblCircuitClass">Circuit class</b>
           <div class="seg" id="circuitClassSeg">
             <button data-u="B" class="active">Class B</button>
@@ -334,6 +340,20 @@ let currentLang = 'en';
 let state = { awg:"14", circuitClass:"B", devices:[] };
 let devSeq = 1;
 
+/* Length unit: lengths are stored internally in feet (NEC Ch.9 Table 8 is
+   ohm/1000 ft); the ft/m toggle only changes the displayed/input unit.
+   Shared key 'ohmzone-unit' with the voltage-drop page; validated here so a
+   stale value from another page cannot mislead this one. */
+const FT_PER_M = 3.28084;
+let lenUnit = 'ft';
+try { const u = localStorage.getItem('ohmzone-unit'); if (u === 'm' || u === 'ft') lenUnit = u; } catch(e) {}
+function lenToFt(v){ return lenUnit === 'm' ? v * FT_PER_M : v; }
+function lenDisplay(ft){ return lenUnit === 'm' ? ft / FT_PER_M : ft; }
+function lenUnitLabel(){ return lenUnit === 'ft' ? (currentLang === 'fr' ? 'pi' : 'ft') : 'm'; }
+function lenStr(ft, d){ return fmt(lenDisplay(ft), d === undefined ? 0 : d) + ' ' + lenUnitLabel(); }
+function lenLabel(){ return UI[currentLang].lblLength + ' (' + lenUnitLabel() + ')'; }
+function setRunLengthFt(ft){ $("runLength").value = lenUnit === 'm' ? Math.round(ft / FT_PER_M * 10) / 10 : Math.round(ft); $("runLength").step = lenUnit === 'm' ? '0.1' : '1'; }
+
 document.querySelectorAll(".step-head").forEach(h=>{
   h.addEventListener("click", ()=>{ $(h.dataset.toggle).classList.toggle("closed"); });
 });
@@ -348,6 +368,22 @@ function wireSeg(segId, stateKey){
   });
 }
 wireSeg("circuitClassSeg","circuitClass");
+$("lenUnitSeg").addEventListener("click", e=>{
+  const b = e.target.closest("button"); if(!b) return;
+  const u = b.dataset.u; if(u === lenUnit) return;
+  const curFt = lenToFt(parseFloat($("runLength").value)||0);
+  document.querySelectorAll("#lenUnitSeg button").forEach(x=>x.classList.toggle("active", x.dataset.u===u));
+  lenUnit = u;
+  try { localStorage.setItem('ohmzone-unit', u); } catch(e) {}
+  setRunLengthFt(curFt);
+  applyStaticI18n();
+  recalc();
+});
+/* honour a stored unit preference on load (default HTML is ft / 250) */
+(function(){
+  document.querySelectorAll("#lenUnitSeg button").forEach(x=>x.classList.toggle("active", x.dataset.u===lenUnit));
+  if(lenUnit === 'm') setRunLengthFt(250);
+})();
 $("awgSel").addEventListener("change", ()=>{ state.awg = $("awgSel").value; recalc(); });
 
 $("addDeviceBtn").addEventListener("click", ()=>{
@@ -387,7 +423,7 @@ function renderDeviceList(){
 $("loadExample").addEventListener("click", ()=>{
   $("eqTag").value = "NAC-1";
   $("awgSel").value = "14"; state.awg = "14";
-  $("runLength").value = 250;
+  setRunLengthFt(250);
   state.circuitClass = "B";
   document.querySelectorAll("#circuitClassSeg button").forEach(x=>x.classList.toggle("active", x.dataset.u==="B"));
   state.devices = []; devSeq = 1;
@@ -406,7 +442,8 @@ const WIRE_R = {"18":6.385, "16":4.016, "14":2.525, "12":1.588, "10":0.9989};
 function calcAll(){
   const awg = state.awg;
   const R = WIRE_R[awg];
-  const L = parseFloat($("runLength").value)||0;
+  /* input is in the displayed unit (ft or m); convert to ft for the calc */
+  const L = lenToFt(parseFloat($("runLength").value)||0);
   const circuitClass = state.circuitClass;
 
   let totalA = 0;
@@ -449,7 +486,7 @@ function recalc(){
   $("statVd").textContent = fmt(d.VD,2)+" V";
   $("statUtil").textContent = fmt(d.nacUtilPct,1)+"%";
   $("statTotalA").textContent = fmt(d.totalA,3)+" A";
-  $("statMaxLen").textContent = d.maxLen!==null ? fmt(d.maxLen,0)+" ft" : "—";
+  $("statMaxLen").textContent = d.maxLen!==null ? lenStr(d.maxLen, 0) : "—";
   $("statRPerFt").textContent = fmt(d.R,3)+" Ω/1000ft";
   $("statClass").textContent = "Class "+d.circuitClass;
   $("revTag").textContent = new Date().toISOString().slice(0,10);
@@ -460,7 +497,7 @@ function recalc(){
   } else if(d.pass){
     verdictBox.innerHTML = `<div class="risk-box risk-ok"><b>${L.passTitle}</b> ${L.passBody.replace('{vend}',fmt(d.Vend,2)).replace('{vmin}',fmt(d.Vmin,2))}</div>`;
   } else {
-    verdictBox.innerHTML = `<div class="risk-box risk-alarm"><b>${L.failTitle}</b> ${L.failBody.replace('{vend}',fmt(d.Vend,2)).replace('{vmin}',fmt(d.Vmin,2)).replace('{maxlen}',d.maxLen!==null?fmt(d.maxLen,0):'—')}</div>`;
+    verdictBox.innerHTML = `<div class="risk-box risk-alarm"><b>${L.failTitle}</b> ${L.failBody.replace('{vend}',fmt(d.Vend,2)).replace('{vmin}',fmt(d.Vmin,2)).replace('{maxlen}',d.maxLen!==null?lenStr(d.maxLen,0):'—')}</div>`;
   }
 
   const nacBox = $("nacBox");
@@ -492,7 +529,7 @@ ${L.totalALbl} = ${fmt(d.totalA,3)} A`});
 
   steps.push({num:2, title:L.ls2Title, clause:"NEC Ch.9 Table 8", note:L.ls2Note, formula:
 `${L.wireLbl}: ${d.awg} AWG, ${L.rLbl} = ${fmt(d.R,4)} Ω/1000ft
-${L.lengthLbl} = ${fmt(d.L,0)} ft (${L.oneWayLbl})
+${L.lengthLbl} = ${lenStr(d.L,0)} (${L.oneWayLbl}${lenUnit==='m' ? '; '+fmt(d.L,0)+' ft' : ''})
 ${L.circuitClassLbl}: Class ${d.circuitClass}`});
 
   steps.push({num:3, title:L.ls3Title, clause:"NFPA 72 §18.3.7 (EOL method)", note:L.ls3Note, formula:
@@ -515,7 +552,7 @@ ${L.nacUtilLbl} = ${fmt(d.nacUtilPct,1)}%  → ${d.nacPass ? L.resultPass : L.re
     steps.push({num:6, title:L.ls6Title, clause:"—", note:L.ls6Note, formula:
 `L_max = (V_source − V_min − MVA) × 1000 / (2 × I_total × R)
       = (${fmt(d.Vsource,2)} − ${fmt(d.Vmin,2)} − ${fmt(d.mva,2)}) × 1000 / (2 × ${fmt(d.totalA,3)} × ${fmt(d.R,4)})
-      = ${fmt(d.maxLen,0)} ft`});
+      = ${lenStr(d.maxLen,0)}`});
   }
   return steps;
 }
@@ -541,14 +578,14 @@ function buildReportPageHTML(d, includeLedger, includeLogo){
   const sectionHead = (t)=>`<div style="font-size:9.5pt;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;border-bottom:1pt solid #1a1a1a;padding-bottom:2pt;margin:12pt 0 5pt;">${t}</div>`;
 
   const inputPairs = [
-    [L.lblAwg, d.awg+" AWG"], [L.lblLength, fmt(d.L,0)+" ft"],
+    [L.lblAwg, d.awg+" AWG"], [lenLabel(), lenStr(d.L,0)],
     [L.lblCircuitClass, "Class "+d.circuitClass], [L.lblVsource, fmt(d.Vsource,2)+" V"],
     [L.lblVmin, fmt(d.Vmin,2)+" V"], [L.lblNacRating, fmt(d.nacRating,2)+" A"]
   ];
   const resultPairs = [
     [L.gaugeLbl, fmt(d.Vend,2)+" V"], [L.lblStatVd, fmt(d.VD,2)+" V"],
     [L.lblStatUtil, fmt(d.nacUtilPct,1)+"%"], [L.lblStatTotalA, fmt(d.totalA,3)+" A"],
-    [L.lblStatMaxLen, d.maxLen!==null?fmt(d.maxLen,0)+" ft":"—"], [L.xlsResult, d.pass&&d.nacPass?L.passWord:L.failWord]
+    [L.lblStatMaxLen, d.maxLen!==null?lenStr(d.maxLen,0):"—"], [L.xlsResult, d.pass&&d.nacPass?L.passWord:L.failWord]
   ];
 
   const devRows = d.rows.map(r=>`<tr>
@@ -629,10 +666,10 @@ function templateTagValues(d){
   const today = new Date().toLocaleDateString(currentLang==='fr'?'fr-CA':'en-CA');
   return {
     tag: d.tag || L.untitledTag, date: today,
-    awg: d.awg+" AWG", length: fmt(d.L,0)+" ft", circuitClass: "Class "+d.circuitClass,
+    awg: d.awg+" AWG", length: lenStr(d.L,0), circuitClass: "Class "+d.circuitClass,
     vSource: fmt(d.Vsource,2)+" V", vEnd: fmt(d.Vend,2)+" V", vd: fmt(d.VD,2)+" V",
     totalA: fmt(d.totalA,3)+" A", nacUtil: fmt(d.nacUtilPct,1)+"%",
-    maxLen: d.maxLen!==null?fmt(d.maxLen,0)+" ft":"—", result: (d.pass&&d.nacPass)?L.passWord:L.failWord
+    maxLen: d.maxLen!==null?lenStr(d.maxLen,0):"—", result: (d.pass&&d.nacPass)?L.passWord:L.failWord
   };
 }
 function showTemplateStatus(msg, color){ const el=$("templateStatus"); if(el){ el.textContent=msg; el.style.color=color||"var(--trace)"; } }
@@ -709,12 +746,12 @@ $("exportExcelBtn").addEventListener("click", ()=>{
   const main = [
     [L.repInputData,""],
     [L.lblTag, d.tag || L.untitledTag],
-    [L.lblAwg, d.awg], [L.lblLength, fmt(d.L,0)], [L.lblCircuitClass, d.circuitClass],
+    [L.lblAwg, d.awg], [lenLabel(), fmt(lenDisplay(d.L), lenUnit==='m'?1:0)], [L.lblCircuitClass, d.circuitClass],
     [L.lblVsource, fmt(d.Vsource,2)], [L.lblVmin, fmt(d.Vmin,2)], [L.lblNacRating, fmt(d.nacRating,2)],
     ["",""], [L.repResults,""],
     [L.gaugeLbl, fmt(d.Vend,2)], [L.lblStatVd, fmt(d.VD,2)],
     [L.lblStatUtil, fmt(d.nacUtilPct,1)], [L.lblStatTotalA, fmt(d.totalA,3)],
-    [L.lblStatMaxLen, d.maxLen!==null?fmt(d.maxLen,0):"—"],
+    [L.lblStatMaxLen, d.maxLen!==null?lenStr(d.maxLen,0):"—"],
     ["",""], [L.disclaimerLbl, L.disclaimerBody]
   ];
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(main), "Voltage Drop");
@@ -744,7 +781,7 @@ const UI = {
     topDiscTxt:"This tool applies the standard NFPA 72 §18.3.7 end-of-line (EOL) voltage drop method with NEC Chapter 9 Table 8 conductor resistance values. It does not include a manufacturer device database — enter each device's worst-case current from the actual UL-listed datasheet. Final voltage drop and NAC loading calculations must be documented and submitted per the AHJ's requirements and reviewed by a qualified fire alarm professional against the specific control panel/power supply manufacturer's own worksheet.",
     loadExampleTxt:"Load example",
     step1Title:"Circuit & Wire", step1Small:"Tag, wire gauge, length, circuit class",
-    lblTag:"Circuit tag", lblAwg:"Wire gauge (AWG, copper)", lblLength:"One-way run length (ft)", lblCircuitClass:"Circuit class",
+    lblTag:"Circuit tag", lblAwg:"Wire gauge (AWG, copper)", lblLength:"One-way run length", lblLenUnit:"Length unit", lblCircuitClass:"Circuit class",
     hintStep1:"This tool uses the standard end-of-line (EOL) method, which assumes the worst-case condition where all connected current flows to the far end of the circuit — the conservative and most commonly used method. Point-to-point (PTP) analysis, which sums voltage drop segment by segment as devices tap off along the run, gives a less conservative result but requires the full device layout sequence; use Custom Points-style segment-by-segment hand calculation if PTP precision is required.",
     step2Title:"Devices on Circuit", step2Small:"NAC appliance current — worst-case from datasheet",
     lblDevName:"Label", lblDevQty:"Qty", lblDevAmp:"Current, each (A)", addDeviceTxt:"Add device group",
@@ -759,7 +796,7 @@ const UI = {
     lblStatMaxLen:"Max length at this load", lblStatRPerFt:"Wire resistance", lblStatClass:"Circuit class",
     noDevTitle:"No devices entered.", noDevBody:"Add at least one device group in Step 2 to calculate voltage drop.",
     passTitle:"End-of-line voltage meets the minimum.", passBody:"Calculated end voltage {vend} V ≥ required minimum {vmin} V.",
-    failTitle:"End-of-line voltage is below the minimum — review.", failBody:"Calculated end voltage {vend} V is below the required minimum {vmin} V. At this load, the maximum run length would be approximately {maxlen} ft — consider a larger wire gauge, a shorter run, fewer devices per circuit, or a higher source voltage.",
+    failTitle:"End-of-line voltage is below the minimum — review.", failBody:"Calculated end voltage {vend} V is below the required minimum {vmin} V. At this load, the maximum run length would be approximately {maxlen} — consider a larger wire gauge, a shorter run, fewer devices per circuit, or a higher source voltage.",
     nacFailTitle:"NAC circuit current exceeds rated capacity.", nacFailBody:"Total circuit current {total} A exceeds the {rating} A rated capacity — split the load across additional NAC circuits or use a higher-capacity power supply.",
     nacHighTitle:"NAC circuit utilization is high.", nacHighBody:"Circuit is at {pct}% of rated capacity — consider leaving margin for future device additions.",
     lblIncludeLedger:"Include Calculation Ledger in report", lblIncludeLogo:"Include OhmZone brand mark in report",
@@ -793,7 +830,7 @@ const UI = {
     topDiscTxt:"Cet outil applique la méthode standard de chute de tension en fin de ligne (EOL) de la NFPA 72 §18.3.7 avec les valeurs de résistance de conducteur du tableau 8 du chapitre 9 du NEC. Il n'inclut pas de base de données de dispositifs de fabricant — entrez le courant le plus défavorable de chaque dispositif à partir de la fiche technique homologuée UL réelle. Les calculs finaux de chute de tension et de charge NAC doivent être documentés et soumis selon les exigences de l'AHJ et révisés par un professionnel qualifié en alarme incendie selon la feuille de calcul propre au fabricant du panneau de contrôle/de l'alimentation.",
     loadExampleTxt:"Charger l'exemple",
     step1Title:"Circuit et câblage", step1Small:"Repère, calibre de fil, longueur, classe de circuit",
-    lblTag:"Repère du circuit", lblAwg:"Calibre de fil (AWG, cuivre)", lblLength:"Longueur de parcours aller simple (pi)", lblCircuitClass:"Classe de circuit",
+    lblTag:"Repère du circuit", lblAwg:"Calibre de fil (AWG, cuivre)", lblLength:"Longueur de parcours aller simple", lblLenUnit:"Unité de longueur", lblCircuitClass:"Classe de circuit",
     hintStep1:"Cet outil utilise la méthode standard de fin de ligne (EOL), qui suppose le pire cas où tout le courant connecté circule jusqu'à l'extrémité éloignée du circuit — la méthode conservatrice et la plus couramment utilisée. L'analyse point à point (PTP), qui additionne la chute de tension segment par segment à mesure que les dispositifs se raccordent le long du parcours, donne un résultat moins conservateur mais nécessite la séquence complète de disposition des dispositifs; utilisez un calcul manuel segment par segment si la précision PTP est requise.",
     step2Title:"Dispositifs sur le circuit", step2Small:"Courant des appareils NAC — pire cas selon la fiche technique",
     lblDevName:"Repère", lblDevQty:"Qté", lblDevAmp:"Courant, chacun (A)", addDeviceTxt:"Ajouter un groupe de dispositifs",
@@ -808,7 +845,7 @@ const UI = {
     lblStatMaxLen:"Longueur max. à cette charge", lblStatRPerFt:"Résistance du fil", lblStatClass:"Classe de circuit",
     noDevTitle:"Aucun dispositif saisi.", noDevBody:"Ajoutez au moins un groupe de dispositifs à l'étape 2 pour calculer la chute de tension.",
     passTitle:"La tension en fin de ligne respecte le minimum.", passBody:"Tension d'extrémité calculée {vend} V ≥ minimum requis {vmin} V.",
-    failTitle:"La tension en fin de ligne est sous le minimum — à revoir.", failBody:"La tension d'extrémité calculée {vend} V est sous le minimum requis {vmin} V. À cette charge, la longueur maximale de parcours serait d'environ {maxlen} pi — envisagez un calibre de fil plus grand, un parcours plus court, moins de dispositifs par circuit, ou une tension de source plus élevée.",
+    failTitle:"La tension en fin de ligne est sous le minimum — à revoir.", failBody:"La tension d'extrémité calculée {vend} V est sous le minimum requis de {vmin} V. À cette charge, la longueur maximale de parcours serait d'environ {maxlen} — envisagez un calibre de fil plus grand, un parcours plus court, moins de dispositifs par circuit, ou une tension de source plus élevée.",
     nacFailTitle:"Le courant du circuit NAC dépasse la capacité nominale.", nacFailBody:"Le courant total du circuit {total} A dépasse la capacité nominale de {rating} A — répartissez la charge sur des circuits NAC additionnels ou utilisez une alimentation de capacité supérieure.",
     nacHighTitle:"L'utilisation du circuit NAC est élevée.", nacHighBody:"Le circuit est à {pct} % de la capacité nominale — envisagez de laisser une marge pour l'ajout futur de dispositifs.",
     lblIncludeLedger:"Inclure le registre de calcul dans le rapport", lblIncludeLogo:"Inclure la marque OhmZone dans le rapport",
@@ -844,7 +881,7 @@ function applyStaticI18n(){
   $('topDiscB').textContent=L.topDiscB; $('topDiscTxt').textContent=L.topDiscTxt;
   $('loadExampleTxt').textContent=L.loadExampleTxt;
   $('step1Title').childNodes[0].textContent=L.step1Title+' '; $('step1Small').textContent=L.step1Small;
-  $('lblTag').textContent=L.lblTag; $('lblAwg').textContent=L.lblAwg; $('lblLength').textContent=L.lblLength;
+  $('lblTag').textContent=L.lblTag; $('lblAwg').textContent=L.lblAwg; $('lblLength').textContent=lenLabel(); $('lblLenUnit').textContent=L.lblLenUnit;
   $('lblCircuitClass').textContent=L.lblCircuitClass; $('hintStep1').textContent=L.hintStep1;
   $('step2Title').childNodes[0].textContent=L.step2Title+' '; $('step2Small').textContent=L.step2Small;
   $('lblDevName').textContent=L.lblDevName; $('lblDevQty').textContent=L.lblDevQty;
