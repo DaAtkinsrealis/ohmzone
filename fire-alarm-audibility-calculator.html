@@ -224,6 +224,12 @@ footer.note b{color:var(--ink-dim);}
             <input type="number" id="numWalls" value="0" min="0" step="1">
           </label>
         </div>
+        <label class="field"><b id="lblLenUnit">Length unit</b>
+          <div class="seg" id="lenUnitSeg">
+            <button data-u="ft" class="active">ft</button>
+            <button data-u="m">m</button>
+          </div>
+        </label>
         <div class="hint" id="hintStep2"></div>
       </div>
     </div>
@@ -332,6 +338,27 @@ function fmt(n,d=2){ if(n===undefined||n===null||isNaN(n)) return "\u2014"; retu
 let currentLang = 'en';
 let state = { mode:"public", ampV:"25", targetLoss:"0.5" };
 
+/* Length unit: distances are stored internally in feet (the device rating is
+   quoted at 10 ft); the ft/m toggle only changes the displayed/input unit
+   for the two actual distances (listener distance, audio run length).
+   The 10 ft rated reference is a manufacturer benchmark and is never
+   converted as a value -- in metric mode it is shown as 3.048 m (ref).
+   Shared key 'ohmzone-unit' with the other tool pages; validated here so a
+   stale value from another page cannot mislead this one. */
+const FT_PER_M = 3.28084;
+let lenUnit = 'ft';
+try { const u = localStorage.getItem('ohmzone-unit'); if (u === 'm' || u === 'ft') lenUnit = u; } catch(e) {}
+function lenToFt(v){ return lenUnit === 'm' ? v * FT_PER_M : v; }
+function lenDisplay(ft){ return lenUnit === 'm' ? ft / FT_PER_M : ft; }
+function lenUnitLabel(){ return lenUnit === 'ft' ? (currentLang === 'fr' ? 'pi' : 'ft') : 'm'; }
+function lenStr(ft, d){ return fmt(lenDisplay(ft), d === undefined ? 0 : d) + ' ' + lenUnitLabel(); }
+/* rated reference distance: 10 ft = 3.048 m (benchmark, value never converted) */
+function refLabel(){ return lenUnit === 'm' ? (currentLang === 'fr' ? '3,048 m' : '3.048 m') : (currentLang === 'fr' ? '10 pi' : '10 ft'); }
+function distLabel(){ return UI[currentLang].lblDistance + ' (' + lenUnitLabel() + ')'; }
+function audioLenLabel(){ return UI[currentLang].lblAudioLength + ' (' + lenUnitLabel() + ')'; }
+function devDbaLabel(){ return lenUnit === 'm' ? UI[currentLang].lblDevDbaM : UI[currentLang].lblDevDba; }
+function setLenInput(id, ftVal){ $(id).value = lenUnit === 'm' ? Math.round(ftVal / FT_PER_M * 10) / 10 : Math.round(ftVal); $(id).step = lenUnit === 'm' ? '0.1' : '1'; }
+
 document.querySelectorAll(".step-head").forEach(h=>{
   h.addEventListener("click", ()=>{ $(h.dataset.toggle).classList.toggle("closed"); });
 });
@@ -356,6 +383,25 @@ wireSeg("ampVSeg","ampV");
 wireSeg("targetLossSeg","targetLoss");
 $("modeSel").addEventListener("change", ()=>{ state.mode = $("modeSel").value; recalc(); });
 
+$("lenUnitSeg").addEventListener("click", e=>{
+  const b = e.target.closest("button"); if(!b) return;
+  const u = b.dataset.u; if(u === lenUnit) return;
+  const curDistFt = lenToFt(parseFloat($("distance").value)||0);
+  const curAudioFt = lenToFt(parseFloat($("audioLength").value)||0);
+  document.querySelectorAll("#lenUnitSeg button").forEach(x=>x.classList.toggle("active", x.dataset.u===u));
+  lenUnit = u;
+  try { localStorage.setItem('ohmzone-unit', u); } catch(e) {}
+  setLenInput("distance", curDistFt);
+  setLenInput("audioLength", curAudioFt);
+  applyStaticI18n();
+  recalc();
+});
+/* honour a stored unit preference on load (default HTML is ft / 30, 300) */
+(function(){
+  document.querySelectorAll("#lenUnitSeg button").forEach(x=>x.classList.toggle("active", x.dataset.u===lenUnit));
+  if(lenUnit === 'm'){ setLenInput("distance", 30); setLenInput("audioLength", 300); }
+})();
+
 ["eqTag","ambAvg","ambMax","devDba","distance","numWalls","totalW","audioLength"].forEach(id=>{
   $(id).addEventListener("input", recalc);
   $(id).addEventListener("change", recalc);
@@ -368,11 +414,11 @@ $("loadExample").addEventListener("click", ()=>{
   $("modeSel").value = "public"; state.mode = "public";
   $("sleepingOn").checked = false;
   $("ambAvg").value = 50; $("ambMax").value = 58;
-  $("devDba").value = 90; $("distance").value = 35; $("numWalls").value = 0;
+  $("devDba").value = 90; setLenInput("distance", 35); $("numWalls").value = 0;
   $("audioOn").checked = true;
   state.ampV = "25";
   document.querySelectorAll("#ampVSeg button").forEach(x=>x.classList.toggle("active", x.dataset.u==="25"));
-  $("totalW").value = 15; $("awgAudioSel").value = "16"; $("audioLength").value = 300;
+  $("totalW").value = 15; $("awgAudioSel").value = "16"; setLenInput("audioLength", 300);
   state.targetLoss = "0.5";
   document.querySelectorAll("#targetLossSeg button").forEach(x=>x.classList.toggle("active", x.dataset.u==="0.5"));
   wireOptionalToggle("step3","audioOn");
@@ -401,7 +447,8 @@ function calcAll(){
   if(sleeping && 75 > reqDba){ reqDba = 75; criterion = "sleeping75"; }
 
   const devDba = parseFloat($("devDba").value)||0;
-  const distance = parseFloat($("distance").value)||10;
+  const distRaw = parseFloat($("distance").value);
+  const distance = isNaN(distRaw) ? 10 : lenToFt(distRaw);
   const numWalls = parseFloat($("numWalls").value)||0;
 
   const distLoss = 20*Math.log10(Math.max(distance,1)/10);
@@ -416,7 +463,8 @@ function calcAll(){
   const totalW = parseFloat($("totalW").value)||0;
   const awgAudio = $("awgAudioSel").value;
   const R = WIRE_R[awgAudio];
-  const audioLength = parseFloat($("audioLength").value)||0;
+  const audioRaw = parseFloat($("audioLength").value);
+  const audioLength = isNaN(audioRaw) ? 0 : lenToFt(audioRaw);
   const targetLoss = parseFloat(state.targetLoss);
 
   let audioI=null, audioVD=null, audioVend=null, dbLoss=null, audioPass=null;
@@ -483,13 +531,13 @@ function buildLedgerSteps(d){
 L.modeSelectedLbl + ": " + (d.mode==="public"?L.modePublic:L.modePrivate) + " \u2192 " + L.reqDbaLbl + " = " + fmt(d.reqDba,1) + " dBA"});
 
   steps.push({num:2, title:L.ls2Title, clause:"Inverse-square law (commonly applied)", note:L.ls2Note, formula:
-"dB(distance) = 20\u00d7log10(d/10) = 20\u00d7log10(" + fmt(d.distance,0) + "/10) = " + fmt(d.distLoss,2) + " dB"});
+"dB(distance) = 20\u00d7log10(d/" + refLabel() + ") = 20\u00d7log10(" + (lenUnit==='m'?fmt(lenDisplay(d.distance),1):fmt(d.distance,0)) + "/" + refLabel() + ") = " + fmt(d.distLoss,2) + " dB"});
 
   steps.push({num:3, title:L.ls3Title, clause:"Representative allowance", note:L.ls3Note, formula:
 L.wallCountLbl + " = " + d.numWalls + " \u00d7 15 dB = " + fmt(d.wallLoss,1) + " dB"});
 
   steps.push({num:4, title:L.ls4Title, clause:"\u2264110 dBA ceiling", note:L.ls4Note, formula:
-"dBA(listener) = dBA(10ft) \u2212 dist.loss \u2212 wall loss\n" +
+"dBA(listener) = dBA(" + refLabel() + ") \u2212 dist.loss \u2212 wall loss\n" +
 "             = " + fmt(d.devDba,1) + " \u2212 " + fmt(d.distLoss,2) + " \u2212 " + fmt(d.wallLoss,1) + "\n" +
 "             = " + fmt(d.dbaAtListener,2) + " dBA\n" +
 L.marginLbl + " = " + fmt(d.margin,2) + " dB \u2192 " + (d.pass?L.resultPass:L.resultFail)});
@@ -497,7 +545,7 @@ L.marginLbl + " = " + fmt(d.margin,2) + " dB \u2192 " + (d.pass?L.resultPass:L.r
   if(d.audioOn){
     steps.push({num:5, title:L.ls5Title, clause:"NFPA 72 Annex (0.5/1.0 dB guidance)", note:L.ls5Note, formula:
 "I = P/V = " + fmt(d.totalW,2) + "/" + fmt(d.ampV,1) + " = " + fmt(d.audioI,3) + " A\n" +
-"VD = 2\u00d7L\u00d7I\u00d7R/1000 = 2\u00d7" + fmt(d.audioLength,0) + "\u00d7" + fmt(d.audioI,3) + "\u00d7" + fmt(d.R,3) + "/1000 = " + fmt(d.audioVD,3) + " V\n" +
+"VD = 2\u00d7L\u00d7I\u00d7R/1000 = 2\u00d7" + lenStr(d.audioLength, lenUnit==='m'?1:0) + (lenUnit==='m'?" ("+fmt(d.audioLength,0)+" ft)":"") + "\u00d7" + fmt(d.audioI,3) + "\u00d7" + fmt(d.R,3) + "/1000 = " + fmt(d.audioVD,3) + " V\n" +
 "V_end = " + fmt(d.ampV,1) + " \u2212 " + fmt(d.audioVD,3) + " = " + fmt(d.audioVend,3) + " V\n" +
 "dB loss = 20\u00d7log10(V/V_end) = 20\u00d7log10(" + fmt(d.ampV,1) + "/" + fmt(d.audioVend,3) + ") = " + fmt(d.dbLoss,3) + " dB \u2192 " + (d.audioPass?L.resultPass:L.resultFail)});
   }
@@ -527,7 +575,7 @@ function buildReportPageHTML(d, includeLedger, includeLogo){
   const inputPairs = [
     [L.lblMode, d.mode==="public"?L.modePublic:L.modePrivate], [L.lblSleepingOnShort, d.sleeping?L.yes:L.no],
     [L.lblAmbAvg, fmt(d.ambAvg,1)+" dBA"], [L.lblAmbMax, fmt(d.ambMax,1)+" dBA"],
-    [L.lblDevDba, fmt(d.devDba,1)+" dBA"], [L.lblDistance, fmt(d.distance,0)+" ft"]
+    [devDbaLabel(), fmt(d.devDba,1)+" dBA"], [distLabel(), lenStr(d.distance, lenUnit==='m'?1:0)]
   ];
   const resultPairs = [
     [L.gaugeLbl, fmt(d.dbaAtListener,1)+" dBA"], [L.lblStatReqDba, fmt(d.reqDba,1)+" dBA"],
@@ -686,7 +734,7 @@ $("exportExcelBtn").addEventListener("click", function(){
     [L.lblTag, d.tag || L.untitledTag],
     [L.lblMode, d.mode==="public"?L.modePublic:L.modePrivate], [L.lblSleepingOnShort, d.sleeping?L.yes:L.no],
     [L.lblAmbAvg, fmt(d.ambAvg,1)], [L.lblAmbMax, fmt(d.ambMax,1)],
-    [L.lblDevDba, fmt(d.devDba,1)], [L.lblDistance, fmt(d.distance,0)], [L.lblWalls, d.numWalls],
+    [devDbaLabel(), fmt(d.devDba,1)], [distLabel(), lenStr(d.distance, lenUnit==='m'?1:0)], [L.lblWalls, d.numWalls],
     ["",""], [L.repResults,""],
     [L.gaugeLbl, fmt(d.dbaAtListener,1)], [L.lblStatReqDba, fmt(d.reqDba,1)],
     [L.lblStatMargin, fmt(d.margin,1)], [L.lblStatDistLoss, fmt(d.distLoss,1)], [L.lblStatWallLoss, fmt(d.wallLoss,1)]
@@ -721,11 +769,11 @@ const UI = {
     lblAmbAvg:"Average ambient sound (dBA)", lblAmbMax:"Maximum ambient sound, \u226560s (dBA)",
     hintStep1:"Public mode requires the greater of average ambient +15 dBA or maximum ambient (sustained \u226560s) +5 dBA, per NFPA 72 \u00a718.4.3/18.4.4. Private mode requires average ambient +10 dBA per \u00a718.4.5. In sleeping areas, a minimum of 75 dBA at the pillow (or the standard rule, whichever is greater) applies. Measured ambient sound levels should reflect actual field conditions where possible.",
     step2Title:"Device & Distance", step2Small:"Rated output, distance and obstructions to the listener",
-    lblDevDba:"Device rated output at 10 ft (dBA)", lblDistance:"Distance to farthest listener (ft)", lblWalls:"Walls/partitions crossed",
+    lblDevDba:"Device rated output at 10 ft (dBA)", lblDevDbaM:"Device rated output at 3.048 m (ref) (dBA)", lblDistance:"Distance to farthest listener", lblLenUnit:"Length unit", lblWalls:"Walls/partitions crossed",
     hintStep2:"Sound pressure follows the inverse-square law: each doubling of distance from the source reduces level by approximately 6 dB (20\u00d7log10 of the distance ratio). Each wall or partition crossed is applied here as a representative \u221215 dB allowance \u2014 actual wall attenuation varies significantly by construction type and should be verified for critical spaces.",
     step3Title:"Audio Circuit Line Loss", optionalTag3:"(optional)", step3Small:"Constant-voltage speaker circuit (25V/70.7V)",
     lblAmpV:"Amplifier line voltage", lblTotalW:"Total connected speaker taps (W)", lblAwgAudio:"Wire gauge (AWG, copper)",
-    lblAudioLength:"One-way run length (ft)", lblTargetLoss:"Target maximum loss (dB)",
+    lblAudioLength:"One-way run length", lblTargetLoss:"Target maximum loss (dB)",
     hintStep3:"NFPA 72 Annex guidance commonly cites 0.5 dB as a recommended design target for audio circuit loss, with 1.0 dB as a commonly applied maximum allowed loss \u2014 confirm the specific project design criteria. This calculation uses the same end-of-line voltage-drop method as the notification appliance circuit tool, converted to a dB loss figure.",
     resultTitle:"Result \u2014 Audibility Check", gaugeLbl:"dBA at listener",
     lblStatReqDba:"Required minimum", lblStatMargin:"Margin", lblStatDistLoss:"Distance attenuation",
@@ -770,11 +818,11 @@ const UI = {
     lblAmbAvg:"Son ambiant moyen (dBA)", lblAmbMax:"Son ambiant maximal, \u226560s (dBA)",
     hintStep1:"Le mode public exige le plus élevé entre le niveau ambiant moyen +15 dBA ou le niveau ambiant maximal (soutenu \u226560 secondes) +5 dBA, selon la NFPA 72 \u00a718.4.3/18.4.4. Le mode privé exige le niveau ambiant moyen +10 dBA selon \u00a718.4.5. Dans les zones de sommeil, un minimum de 75 dBA à l'oreiller (ou la règle standard, selon la valeur la plus élevée) s'applique. Les niveaux de son ambiant mesurés devraient refléter les conditions réelles sur le terrain lorsque possible.",
     step2Title:"Dispositif et distance", step2Small:"Sortie nominale, distance et obstructions vers l'auditeur",
-    lblDevDba:"Sortie nominale du dispositif à 10 pi (dBA)", lblDistance:"Distance à l'auditeur le plus éloigné (pi)", lblWalls:"Murs/cloisons traversés",
+    lblDevDba:"Sortie nominale du dispositif à 10 pi (dBA)", lblDevDbaM:"Sortie nominale du dispositif à 3,048 m (réf.) (dBA)", lblDistance:"Distance à l'auditeur le plus éloigné", lblLenUnit:"Unité de longueur", lblWalls:"Murs/cloisons traversés",
     hintStep2:"La pression sonore suit la loi du carré inverse : chaque doublement de la distance par rapport à la source réduit le niveau d'environ 6 dB (20\u00d7log10 du rapport de distance). Chaque mur ou cloison traversé est appliqué ici comme une allocation représentative de \u221215 dB \u2014 l'atténuation réelle des murs varie considérablement selon le type de construction et devrait être vérifiée pour les espaces critiques.",
     step3Title:"Perte de ligne du circuit audio", optionalTag3:"(facultatif)", step3Small:"Circuit de haut-parleurs à tension constante (25V/70,7V)",
     lblAmpV:"Tension de ligne de l'amplificateur", lblTotalW:"Prises de haut-parleurs connectées, total (W)", lblAwgAudio:"Calibre de fil (AWG, cuivre)",
-    lblAudioLength:"Longueur de parcours aller simple (pi)", lblTargetLoss:"Perte maximale cible (dB)",
+    lblAudioLength:"Longueur de parcours aller simple", lblTargetLoss:"Perte maximale cible (dB)",
     hintStep3:"Les directives de l'annexe de la NFPA 72 citent couramment 0,5 dB comme cible de conception recommandée pour la perte de circuit audio, avec 1,0 dB comme perte maximale couramment appliquée \u2014 confirmez les critères de conception spécifiques au projet. Ce calcul utilise la même méthode de chute de tension en fin de ligne que l'outil de circuit d'appareils de notification, convertie en une valeur de perte en dB.",
     resultTitle:"Résultat \u2014 Vérification d'audibilité", gaugeLbl:"dBA à l'auditeur",
     lblStatReqDba:"Minimum requis", lblStatMargin:"Marge", lblStatDistLoss:"Atténuation de distance",
@@ -821,10 +869,10 @@ function applyStaticI18n(){
   $('lblSleepingOn').textContent=L.lblSleepingOn;
   $('lblAmbAvg').textContent=L.lblAmbAvg; $('lblAmbMax').textContent=L.lblAmbMax; $('hintStep1').textContent=L.hintStep1;
   $('step2Title').childNodes[0].textContent=L.step2Title+' '; $('step2Small').textContent=L.step2Small;
-  $('lblDevDba').textContent=L.lblDevDba; $('lblDistance').textContent=L.lblDistance; $('lblWalls').textContent=L.lblWalls; $('hintStep2').textContent=L.hintStep2;
+  $('lblDevDba').textContent=devDbaLabel(); $('lblDistance').textContent=distLabel(); $('lblLenUnit').textContent=L.lblLenUnit; $('lblWalls').textContent=L.lblWalls; $('hintStep2').textContent=L.hintStep2;
   $('step3Title').childNodes[0].textContent=L.step3Title+' '; $('optionalTag3').textContent=L.optionalTag3; $('step3Small').textContent=L.step3Small;
   $('lblAmpV').textContent=L.lblAmpV; $('lblTotalW').textContent=L.lblTotalW; $('lblAwgAudio').textContent=L.lblAwgAudio;
-  $('lblAudioLength').textContent=L.lblAudioLength; $('lblTargetLoss').textContent=L.lblTargetLoss; $('hintStep3').textContent=L.hintStep3;
+  $('lblAudioLength').textContent=audioLenLabel(); $('lblTargetLoss').textContent=L.lblTargetLoss; $('hintStep3').textContent=L.hintStep3;
   $('resultTitle').innerHTML=L.resultTitle; $('gaugeLbl').textContent=L.gaugeLbl;
   $('lblStatReqDba').textContent=L.lblStatReqDba; $('lblStatMargin').textContent=L.lblStatMargin;
   $('lblStatDistLoss').textContent=L.lblStatDistLoss; $('lblStatWallLoss').textContent=L.lblStatWallLoss;
