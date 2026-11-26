@@ -305,6 +305,7 @@ footer.note b{color:var(--ink-dim);}
         <label class="field" id="voltNoteWrap"><span class="hint" id="voltNote">For 3φ connections, enter the line-to-line voltage.</span></label>
         <label class="field"><b id="lblActiveP">Active power, P (kW)</b>
           <input type="number" id="P" value="150" min="0" step="0.1">
+          <div class="seg" id="pwrUnitSeg"><button data-u="kW" class="active">kW</button><button data-u="HP">HP</button></div>
         </label>
       </div>
     </div>
@@ -528,7 +529,11 @@ const REF_LOADS = [
   {en:"Plant average (uncorrected, mixed load)", fr:"Moyenne d'usine (non corrigée, charge mixte)", pf:"0.65 – 0.85"},
 ];
 
-let state = { phase:"1p", V:600, f:60 };
+const HP_KW = 0.7457; // 1 HP = 0.7457 kW  (HP = kW x 1.341, as in the MCC estimating rules)
+let _savedPwr = 'kW';
+try { _savedPwr = localStorage.getItem('ohmzone-pwr-unit') || 'kW'; } catch(e) {}
+if(_savedPwr !== 'kW' && _savedPwr !== 'HP') _savedPwr = 'kW';
+let state = { phase:"1p", V:600, f:60, pwrUnit:_savedPwr };
 let currentLang = 'en';
 
 function fmt(n,d=2){ if(n===undefined||n===null||isNaN(n)) return "—"; return Number(n).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d}); }
@@ -591,6 +596,39 @@ $("freqSeg").addEventListener("click", e=>{
   recalc();
 });
 
+/* ===== active-power unit segmented control (kW / HP) ===== */
+function pwrKw(){
+  const v = parseFloat($("P").value)||0;
+  return state.pwrUnit==="HP" ? v*HP_KW : v;
+}
+function renderPLabel(){
+  const L = UI[currentLang];
+  $("lblActiveP").textContent = state.pwrUnit==="HP" ? L.lblActiveP.replace("(kW)","(HP)") : L.lblActiveP;
+}
+$("pwrUnitSeg").addEventListener("click", e=>{
+  const b = e.target.closest("button"); if(!b) return;
+  const u = b.dataset.u;
+  if(u===state.pwrUnit) return;
+  const inp = $("P");
+  const v = parseFloat(inp.value);
+  if(!isNaN(v)){
+    if(state.pwrUnit==="kW" && u==="HP") inp.value = Math.round(v/HP_KW*10)/10;
+    if(state.pwrUnit==="HP" && u==="kW") inp.value = Math.round(v*HP_KW*10)/10;
+  }
+  state.pwrUnit = u;
+  try { localStorage.setItem('ohmzone-pwr-unit', u); } catch(e) {}
+  document.querySelectorAll("#pwrUnitSeg button").forEach(x=>x.classList.toggle("active", x.dataset.u===u));
+  renderPLabel();
+  recalc();
+});
+/* apply a saved HP preference to the default input before the first recalc */
+if(state.pwrUnit==="HP"){
+  document.querySelectorAll("#pwrUnitSeg button").forEach(x=>x.classList.toggle("active", x.dataset.u==="HP"));
+  const inp = $("P");
+  const v = parseFloat(inp.value);
+  if(!isNaN(v)) inp.value = Math.round(v/HP_KW*10)/10;
+}
+
 /* ===== voltage chips ===== */
 $("voltChips").addEventListener("click", e=>{
   const c = e.target.closest(".chip"); if(!c) return;
@@ -621,7 +659,7 @@ $("loadExample").addEventListener("click", ()=>{
   document.querySelectorAll("#freqSeg button").forEach(x=>x.classList.toggle("active", x.dataset.f==="60"));
   state.f = 60;
   $("sysV").value = 600;
-  $("P").value = 250;
+  $("P").value = state.pwrUnit==="HP" ? 335.3 : 250;
   $("pf1").value = 0.72;
   $("pf2").value = 0.95;
   $("harmOn").checked = true;
@@ -644,7 +682,8 @@ function capUF(Qkvar, Vv, f){
 
 function recalc(){
   const L = UI[currentLang];
-  const P = parseFloat($("P").value)||0;
+  const P = pwrKw();
+  const pStr = state.pwrUnit==="HP" ? fmt(P/HP_KW,1)+" HP ("+fmt(P,1)+" kW)" : fmt(P,1)+" kW";
   const pf1 = parseFloat($("pf1").value)||0.001;
   const pf2 = parseFloat($("pf2").value)||0.999;
   const V = parseFloat($("sysV").value)||1;
@@ -767,7 +806,7 @@ function recalc(){
     cableBox.innerHTML = "";
   }
 
-  renderLedger({P,pf1,pf2,phi1,phi2,Qc,Q1,Q2,S1,S2,V,f,phase,Cuf,I1,I2,IRedPct,stdStep});
+  renderLedger({P,pStr,pf1,pf2,phi1,phi2,Qc,Q1,Q2,S1,S2,V,f,phase,Cuf,I1,I2,IRedPct,stdStep});
   window._lastResults = {P,pf1,pf2,phi1,phi2,Qc,Q1,Q2,S1,S2,V,f,phase,Cuf,I1,I2,IRedPct,stdStep,
     cableOn: $("cableOn").checked, cableResult, cableMat:capState.mat, cableInstall:capState.install, cableCol:capState.col};
 }
@@ -789,8 +828,8 @@ L.lstep1Note);
 
   html += lstep(2, L.lstep2Title,
 `Qc = P × (tan φ1 − tan φ2)
-   = ${fmt(d.P,1)} × (tan ${fmt(d.phi1*180/Math.PI,2)}° − tan ${fmt(d.phi2*180/Math.PI,2)}°)
-   = ${fmt(d.P,1)} × (${fmt(Math.tan(d.phi1),4)} − ${fmt(Math.tan(d.phi2),4)})
+   = ${d.pStr} × (tan ${fmt(d.phi1*180/Math.PI,2)}° − tan ${fmt(d.phi2*180/Math.PI,2)}°)
+   = ${d.pStr} × (${fmt(Math.tan(d.phi1),4)} − ${fmt(Math.tan(d.phi2),4)})
    = ${fmt(d.Qc,3)} kVAR`,
 L.lstep2Note);
 
@@ -814,8 +853,8 @@ C_Y (per phase) = (Qc/3) × 10⁹ / (2π f V_ph²)
   html += lstep(3, L.lstep3Title.replace('{conn}',connLbl), capFormula, L.lstep3Note);
 
   html += lstep(4, L.lstep4Title,
-`S1 = P / PF1 = ${fmt(d.P,1)} / ${fmt(d.pf1,3)} = ${fmt(d.S1,2)} kVA
-S2 = P / PF2 = ${fmt(d.P,1)} / ${fmt(d.pf2,3)} = ${fmt(d.S2,2)} kVA
+`S1 = P / PF1 = ${d.pStr} / ${fmt(d.pf1,3)} = ${fmt(d.S1,2)} kVA
+S2 = P / PF2 = ${d.pStr} / ${fmt(d.pf2,3)} = ${fmt(d.S2,2)} kVA
 Q1 = P × tan φ1 = ${fmt(d.Q1,2)} kVAR   (${L.reactiveBefore})
 Q2 = P × tan φ2 = ${fmt(d.Q2,2)} kVAR   (${L.reactiveAfter})`,
 L.lstep4Note);
@@ -870,7 +909,7 @@ function buildReportRows(){
     [L.xlsPhase, connectionLabel(d.phase,L)],
     [L.xlsVoltage, fmt(d.V,0)],
     [L.xlsFreq, d.f],
-    [L.xlsP, fmt(d.P,1)],
+    [state.pwrUnit==="HP" ? L.xlsP.replace("(kW)","(HP)") : L.xlsP, state.pwrUnit==="HP" ? fmt(d.P/HP_KW,1) : fmt(d.P,1)],
     [L.xlsPf1, fmt(d.pf1,3)],
     [L.xlsPf2, fmt(d.pf2,3)],
     ["", ""],
@@ -1119,7 +1158,7 @@ function applyStaticI18n(){
   $('lblVoltage').textContent = L.lblVoltage;
   $('lblFreq').textContent = L.lblFreq;
   updateVoltNote();
-  $('lblActiveP').textContent = L.lblActiveP;
+  renderPLabel();
   $('step2Title').childNodes[0].textContent = L.step2Title + ' ';
   $('step2Small').textContent = L.step2Small;
   $('lblPf1').textContent = L.lblPf1;

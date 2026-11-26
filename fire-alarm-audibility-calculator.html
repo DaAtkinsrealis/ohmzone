@@ -353,7 +353,7 @@ function lenDisplay(ft){ return lenUnit === 'm' ? ft / FT_PER_M : ft; }
 function lenUnitLabel(){ return lenUnit === 'ft' ? (currentLang === 'fr' ? 'pi' : 'ft') : 'm'; }
 function lenStr(ft, d){ return fmt(lenDisplay(ft), d === undefined ? 0 : d) + ' ' + lenUnitLabel(); }
 /* rated reference distance: 10 ft = 3.048 m (benchmark, value never converted) */
-function refLabel(){ return lenUnit === 'm' ? (currentLang === 'fr' ? '3,048 m' : '3.048 m') : (currentLang === 'fr' ? '10 pi' : '10 ft'); }
+function refLabel(){ return lenUnit === 'm' ? (currentLang === 'fr' ? '3,048 m' : '3.048 m') : (currentLang === 'fr' ? '10 pi' : '10 ft'); }
 function distLabel(){ return UI[currentLang].lblDistance + ' (' + lenUnitLabel() + ')'; }
 function audioLenLabel(){ return UI[currentLang].lblAudioLength + ' (' + lenUnitLabel() + ')'; }
 function devDbaLabel(){ return lenUnit === 'm' ? UI[currentLang].lblDevDbaM : UI[currentLang].lblDevDba; }
@@ -818,7 +818,7 @@ const UI = {
     lblAmbAvg:"Son ambiant moyen (dBA)", lblAmbMax:"Son ambiant maximal, \u226560s (dBA)",
     hintStep1:"Le mode public exige le plus élevé entre le niveau ambiant moyen +15 dBA ou le niveau ambiant maximal (soutenu \u226560 secondes) +5 dBA, selon la NFPA 72 \u00a718.4.3/18.4.4. Le mode privé exige le niveau ambiant moyen +10 dBA selon \u00a718.4.5. Dans les zones de sommeil, un minimum de 75 dBA à l'oreiller (ou la règle standard, selon la valeur la plus élevée) s'applique. Les niveaux de son ambiant mesurés devraient refléter les conditions réelles sur le terrain lorsque possible.",
     step2Title:"Dispositif et distance", step2Small:"Sortie nominale, distance et obstructions vers l'auditeur",
-    lblDevDba:"Sortie nominale du dispositif à 10 pi (dBA)", lblDevDbaM:"Sortie nominale du dispositif à 3,048 m (réf.) (dBA)", lblDistance:"Distance à l'auditeur le plus éloigné", lblLenUnit:"Unité de longueur", lblWalls:"Murs/cloisons traversés",
+    lblDevDba:"Sortie nominale du dispositif à 10 pi (dBA)", lblDevDbaM:"Sortie nominale du dispositif à 3,048 m (réf.) (dBA)", lblDistance:"Distance à l'auditeur le plus éloigné", lblLenUnit:"Unité de longueur", lblWalls:"Murs/cloisons traversés",
     hintStep2:"La pression sonore suit la loi du carré inverse : chaque doublement de la distance par rapport à la source réduit le niveau d'environ 6 dB (20\u00d7log10 du rapport de distance). Chaque mur ou cloison traversé est appliqué ici comme une allocation représentative de \u221215 dB \u2014 l'atténuation réelle des murs varie considérablement selon le type de construction et devrait être vérifiée pour les espaces critiques.",
     step3Title:"Perte de ligne du circuit audio", optionalTag3:"(facultatif)", step3Small:"Circuit de haut-parleurs à tension constante (25V/70,7V)",
     lblAmpV:"Tension de ligne de l'amplificateur", lblTotalW:"Prises de haut-parleurs connectées, total (W)", lblAwgAudio:"Calibre de fil (AWG, cuivre)",

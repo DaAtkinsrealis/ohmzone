@@ -250,6 +250,10 @@ footer.note b{color:var(--ink-dim);}
       </div>
       <div class="step-body">
         <label class="field"><b id="lblTemp">Lowest expected electrolyte temperature (°C)</b>
+          <div class="seg" id="tempUnitSeg">
+            <button data-u="C" class="active">°C</button>
+            <button data-u="F">°F</button>
+          </div>
           <input type="number" id="tempC" value="25" min="-40" max="60" step="1">
         </label>
         <div class="hint" id="tempFactorNote"></div>
@@ -388,7 +392,12 @@ const MANUFACTURERS = [
 ];
 
 let currentLang = 'en';
-let state = { loadUnit:"A", periods:[] };
+/* Electrolyte-temperature display unit (°C/°F). Internal calculation stays °C:
+   the IEEE 485 table is °C-based, so every read goes through dispTempC(). */
+let _savedTempUnit = 'C';
+try { _savedTempUnit = localStorage.getItem('ohmzone-batt-temp-unit') || 'C'; } catch(e) {}
+if(_savedTempUnit !== 'C' && _savedTempUnit !== 'F') _savedTempUnit = 'C';
+let state = { loadUnit:"A", periods:[], tempUnit:_savedTempUnit };
 let periodSeq = 1;
 
 document.querySelectorAll(".step-head").forEach(h=>{
@@ -401,6 +410,52 @@ $("loadUnitSeg").addEventListener("click", e=>{
   b.classList.add("active");
   state.loadUnit = b.dataset.u;
 });
+
+/* ===== electrolyte-temperature unit segmented control (°C / °F) ===== */
+const C_TO_F = c => c*9/5+32;
+const F_TO_C = f => (f-32)*5/9;
+/* Displayed value is in state.tempUnit; return the °C value the IEEE 485 table needs. */
+function dispTempC(){
+  const v = parseFloat($("tempC").value);
+  if(isNaN(v)) return NaN;
+  return state.tempUnit==="F" ? F_TO_C(v) : v;
+}
+/* Display string for ledger / reports: °F mode shows both ("50 °F (10 °C)"), °C mode stays plain. */
+function tempDispStr(tempC){
+  if(state.tempUnit==="F") return fmt(C_TO_F(tempC),0)+" °F ("+fmt(tempC,0)+" °C)";
+  return fmt(tempC,0)+" °C";
+}
+/* Field label with the unit symbol following the display unit (no new French words). */
+function tempLbl(){
+  const L = UI[currentLang];
+  return state.tempUnit==="F" ? L.lblTemp.replace("(°C)","(°F)") : L.lblTemp;
+}
+function renderTempLabel(){ $("lblTemp").textContent = tempLbl(); }
+$("tempUnitSeg").addEventListener("click", e=>{
+  const b = e.target.closest("button"); if(!b) return;
+  const u = b.dataset.u;
+  if(u===state.tempUnit) return;
+  const inp = $("tempC");
+  const v = parseFloat(inp.value);
+  if(!isNaN(v)){
+    if(state.tempUnit==="C" && u==="F") inp.value = Math.round(C_TO_F(v)*10)/10;
+    if(state.tempUnit==="F" && u==="C") inp.value = Math.round(F_TO_C(v)*10)/10;
+  }
+  state.tempUnit = u;
+  inp.min = -40; inp.max = u==="F" ? 140 : 60;
+  try { localStorage.setItem('ohmzone-batt-temp-unit', u); } catch(e) {}
+  document.querySelectorAll("#tempUnitSeg button").forEach(x=>x.classList.toggle("active", x.dataset.u===u));
+  renderTempLabel();
+  recalc();
+});
+/* apply a saved °F preference to the default input before the first recalc */
+if(state.tempUnit==="F"){
+  document.querySelectorAll("#tempUnitSeg button").forEach(x=>x.classList.toggle("active", x.dataset.u==="F"));
+  const inp = $("tempC");
+  const v = parseFloat(inp.value);
+  if(!isNaN(v)) inp.value = Math.round(C_TO_F(v)*10)/10;
+  inp.min = -40; inp.max = 140;
+}
 
 $("chem").addEventListener("change", ()=>{
   const d = CHEM_DEFAULTS[$("chem").value];
@@ -456,7 +511,7 @@ $("loadExample").addEventListener("click", ()=>{
   $("eqTag").value = "BAT-101";
   $("sysV").value = 125; $("chem").value = "vrla";
   $("cellV").value = 2; $("cellAh").value = 200;
-  $("tempC").value = 10; $("agingF").value = 1.25; $("marginF").value = 1.10;
+  $("tempC").value = state.tempUnit==="F" ? 50 : 10; $("agingF").value = 1.25; $("marginF").value = 1.10;
   $("dod").value = 0.80; $("eff").value = 1.00;
   state.periods = [];
   periodSeq = 1;
@@ -471,7 +526,7 @@ function calcAll(){
   const sysV = parseFloat($("sysV").value)||1;
   const cellV = parseFloat($("cellV").value)||2;
   const cellAh = parseFloat($("cellAh").value)||1;
-  const tempC = parseFloat($("tempC").value);
+  const tempC = dispTempC();
   const agingF = parseFloat($("agingF").value)||1;
   const marginF = parseFloat($("marginF").value)||1;
   const dod = parseFloat($("dod").value)||1;
@@ -596,7 +651,7 @@ function buildLedgerSteps(d){
 ${L.totalRawLbl} = ${fmt(d.ahRaw,2)} Ah`});
 
   steps.push({num:2, title:L.ls2Title, note:L.ls2Note, formula:
-`${L.tempLbl} = ${fmt(d.tempC,0)}°C → TF = ${fmt(d.tf,3)}
+`${L.tempLbl} = ${tempDispStr(d.tempC)} → TF = ${fmt(d.tf,3)}
 ${L.agingLbl} (AF) = ${fmt(d.agingF,2)}
 ${L.marginLbl} (DM) = ${fmt(d.marginF,2)}
 
@@ -660,7 +715,7 @@ function buildReportPageHTML(d, includeLedger, includeLogo){
   const inputPairs = [
     [L.lblSysV, fmt(d.sysV,1)+" V"], [L.lblChem, L["chemName_"+d.chem]],
     [L.lblCellV, fmt(d.cellV,2)+" V"], [L.lblCellAh, fmt(d.cellAh,0)+" Ah"],
-    [L.lblTemp, fmt(d.tempC,0)+"°C (TF "+fmt(d.tf,3)+")"], [L.lblAging, fmt(d.agingF,2)],
+    [tempLbl(), tempDispStr(d.tempC)+" (TF "+fmt(d.tf,3)+")"], [L.lblAging, fmt(d.agingF,2)],
     [L.lblMargin, fmt(d.marginF,2)], [L.lblDoD, fmt(d.dod,2)],
     [L.lblEff, fmt(d.eff,2)], ["", ""]
   ];
@@ -760,7 +815,7 @@ $("exportExcelBtn").addEventListener("click", ()=>{
     [L.lblChem, L["chemName_"+d.chem]],
     [L.lblCellV, fmt(d.cellV,2)+" V"],
     [L.lblCellAh, fmt(d.cellAh,0)+" Ah"],
-    [L.lblTemp, fmt(d.tempC,0)+"°C"],
+    [tempLbl(), tempDispStr(d.tempC)],
     ["TF", fmt(d.tf,3)], ["AF", fmt(d.agingF,2)], ["DM", fmt(d.marginF,2)],
     [L.lblDoD, fmt(d.dod,2)], [L.lblEff, fmt(d.eff,2)],
     ["",""],
@@ -941,7 +996,7 @@ function applyStaticI18n(){
   $('lblLoadUnit').textContent=L.lblLoadUnit; $('lblLoadVal').textContent=L.lblLoadVal; $('lblDurVal').textContent=L.lblDurVal;
   $('addPeriodTxt').textContent=L.addPeriodTxt; $('hintStep2').textContent=L.hintStep2;
   $('step3Title').childNodes[0].textContent=L.step3Title+' '; $('step3Small').textContent=L.step3Small;
-  $('lblTemp').textContent=L.lblTemp; $('lblAging').textContent=L.lblAging; $('lblMargin').textContent=L.lblMargin;
+  renderTempLabel(); $('lblAging').textContent=L.lblAging; $('lblMargin').textContent=L.lblMargin;
   $('lblDoD').textContent=L.lblDoD; $('lblEff').textContent=L.lblEff; $('hintStep3').textContent=L.hintStep3;
   $('resultTitle').textContent=L.resultTitle; $('gaugeLbl').textContent=L.gaugeLbl;
   $('lblStatUncorrected').textContent=L.lblStatUncorrected; $('lblStatCorrection').textContent=L.lblStatCorrection;
